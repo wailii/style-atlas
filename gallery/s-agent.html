@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 原生界面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #fafaf9; --panel: #fff; --line: #ebeae6; --ink: #1c1b19; --ink2: #57534e; --mute: #a29e97; --acc: #6d4aff; --acc2: #ff7a59; --ok: #15a36b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 600; font-size: 14px; }
+  .top { flex: none; display: flex; align-items: center; gap: 10px; padding: 2px 16px 10px; border-bottom: 1px solid var(--line); }
+  .orb { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(from var(--r, 0deg), var(--acc), var(--acc2), #ffd25a, var(--acc)); position: relative; }
+  .orb::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: var(--bg); }
+  .busy .orb { animation: spin 1.6s linear infinite; }
+  @property --r { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  @keyframes spin { to { --r: 360deg; } }
+  .top h1 { font-weight: 700; font-size: 17px; }
+  .top small { display: block; font-size: 11.5px; color: var(--mute); font-weight: 500; }
+  .top .new { margin-left: auto; width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line); display: grid; place-items: center; }
+  .top .new svg { width: 16px; height: 16px; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 16px 20px; scrollbar-width: none; scroll-behavior: smooth; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .me { margin-left: auto; max-width: 78%; width: fit-content; padding: 10px 14px; border-radius: 18px 18px 4px 18px; background: #efeeea; font-size: 14.5px; line-height: 1.5; }
+  .turn { margin-top: 18px; }
+  .think { font-size: 13px; font-weight: 600; background: linear-gradient(90deg, var(--mute) 0%, var(--mute) 35%, var(--ink) 50%, var(--mute) 65%, var(--mute) 100%); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shim 1.6s linear infinite; }
+  @keyframes shim { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+  .think.done { animation: none; background: none; color: var(--mute); }
+  .steps { margin-top: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow: hidden; }
+  .st { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 10px 12px; font-size: 13px; color: var(--ink2); }
+  .st + .st { border-top: 1px solid var(--line); }
+  .st .ic { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; }
+  .st.run .ic { border-color: var(--acc); border-right-color: transparent; animation: rot .7s linear infinite; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .st.ok .ic { border: 0; background: var(--ok); }
+  .st.ok .ic::after { content: ""; width: 7px; height: 4px; border: solid #fff; border-width: 0 0 1.8px 1.8px; transform: translateY(-1px) rotate(-45deg); }
+  .st.ok { color: var(--ink); }
+  .st .r { font-family: "JetBrains Mono"; font-size: 11px; color: var(--mute); }
+  .srcs { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 4px; }
+  .srcs span { display: flex; align-items: center; gap: 4px; padding: 2px 7px 2px 3px; border-radius: 999px; background: #f4f3f0; font-size: 11px; color: var(--ink2); }
+  .srcs span i { width: 14px; height: 14px; border-radius: 50%; font-style: normal; font-size: 8.5px; font-weight: 700; color: #fff; display: grid; place-items: center; }
+  .tool { grid-column: 2 / -1; display: none; margin-top: 2px; padding: 8px 10px; border-radius: 8px; background: #f7f6f3; font-family: "JetBrains Mono"; font-size: 10.5px; line-height: 1.65; color: var(--ink2); white-space: pre; overflow: hidden; }
+  .st.open .tool { display: block; }
+  .st .tg { cursor: pointer; font-family: "JetBrains Mono"; font-size: 11px; color: var(--acc); }
+
+  .ans { margin-top: 14px; font-size: 15px; line-height: 1.75; }
+  .ans p + p { margin-top: 10px; }
+  .ans b { font-weight: 700; }
+  .cite { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; margin: 0 1px; border-radius: 5px; background: #efeaff; color: var(--acc); font-family: "JetBrains Mono"; font-size: 10.5px; font-weight: 500; vertical-align: 2px; cursor: pointer; }
+  .num { font-family: "JetBrains Mono"; font-size: 13.5px; padding: 0 4px; border-radius: 4px; background: #f4f3f0; }
+  .caret { display: inline-block; width: 9px; height: 9px; margin-left: 3px; border-radius: 50%; background: var(--ink); vertical-align: 1px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .card { display: flex; gap: 10px; margin: 12px 0 2px; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  .card img { width: 96px; height: 64px; border-radius: 9px; object-fit: cover; }
+  .card div { font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .card small { display: block; margin-top: 4px; font-weight: 500; font-size: 11px; color: var(--mute); }
+  .ask { margin-top: 14px; padding: 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 0 0 3px #f1edff; }
+  .ask p { font-size: 13.5px; font-weight: 600; }
+  .ask .bt { display: flex; gap: 8px; margin-top: 10px; }
+  .ask .bt button { height: 34px; padding: 0 14px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--line); }
+  .ask .bt .go { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .ask.on .bt .go { background: var(--acc); border-color: var(--acc); }
+  .eq { display: none; gap: 2px; align-items: flex-end; height: 12px; margin-right: 6px; }
+  .eq i { width: 2.5px; background: #fff; border-radius: 1px; animation: eq .5s ease-in-out infinite alternate; }
+  .ask.on .eq { display: inline-flex; }
+  @keyframes eq { from { height: 3px; } to { height: 12px; } }
+  .more { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .more button { padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-size: 12.5px; color: var(--ink2); }
+  .acts { display: flex; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--mute); }
+  .acts button { display: flex; align-items: center; gap: 4px; }
+
+  .comp { flex: none; margin: 0 12px 22px; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 6px 18px -10px rgba(28,27,25,.25); }
+  .comp input { flex: 1; height: 36px; font-size: 14px; cursor: text; }
+  .comp input::placeholder { color: var(--mute); }
+  .send { width: 36px; height: 36px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; }
+  .send svg { width: 16px; height: 16px; }
+  .send .sq { width: 11px; height: 11px; border-radius: 2px; background: #fff; display: none; }
+  .busy .send .sq { display: block; } .busy .send svg { display: none; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, h2] = HOT;
+const fastest = [...HOT].sort((a, b) => b.trendPct - a.trendPct)[0];
+const COL = ["#6d4aff", "#ff7a59", "#15a36b", "#2f7de1", "#c2410c"];
+const ini = (n) => [...n.replace(/^公众号：/, "")][0].toUpperCase();
+// 回答由真实数据拼出来：每段是若干小块，文字、加粗、数字、引用分开，逐字流出时各进各的元素
+const ANSWER = [
+  [{ t: "今天最热的是 " }, { b: shortTitle(h1) }, { t: "，热度 " }, { n: heatText(h1) }, { t: `，${h1.sources} 家来源在说` }, { c: 1 }, { c: 2 }, { t: "。最新进展：" + h1.latest + "。" }],
+  "CARD",
+  [{ t: "第二是 " }, { b: shortTitle(h2) }, { t: "，热度 " }, { n: heatText(h2) }, { c: 3 }, { t: "。" }],
+  [{ t: "涨得最快的是 " }, { b: shortTitle(fastest) }, { t: "，涨幅 " }, { n: (fastest.trendPct > 0 ? "+" : "") + fastest.trendPct + "%" }, { t: "。" }],
+];
+const CITES = [h1.names[0], h1.names[1], h2.names[0]];
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top" id="top"><span class="orb"></span><div><h1>今日简报</h1><small>AI 热点助手 · 读的是实时榜单</small></div><button class="new" id="again" title="重新生成"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button></header>
+  <main class="scroll" id="scroll"></main>
+  <div class="comp" id="comp"><input placeholder="继续问…"><button class="send"><span class="sq"></span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>`;
+const $ = (id) => document.getElementById(id), sc = $("scroll");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const pop = (el) => el.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.8,.2,1)" });
+const follow = () => (sc.scrollTop = sc.scrollHeight);
+let run = 0;
+async function play() {
+  const my = ++run; const alive = () => my === run;
+  sc.innerHTML = ""; app.classList.add("busy");
+  const me = document.createElement("div"); me.className = "me"; me.textContent = "今天 AI 圈有什么值得看的？"; sc.append(me); pop(me);
+  await sleep(500); if (!alive()) return;
+  const turn = document.createElement("section"); turn.className = "turn"; sc.append(turn);
+  turn.innerHTML = `<div class="think" id="th">正在看今天的热点…</div><div class="steps" id="steps">
+    <div class="st run" id="s1"><span class="ic"></span><span>拉取今日榜单</span><span class="r"></span><div class="tool">${HOT.slice(0, 5).map((h) => `{ rank: ${h.rank}, heat: ${heatText(h)}, title: "${esc(clip(shortTitle(h), 12))}" }`).join("\n")}\n…共 ${HOT.length} 条</div></div>
+    <div class="st" id="s2"><span class="ic"></span><span>读头条的 ${h1.sources} 个来源</span><span class="r"></span><div class="srcs" id="srcs"></div></div>
+    <div class="st" id="s3"><span class="ic"></span><span>按热度和涨幅写简报</span><span class="r"></span></div></div>`;
+  pop(turn); follow();
+  await sleep(800); if (!alive()) return;
+  const s1 = $("s1"); s1.className = "st ok"; s1.querySelector(".r").innerHTML = `<span class="tg">${HOT.length} 条 ›</span>`; s1.querySelector(".tg").onclick = () => s1.classList.toggle("open");
+  $("s2").className = "st run";
+  for (let i = 0; i < h1.names.length; i++) { await sleep(180); if (!alive()) return; const c = document.createElement("span"); c.innerHTML = `<i style="background:${COL[i]}">${ini(h1.names[i])}</i>${esc(h1.names[i])}`; $("srcs").append(c); c.animate([{ transform: "scale(.6)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 260, easing: "cubic-bezier(.3,1.5,.5,1)" }); $("s2").querySelector(".r").textContent = `${i + 1}/${h1.sources}`; follow(); }
+  const rest = document.createElement("span"); rest.textContent = `+${h1.sources - h1.names.length}`; $("srcs").append(rest);
+  await sleep(250); if (!alive()) return;
+  $("s2").className = "st ok"; $("s2").querySelector(".r").textContent = `${h1.sources}/${h1.sources}`; $("s3").className = "st run";
+  await sleep(450); if (!alive()) return;
+  $("s3").className = "st ok"; $("th").textContent = "看完了 8 条热点、12 个来源"; $("th").classList.add("done");
+  // 逐字流出：每 16ms 吐 1~2 个字，光标一直跟在最后
+  const ans = document.createElement("div"); ans.className = "ans"; turn.append(ans);
+  const caret = document.createElement("span"); caret.className = "caret";
+  for (const para of ANSWER) {
+    if (para === "CARD") { const card = document.createElement("div"); card.className = "card"; card.innerHTML = `<img src="${h1.cover}" alt=""><div>${esc(shortTitle(h1))}<small>头条 · ${h1.people} 人参与</small></div>`; ans.append(card); pop(card); follow(); await sleep(260); continue; }
+    const p = document.createElement("p"); ans.append(p);
+    for (const seg of para) {
+      if (seg.c) { const s = document.createElement("span"); s.className = "cite"; s.textContent = seg.c; s.title = CITES[seg.c - 1]; p.append(s, caret); s.animate([{ transform: "scale(0)" }, { transform: "none" }], { duration: 220, easing: "cubic-bezier(.3,1.6,.5,1)" }); await sleep(60); continue; }
+      const el = seg.b ? document.createElement("b") : seg.n ? Object.assign(document.createElement("span"), { className: "num" }) : document.createTextNode("");
+      p.append(el, caret); const text = [...String(seg.t ?? seg.b ?? seg.n)];
+      for (let i = 0; i < text.length; ) { if (!alive()) return; const k = 1 + (Math.random() < 0.5); el.textContent += text.slice(i, i + k).join(""); i += k; await sleep(16); }
+      follow();
+    }
+  }
+  caret.remove(); app.classList.remove("busy");
+  // 动手前先问：朗读要用户点头
+  const ask = document.createElement("div"); ask.className = "ask"; ask.innerHTML = `<p>要我把头条读给你听吗？大约 1 分钟。</p><div class="bt"><button class="go"><span class="eq"><i></i><i></i><i></i></span><span>读给我听</span></button><button class="no">先不用</button></div>`;
+  turn.append(ask); pop(ask);
+  ask.querySelector(".go").onclick = () => { const on = ask.classList.toggle("on"); ask.querySelector(".go span:last-child").textContent = on ? "正在朗读 · 头条" : "读给我听"; };
+  ask.querySelector(".no").onclick = () => ask.animate([{ opacity: 1 }, { opacity: 0, height: "0px", padding: "0px", marginTop: "0px" }], { duration: 250, fill: "forwards" });
+  const more = document.createElement("div"); more.className = "more"; more.innerHTML = [`${clip(KEY[3], 10)}的细节`, `${KEY[2]}影响哪些版本`, "只看上升的"].map((t) => `<button>${esc(t)}</button>`).join(""); turn.append(more); pop(more);
+  const acts = document.createElement("div"); acts.className = "acts"; acts.innerHTML = `<button>复制</button><button>重新生成</button><button>${CITES.length} 个引用</button>`; turn.append(acts);
+  acts.children[1].onclick = play; follow();
+}
+(async () => { await fontsReady(); $("again").onclick = play; play(); })();
+</script>
+</body>
+</html>

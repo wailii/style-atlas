@@ -1,5 +1,12 @@
 # 更新记录
 
+## 1.4.0 · 2026-10-23
+
+新增 10 种工具类和科普类风格（共 50 种）。工具：便当格、数据密集、AI 原生界面、墨水屏、终端界面；科普：白板讲解、可探索解释、象形统计、显微镜、博物版画。来源：UI/UX Pro Max 风格表、lemo-opuscar 风格库（whiteboard、pictogram-motion、microscope、engraving）、Bret Victor 和 Nicky Case 的可探索解释、Neurath 的 Isotype。
+
+- 图鉴分组新增「工具界面」「科普讲解」
+- 「按气质找」加「做工具」「做科普」两条
+
 ## 1.3.0 · 2026-10-23
 
 新增 10 种风格（共 40 种）：Y2K 铬金属、孟菲斯、编辑杂志、拟物、Material 3 Expressive、产品拆解、装饰艺术、HD-2D、活体录屏、学院风。来源：UI/UX Pro Max 风格表、lemo-opuscar 风格库（teardown、art-deco、hd-2d、living-screencast）、Material Design 3。

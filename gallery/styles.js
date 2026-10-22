@@ -1,4 +1,4 @@
-// 40 种风格：名字、出处、招牌动效、能点的地方、适合做什么
+// 50 种风格：名字、出处、招牌动效、能点的地方、适合做什么
 const LEMO = "https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles";
 const STYLES = [
   // ── 手作 · 手工艺 ──
@@ -370,5 +370,86 @@ const STYLES = [
     moves: ["刊名像墨水从左写到右；照片像显影一样沉下来", "火漆转着盖下来，落定压一下", "目录卡从抽屉里一张张立起来"],
     tap: ["点火漆：开始朗读", "点目录卡：抽出来、展开"],
     fit: "读书、课程、研究机构、博物馆、出版社",
+  },
+  // ── 第四批（1.4.0）：工具和科普 ──
+  {
+    id: "bento", group: "工具界面", name: "便当格", file: "s-bento.html",
+    line: "4 列小方格，每格一个能独立看懂的小部件。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Bento Box Grid", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"], ["2026 B2B SaaS 首页趋势", "便当格成了新工具首页的默认排法", "https://www.pravinkumar.co/blog/bento-grids-b2b-saas-homepage-design-trend-2026"]],
+    moves: ["每格按网格位置从下面浮上来、带模糊", "数字从 0 数上去，曲线一笔画出", "手指放上去格子朝那边歪；点一下翻到背面看摘要"],
+    tap: ["点任何一格：翻面", "点黑色播放格", "手指在格子上移动"],
+    fit: "SaaS / 工具首页、仪表盘首页、年度总结",
+  },
+  {
+    id: "dense", group: "工具界面", name: "数据密集", file: "s-dense.html",
+    line: "小字、等宽数字、行内曲线、24 小时矩阵、⌘K 搜索。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Data-Dense Dashboard", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["数字 700ms 跳到位，迷你曲线画出来", "矩阵按时间从左往右扫满", "选中行浅蓝底 + 左边蓝线，下面插一行详情"],
+    tap: ["点「搜索 ⌘K」打字搜", "点筛选：上升 / 下降 / 持平", "点表格任一行", "键盘 J/K/↵"],
+    fit: "后台、监控、交易、运营看板",
+  },
+  {
+    id: "agent", group: "工具界面", name: "AI 原生界面", file: "s-agent.html",
+    line: "智能体干活的过程：步骤打勾、来源冒出来、回答逐字流、动手前先问。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 AI-Native UI", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"], ["2026 智能体界面模式", "可见的检查点、替用户动手前确认", "https://dev.to/zdeb_fouc_f95089367652fc5/from-agent-checkpoints-to-spatial-widgets-five-uiux-patterns-that-look-poised-to-define-2026-m3i"]],
+    moves: ["「正在看…」流光字；步骤转圈 → 绿勾", "来源一个个弹出来；回答逐字流出，引用编号蹦出来", "检查点卡浮上来，等用户点头"],
+    tap: ["点「8 条 ›」看工具返回", "点「读给我听」", "点右上角或「重新生成」重放"],
+    fit: "任何「让 AI 帮你做事」的产品",
+  },
+  {
+    id: "eink", group: "工具界面", name: "墨水屏", file: "s-eink.html",
+    line: "纸灰底、16 级灰抖动图、翻页黑白闪一下、留一点残影。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 E-Ink / Paper", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["翻页全刷：黑 → 白 → 内容", "局部刷新反色一下，留淡淡残影，每 4 次全刷清掉", "图片先出黑白版再出 16 级灰"],
+    tap: ["点屏幕右边下一页、左边上一页", "点「目录」", "点「朗读」：直接反色"],
+    fit: "长文阅读、文档、专注模式、桌面小摆件",
+  },
+  {
+    id: "tui", group: "工具界面", name: "终端界面", file: "s-tui.html",
+    line: "浅色终端里的文字程序：框线、字符曲线、半格字符画的封面。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Terminal CLI (Mobile)", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["命令一个字一个字敲出来", "回车后整屏按行刷出", "朗读时盲文点阵转圈"],
+    tap: ["点热点榜任一行：预览换成那一条", "点「p 朗读」「j/k 移动」", "点最底下 tmux 窗口栏"],
+    fit: "开发者工具、CLI 产品、极客个人站",
+  },
+  {
+    id: "whiteboard", group: "科普讲解", name: "白板讲解", file: "s-whiteboard.html",
+    line: "马克笔当面一笔笔写、一笔笔画，照片用磁铁吸在板上。",
+    from: [["lemo-opuscar 风格库 · whiteboard", "一整块白板、没有手的马克笔、镜头跟着笔走", `${LEMO}/whiteboard/STYLE.md`]],
+    moves: ["字一个个写出来，图形一笔笔画出来，笔自己飘", "照片「啪」地贴上，红磁铁按住", "镜头跟着笔往下走"],
+    tap: ["点「擦掉重画」：板擦扫过、重画", "点清单方框：打红勾"],
+    fit: "产品原理、课程、新手引导、科普视频",
+  },
+  {
+    id: "explorable", group: "科普讲解", name: "可探索解释", file: "s-explorable.html",
+    line: "正文里的数字能拖，图能拖，拖了句子和图一起变。",
+    from: [["Bret Victor · Explorable Explanations", "会回应的文档", "https://worrydream.com/ExplorableExplanations/"], ["Nicky Case · explorabl.es", "可探索解释合集", "https://explorabl.es/"]],
+    moves: ["曲线画出来，圆点自己走一遍示范", "能拖的数字左右晃两下提示", "拖动时数字补间、线条插值、被筛掉的变淡"],
+    tap: ["按住图左右拖", "拖蓝色数字：筛来源数", "拖紫色数字：换对比的那条"],
+    fit: "科普长文、产品原理、计算器、教程",
+  },
+  {
+    id: "isotype", group: "科普讲解", name: "象形统计", file: "s-isotype.html",
+    line: "一个符号代表固定数量，数符号就懂，不满一个就切掉一截。",
+    from: [["Otto Neurath / Gerd Arntz · Isotype", "1920 年代维也纳图示统计法", "https://en.wikipedia.org/wiki/Otto_Neurath"], ["lemo-opuscar 风格库 · pictogram-motion", "几何图案带、整行错开", `${LEMO}/pictogram-motion/STYLE.md`]],
+    moves: ["符号一个个盖章出来，按行按图依次", "顶部图案带两行反方向错开", "封面 steps(6) 擦出来"],
+    tap: ["点任一行：展开全标题"],
+    fit: "科普数据、年报、公益、人口资源话题",
+  },
+  {
+    id: "microscope", group: "科普讲解", name: "显微镜", file: "s-microscope.html",
+    line: "圆形视野、染色标本、换物镜失焦再对焦，读数都是算出来的。",
+    from: [["lemo-opuscar 风格库 · microscope", "一镜到底放大、对焦有语法、读数是测出来的", `${LEMO}/microscope/STYLE.md`]],
+    moves: ["从模糊对上焦，一路 4× → 10× → 40×", "换倍数：失焦呼吸，焦平面带从左扫到右", "换载玻片：新片从下面推上来"],
+    tap: ["点物镜 4× / 10× / 40×", "拖动视野平移", "点载玻片换标本"],
+    fit: "科学、医疗、材料、芯片科普；放大看细节",
+  },
+  {
+    id: "engraving", group: "科普讲解", name: "博物版画", file: "s-engraving.html",
+    line: "铜版画：色调全靠线，刻完再上一层淡水彩，带编号和局部放大。",
+    from: [["lemo-opuscar 风格库 · engraving", "19 世纪博物图谱：线随形体收放、颜色最后到", `${LEMO}/engraving/STYLE.md`]],
+    moves: ["三组线依次刻上去，再刻轮廓", "两个圆形局部单独刻", "水彩从左上晕开，编号圈弹出来"],
+    tap: ["点「朗读此页」", "点图版目录任一条：展开"],
+    fit: "博物馆、自然科普、百科、出版",
   },
 ];

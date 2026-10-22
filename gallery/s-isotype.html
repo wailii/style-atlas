@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>象形统计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #f1ede2; --ink: #1e1e1e; --red: #cf3a2b; --blue: #2b5c9e; --ochre: #e0a12a; --grey: #8d877a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: Jost, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .sb { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-weight: 600; font-size: 14px; }
+  /* 顶上一条图案带：圆、半圆、小格，同一个色相的五个深浅；整行左右错开 */
+  .band { flex: none; height: 44px; overflow: hidden; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+  .band .rw { display: flex; height: 22px; }
+  .band .rw i { flex: none; width: 22px; height: 22px; }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 14px 16px 28px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .kick { font-weight: 600; font-size: 11.5px; letter-spacing: .24em; }
+  h1 { margin-top: 4px; font-weight: 900; font-size: 27px; line-height: 1.25; }
+  .lead { margin-top: 6px; font-size: 13.5px; line-height: 1.6; color: #4a463e; }
+  .hero { margin-top: 14px; display: grid; grid-template-columns: 1fr 104px; gap: 12px; align-items: end; }
+  .hero canvas { width: 100%; display: block; border: 2px solid var(--ink); image-rendering: auto; }
+  .hero .big { font-weight: 700; font-size: 54px; line-height: .9; color: var(--red); }
+  .hero .big small { display: block; margin-top: 8px; font-size: 12px; line-height: 1.4; color: var(--ink); font-weight: 600; }
+  .ch { margin-top: 26px; }
+  .ch h2 { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; border-bottom: 2px solid var(--ink); font-weight: 900; font-size: 16px; }
+  .ch h2 span { display: flex; align-items: center; gap: 4px; font-weight: 500; font-size: 11.5px; }
+  .ch h2 svg { width: 16px; height: 16px; }
+  .r { display: grid; grid-template-columns: 76px 1fr 30px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(30,30,30,.15); cursor: pointer; }
+  .r .lab { font-weight: 700; font-size: 12.5px; line-height: 1.25; }
+  .r .icons { display: flex; flex-wrap: wrap; gap: 2px; }
+  .r .icons svg { width: 19px; height: 19px; flex: none; }
+  .r .num { font-weight: 600; font-size: 14px; text-align: right; }
+  .r.on { background: rgba(30,30,30,.06); }
+  .r .full { grid-column: 1 / -1; display: none; font-size: 12.5px; line-height: 1.5; color: #4a463e; }
+  .r.on .full { display: block; }
+  .note { margin-top: 8px; font-size: 11px; color: var(--grey); line-height: 1.5; }
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 6px 24px; border-top: 2px solid var(--ink); background: var(--paper); }
+  .tab { font-weight: 700; font-size: 13px; color: var(--grey); }
+  .tab.on { color: var(--ink); }
+  .tab.on::after { content: ""; display: block; width: 8px; height: 8px; margin: 3px auto 0; border-radius: 50%; background: var(--red); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1] = HOT;
+// 符号：实心剪影，没有描边、没有渐变；一个符号代表固定数量
+const ICON = {
+  paper: (c) => `<path d="M3 3 H17 V21 H5 A2 2 0 0 1 3 19 Z M17 8 H21 V19 A2 2 0 0 1 17 21 Z" fill="${c}"/><path d="M6 7 H14 M6 11 H14 M6 15 H11" stroke="#f1ede2" stroke-width="1.8"/>`,
+  man: (c) => `<circle cx="12" cy="4.4" r="3.4" fill="${c}"/><path d="M6.5 9 H17.5 L16.2 16 H14.6 V23 H12.6 V16.5 H11.4 V23 H9.4 V16 H7.8 Z" fill="${c}"/>`,
+  fire: (c) => `<path d="M12 2 C14 7 19 9 19 15 A7 7 0 0 1 5 15 C5 11 8 10 8 6 C10 8 10 10 11 11 C12 8 11 5 12 2 Z" fill="${c}"/><path d="M12 13 C13 15 15 16 15 18 A3 3 0 0 1 9 18 C9 16 11 15 12 13 Z" fill="#f1ede2"/>`,
+};
+const sym = (k, c, frac = 1) => `<svg viewBox="0 0 24 24"><defs><clipPath id="cp${k}${frac}"><rect width="${24 * frac}" height="24"/></clipPath></defs><g clip-path="url(#cp${k}${frac})">${ICON[k](c)}</g></svg>`;
+// 一行：整数个完整符号 + 最后一个按比例切掉（Isotype 的规矩：不缩放符号，只数个数）
+const row = (k, c, v, unit) => { const n = v / unit, full = Math.floor(n), f = Math.round((n - full) * 4) / 4; return Array.from({ length: full }, () => sym(k, c)).join("") + (f > 0 ? sym(k, c, f) : ""); };
+const label = (h) => esc(KEY[h.rank] || clip(shortTitle(h), 6));
+const CH = [
+  { k: "paper", c: "var(--blue)", unit: 1, f: "sources", t: "谁在报道", u: "= 1 家来源" },
+  { k: "man", c: "var(--red)", unit: 10, f: "people", t: "多少人在聊", u: "= 10 人" },
+  { k: "fire", c: "var(--ochre)", unit: 50, f: "heat", t: "有多热", u: "= 50 热度" },
+];
+const TONES = ["#2b5c9e", "#4f7cba", "#86a6d3", "#c1d0e6", "#1e3f6e"];
+const bandRow = (seed) => Array.from({ length: 22 }, (_, i) => { const t = TONES[Math.floor(rnd(seed + i * 3.1) * 5)], b = TONES[Math.floor(rnd(seed + i * 7.7) * 5)], k = Math.floor(rnd(seed * 2 + i) * 4); return `<i style="background:${k === 0 ? `radial-gradient(circle,${t} 0 10px,${b} 10.5px)` : k === 1 ? `radial-gradient(circle at 50% 100%,${t} 0 10.5px,${b} 11px)` : k === 2 ? `radial-gradient(circle at 0 50%,${t} 0 10.5px,${b} 11px)` : `${b}`}"></i>`; }).join("");
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <div class="band" id="band"><div class="rw">${bandRow(1)}</div><div class="rw">${bandRow(2)}</div></div>
+  <main class="scroll">
+    <div class="kick">ISOTYPE · 图示统计 · 10.22</div>
+    <h1>今天 8 条 AI 热点<br>谁在说、多少人在聊</h1>
+    <p class="lead">一个符号代表固定的数量，不用读数字，数符号就行。</p>
+    <div class="hero"><canvas id="cv" width="480" height="270"></canvas><div class="big">${h1.sources}<small>家来源报道了头条「${esc(KEY[1])}」</small></div></div>
+    ${CH.map((ch) => `<section class="ch"><h2>${ch.t}<span>${sym(ch.k, ch.c)}${ch.u}</span></h2>${HOT.map((h) => `<div class="r"><span class="lab">${label(h)}</span><span class="icons">${row(ch.k, ch.c, h[ch.f], ch.unit)}</span><span class="num">${ch.f === "heat" ? heatText(h) : h[ch.f]}</span><div class="full">${pad2(h.rank)} · ${esc(shortTitle(h))}</div></div>`).join("")}</section>`).join("")}
+    <div class="note">最后一个符号被切掉的部分，表示不满一个单位（按四分之一取整）。</div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+(async () => {
+const img = await loadImage(h1.cover);
+// 封面压成四种平涂色，和符号同一套颜色
+$("cv").getContext("2d").drawImage(posterCanvas(img, 480, 270, ["#f1ede2", "#1e1e1e", "#cf3a2b", "#2b5c9e", "#e0a12a"], { soft: 4 }), 0, 0);
+await fontsReady();
+// 图案带：两行反方向慢慢错开
+app.querySelectorAll(".band .rw").forEach((r, i) => r.animate([{ transform: "translateX(0)" }, { transform: `translateX(${i ? 44 : -44}px)` }], { duration: 2600, iterations: Infinity, direction: "alternate", easing: "cubic-bezier(.7,0,.3,1)" }));
+// 符号一个个「盖章」：一行一行、从左到右，每个 steps(2) 弹一下
+let k = 0;
+app.querySelectorAll(".ch").forEach((sec, si) => sec.querySelectorAll(".r").forEach((r, ri) => r.querySelectorAll(".icons svg").forEach((s, i) => s.animate([{ transform: "scale(0)" }, { transform: "scale(1.25)" }, { transform: "scale(1)" }], { duration: 160, delay: 300 + si * 500 + ri * 70 + i * 32, easing: "steps(2, end)", fill: "backwards" }))));
+app.querySelectorAll(".r").forEach((r) => r.addEventListener("click", () => r.classList.toggle("on")));
+$("cv").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 700, delay: 100, easing: "steps(6)", fill: "backwards" });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>显微镜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+  /* 明场显微：白光底、染色标本；读数只用一种颜色 */
+  :root { --bench: #eef1f3; --ink: #1d2a33; --mute: #74828c; --line: #d7dde1; --acc: #0b8f8c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bench); }
+  body { font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .mono { font-family: "IBM Plex Mono", monospace; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(120% 60% at 50% 30%, #fafbfc, var(--bench)); }
+  .sb { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-weight: 600; font-size: 13px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: baseline; padding: 0 18px 6px; }
+  h1 { font-weight: 700; font-size: 22px; }
+  .top span { font-family: "IBM Plex Mono"; font-size: 11px; color: var(--mute); }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 26px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 视野：圆形，外面一圈黑的目镜筒；里面清楚的一层 + 模糊的一层，模糊层上有一条清楚的焦平面带扫过 */
+  .eye { position: relative; width: 316px; height: 316px; margin: 6px auto 0; border-radius: 50%; padding: 12px; background: radial-gradient(circle, #2a3036 60%, #0f1214 72%); box-shadow: 0 14px 30px -14px rgba(20,30,40,.55), inset 0 0 0 2px #3a4249; }
+  .field { position: relative; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: #fbf7fb; cursor: grab; touch-action: none; }
+  .field canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  @property --fp { syntax: "<percentage>"; inherits: false; initial-value: 200%; }
+  #blur { filter: blur(3px); -webkit-mask: linear-gradient(105deg, transparent calc(var(--fp) - 12%), #000 calc(var(--fp) + 12%)); mask: linear-gradient(105deg, transparent calc(var(--fp) - 12%), #000 calc(var(--fp) + 12%)); }  /* 焦平面带左边已对上焦，右边还虚；--fp 从 -30% 扫到 130% */
+  .field::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; box-shadow: inset 0 0 26px 6px rgba(60,40,70,.35), inset 0 0 2px 3px rgba(120,160,220,.25); }
+  .mag { position: absolute; left: 50%; top: 26px; transform: translateX(-50%); font-family: "IBM Plex Mono"; font-size: 12px; font-weight: 600; color: var(--acc); background: rgba(255,255,255,.8); padding: 1px 6px; border-radius: 4px; z-index: 2; }
+  .scale { position: absolute; right: 54px; bottom: 50px; z-index: 2; text-align: center; font-family: "IBM Plex Mono"; font-size: 10.5px; color: var(--acc); }
+  .scale i { display: block; height: 4px; margin-bottom: 3px; background: var(--acc); width: var(--sw, 40px); transition: width .4s; }
+  .obj { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+  /* 物镜颜色环是行业惯例：4× 红、10× 黄、40× 浅蓝 */
+  .obj button { width: 66px; padding: 8px 0 6px; border-radius: 12px; background: #fff; border: 1px solid var(--line); font-family: "IBM Plex Mono"; font-weight: 600; font-size: 14px; }
+  .obj button i { display: block; width: 34px; height: 5px; margin: 0 auto 5px; border-radius: 3px; background: var(--ring); }
+  .obj button.on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+  .read { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--line); font-family: "IBM Plex Mono"; font-size: 11.5px; line-height: 1.7; color: var(--mute); }
+  .read b { color: var(--acc); font-weight: 600; }
+  .read h2 { font-family: "IBM Plex Sans", "Noto Sans SC"; font-weight: 700; font-size: 15.5px; line-height: 1.45; color: var(--ink); margin-bottom: 4px; }
+  .sec { margin: 22px 2px 8px; display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; }
+  .sec span { font-family: "IBM Plex Mono"; font-weight: 400; font-size: 11px; color: var(--mute); }
+  /* 载玻片：一条透明玻璃 + 左边磨砂标签区（手写编号）+ 中间一小片染色标本 */
+  .slide { position: relative; height: 58px; margin-bottom: 8px; border-radius: 4px; background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(225,235,240,.75)); box-shadow: 0 1px 0 #fff inset, 0 0 0 1px rgba(150,170,185,.55), 0 4px 10px -6px rgba(20,30,40,.35); display: grid; grid-template-columns: 88px 1fr 70px; align-items: center; cursor: pointer; overflow: hidden; }
+  .slide .lb { height: 100%; padding: 6px 8px; background: repeating-linear-gradient(45deg, #f4f4f2 0 2px, #ecece8 2px 4px); border-right: 1px solid rgba(150,170,185,.5); font-family: Caveat, "Noto Sans SC"; font-size: 17px; line-height: 1.1; color: #2848a0; }
+  .slide .lb small { display: block; font-family: "IBM Plex Mono"; font-size: 9.5px; color: var(--mute); }
+  .slide .tt { padding: 0 10px; font-size: 12.5px; font-weight: 600; line-height: 1.35; }
+  .slide .sp { justify-self: center; width: 46px; height: 46px; border-radius: 50%; overflow: hidden; opacity: .9; }
+  .slide .sp canvas { width: 100%; height: 100%; }
+  .slide .none { font-family: "IBM Plex Mono"; font-size: 10px; color: var(--mute); }
+  .slide.on { box-shadow: 0 0 0 2px var(--acc), 0 4px 10px -6px rgba(20,30,40,.35); }
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 6px 24px; border-top: 1px solid var(--line); background: rgba(255,255,255,.85); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 600; font-size: 11px; color: var(--mute); }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const OBJ = [{ m: 4, ring: "#d9443a", fov: 640 }, { m: 10, ring: "#e8c52e", fov: 256 }, { m: 40, ring: "#7cc4e8", fov: 64 }];
+// 染色：亮度映射到 白 → 伊红粉 → 苏木精紫（明场 H&E 的样子）
+function stain(img) {
+  const w = img.width, h = img.height, c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+  const id = x.getImageData(0, 0, w, h), d = id.data, A = [251, 247, 251], B = [233, 150, 196], C = [86, 38, 128];
+  for (let i = 0; i < d.length; i += 4) { const L = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255, sat = (Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2])) / 255, t = Math.min(1, (1 - L) * 1.25 + sat * 0.35), [p, q, k] = t < 0.5 ? [A, B, t * 2] : [B, C, (t - 0.5) * 2]; for (let j = 0; j < 3; j++) d[i + j] = p[j] + (q[j] - p[j]) * k; }
+  x.putImageData(id, 0, 0); return c;
+}
+// 找画面里细节最多的一块（梯度和最大的 40px 方块中心），40× 默认对准它
+function busiest(c) {
+  const w = c.width, h = c.height, L = lumaOf(c), B = 40; let best = [w / 2, h / 2], bv = -1;
+  for (let by = 0; by + B < h; by += B / 2) for (let bx = 0; bx + B < w; bx += B / 2) { let s = 0; for (let y = by + 1; y < by + B; y += 2) for (let x = bx + 1; x < bx + B; x += 2) s += Math.abs(L[y * w + x] - L[y * w + x - 1]) + Math.abs(L[y * w + x] - L[(y - 1) * w + x]); if (s > bv) { bv = s; best = [bx + B / 2, by + B / 2]; } }
+  return best;
+}
+const withCover = HOT.filter((h) => h.cover);
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top"><h1>AI 热点 · 镜下</h1><span id="hd">载玻片 01</span></header>
+  <main class="scroll">
+    <div class="eye"><div class="field" id="field"><canvas id="sharp" width="584" height="584"></canvas><canvas id="blur" width="584" height="584"></canvas></div><span class="mag" id="mag">×4</span><span class="scale" id="scale"><i></i><span id="sl">100 px</span></span></div>
+    <div class="obj" id="obj">${OBJ.map((o, i) => `<button data-i="${i}" style="--ring:${o.ring}"><i></i>${o.m}×</button>`).join("")}</div>
+    <div class="read" id="read"></div>
+    <div class="sec">载玻片<span>${withCover.length} 片有标本 · 点一片换上去</span></div>
+    <div id="slides">${HOT.map((h, i) => `<div class="slide ${i ? "" : "on"}" data-i="${i}"><div class="lb">AI-${pad2(h.rank)}<small>10.22 · ${h.sources} src</small></div><div class="tt">${esc(clip(shortTitle(h), 26))}</div><div class="sp">${h.cover ? `<canvas width="92" height="92"></canvas>` : `<span class="none">无标本</span>`}</div></div>`).join("")}</div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+const S = {}, sharp = $("sharp").getContext("2d"), blur = $("blur").getContext("2d");
+let cur = 0, oi = 0, cx = 0, cy = 0, zoomFov = OBJ[0].fov;
+// 画视野：以 (cx, cy) 为中心，视野宽 fov 个图片像素
+function paint(fov = zoomFov) {
+  const st = S[cur]; if (!st) return; const k = 584 / fov;
+  [sharp, blur].forEach((x) => { x.fillStyle = "#fbf7fb"; x.fillRect(0, 0, 584, 584); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(st.c, 292 - cx * k, 292 - cy * k, st.c.width * k, st.c.height * k); });
+  // 比例尺：挑一个整数像素长度，让它在屏上 30~70px
+  const per = 292 / fov, cand = [1, 2, 5, 10, 20, 50, 100, 200], px = cand.find((n) => n * per >= 30) || 200;
+  $("scale").style.setProperty("--sw", `${(px * 584 / fov) / 2}px`); $("sl").textContent = `${px} px`;
+}
+function readout() {
+  const h = HOT[cur], st = S[cur], o = OBJ[oi];
+  $("mag").textContent = `×${o.m}`; $("hd").textContent = `载玻片 ${pad2(h.rank)} · 物镜 ${o.m}×`;
+  $("read").innerHTML = `<h2>${esc(shortTitle(h))}</h2>标本 <b>${st.c.width} × ${st.c.height} px</b> · 视野 <b>${o.fov} px</b> 宽<br>中心 <b>(${Math.round(cx)}, ${Math.round(cy)})</b> · 拖动视野可以平移`;
+}
+// 换物镜：先失焦（模糊 + 视野微变），再对焦，最后焦平面带从左扫到右
+function setObj(i, land = true) {
+  oi = i; $("obj").querySelectorAll("button").forEach((b, k) => b.classList.toggle("on", k === i));
+  const from = zoomFov, to = OBJ[i].fov, t0 = performance.now(), dur = 650;
+  if (i === 2 && land) [cx, cy] = S[cur].hot;
+  (function z(now) { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); zoomFov = Math.exp(Math.log(from) + (Math.log(to) - Math.log(from)) * e); paint(); if (k < 1) requestAnimationFrame(z); })(t0);
+  $("field").animate([{ filter: "blur(0)" }, { filter: "blur(5px)", transform: "scale(1.03)", offset: 0.4 }, { filter: "blur(1px)", offset: 0.75 }, { filter: "blur(0)", transform: "none" }], { duration: 760, easing: "ease-in-out" });
+  $("blur").animate([{ "--fp": "-30%" }, { "--fp": "130%" }], { duration: 1100, delay: 650, easing: "cubic-bezier(.4,0,.2,1)", fill: "both" });
+  setTimeout(readout, 300);
+}
+async function load(i) {
+  const h = HOT[i]; if (!h.cover) return;
+  cur = i; $("slides").querySelectorAll(".slide").forEach((s, k) => s.classList.toggle("on", k === i));
+  [cx, cy] = [S[i].c.width / 2, S[i].c.height / 2];
+  $("field").animate([{ transform: "translateY(60%)", opacity: 0.2 }, { transform: "none", opacity: 1 }], { duration: 450, easing: "cubic-bezier(.3,.8,.2,1)" });
+  setObj(0, false);
+}
+// 拖动平移：手指移多少，视野反着移多少
+let drag = null;
+$("field").addEventListener("pointerdown", (e) => { $("field").setPointerCapture(e.pointerId); drag = [e.clientX, e.clientY, cx, cy]; });
+$("field").addEventListener("pointermove", (e) => { if (!drag) return; const k = zoomFov / 292; cx = drag[2] - (e.clientX - drag[0]) * k; cy = drag[3] - (e.clientY - drag[1]) * k; paint(); readout(); });
+$("field").addEventListener("pointerup", () => (drag = null));
+$("obj").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => setObj(+b.dataset.i)));
+$("slides").querySelectorAll(".slide").forEach((s) => s.addEventListener("click", () => load(+s.dataset.i)));
+(async () => {
+  for (const [i, h] of HOT.entries()) if (h.cover) { const im = await loadImage(h.cover), c = stain(im); S[i] = { c, hot: busiest(c) }; const sp = $("slides").children[i].querySelector("canvas"); if (sp) { const x = sp.getContext("2d"), s = 92 / 120; x.drawImage(c, S[i].hot[0] - 60, S[i].hot[1] - 60, 120, 120, 0, 0, 92, 92); } }
+  await fontsReady();
+  cx = S[0].c.width / 2; cy = S[0].c.height / 2;
+  // 开场：从模糊对上焦，然后一路 4× → 10× → 40×（像《十的次方》那样一镜到底）
+  zoomFov = OBJ[0].fov; paint(); readout();
+  $("field").animate([{ filter: "blur(10px)", opacity: 0.4 }, { filter: "blur(0)", opacity: 1 }], { duration: 1000, easing: "ease-out" });
+  $("obj").children[0].classList.add("on");
+  setTimeout(() => setObj(1, false), 1500);
+  setTimeout(() => setObj(2), 3400);
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

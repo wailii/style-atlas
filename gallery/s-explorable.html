@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>可探索解释</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Noto+Serif+SC:wght@400;600;900&family=Inter:wght@500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* 每个变量一种颜色：热度橙、来源蓝、名次紫；正文和图里同一个量永远同一个颜色 */
+  :root { --ink: #1b1b1f; --ink2: #495057; --mute: #868e96; --line: #e9ecef; --fig: #f8f9fa; --heat: #e8590c; --src: #1c7ed6; --rank: #7048e8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #fff; }
+  body { font-family: "Source Serif 4", "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
+  .sb { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: Inter; font-weight: 600; font-size: 13px; }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 20px 30px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .kick { font-family: Inter, "Noto Sans SC"; font-weight: 600; font-size: 11.5px; letter-spacing: .08em; color: var(--mute); }
+  h1 { margin-top: 6px; font-weight: 900; font-size: 27px; line-height: 1.32; }
+  .by { margin-top: 8px; font-family: Inter, "Noto Sans SC"; font-size: 11.5px; color: var(--mute); }
+  p { margin-top: 16px; font-size: 16px; line-height: 1.85; color: #2b2b30; }
+  b.h { color: var(--heat); font-weight: 600; } b.s { color: var(--src); font-weight: 600; } b.r { color: var(--rank); font-weight: 600; }
+  .v { font-family: "JetBrains Mono"; font-weight: 700; font-size: 14.5px; }
+  .v.h { color: var(--heat); } .v.s { color: var(--src); } .v.r { color: var(--rank); }
+  /* 能拖的数字：虚线下划线 + 左右箭头光标 */
+  .drag { position: relative; font-family: "JetBrains Mono"; font-weight: 700; font-size: 14.5px; padding: 0 3px; border-bottom: 2px dotted currentColor; cursor: ew-resize; touch-action: none; user-select: none; }
+  .drag::before, .drag::after { position: absolute; top: -1px; font-size: 11px; opacity: 0; transition: opacity .2s; }
+  .drag::before { content: "◂"; left: -9px; } .drag::after { content: "▸"; right: -9px; }
+  .drag:hover::before, .drag:hover::after, .drag.on::before, .drag.on::after { opacity: 1; }
+  .fig { margin-top: 16px; padding: 12px 12px 10px; background: var(--fig); border-radius: 12px; }
+  .fig svg { display: block; width: 100%; overflow: visible; touch-action: none; }
+  .cap { margin-top: 6px; font-family: Inter, "Noto Sans SC"; font-size: 11.5px; color: var(--mute); line-height: 1.5; }
+  .read { font-family: Inter, "Noto Sans SC"; font-size: 12.5px; font-weight: 600; }
+  .bars { display: flex; flex-direction: column; gap: 6px; }
+  .bar { display: grid; grid-template-columns: 20px 1fr 34px 18px; gap: 8px; align-items: center; font-family: Inter, "Noto Sans SC"; font-size: 12px; transition: opacity .35s; }
+  .bar .n { font-family: "JetBrains Mono"; color: var(--mute); font-size: 11px; }
+  .bar .t { position: relative; height: 22px; border-radius: 5px; background: #fff; overflow: hidden; }
+  .bar .t i { position: absolute; inset: 0 auto 0 0; width: var(--w); background: rgba(232,89,12,.16); border-right: 2px solid var(--heat); transition: width .5s cubic-bezier(.3,.8,.2,1); }
+  .bar .t span { position: relative; padding-left: 8px; line-height: 22px; white-space: nowrap; overflow: hidden; display: block; text-overflow: ellipsis; }
+  .bar .x { font-family: "JetBrains Mono"; color: var(--heat); text-align: right; }
+  .bar .y { font-family: "JetBrains Mono"; color: var(--src); text-align: right; }
+  .bar.off { opacity: .22; }
+  .src { margin-top: 26px; padding-top: 10px; border-top: 1px solid var(--line); font-family: Inter, "Noto Sans SC"; font-size: 11px; color: var(--mute); line-height: 1.6; }
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 6px 24px; border-top: 1px solid var(--line); background: #fff; }
+  .tab { font-family: Inter, "Noto Sans SC"; font-weight: 600; font-size: 12.5px; color: var(--mute); }
+  .tab.on { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1] = HOT;
+const at = new Date(window.HOT.at), upd = `${pad2(at.getHours())}:${pad2(at.getMinutes())}`;
+const S = h1.spark, N = S.length, first = S.findIndex((v) => v != null), over = S.findIndex((v) => v != null && v >= 300);
+const W = 334, H = 170, PADL = 28, PADB = 20, gmax = Math.ceil(Math.max(...HOT.flatMap((h) => h.spark.filter((v) => v != null))) / 100) * 100;
+const X = (j) => PADL + (j / (N - 1)) * (W - PADL), Y = (v) => H - PADB - (v / gmax) * (H - PADB - 6);
+const pathOf = (s) => s.map((v, j) => (v == null ? null : `${X(j).toFixed(1)} ${Y(v).toFixed(1)}`)).reduce((d, p, j, a) => (p ? d + (a[j - 1] ? " L" : " M") + p : d), "").trim();
+const axes = () => `${[0, gmax / 2, gmax].map((v) => `<line x1="${PADL}" x2="${W}" y1="${Y(v)}" y2="${Y(v)}" stroke="#dee2e6" stroke-dasharray="${v ? "2 3" : ""}"/><text x="${PADL - 6}" y="${Y(v) + 3.5}" text-anchor="end" font-size="9.5" fill="#868e96" font-family="JetBrains Mono">${v}</text>`).join("")}${[0, 12, 24].map((j) => `<text x="${X(j)}" y="${H - 4}" text-anchor="${j ? (j === 24 ? "end" : "middle") : "start"}" font-size="9.5" fill="#868e96" font-family="Inter">${j === 24 ? "现在" : `${24 - j} 小时前`}</text>`).join("")}`;
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <main class="scroll" id="scroll">
+    <div class="kick">可以拖的讲解 · 第 1 篇</div>
+    <h1>一条热点是怎么涨上来的</h1>
+    <div class="by">数据：AI 热点榜 · 10 月 22 日 ${upd} · 每小时一个点</div>
+    <p>下面这条线是今天的头条 <b class="h">${esc(KEY[1])}</b> 过去 24 小时的<b class="h">热度</b>。按住图，左右拖，看它每个小时是多少。</p>
+    <div class="fig"><svg id="f1" viewBox="0 0 ${W} ${H}">${axes()}<path d="${pathOf(S)}" fill="none" stroke="var(--heat)" stroke-width="2.4" stroke-linejoin="round" id="l1"/><line id="g1" y1="6" y2="${H - PADB}" stroke="var(--heat)" stroke-width="1" stroke-dasharray="3 3"/><circle id="c1" r="6" fill="#fff" stroke="var(--heat)" stroke-width="2.4"/></svg>
+      <div class="read" id="r1"></div></div>
+    <p>它在 <span class="v h">${N - 1 - first}</span> 小时前第一次上榜，热度 <span class="v h">${Math.round(S[first])}</span>；又过了 <span class="v h">${over - first}</span> 个小时，就涨过了 <span class="v h">300</span>。</p>
+    <p>热度高的，来源也多吗？如果只看至少有 <span class="drag s" id="d1" data-v="3" data-min="1" data-max="12">3</span> 家<b class="s">来源</b>报道的热点，今天剩下 <span class="v s" id="cnt"></span> 条：</p>
+    <div class="fig"><div class="bars" id="bars">${HOT.map((h) => `<div class="bar" data-s="${h.sources}"><span class="n">${pad2(h.rank)}</span><span class="t"><i style="--w:${(h.heat / gmax) * 100}%"></i><span>${esc(shortTitle(h))}</span></span><span class="x">${heatText(h)}</span><span class="y">${h.sources}</span></div>`).join("")}</div><div class="cap">橙条 = 热度，蓝字 = 来源数。拖上面那个蓝色数字。</div></div>
+    <p>再把头条和第 <span class="drag r" id="d2" data-v="3" data-min="2" data-max="${HOT.length}">3</span> 条放在一起看：<span id="cmp"></span></p>
+    <div class="fig"><svg id="f2" viewBox="0 0 ${W} ${H}">${axes()}<path d="${pathOf(S)}" fill="none" stroke="var(--heat)" stroke-width="2.2"/><path id="l2" fill="none" stroke="var(--rank)" stroke-width="2.2" stroke-dasharray="5 3"/></svg><div class="cap">实线 = 头条，虚线 = <span id="nm2"></span></div></div>
+    <div class="src">拖动只改变你看的角度，不改变数据。所有数字来自同一份榜单；线断开的地方表示那个小时还没上榜。</div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+// 图 1：拖动 → 吸附到最近的小时；读数跟着改
+let j1 = N - 1, shown = j1;
+function setJ(j) {
+  j1 = Math.max(0, Math.min(N - 1, j)); const v = S[j1];
+  const yy = v == null ? Y(0) : Y(v); $("c1").setAttribute("cx", X(j1)); $("c1").setAttribute("cy", yy); $("g1").setAttribute("x1", X(j1)); $("g1").setAttribute("x2", X(j1));
+  $("c1").style.opacity = v == null ? 0.35 : 1;
+  $("r1").innerHTML = j1 === N - 1 ? `现在：热度 <span class="v h">${Math.round(v)}</span>` : `${N - 1 - j1} 小时前：${v == null ? `<span style="color:var(--mute)">还没上榜</span>` : `热度 <span class="v h">${Math.round(v)}</span>`}`;
+}
+const f1 = $("f1");
+const jAt = (e) => { const r = f1.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * W; return Math.round(((x - PADL) / (W - PADL)) * (N - 1)); };
+f1.addEventListener("pointerdown", (e) => { f1.setPointerCapture(e.pointerId); demo = false; setJ(jAt(e)); });
+f1.addEventListener("pointermove", (e) => { if (e.buttons) setJ(jAt(e)); });
+// 能拖的数字：横向每 14px 变 1；也能用键盘左右
+function draggable(el, onChange) {
+  let x0 = 0, v0 = 0; const lo = +el.dataset.min, hi = +el.dataset.max;
+  const set = (v) => { v = Math.max(lo, Math.min(hi, v)); if (v === +el.dataset.v) return; el.dataset.v = v; el.textContent = v; onChange(v); };
+  el.addEventListener("pointerdown", (e) => { el.setPointerCapture(e.pointerId); x0 = e.clientX; v0 = +el.dataset.v; el.classList.add("on"); });
+  el.addEventListener("pointermove", (e) => { if (e.buttons) set(v0 + Math.round((e.clientX - x0) / 14)); });
+  el.addEventListener("pointerup", () => el.classList.remove("on"));
+  el.tabIndex = 0; el.addEventListener("keydown", (e) => { if (e.key === "ArrowRight") set(+el.dataset.v + 1); if (e.key === "ArrowLeft") set(+el.dataset.v - 1); });
+  onChange(+el.dataset.v);
+}
+// 数字变化用补间，不跳
+const tween = (el, to) => { const from = +el.dataset.n || 0, t0 = performance.now(); el.dataset.n = to; (function tk(now) { const k = Math.min(1, (now - t0) / 300); el.textContent = Math.round(from + (to - from) * k); if (k < 1) requestAnimationFrame(tk); })(t0); };
+draggable($("d1"), (v) => { let n = 0; $("bars").querySelectorAll(".bar").forEach((b) => { const on = +b.dataset.s >= v; b.classList.toggle("off", !on); n += on; }); tween($("cnt"), n); });
+// 图 2：两条线之间的形状插值（同一套点，逐点过渡）
+let cur2 = null;
+draggable($("d2"), (v) => {
+  const h = HOT[v - 1], to = h.spark.map((x) => x ?? 0), from = cur2 || to.map(() => 0), t0 = performance.now();
+  $("nm2").innerHTML = `<b class="r">第 ${v} 条</b> ${esc(clip(shortTitle(h), 16))}`;
+  $("cmp").innerHTML = `现在相差 <span class="v h">${Math.round(h1.spark.at(-1) - h.spark.at(-1))}</span> 热度，<b class="r">第 ${v} 条</b>有 <span class="v s">${h.sources}</span> 家来源。`;
+  (function tk(now) { const k = Math.min(1, (now - t0) / 450), e = 1 - Math.pow(1 - k, 3); cur2 = to.map((x, i) => from[i] + (x - from[i]) * e); $("l2").setAttribute("d", pathOf(cur2.map((x, i) => (h.spark[i] == null && k === 1 ? null : x)))); if (k < 1) requestAnimationFrame(tk); })(t0);
+});
+let demo = true;
+(async () => {
+  await fontsReady();
+  // 开场：曲线画出来，圆点自己从左走到右示范一遍，蓝色数字左右晃一下提示能拖
+  const l1 = $("l1"), L = l1.getTotalLength(); l1.style.strokeDasharray = L;
+  l1.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 1200, delay: 300, easing: "cubic-bezier(.4,0,.2,1)", fill: "backwards" });
+  setJ(0); const t0 = performance.now() + 600;
+  (function walk(now) { if (!demo) return; const k = Math.min(1, Math.max(0, (now - t0) / 2600)), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; const j = Math.round(e * (N - 1)); if (j !== shown) { shown = j; setJ(j); } if (k < 1) requestAnimationFrame(walk); })(t0);
+  setTimeout(() => ["d1", "d2"].forEach((id) => $(id).animate([{ transform: "none" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "none" }], { duration: 700, iterations: 2 })), 3400);
+  app.querySelectorAll("p, .fig").forEach((e, i) => e.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 600, delay: 100 + i * 90, fill: "backwards" }));
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

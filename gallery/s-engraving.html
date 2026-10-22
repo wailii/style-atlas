@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>博物版画</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  @property --wr { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+  :root { --paper: #f3ecdc; --ink: #1d1a16; --ink2: #5a5246; --rule: #3a342c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "IM Fell English", "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .sc { font-family: "IM Fell English SC", "Noto Serif SC", serif; letter-spacing: .12em; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .app::before { content: ""; position: absolute; inset: 0; background-image: var(--fiber); background-size: 420px; opacity: .55; pointer-events: none; }
+  .sb { position: relative; height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-size: 15px; }
+  .scroll { position: relative; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 14px 28px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 版痕：铜版压在纸上留下的一圈凹印 */
+  .plate { padding: 14px 14px 16px; box-shadow: inset 1px 1px 0 rgba(255,255,255,.7), inset -1px -1px 0 rgba(90,70,40,.25), 0 0 0 1px rgba(90,70,40,.18), 2px 2px 0 rgba(255,255,255,.6); }
+  .ph { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+  .ph b { font-weight: 400; font-size: 17px; }
+  .fig { position: relative; margin-top: 8px; border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: 3px; }
+  .fig canvas { display: block; width: 100%; height: auto; }
+  .wash { position: absolute; inset: 0; mix-blend-mode: multiply; opacity: .55; -webkit-mask: radial-gradient(circle at 30% 40%, #000 var(--wr), transparent calc(var(--wr) + 18%)); mask: radial-gradient(circle at 30% 40%, #000 var(--wr), transparent calc(var(--wr) + 18%)); }
+  .ink { position: absolute; inset: 0; }
+  .rd { position: absolute; width: 22px; height: 22px; margin: -11px; border-radius: 50%; border: 1px solid var(--ink); background: var(--paper); display: grid; place-items: center; font-size: 13px; }
+  .det { display: flex; justify-content: space-around; margin-top: 16px; }
+  .det figure { text-align: center; }
+  .det .c { position: relative; width: 112px; height: 112px; border-radius: 50%; overflow: hidden; border: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 3px; margin: 4px auto 0; }
+  .det canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .det figcaption { margin-top: 10px; font-style: italic; font-size: 13px; color: var(--ink2); }
+  .cap { margin-top: 16px; text-align: center; }
+  .cap h2 { font-family: "Noto Serif SC"; font-weight: 700; font-size: 18px; line-height: 1.5; letter-spacing: .08em; }
+  .cap i { display: block; margin-top: 4px; font-size: 14px; color: var(--ink2); }
+  .cred { display: flex; justify-content: space-between; margin-top: 12px; font-style: italic; font-size: 11.5px; color: var(--ink2); }
+  .read { display: block; margin: 16px auto 0; padding: 7px 20px; border: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 2px; font-size: 14px; }
+  .read.on { background: var(--ink); color: var(--paper); }
+  .idx { margin-top: 24px; }
+  .idx h3 { text-align: center; font-weight: 400; font-size: 16px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+  .idx .row { display: grid; grid-template-columns: 58px 1fr auto; gap: 8px; align-items: baseline; padding: 9px 2px; border-bottom: 1px dotted rgba(58,52,44,.45); cursor: pointer; }
+  .idx .row b { font-weight: 400; font-size: 14px; }
+  .idx .row span { font-family: "Noto Serif SC"; font-size: 14px; line-height: 1.5; }
+  .idx .row em { font-size: 14px; color: var(--ink2); }
+  .idx .row .more { grid-column: 2 / -1; display: none; font-family: "Noto Serif SC"; font-size: 12.5px; line-height: 1.7; color: var(--ink2); }
+  .idx .row.on .more { display: block; }
+  .tabs { position: relative; flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 6px 24px; border-top: 1px solid var(--rule); box-shadow: 0 -3px 0 var(--paper), 0 -4px 0 var(--rule); background: var(--paper); }
+  .tab { font-family: "Noto Serif SC"; font-weight: 500; font-size: 13px; color: var(--ink2); letter-spacing: .15em; }
+  .tab.on { color: var(--ink); font-weight: 700; }
+  .tab.on::before { content: "☞ "; font-family: "IM Fell English"; letter-spacing: 0; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+app.style.setProperty("--fiber", `url(${fiberURL(420, 200, "120,95,60", "255,250,238")})`);
+// 铜版雕刻：色调全靠线。第一组斜线铺半调，第二组交叉压阴影，第三组短点压最暗；线宽随暗度变，进出自然收尖
+const FAMS = [{ a: -35, sp: 5, t: 0.14, k: 4.4, max: 3.0 }, { a: 28, sp: 5.5, t: 0.4, k: 3.8, max: 2.6 }, { a: 82, sp: 4.2, t: 0.68, k: 4.8, max: 2.4, dash: true }];
+function engraveJobs(cv, img, crop, density = 1) {
+  const w = cv.width, h = cv.height, src = document.createElement("canvas"); src.width = w; src.height = h;
+  const sx = src.getContext("2d"); sx.filter = "blur(1.2px)"; if (crop) sx.drawImage(img, crop[0], crop[1], crop[2], crop[3], 0, 0, w, h); else sx.drawImage(coverCanvas(img, w, h), 0, 0);
+  const L = lumaOf(src), x = cv.getContext("2d"), R = Math.hypot(w, h) / 2, jobs = [];
+  x.strokeStyle = x.fillStyle = "#1d1a16"; x.lineCap = "round";
+  const D = (px, py) => { const i = (py | 0) * w + (px | 0); return Math.pow(1 - L[i], 0.9); };
+  for (const f of FAMS) {
+    const a = (f.a * Math.PI) / 180, dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx, sp = f.sp / density;
+    for (let d = -R; d < R; d += sp) jobs.push(() => {
+      const paths = new Map(); let prev = null, step = 0;
+      for (let u = -R; u < R; u += 1.5) {
+        const px = w / 2 + nx * d + dx * u, py = h / 2 + ny * d + dy * u; step++;
+        if (px < 0 || py < 0 || px >= w || py >= h) { prev = null; continue; }
+        const wd = Math.min(f.max, (D(px, py) - f.t) * f.k * (0.85 + 0.3 * Math.sin(u * 0.05 + d)));
+        if (wd < 0.18 || (f.dash && step % 4 > 1)) { prev = null; continue; }
+        const b = Math.round(wd * 3) / 3; let p = paths.get(b); if (!p) paths.set(b, (p = new Path2D()));
+        if (prev) { p.moveTo(prev[0], prev[1]); p.lineTo(px, py); } prev = [px, py];
+      }
+      paths.forEach((p, b) => { x.lineWidth = b; x.stroke(p); });
+    });
+  }
+  // 轮廓：亮度梯度大的地方点一下，像刻刀沿形体走的那一刀
+  jobs.push(() => { for (let py = 1; py < h - 1; py += 1) for (let px = 1; px < w - 1; px += 1) { const i = py * w + px, g = Math.hypot(L[i + 1] - L[i - 1], L[i + w] - L[i - w]); if (g > 0.32 && (px + py) % 2) x.fillRect(px, py, 1.1, 1.1); } });
+  return jobs;
+}
+// 手工上色：很低分辨率的原图颜色，糊开、降饱和，用正片叠底铺在线下面
+function washCanvas(img, w, h, crop) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"), lo = document.createElement("canvas"); lo.width = 26; lo.height = 15;
+  const lx = lo.getContext("2d"); if (crop) lx.drawImage(img, crop[0], crop[1], crop[2], crop[3], 0, 0, 26, 15); else lx.drawImage(coverCanvas(img, 26, 15), 0, 0);
+  x.filter = "blur(10px) saturate(.6) sepia(.25) brightness(1.08)"; x.drawImage(lo, -10, -10, w + 20, h + 20); return c;
+}
+function busiestTwo(img, crop) {
+  const c = document.createElement("canvas"); c.width = 192; c.height = 108; c.getContext("2d").drawImage(img, crop[0], crop[1], crop[2], crop[3], 0, 0, 192, 108); const L = lumaOf(c), B = 24, cand = [];
+  for (let by = 4; by + B < 104; by += 6) for (let bx = 4; bx + B < 188; bx += 6) { let s = 0; for (let y = by + 1; y < by + B; y++) for (let x = bx + 1; x < bx + B; x++) s += Math.abs(L[y * 192 + x] - L[y * 192 + x - 1]); cand.push([s, bx + B / 2, by + B / 2]); }
+  cand.sort((a, b) => b[0] - a[0]); const a = cand[0], b = cand.find((q) => Math.hypot(q[1] - a[1], q[2] - a[2]) > 60) || cand[1];
+  return [a, b].map(([, x, y]) => [x / 192, y / 108]);
+}
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <main class="scroll">
+    <section class="plate">
+      <div class="ph"><span class="sc">AI 热点 · 图谱</span><b class="sc">Plate I.</b><span>Fig. 1</span></div>
+      <div class="fig" id="fig"><canvas id="base" width="680" height="383" style="visibility:hidden"></canvas><canvas class="wash" id="wash" width="680" height="383"></canvas><canvas class="ink" id="ink" width="680" height="383"></canvas></div>
+      <div class="det" id="det"></div>
+      <div class="cap"><h2>${esc(shortTitle(h1))}</h2><i>Fig. 1 — ${esc(KEY[1])}, x.xxii.mmxxvi · ${h1.sources} 家来源</i></div>
+      <div class="cred"><span>封面 del.</span><span>style-atlas sculp.</span></div>
+      <button class="read sc" id="read">朗 读 此 页</button>
+    </section>
+    <section class="idx"><h3 class="sc">图版目录</h3>${rest.map((h) => `<div class="row"><b class="sc">Pl. ${ROMAN[h.rank]}</b><span>${esc(shortTitle(h))}</span><em>${heatText(h)}</em><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div>`).join("")}</section>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+const frame = () => new Promise((r) => requestAnimationFrame(r));
+async function runJobs(jobs, perFrame) { for (let i = 0; i < jobs.length; i += perFrame) { jobs.slice(i, i + perFrame).forEach((j) => j()); await frame(); } }
+(async () => {
+  const img = await loadImage(h1.cover); await fontsReady();
+  // 主图只刻封面中间 60%：形体够大，线才刻得出形状
+  const cw = img.width, ch = img.height, MAIN = [cw * 0.2, ch * 0.2, cw * 0.6, ch * 0.6], pts = busiestTwo(img, MAIN), sz = Math.round(ch * 0.16);
+  const crops = pts.map(([fx, fy]) => { const ix = MAIN[0] + fx * MAIN[2], iy = MAIN[1] + fy * MAIN[3]; return [Math.max(0, Math.min(cw - sz, ix - sz / 2)), Math.max(0, Math.min(ch - sz, iy - sz / 2)), sz, sz]; });
+  const rel = ((300 / sz) / (680 / MAIN[2])).toFixed(1);
+  $("det").innerHTML = crops.map((_, i) => `<figure><div class="c"><canvas class="wash" width="300" height="300"></canvas><canvas class="ink" width="300" height="300"></canvas></div><figcaption>Fig. ${i + 2} — 局部 ×${rel}</figcaption></figure>`).join("");
+  pts.forEach(([fx, fy], i) => $("fig").insertAdjacentHTML("beforeend", `<span class="rd" style="left:${fx * 100}%;top:${fy * 100}%;opacity:0">${i + 2}</span>`));
+  // 先刻主图：三组线依次刻上去；再刻两个局部；然后上色从左上晕开；最后编号圈落下
+  $("wash").getContext("2d").drawImage(washCanvas(img, 680, 383, MAIN), 0, 0);
+  await runJobs(engraveJobs($("ink"), img, MAIN), 5);
+  const dets = [...$("det").querySelectorAll(".c")];
+  for (const [i, d] of dets.entries()) { const [wc, ic] = d.querySelectorAll("canvas"); wc.getContext("2d").drawImage(washCanvas(img, 300, 300, crops[i]), 0, 0); await runJobs(engraveJobs(ic, img, crops[i], 1.2), 8); }
+  [$("wash"), ...app.querySelectorAll(".det .wash")].forEach((w, i) => w.animate([{ "--wr": "0%" }, { "--wr": "140%" }], { duration: 1600, delay: i * 200, easing: "ease-out", fill: "both" }));
+  app.querySelectorAll(".rd").forEach((r, i) => r.animate([{ opacity: 0, transform: "scale(1.8)" }, { opacity: 1, transform: "none" }], { duration: 400, delay: 900 + i * 150, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "forwards" }));
+  app.querySelectorAll(".idx .row").forEach((r) => r.addEventListener("click", () => r.classList.toggle("on")));
+  $("read").addEventListener("click", () => { const on = $("read").classList.toggle("on"); $("read").textContent = on ? "朗 读 中 · I" : "朗 读 此 页"; });
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+app.querySelectorAll(".wash").forEach((w) => w.style.setProperty("--wr", "0%"));
+</script>
+</body>
+</html>

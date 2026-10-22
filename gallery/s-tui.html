@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>终端界面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* 浅色终端配色（ANSI 16 色里用到的几种） */
+  :root { --bg: #fbfbf8; --fg: #24292f; --dim: #8c959f; --blue: #0550ae; --green: #116329; --red: #cf222e; --mag: #8250df; --yel: #9a6700; --cyan: #1b7c83; --sel: #ddf4ff; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "JetBrains Mono", monospace; font-size: 12px; line-height: 18px; color: var(--fg); -webkit-font-smoothing: antialiased; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+  .sb { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-weight: 700; font-size: 13px; }
+  .term { flex: 1; padding: 0 6px; white-space: pre; overflow: hidden; }
+  .ln { height: 18px; }
+  /* 中文、全角字占两格：每个包一层，宽度 2ch，框线才能对齐 */
+  .w { display: inline-block; width: calc(var(--cw) * 2); text-align: center; font-style: normal; font-family: "Noto Sans SC", sans-serif; font-size: 12px; }
+  .inv { background: var(--fg); color: var(--bg); }
+  .b { color: var(--blue); } .g { color: var(--green); } .r { color: var(--red); } .m { color: var(--mag); } .y { color: var(--yel); } .c { color: var(--cyan); } .d { color: var(--dim); } .bold { font-weight: 700; }
+  .row { cursor: pointer; }
+  .row.sel { background: var(--sel); }
+  .row.sel .cur { color: var(--blue); }
+  .blk { display: inline-block; width: 1ch; height: 15px; vertical-align: -3px; background: var(--fg); animation: bl 1s steps(1) infinite; }
+  @keyframes bl { 50% { opacity: 0; } }
+  .px { display: inline-block; width: var(--cw); height: 18px; vertical-align: top; }
+  .key { cursor: pointer; }
+  .tmux { flex: none; height: 18px; margin: 0 0 24px; padding: 0 6px; white-space: pre; background: #eaeef2; }
+  .tmux span { cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app" id="app"><div class="sb"><span id="clk"></span><span>5G</span></div><div class="term" id="term"></div><div class="tmux" id="tmux"></div></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+$("clk").textContent = nowHM();
+const term = $("term");
+const wide = (ch) => /[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦　-〿]/.test(ch);
+const W = (s) => [...s].reduce((a, ch) => a + (wide(ch) ? 2 : 1), 0);
+// 按显示宽度截断 / 补齐；中文包成两格宽
+const fit = (s, n) => { let out = "", w = 0; for (const ch of s) { const k = wide(ch) ? 2 : 1; if (w + k > n - (W(s) > n ? 1 : 0)) { out += "…"; w += 1; break; } out += ch; w += k; } return out + " ".repeat(Math.max(0, n - w)); };
+const cell = (s) => [...s].map((ch) => (wide(ch) ? `<i class="w">${esc(ch)}</i>` : esc(ch))).join("");
+const at = new Date(window.HOT.at), upd = `${pad2(at.getHours())}:${pad2(at.getMinutes())}`;
+const SPARK = "▁▂▃▄▅▆▇█";
+const spark = (s, n) => { const v = s.filter((x) => x != null), mx = Math.max(...v), mn = Math.min(...v), st = v.length / n; return Array.from({ length: n }, (_, i) => SPARK[Math.round(((v[Math.floor(i * st)] - mn) / (mx - mn || 1)) * 7)]).join(""); };
+let COLS = 50, sel = 0, playing = false, booted = false;
+function measure() { const p = document.createElement("span"); p.textContent = "0".repeat(100); p.style.visibility = "hidden"; term.append(p); const cw = p.getBoundingClientRect().width / 100; p.remove(); COLS = Math.floor((term.clientWidth - 2) / cw); document.documentElement.style.setProperty("--cw", cw + "px"); }
+// 封面画成「▀」半格字符：上半格用前景色、下半格用背景色，一个字符 = 两个像素
+let ART = [];
+async function art(h, cols, rows) {
+  const im = await loadImage(h.cover), c = coverCanvas(im, cols, rows * 2), d = c.getContext("2d").getImageData(0, 0, cols, rows * 2).data, px = (x, y) => { const i = (y * cols + x) * 4; return `rgb(${d[i]},${d[i + 1]},${d[i + 2]})`; };
+  return Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, x) => `<span class="px" style="background:linear-gradient(${px(x, r * 2)} 50%,${px(x, r * 2 + 1)} 50%)"></span>`).join(""));
+}
+const wrap = (str, n) => { const out = []; let cur = ""; for (const ch of str) { if (W(cur + ch) > n) { out.push(cur); cur = ""; } cur += ch; } if (cur) out.push(cur); return out; };
+const box = (title, inner, w) => [`┌─ ${cell(title)} ${"─".repeat(Math.max(0, w - 5 - W(title)))}┐`, ...inner.map((l) => `│${l}│`), `└${"─".repeat(w - 2)}┘`];
+const pad = (html, used, w) => html + " ".repeat(Math.max(0, w - used));
+function render() {
+  const w = COLS, iw = w - 2, h = HOT[sel], L = [];
+  L.push(`<span class="inv bold">${pad(cell(` aihot ─ 今日 ${HOT.length} 条 ─ ${upd} 更新`), W(` aihot ─ 今日 ${HOT.length} 条 ─ ${upd} 更新`), w)}</span>`);
+  L.push(`<span class="g">~</span> <span class="b">$</span> aihot --top ${HOT.length}`);
+  L.push(`<span class="g">✓</span> ${cell(`拉取完成：${HOT.length} 条 · ${HOT.reduce((a, x) => a + x.sources, 0)} 个来源`)}`);
+  const sw = 8, tw = iw - 4 - 4 - sw - 2;
+  L.push(...box("热点榜", HOT.map((x, i) => { const t = fit(shortTitle(x), tw); return `<span class="row ${i === sel ? "sel" : ""}" data-i="${i}"><span class="cur">${i === sel ? "▶" : " "}</span> <span class="d">${pad2(x.rank)}</span> ${cell(t)}<span class="y">${String(heatText(x)).padStart(4)}</span> <span class="${x.trend === "up" ? "g" : x.trend === "down" ? "r" : "d"}">${spark(x.spark, sw)}</span> </span>`; }), w));
+  const meta = `来源 ${h.sources} · 参与 ${h.people} · 趋势 ${h.trendPct > 0 ? "+" : ""}${h.trendPct}%`;
+  const title = shortTitle(h), tl = []; let cur = ""; for (const ch of title) { if (W(cur + ch) > iw - 2) { tl.push(cur); cur = ""; } cur += ch; } if (cur) tl.push(cur);
+  const hb = Math.round((h.heat / HOT[0].heat) * (iw - 12));
+  const inner = [
+    ...(h.cover && ART[sel] ? ART[sel].map((a) => " " + a + " ".repeat(Math.max(0, iw - 1 - ART[sel].cols))) : [pad(`<span class="d"> ${cell("（这条没有封面图）")}</span>`, 1 + W("（这条没有封面图）"), iw)]),
+    " ".repeat(iw),
+    ...tl.slice(0, 2).map((t) => pad(` <span class="bold">${cell(t)}</span>`, 1 + W(t), iw)),
+    pad(` <span class="d">${cell(meta)}</span>`, 1 + W(meta), iw),
+    pad(` ${cell("24h")} <span class="${h.trend === "up" ? "g" : h.trend === "down" ? "r" : "b"}">${spark(h.spark, iw - 6)}</span>`, 1 + 3 + 1 + (iw - 6), iw),
+    " ".repeat(iw),
+    ...wrap(clip(firstLine(h.summary), 90), iw - 2).slice(0, 4).map((t) => pad(` ${cell(t)}`, 1 + W(t), iw)),
+    pad(` ${cell("热度")} <span class="m">${"█".repeat(hb)}</span><span class="d">${"░".repeat(iw - 12 - hb)}</span> ${String(heatText(h)).padStart(3)}`, 1 + 4 + 1 + (iw - 12) + 1 + 3, iw),
+  ];
+  L.push(...box(`预览 #${pad2(h.rank)}`, inner.map((l) => (l.cols ? l : l)), w));
+  const names = []; let ln = ""; for (const n of h.names) { const t = (ln ? " · " : "") + n; if (W(ln + t) > iw - 2) { names.push(ln); ln = n; } else ln += t; } if (ln) names.push(ln);
+  L.push(...box(`来源 ${h.names.length}/${h.sources}`, names.slice(0, 3).map((t) => pad(` <span class="c">${cell(t)}</span>`, 1 + W(t), iw)), w));
+  const keys = [["j/k", "移动"], ["⏎", "展开"], ["p", playing ? "停止" : "朗读"], ["q", "退出"]];
+  L.push(keys.map(([k, v]) => `<span class="key" data-k="${k}"><span class="inv"> ${k} </span> ${cell(v)}</span>`).join("  "));
+  L.push(playing ? `<span class="c" id="spin">⠋</span> ${cell(`朗读中 · 第 ${h.rank} 条`)}` : `<span class="g">~</span> <span class="b">$</span> <span class="blk"></span>`);
+  term.innerHTML = L.map((l) => `<div class="ln">${l}</div>`).join("");
+  term.querySelectorAll(".row").forEach((r) => r.addEventListener("click", () => { sel = +r.dataset.i; render(); }));
+  term.querySelectorAll(".key").forEach((k) => k.addEventListener("click", () => key(k.dataset.k)));
+}
+function key(k) { if (k === "j/k") sel = (sel + 1) % HOT.length; if (k === "p") playing = !playing; render(); }
+document.addEventListener("keydown", (e) => { if (e.key === "j") sel = Math.min(HOT.length - 1, sel + 1); else if (e.key === "k") sel = Math.max(0, sel - 1); else if (e.key === "p") playing = !playing; else return; render(); });
+// 朗读时的盲文点阵转圈：80ms 一帧
+const SPIN = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"; let si = 0; setInterval(() => { const s = $("spin"); if (s) s.textContent = SPIN[(si = (si + 1) % SPIN.length)]; }, 80);
+$("tmux").innerHTML = TAB_NAMES.map((n, i) => `<span data-i="${i}">${i ? " " : ""}${i}:${cell(n)}${i ? " " : "*"}</span>`).join(" ") ;
+$("tmux").querySelectorAll("[data-i]").forEach((s) => s.addEventListener("click", () => $("tmux").querySelectorAll("[data-i]").forEach((x) => { const i = +x.dataset.i, on = x === s; x.innerHTML = `${i ? " " : ""}${i}:${cell(TAB_NAMES[i])}${on ? "*" : " "}`; x.style.fontWeight = on ? 700 : 400; })));
+(async () => {
+  await fontsReady(); measure();
+  const cols = COLS - 4, rows = 11;
+  ART = await Promise.all(HOT.map(async (h) => { if (!h.cover) return null; const a = await art(h, cols, rows); a.cols = cols; return a; }));
+  // 开机：命令一个字一个字敲出来，然后整屏按行刷出
+  const cmd = `aihot --top ${HOT.length}`;
+  for (let i = 0; i <= cmd.length; i++) { term.innerHTML = `<div class="ln"> </div><div class="ln"><span class="g">~</span> <span class="b">$</span> ${esc(cmd.slice(0, i))}<span class="blk"></span></div>`; await new Promise((r) => setTimeout(r, 45)); }
+  await new Promise((r) => setTimeout(r, 250));
+  render();
+  const lines = [...term.querySelectorAll(".ln")];
+  lines.forEach((l, i) => l.animate([{ visibility: "hidden" }, { visibility: "visible" }], { duration: 1, delay: 0, fill: "backwards", iterations: 1, endDelay: 0, iterationStart: 0, easing: "steps(1)" }) && l.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1, delay: i * 28, fill: "backwards" }));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>便当格</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f2f2f4; --cell: #fff; --line: #e6e6ea; --ink: #111113; --mute: #7b7b85; --acc: #d4ff3a; --dark: #111113; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: Geist, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .mono { font-family: "Geist Mono", monospace; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 600; font-size: 14px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 16px 12px; }
+  h1 { font-weight: 800; font-size: 30px; letter-spacing: -1px; }
+  .top small { display: block; font-size: 12px; color: var(--mute); font-weight: 500; }
+  .live { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; background: var(--cell); border: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+  .live i { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 14px 26px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 便当格：4 列，每格 83px 见方，间距 10 */
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 83px; gap: 10px; perspective: 900px; }
+  .c { position: relative; border-radius: 22px; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,1.4,.5,1); cursor: pointer; }
+  .c .f, .c .b { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; backface-visibility: hidden; background: var(--cell); border: 1px solid var(--line); padding: 14px; }
+  .c .b { transform: rotateY(180deg); font-size: 12.5px; line-height: 1.6; color: #3a3a42; display: flex; flex-direction: column; justify-content: space-between; }
+  .c .b b { font-size: 11px; color: var(--mute); font-weight: 600; }
+  .c.flip { transform: rotateY(180deg); }
+  .c .lab { font-size: 11.5px; font-weight: 600; color: var(--mute); }
+  .w1 { grid-column: span 1; } .w2 { grid-column: span 2; } .w4 { grid-column: span 4; }
+  .h1 { grid-row: span 1; } .h2 { grid-row: span 2; } .h3 { grid-row: span 3; }
+
+  .hero .f { padding: 0; border: 0; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(var(--z, 1.04)); }
+  .hero .scrim { position: absolute; inset: auto 0 0 0; padding: 70px 16px 14px; background: linear-gradient(rgba(10,10,14,0), rgba(10,10,14,.6) 40%, rgba(10,10,14,.88)); color: #fff; }
+  .hero .scrim span { font-size: 11.5px; font-weight: 600; opacity: .8; }
+  .hero h2 { margin-top: 4px; font-weight: 800; font-size: 19px; line-height: 1.38; }
+  .tag { position: absolute; left: 12px; top: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.9); font-family: "Geist Mono"; font-size: 11px; font-weight: 600; }
+  .heat .f { background: var(--acc); border-color: transparent; display: flex; flex-direction: column; justify-content: space-between; }
+  .heat .big { font-weight: 800; font-size: 56px; letter-spacing: -3px; line-height: 1; }
+  .heat .tr { font-size: 12px; font-weight: 600; }
+  .src .f { display: flex; flex-direction: column; justify-content: space-between; }
+  .avs { display: flex; }
+  .avs i { width: 26px; height: 26px; margin-right: -7px; border-radius: 50%; border: 2px solid #fff; display: grid; place-items: center; font-style: normal; font-size: 10.5px; font-weight: 700; color: #fff; }
+  .src .n { font-weight: 800; font-size: 20px; }
+  .src .n small { font-size: 12px; font-weight: 600; color: var(--mute); margin-left: 4px; }
+  .ppl .f { display: flex; flex-direction: column; justify-content: space-between; padding: 12px; }
+  .ppl b { font-weight: 800; font-size: 26px; letter-spacing: -1px; }
+  .play .f { background: var(--dark); border-color: transparent; display: grid; place-items: center; }
+  .play .btn { width: 46px; height: 46px; border-radius: 50%; background: var(--acc); display: grid; place-items: center; }
+  .play .btn svg { width: 18px; height: 18px; }
+  .play .wave { position: absolute; left: 12px; right: 12px; bottom: 10px; height: 12px; display: flex; gap: 2px; align-items: flex-end; opacity: 0; }
+  .play .wave i { flex: 1; background: var(--acc); border-radius: 1px; height: 30%; }
+  .play.on .wave { opacity: 1; } .play.on .wave i { animation: wv .6s ease-in-out infinite alternate; }
+  @keyframes wv { to { height: 100%; } }
+  .spark .f { display: flex; align-items: center; gap: 12px; }
+  .spark svg { flex: 1; height: 52px; overflow: visible; }
+  .spark .lab b { display: block; font-size: 15px; color: var(--ink); font-weight: 700; }
+  .pic .f { padding: 0; }
+  .pic img { width: 100%; height: 62%; object-fit: cover; display: block; }
+  .pic .t { padding: 8px 12px; font-weight: 700; font-size: 13px; line-height: 1.4; }
+  .pic .t span { font-family: "Geist Mono"; color: var(--mute); font-weight: 500; margin-right: 4px; }
+  .txt .f { display: flex; flex-direction: column; justify-content: space-between; }
+  .txt h3 { font-weight: 700; font-size: 13px; line-height: 1.42; }
+  .txt .meta { display: flex; align-items: center; gap: 8px; font-family: "Geist Mono"; font-size: 11px; color: var(--mute); }
+  .txt .meta i { flex: 1; height: 4px; border-radius: 2px; background: #ededf0; position: relative; overflow: hidden; }
+  .txt .meta i::after { content: ""; position: absolute; inset: 0; width: var(--p); background: var(--ink); border-radius: 2px; }
+  .sec { margin: 22px 2px 10px; display: flex; justify-content: space-between; font-weight: 700; font-size: 15px; }
+  .sec span { font-size: 12px; color: var(--mute); font-weight: 500; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 0 14px 22px; padding: 6px; border-radius: 22px; background: var(--cell); border: 1px solid var(--line); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 16px; font-weight: 600; font-size: 11px; color: var(--mute); }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { background: var(--ink); color: #fff; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const AV = ["#111113", "#5b5bf0", "#f0613b", "#16a34a", "#c026d3"];
+const initial = (n) => [...n.replace(/^公众号：|^X\./, "")][0].toUpperCase();
+const trend = (h) => (h.trendPct >= 0 ? "↑ " : "↓ ") + Math.abs(h.trendPct).toFixed(1) + "%";
+const sparkD = (s, w, hh) => { const v = s.filter((x) => x != null), mx = Math.max(...v), mn = Math.min(...v); return v.map((x, i) => `${i ? "L" : "M"}${((i / (v.length - 1)) * w).toFixed(1)} ${(hh - ((x - mn) / (mx - mn || 1)) * hh).toFixed(1)}`).join(" "); };
+const back = (h) => `<div class="b"><span>${esc(clip(firstLine(h.summary), 70))}</span><b>${h.sources} 家来源 · 点一下翻回来</b></div>`;
+const cell = (cls, front, h) => `<div class="c ${cls}">${front}${h ? back(h) : ""}</div>`;
+const maxHeat = h1.heat;
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top"><div><small>10 月 22 日 · 周四</small><h1>AI 热点</h1></div><span class="live"><i></i>实时 · 8 条</span></header>
+  <main class="scroll">
+    <section class="grid" id="grid">
+      ${cell("hero w4 h3", `<div class="f"><img id="hz" src="${h1.cover}" alt=""><span class="tag">#01 头条</span><div class="scrim"><span>${h1.sources} 家来源 · ${h1.people} 人参与</span><h2>${esc(shortTitle(h1))}</h2></div></div>`, h1)}
+      ${cell("heat w2 h2", `<div class="f"><span class="lab" style="color:#3a4a00">热度</span><div><div class="big mono" data-n="${heatText(h1)}">0</div><div class="tr">${trend(h1)} · ${{ up: "上升", down: "下降", flat: "走平" }[h1.trend]}</div></div></div>`)}
+      ${cell("src w2 h1", `<div class="f"><span class="lab">来源</span><div style="display:flex;justify-content:space-between;align-items:center"><div class="avs">${h1.names.slice(0, 5).map((n, i) => `<i style="background:${AV[i]}">${initial(n)}</i>`).join("")}</div><span class="n">${h1.sources}<small>家</small></span></div></div>`)}
+      ${cell("ppl w1 h1", `<div class="f"><span class="lab">参与</span><b class="mono" data-n="${h1.people}">0</b></div>`)}
+      ${cell("play w1 h1", `<div class="f"><span class="btn"><svg viewBox="0 0 24 24"><path d="M7 4 L20 12 L7 20 Z" fill="#111"/></svg></span><span class="wave">${"<i></i>".repeat(9)}</span></div>`)}
+      ${cell("spark w4 h1", `<div class="f"><span class="lab">24 小时<b>${Math.round(h1.spark.find((x) => x != null))} → ${Math.round(h1.spark.at(-1))}</b></span><svg viewBox="0 0 220 52" preserveAspectRatio="none"><path id="sp" d="${sparkD(h1.spark, 220, 50)}" fill="none" stroke="#111" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></div>`)}
+    </section>
+    <div class="sec">其余 ${rest.length} 条<span>点卡片看摘要</span></div>
+    <section class="grid" id="grid2">
+      ${rest.map((h, i) => h.cover && i < 2 ? cell("pic w2 h2", `<div class="f"><img src="${h.cover}" alt=""><div class="t"><span>${pad2(h.rank)}</span>${esc(clip(shortTitle(h), 22))}</div></div>`, h)
+        : h.cover ? cell("pic w4 h2", `<div class="f" style="display:flex"><img src="${h.cover}" alt="" style="width:50%;height:100%"><div class="t" style="padding:14px"><span>${pad2(h.rank)}</span>${esc(shortTitle(h))}</div></div>`, h)
+        : cell("txt w2 h1", `<div class="f"><h3>${esc(clip(shortTitle(h), 20))}</h3><div class="meta">${pad2(h.rank)}<i style="--p:${Math.round((h.heat / maxHeat) * 100)}%"></i>${heatText(h)}</div></div>`, h)).join("")}
+    </section>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+const SPRING = "cubic-bezier(.3,1.35,.5,1)";
+// 入场：按格子在网格里的位置（先行后列）一格格浮上来
+const cells = [...app.querySelectorAll(".c")];
+cells.forEach((c, i) => { const r = c.getBoundingClientRect(); c.animate([{ transform: "translateY(18px) scale(.92)", opacity: 0, filter: "blur(6px)" }, { transform: "none", opacity: 1, filter: "blur(0)" }], { duration: 700, delay: 120 + (r.top / 6) + (r.left / 4), easing: SPRING, fill: "backwards" }); });
+// 数字从 0 数上去；曲线画出来
+app.querySelectorAll("[data-n]").forEach((el) => { const n = +el.dataset.n, t0 = performance.now() + 400; (function tick(now) { const k = Math.min(1, Math.max(0, (now - t0) / 1100)), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(n * e); if (k < 1) requestAnimationFrame(tick); })(t0); });
+const sp = $("sp"), L = sp.getTotalLength(); sp.style.strokeDasharray = L; sp.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 1400, delay: 700, easing: "cubic-bezier(.4,0,.2,1)", fill: "backwards" });
+app.querySelectorAll(".avs i").forEach((a, i) => a.animate([{ transform: "scale(0)" }, { transform: "none" }], { duration: 500, delay: 700 + i * 80, easing: SPRING, fill: "backwards" }));
+// 跟手倾斜：手指在格子上移动，格子朝那边歪一点；点一下翻到背面看摘要
+cells.forEach((c) => {
+  c.addEventListener("pointermove", (e) => { if (c.classList.contains("flip")) return; const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5; c.style.transition = "transform .12s"; c.style.transform = `rotateX(${(-y * 8).toFixed(2)}deg) rotateY(${(x * 8).toFixed(2)}deg)`; });
+  c.addEventListener("pointerleave", () => { c.style.transition = ""; c.style.transform = ""; });
+  c.addEventListener("click", () => { c.style.transition = ""; c.style.transform = ""; if (c.querySelector(".b")) c.classList.toggle("flip"); else if (c.classList.contains("play")) c.classList.toggle("on"); });
+});
+app.querySelectorAll(".play .wave i").forEach((w, i) => (w.style.animationDelay = `${-i * 0.13}s`));
+const hz = $("hz"), sc = app.querySelector(".scroll");
+sc.addEventListener("scroll", () => hz.style.setProperty("--z", (1.04 + Math.min(0.1, sc.scrollTop / 2000)).toFixed(3)));
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

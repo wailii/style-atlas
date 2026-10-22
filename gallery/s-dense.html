@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据密集</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f7f9; --panel: #fff; --line: #e4e7ec; --line2: #f0f2f5; --ink: #101828; --ink2: #475467; --mute: #98a2b3; --acc: #2563eb; --acc-bg: #eef4ff; --up: #079455; --down: #d92d20; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif; font-size: 12.5px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+  .mono { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+  .sb { height: 36px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-weight: 600; font-size: 13px; }
+  .bar { flex: none; display: flex; align-items: center; gap: 8px; padding: 4px 12px 8px; }
+  .logo { width: 24px; height: 24px; border-radius: 6px; background: var(--ink); color: #fff; display: grid; place-items: center; font-family: "IBM Plex Mono"; font-weight: 600; font-size: 10px; }
+  .crumb { font-weight: 600; font-size: 14px; }
+  .crumb span { color: var(--mute); font-weight: 400; }
+  .search { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--mute); }
+  .search svg { width: 14px; height: 14px; }
+  .sub { flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px 8px; color: var(--ink2); }
+  .chip { height: 24px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font-size: 11.5px; color: var(--ink2); }
+  .chip b { font-family: "IBM Plex Mono"; font-weight: 500; color: var(--mute); margin-left: 3px; }
+  .chip.on { border-color: var(--acc); color: var(--acc); background: var(--acc-bg); }
+  .chip.on b { color: var(--acc); }
+  .upd { margin-left: auto; display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--mute); }
+  .upd i { width: 6px; height: 6px; border-radius: 50%; background: var(--up); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 12px 20px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .kpi > div { padding: 8px 10px; }
+  .kpi > div + div { border-left: 1px solid var(--line); }
+  .kpi small { display: block; font-size: 10.5px; color: var(--mute); }
+  .kpi b { display: block; font-family: "IBM Plex Mono"; font-weight: 600; font-size: 17px; margin-top: 1px; }
+  .kpi svg { display: block; width: 100%; height: 14px; margin-top: 3px; overflow: visible; }
+  .ph { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 12px; }
+  .ph span { font-weight: 400; color: var(--mute); font-size: 11px; }
+  .mt { margin-top: 10px; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { position: sticky; top: 0; background: #fafbfc; font-weight: 500; font-size: 10.5px; color: var(--mute); text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  td { padding: 0 4px; height: 34px; border-bottom: 1px solid var(--line2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .r { text-align: right; }
+  th:first-child, td:first-child { padding-left: 8px; }
+  th:last-child, td:last-child { padding-right: 8px; }
+  tr.row { cursor: pointer; position: relative; }
+  tr.row td:first-child { box-shadow: inset 2px 0 0 transparent; transition: box-shadow .15s; }
+  tr.row.sel td { background: var(--acc-bg); }
+  tr.row.sel td:first-child { box-shadow: inset 2px 0 0 var(--acc); }
+  td.t { font-weight: 500; color: var(--ink); }
+  td svg { display: block; width: 50px; height: 16px; overflow: visible; }
+  .up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--mute); }
+  tr.det td { height: auto; white-space: normal; padding: 8px 10px 10px 30px; background: #fbfcfe; color: var(--ink2); line-height: 1.6; font-size: 12px; }
+  .names { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .names span { padding: 1px 6px; border-radius: 4px; background: var(--line2); font-size: 11px; color: var(--ink2); }
+  .hm { padding: 8px 10px 10px; }
+  .hm .g { display: grid; grid-template-columns: 22px repeat(25, 1fr); gap: 2px; align-items: center; }
+  .hm .g i { aspect-ratio: 1; border-radius: 2px; background: var(--c, #eef1f5); }
+  .hm .g i.na { background: repeating-linear-gradient(45deg, #eef1f5 0 2px, #fff 2px 4px); }
+  .hm .g span { font-family: "IBM Plex Mono"; font-size: 10px; color: var(--mute); }
+  .hm .ax { display: flex; justify-content: space-between; margin: 4px 0 0 24px; font-family: "IBM Plex Mono"; font-size: 9.5px; color: var(--mute); }
+  .hm .lg { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 10.5px; color: var(--mute); }
+  .hm .lg b { width: 90px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #eef1f5, #93b4f5, #1d4ed8); }
+  .tip { position: absolute; z-index: 5; padding: 3px 7px; border-radius: 5px; background: var(--ink); color: #fff; font-family: "IBM Plex Mono"; font-size: 10.5px; pointer-events: none; opacity: 0; transition: opacity .1s; white-space: nowrap; }
+  .keys { margin-top: 10px; text-align: center; font-family: "IBM Plex Mono"; font-size: 10.5px; color: var(--mute); }
+
+  .pal { position: absolute; inset: 0; z-index: 20; background: rgba(16,24,40,.25); display: none; padding: 70px 12px 0; }
+  .pal.on { display: block; }
+  .pal .box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 20px 40px -16px rgba(16,24,40,.35); overflow: hidden; }
+  .pal input { width: 100%; height: 44px; padding: 0 14px; border-bottom: 1px solid var(--line); font-size: 14px; cursor: text; }
+  .pal .it { display: flex; gap: 8px; padding: 9px 14px; font-size: 12.5px; }
+  .pal .it.on { background: var(--acc-bg); }
+  .pal .it span { font-family: "IBM Plex Mono"; color: var(--mute); }
+  .pal .it em { font-style: normal; background: #fff1b8; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 6px 22px; border-top: 1px solid var(--line); background: var(--panel); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 500; font-size: 10.5px; color: var(--mute); }
+  .tab svg { width: 18px; height: 18px; }
+  .tab.on { color: var(--acc); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const at = new Date(window.HOT.at), upd = `${pad2(at.getHours())}:${pad2(at.getMinutes())}`;
+const TR = { up: "上升", down: "下降", flat: "持平" };
+const count = (k) => HOT.filter((h) => h.trend === k).length;
+const sum = (k) => HOT.reduce((a, h) => a + h[k], 0);
+const total = HOT[0].spark.map((_, i) => HOT.reduce((a, h) => a + (h.spark[i] || 0), 0));
+const gmax = Math.max(...HOT.flatMap((h) => h.spark.filter((x) => x != null)));
+const line = (s, w, hh, color = "#101828", wd = 1.3) => { const pts = s.map((x, i) => (x == null ? null : [(i / (s.length - 1)) * w, hh - (x / Math.max(...s.filter((v) => v != null))) * hh])).filter(Boolean); return `<svg viewBox="0 0 ${w} ${hh}" preserveAspectRatio="none"><path class="ln" d="${pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ")}" fill="none" stroke="${color}" stroke-width="${wd}" vector-effect="non-scaling-stroke"/></svg>`; };
+const pct = (h) => `${h.trendPct > 0 ? "+" : ""}${h.trendPct.toFixed(1)}%`;
+const blue = (v) => { const t = Math.pow(v / gmax, 0.8), a = [238, 241, 245], m = [147, 180, 245], b = [29, 78, 216], [p, q, k] = t < 0.5 ? [a, m, t * 2] : [m, b, (t - 0.5) * 2]; return `rgb(${p.map((x, i) => Math.round(x + (q[i] - x) * k)).join(",")})`; };
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <div class="bar"><span class="logo">AH</span><span class="crumb">AI 热点 <span>/ 今日</span></span><button class="search" id="openPal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16 16"/></svg>搜索 <span class="mono">⌘K</span></button></div>
+  <div class="sub"><button class="chip on" data-f="all">全部<b>${HOT.length}</b></button><button class="chip" data-f="up">上升<b>${count("up")}</b></button><button class="chip" data-f="down">下降<b>${count("down")}</b></button><button class="chip" data-f="flat">持平<b>${count("flat")}</b></button><span class="upd"><i></i>${upd} 更新</span></div>
+  <main class="scroll" id="scroll">
+    <section class="panel kpi">
+      <div><small>条目</small><b class="mono" data-n="${HOT.length}">0</b>${line(total, 60, 14, "#98a2b3", 1)}</div>
+      <div><small>来源合计</small><b class="mono" data-n="${sum("sources")}">0</b>${line(HOT.map((h) => h.sources), 60, 14, "#98a2b3", 1)}</div>
+      <div><small>参与合计</small><b class="mono" data-n="${sum("people")}">0</b>${line(HOT.map((h) => h.people), 60, 14, "#98a2b3", 1)}</div>
+      <div><small>最高热度</small><b class="mono" data-n="${heatText(HOT[0])}">0</b>${line(HOT[0].spark, 60, 14, "#2563eb", 1.2)}</div>
+    </section>
+    <section class="panel mt"><div class="ph">热点榜<span>按热度 · 点一行看详情</span></div>
+      <table><colgroup><col style="width:30px"><col><col style="width:58px"><col style="width:36px"><col style="width:54px"><col style="width:32px"></colgroup>
+      <thead><tr><th>#</th><th>标题</th><th>24h</th><th class="r">热度</th><th class="r">变化</th><th class="r">源</th></tr></thead>
+      <tbody id="tb">${HOT.map((h, i) => `<tr class="row ${i ? "" : "sel"}" data-i="${i}" data-tr="${h.trend}"><td class="mono" style="color:var(--mute)">${pad2(h.rank)}</td><td class="t">${esc(shortTitle(h))}</td><td>${line(h.spark, 52, 16, h.trend === "up" ? "#079455" : h.trend === "down" ? "#d92d20" : "#475467")}</td><td class="mono r">${heatText(h)}</td><td class="mono r ${h.trend}">${pct(h)}</td><td class="mono r">${h.sources}</td></tr>`).join("")}</tbody></table>
+    </section>
+    <section class="panel mt"><div class="ph">24 小时热度矩阵<span>每格 1 小时 · 斜纹 = 当时还没上榜</span></div>
+      <div class="hm"><div class="g" id="hm">${HOT.map((h) => `<span>${pad2(h.rank)}</span>${h.spark.map((v, j) => `<i data-r="${h.rank}" data-j="${j}" data-v="${v ?? ""}" ${v == null ? 'class="na"' : `style="--c:${blue(v)}"`}></i>`).join("")}`).join("")}</div>
+      <div class="ax"><span>-24h</span><span>-12h</span><span>现在</span></div>
+      <div class="lg">0<b></b>${Math.round(gmax)}</div></div>
+    </section>
+    <div class="keys">J K 上下 · ↵ 展开 · ⌘K 搜索 · 1–4 筛选</div>
+    <span class="tip" id="tip"></span>
+  </main>
+  <div class="pal" id="pal"><div class="box"><input id="q" placeholder="搜标题、来源…" autocomplete="off"><div id="res"></div></div></div>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const rows = [...app.querySelectorAll("tr.row")];
+let sel = 0;
+// 选中一行：蓝色左边线 + 下面插一行详情
+function select(i, open = true) {
+  sel = i; rows.forEach((r, k) => r.classList.toggle("sel", k === i));
+  app.querySelector("tr.det")?.remove();
+  if (!open) return;
+  const h = HOT[i], tr = document.createElement("tr"); tr.className = "det";
+  tr.innerHTML = `<td colspan="6">${esc(clip(firstLine(h.summary), 96))}<div class="names">${h.names.map((n) => `<span>${esc(n)}</span>`).join("")}</div></td>`;
+  rows[i].after(tr); tr.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 });
+}
+rows.forEach((r, i) => r.addEventListener("click", () => select(i, !(sel === i && app.querySelector("tr.det")))));
+function filter(f) { app.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.f === f)); app.querySelector("tr.det")?.remove(); rows.forEach((r) => (r.style.display = f === "all" || r.dataset.tr === f ? "" : "none")); }
+app.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => filter(c.dataset.f)));
+document.addEventListener("keydown", (e) => {
+  if ($("pal").classList.contains("on")) { if (e.key === "Escape") $("pal").classList.remove("on"); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); openPal(); }
+  else if (e.key === "j") select(Math.min(rows.length - 1, sel + 1), false);
+  else if (e.key === "k") select(Math.max(0, sel - 1), false);
+  else if (e.key === "Enter") select(sel);
+  else if ("1234".includes(e.key)) filter(["all", "up", "down", "flat"][+e.key - 1]);
+});
+// ⌘K 命令面板：标题和来源都能搜，命中的字标黄
+function render(q) {
+  const hit = HOT.map((h, i) => ({ h, i })).filter(({ h }) => !q || h.title.toLowerCase().includes(q.toLowerCase()) || h.names.some((n) => n.toLowerCase().includes(q.toLowerCase())));
+  const hl = (t) => (q ? esc(t).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), (m) => `<em>${m}</em>`) : esc(t));
+  $("res").innerHTML = hit.map(({ h, i }, k) => `<div class="it ${k ? "" : "on"}" data-i="${i}"><span>${pad2(h.rank)}</span>${hl(shortTitle(h))}</div>`).join("") || `<div class="it" style="color:var(--mute)">没有匹配的条目</div>`;
+  $("res").querySelectorAll("[data-i]").forEach((el) => el.addEventListener("click", () => { $("pal").classList.remove("on"); filter("all"); select(+el.dataset.i); }));
+}
+function openPal() { $("pal").classList.add("on"); $("q").value = ""; render(""); $("q").focus(); $("pal").querySelector(".box").animate([{ transform: "translateY(-8px) scale(.98)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 160, easing: "ease-out" }); }
+$("openPal").addEventListener("click", openPal);
+$("q").addEventListener("input", (e) => render(e.target.value.trim()));
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") $("res").querySelector(".it.on")?.click(); });
+$("pal").addEventListener("click", (e) => { if (e.target === $("pal")) $("pal").classList.remove("on"); });
+// 矩阵格子：按住或悬停显示「第几小时 · 数值」
+const tip = $("tip"), sc = $("scroll");
+$("hm").addEventListener("pointerover", (e) => { const c = e.target.closest("i"); if (!c) return; const r = c.getBoundingClientRect(), s = sc.getBoundingClientRect(); tip.textContent = `#${pad2(c.dataset.r)} · ${24 - c.dataset.j}h 前 · ${c.dataset.v ? Math.round(c.dataset.v) : "未上榜"}`; tip.style.left = Math.min(260, r.left - s.left) + "px"; tip.style.top = r.top - s.top + sc.scrollTop - 24 + "px"; tip.style.opacity = 1; });
+$("hm").addEventListener("pointerleave", () => (tip.style.opacity = 0));
+(async () => {
+await fontsReady();
+select(0);
+// 动作克制：数字跳上去、曲线画出来、矩阵按时间从左往右扫满
+app.querySelectorAll("[data-n]").forEach((el) => { const n = +el.dataset.n, t0 = performance.now(); (function tick(now) { const k = Math.min(1, (now - t0) / 700), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(n * e); if (k < 1) requestAnimationFrame(tick); })(t0); });
+app.querySelectorAll(".ln").forEach((p) => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 700, delay: 150, easing: "ease-out", fill: "backwards" }); });
+rows.forEach((r, i) => r.animate([{ opacity: 0, transform: "translateY(4px)" }, { opacity: 1, transform: "none" }], { duration: 220, delay: 60 + i * 25, fill: "backwards" }));
+app.querySelectorAll("#hm i").forEach((c) => c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, delay: 300 + c.dataset.j * 22, fill: "backwards" }));
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>白板讲解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --board: #fcfcfa; --k: #1d1d1f; --b: #1f5fbf; --r: #d23a2a; --tray1: #eef0f2; --tray2: #c3c8ce; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--board); }
+  body { font-family: "Gochi Hand", "ZCOOL KuaiLe", sans-serif; color: var(--k); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--board); }
+  .sb { position: relative; z-index: 3; height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: "Noto Sans SC"; font-weight: 700; font-size: 13px; }
+  .scroll { position: relative; flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 白板：一整块，坐标就是像素；上面有旧课的残影和一道慢慢移动的反光 */
+  .board { position: relative; width: 390px; height: 1150px; }
+  .board::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(112deg, transparent 30%, rgba(255,255,255,.75) 44%, rgba(235,240,245,.4) 50%, transparent 62%); background-size: 260% 100%; animation: sheen 14s linear infinite; mix-blend-mode: soft-light; }
+  @keyframes sheen { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+  .board svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .ghost { position: absolute; color: rgba(29,29,31,.045); font-size: 40px; transform: rotate(-4deg); pointer-events: none; }
+  .tx { position: absolute; white-space: nowrap; line-height: 1.25; text-shadow: 0 0 .4px currentColor; }
+  .tx i { font-style: normal; display: inline-block; clip-path: inset(0 100% 0 0); }
+  .tx.done i { clip-path: none; }
+  .k { color: var(--k); } .b { color: var(--b); } .r { color: var(--r); }
+  .photo { position: absolute; padding: 5px 5px 0; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.18); transform: rotate(-2.5deg); opacity: 0; }
+  .photo img { display: block; width: 186px; height: 104px; object-fit: cover; }
+  .magnet { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8a7a, #d23a2a 55%, #8f1f15); box-shadow: 0 3px 4px rgba(0,0,0,.3); opacity: 0; }
+  .row { position: absolute; left: 20px; right: 20px; height: 42px; cursor: pointer; }
+  .eraser { position: absolute; right: 18px; top: 18px; width: 64px; text-align: center; font-family: "ZCOOL KuaiLe"; font-size: 13px; color: #5d6670; z-index: 2; }
+  .eraser i { display: block; margin: 0 auto 4px; width: 52px; height: 24px; border-radius: 5px; background: linear-gradient(#4a90d9 0 55%, #3a3f46 55%); box-shadow: 0 3px 5px rgba(0,0,0,.25); }
+  .eraser.go i { visibility: hidden; }
+  .rub { position: absolute; z-index: 4; width: 64px; height: 30px; border-radius: 6px; background: linear-gradient(#4a90d9 0 55%, #3a3f46 55%); box-shadow: 0 6px 10px rgba(0,0,0,.28); pointer-events: none; display: none; }
+  /* 马克笔：没有手，自己飘；抬笔时影子变大变远 */
+  .pen { position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; transform-origin: 0 0; }
+  .pen svg { position: absolute; left: -4px; top: -74px; width: 70px; height: 80px; overflow: visible; }
+  .pen .sh { position: absolute; left: 6px; top: -6px; width: 46px; height: 10px; border-radius: 50%; background: rgba(0,0,0,.18); filter: blur(4px); transform: translate(var(--lx, 4px), var(--ly, 6px)) rotate(-38deg); }
+  .tray { flex: none; position: relative; z-index: 3; display: grid; grid-template-columns: repeat(5, 1fr); padding: 14px 8px 26px; background: linear-gradient(var(--tray1), var(--tray2)); box-shadow: inset 0 2px 0 #fff, 0 -3px 6px rgba(0,0,0,.08); }
+  .tab { position: relative; font-family: "ZCOOL KuaiLe"; font-size: 15px; color: #59616b; }
+  .tab.on { color: var(--k); }
+  .tab.on::before { content: ""; position: absolute; left: 50%; top: -10px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--r); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="sb"><span id="clk"></span><span>5G</span></div>
+  <main class="scroll" id="scroll"><div class="board" id="board"><svg id="sv"></svg></div></main>
+  <nav class="tray" id="tray"></nav>
+</div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="vendor/rough.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+$("clk").textContent = nowHM();
+const [h1, ...rest] = HOT;
+const board = $("board"), sv = $("sv"), rc = rough.svg(sv), sc = $("scroll");
+const COL = { k: "#1d1d1f", b: "#1f5fbf", r: "#d23a2a" };
+$("tray").innerHTML = TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("");
+$("tray").querySelectorAll(".tab").forEach((t, _, all) => t.addEventListener("click", () => all.forEach((x) => x.classList.toggle("on", x === t))));
+// 旧课的残影：擦过但没擦干净
+board.insertAdjacentHTML("beforeend", `<span class="ghost" style="left:40px;top:330px">E = mc²</span><span class="ghost" style="left:210px;top:690px;font-size:30px">x → ∞</span><span class="ghost" style="left:150px;top:950px;font-size:34px;transform:rotate(3deg)">TODO</span>`);
+board.insertAdjacentHTML("beforeend", `<div class="eraser" id="er"><i></i>擦掉重画</div><div class="rub" id="rub"></div><div class="pen" id="pen"><span class="sh"></span><svg viewBox="-4 -74 70 80"><g transform="rotate(38)"><rect x="-3.5" y="-70" width="13" height="50" rx="3" fill="#2b2f36"/><rect x="-3.5" y="-46" width="13" height="10" fill="var(--pc,#1d1d1f)"/><path d="M-3.5 -20 L9.5 -20 L5 -6 L1 -6 Z" fill="#9aa1a9"/><path d="M1 -6 L5 -6 L3.6 -1 L2.4 -1 Z" fill="var(--pc,#1d1d1f)"/></g></svg></div>`);
+const pen = $("pen");
+// 写的东西：文字、图形都排成一个队列，马克笔按顺序一个个画
+const T = (id, x, y, c, size, text) => ({ t: "tx", id, x, y, c, size, text });
+const S = (make, c) => ({ t: "sh", make, c });
+const ITEMS = ["提醒你该关注的事", "替你把交代的事办完", "你走开了它接着干"];
+const PLAN = [
+  T("t1", 22, 56, "k", 31, "Claude Duet 是什么？"),
+  S(() => rc.curve([[24, 100], [100, 95], [190, 103], [282, 96]], { stroke: COL.b, strokeWidth: 3, roughness: 1.2, seed: 2 }), "b"),
+  S(() => rc.circle(62, 186, 34, { stroke: COL.k, strokeWidth: 2.6, roughness: 1, seed: 3 }), "k"),
+  S(() => rc.linearPath([[62, 203], [62, 252]], { stroke: COL.k, strokeWidth: 2.6, roughness: 0.8, seed: 4 }), "k"),
+  S(() => rc.linearPath([[40, 222], [84, 222]], { stroke: COL.k, strokeWidth: 2.6, roughness: 0.8, seed: 5 }), "k"),
+  S(() => rc.linearPath([[44, 292], [62, 252], [80, 292]], { stroke: COL.k, strokeWidth: 2.6, roughness: 0.8, seed: 6 }), "k"),
+  T("you", 50, 298, "k", 22, "你"),
+  S(() => rc.rectangle(132, 148, 226, 150, { stroke: COL.k, strokeWidth: 3, roughness: 1.3, seed: 7 }), "k"),
+  { t: "photo" },
+  S(() => rc.linearPath([[92, 214], [126, 214], [116, 205], [126, 214], [116, 223]], { stroke: COL.b, strokeWidth: 3, roughness: 0.7, seed: 8 }), "b"),
+  T("lab", 134, 306, "b", 18, "让 Claude 主动干活的独立 App"),
+  ...ITEMS.flatMap((s, i) => [S(() => rc.linearPath([[28, 380 + i * 50], [54, 380 + i * 50], [46, 373 + i * 50], [54, 380 + i * 50], [46, 387 + i * 50]], { stroke: COL.b, strokeWidth: 2.8, roughness: 0.6, seed: 10 + i }), "b"), T("i" + i, 64, 364 + i * 50, "k", 21, s)]),
+  S(() => rc.rectangle(20, 528, 344, 70, { stroke: COL.r, strokeWidth: 3.2, roughness: 1.4, seed: 20 }), "r"),
+  T("warn1", 34, 538, "r", 20, "动手前先问你"),
+  T("warn2", 34, 566, "k", 16, "发消息、付款、删除，都要你点头"),
+  T("n1", 34, 628, "b", 40, String(h1.sources)), T("n1l", 26, 678, "k", 16, "家来源"),
+  T("n2", 150, 628, "b", 40, String(h1.people)), T("n2l", 142, 678, "k", 16, "人在聊"),
+  T("n3", 262, 628, "b", 40, String(heatText(h1))), T("n3l", 262, 678, "k", 16, "热度"),
+  S(() => rc.ellipse(50, 652, 66, 54, { stroke: COL.b, strokeWidth: 2.4, roughness: 1.6, seed: 21 }), "b"),
+  { t: "pause", ms: 700 },
+  T("more", 22, 730, "k", 24, "今天还有 ↓"),
+  ...rest.flatMap((h, i) => [S(() => rc.rectangle(24, 790 + i * 46, 18, 18, { stroke: COL.k, strokeWidth: 2, roughness: 1, seed: 30 + i }), "k"), T("l" + i, 54, 784 + i * 46, "k", 17, clip(shortTitle(h), 15)), T("lh" + i, 324, 784 + i * 46, "b", 19, String(heatText(h)))]),
+];
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const frame = () => new Promise((r) => requestAnimationFrame(r));
+let px = 330, py = 60, lifted = true, run = 0;
+const placePen = (x, y) => { px = x; py = y; pen.style.transform = `translate(${x}px,${y}px)`; follow(y); };
+function follow(y) { const top = sc.scrollTop, vh = sc.clientHeight; if (y > top + vh * 0.72) sc.scrollTop += (y - top - vh * 0.5) * 0.06; }
+function lift(on) { lifted = on; pen.style.setProperty("--lx", on ? "16px" : "4px"); pen.style.setProperty("--ly", on ? "20px" : "6px"); pen.querySelector(".sh").style.opacity = on ? 0.55 : 1; }
+// 抬笔飞过去：时间跟距离走（50~200ms），带一点弧线
+async function travel(x, y, my) { lift(true); const x0 = px, y0 = py, t0 = performance.now(), dur = Math.min(200, Math.max(50, Math.hypot(x - x0, y - y0) / 2)); for (;;) { const k = Math.min(1, (performance.now() - t0) / dur), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; if (my !== run) return; placePen(x0 + (x - x0) * e, y0 + (y - y0) * e - Math.sin(k * Math.PI) * Math.min(18, dur / 10)); if (k >= 1) break; await frame(); } lift(false); }
+// 画一个图形：每条 path 按长度匀速画出来，笔尖跟着走
+async function drawShape(g, c, my) {
+  pen.style.setProperty("--pc", COL[c]); sv.appendChild(g);
+  const paths = [...g.querySelectorAll("path")]; paths.forEach((p) => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
+  for (const p of paths) { const L = p.getTotalLength(), s = p.getPointAtLength(0); await travel(s.x, s.y, my); const t0 = performance.now(), dur = Math.max(80, L / 2.4); for (;;) { if (my !== run) return; const k = Math.min(1, (performance.now() - t0) / dur), q = p.getPointAtLength(L * k); p.style.strokeDashoffset = L * (1 - k); placePen(q.x, q.y); if (k >= 1) break; await frame(); } }
+}
+// 写字：一个字一个字从左擦出来，笔尖停在正在写的那个字的右下角
+async function write(it, my) {
+  pen.style.setProperty("--pc", COL[it.c]);
+  const el = document.createElement("div"); el.className = `tx ${it.c}`; el.id = it.id; el.style.cssText = `left:${it.x}px;top:${it.y}px;font-size:${it.size}px`;
+  el.innerHTML = [...it.text].map((ch) => `<i>${ch === " " ? "&nbsp;" : esc(ch)}</i>`).join(""); board.appendChild(el);
+  const chars = [...el.children], per = it.size > 30 ? 44 : 26;
+  for (const ch of chars) { if (my !== run) return; const x = it.x + ch.offsetLeft, y = it.y + ch.offsetTop + ch.offsetHeight * 0.8; if (Math.abs(x - px) > 60 || Math.abs(y - py) > 30) await travel(x, y, my); const t0 = performance.now(); for (;;) { const k = Math.min(1, (performance.now() - t0) / per); ch.style.clipPath = `inset(0 ${(1 - k) * 100}% 0 0)`; placePen(x + ch.offsetWidth * k, y - Math.sin(k * 9) * 3); if (k >= 1) break; await frame(); } }
+  el.classList.add("done");
+}
+async function photo(my) {
+  const ph = document.createElement("div"); ph.className = "photo"; ph.style.cssText = "left:150px;top:166px"; ph.innerHTML = `<img src="${h1.cover}" alt="">`; board.appendChild(ph);
+  const mg = document.createElement("div"); mg.className = "magnet"; mg.style.cssText = "left:232px;top:156px"; board.appendChild(mg);
+  await travel(360, 140, my);
+  ph.animate([{ opacity: 0, transform: "translate(40px,-30px) rotate(8deg) scale(1.08)" }, { opacity: 1, transform: "rotate(-2.5deg)" }], { duration: 420, easing: "cubic-bezier(.3,1.3,.5,1)", fill: "forwards" });
+  await sleep(380);
+  mg.animate([{ opacity: 0, transform: "translateY(-30px) scale(1.4)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "cubic-bezier(.4,1.6,.6,1)", fill: "forwards" });
+  await sleep(260);
+}
+async function play() {
+  const my = ++run;
+  sv.innerHTML = ""; board.querySelectorAll(".tx, .photo, .magnet").forEach((e) => e.remove()); sc.scrollTop = 0; placePen(330, 60);
+  await sleep(300);
+  for (const it of PLAN) {
+    if (my !== run) return;
+    if (it.t === "tx") await write(it, my);
+    else if (it.t === "sh") await drawShape(it.make(), it.c, my);
+    else if (it.t === "photo") await photo(my);
+    else if (it.t === "pause") { await travel(340, py - 40, my); lift(true); await sleep(it.ms); }
+  }
+  await travel(352, sc.scrollTop + sc.clientHeight - 30, my); lift(true);
+}
+// 点清单：在方框里打个红勾
+board.addEventListener("click", (e) => {
+  const y = e.clientY - board.getBoundingClientRect().top; const i = Math.floor((y - 780) / 46);
+  if (i >= 0 && i < rest.length && e.clientX < 330) { const g = rc.linearPath([[26, 800 + i * 46], [33, 808 + i * 46], [48, 786 + i * 46]], { stroke: COL.r, strokeWidth: 3.2, roughness: 0.6, seed: 50 + i }); sv.appendChild(g); g.querySelectorAll("path").forEach((p) => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 260, fill: "forwards" }); }); }
+});
+// 板擦：从左到右扫一遍，擦过的地方留一点残影，然后重画
+$("er").addEventListener("click", async () => {
+  run++; const rub = $("rub"), er = $("er"); er.classList.add("go"); rub.style.display = "block"; lift(true);
+  const top = sc.scrollTop, vh = sc.clientHeight, all = [...board.querySelectorAll(".tx, .photo, .magnet"), ...sv.children];
+  for (let row = 0; row < 4; row++) { const y = top + 60 + row * (vh / 4); rub.animate([{ transform: `translate(${row % 2 ? 330 : -10}px,${y}px) rotate(${row % 2 ? 6 : -6}deg)` }, { transform: `translate(${row % 2 ? -10 : 330}px,${y + 20}px) rotate(${row % 2 ? -6 : 6}deg)` }], { duration: 320, easing: "ease-in-out", fill: "forwards" }); await sleep(320); }
+  all.forEach((e) => e.animate([{ opacity: 1 }, { opacity: 0.04 }], { duration: 200, fill: "forwards" }));
+  await sleep(250); rub.style.display = "none"; er.classList.remove("go"); play();
+});
+(async () => { await fontsReady(); play(); })();
+</script>
+</body>
+</html>
