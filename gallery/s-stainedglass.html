@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>彩色玻璃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --stone: #ece6da; --stone2: #ddd5c6; --lead: #22201e; --ink: #2a2622; --ink2: #6c6358; --ruby: #b3122e; --cobalt: #1f4fa8; --emerald: #13824f; --amber: #e59a1c; --violet: #6b3fa0; --gold: #c9a14a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--stone); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--stone) var(--stonetex); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 30; }
+  .beam { position: absolute; z-index: 20; pointer-events: none; left: -40%; top: -10%; width: 70%; height: 140%; background: linear-gradient(90deg, rgba(255,250,235,0), rgba(255,250,235,.32), rgba(255,250,235,0)); transform: rotate(18deg); mix-blend-mode: soft-light; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: Cinzel, serif; font-weight: 700; font-size: 13px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 2px 18px 8px; }
+  h1 { font-weight: 900; font-size: 30px; letter-spacing: 3px; }
+  h1 i { font-family: Cinzel, serif; font-style: normal; font-weight: 900; color: var(--ruby); margin-right: 4px; }
+  .date { font-family: Cinzel, "Noto Serif SC", serif; font-size: 12px; letter-spacing: 2px; color: var(--ink2); margin-top: 2px; }
+  .rose { position: relative; width: 62px; height: 62px; border-radius: 50%; }
+  .rose canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 0 3px var(--lead), 0 0 0 5px var(--gold), 0 6px 14px rgba(60,40,10,.25); }
+  .rose b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 18px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .rose.on canvas { animation: spin 14s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .window { position: relative; height: 300px; margin: 4px 22px 0; }
+  .window .glass { position: absolute; inset: 0; clip-path: var(--arch); background: var(--lead); }
+  .window .glass canvas { width: 100%; height: 100%; display: block; }
+  .window .frame { position: absolute; inset: -7px; clip-path: var(--arch2); background: linear-gradient(#cfc4b0, #b9ad96); z-index: -1; box-shadow: inset 0 0 0 2px #a99c84; }
+  .window .mull { position: absolute; left: 50%; top: 22%; bottom: 0; width: 5px; margin-left: -2.5px; background: var(--lead); }
+  .window .bar { position: absolute; left: 0; right: 0; height: 5px; background: var(--lead); }
+  .spill { position: relative; height: 54px; margin: 0 4px; transform: perspective(300px) rotateX(58deg); transform-origin: top; filter: blur(12px) saturate(1.4); opacity: .55; mix-blend-mode: multiply; }
+  .spill canvas { width: 100%; height: 100%; }
+  .badge { position: absolute; left: 50%; top: 270px; transform: translateX(-50%); width: 58px; height: 58px; border-radius: 50%; background: var(--ruby); box-shadow: 0 0 0 4px var(--lead), 0 0 0 6px var(--gold); display: grid; place-items: center; color: #fff; font-family: Cinzel, serif; font-weight: 900; font-size: 22px; z-index: 3; }
+  .hero h2 { margin-top: -18px; text-align: center; font-weight: 900; font-size: 21px; line-height: 1.5; padding: 0 6px; }
+  em { font-style: normal; color: var(--cobalt); }
+  .hero p { margin-top: 8px; text-align: center; font-size: 13.5px; line-height: 1.8; color: var(--ink2); font-weight: 500; padding: 0 8px; }
+  .hero .m { margin-top: 8px; text-align: center; font-family: Cinzel, "Noto Serif SC", serif; font-size: 12px; letter-spacing: 2px; color: var(--ink2); }
+  .cornice { height: 14px; margin: 18px 0 6px; background: radial-gradient(circle at 50% 0, var(--stone2) 0 6px, transparent 6.5px) 0 0 / 16px 14px, linear-gradient(transparent 6px, var(--gold) 6px 8px, transparent 8px); }
+
+  .it { position: relative; display: grid; grid-template-columns: 1fr 64px; gap: 12px; align-items: center; padding: 12px 4px; cursor: pointer; }
+  .it + .it { border-top: 1px solid rgba(42,38,34,.15); }
+  .it .k { font-family: Cinzel, serif; font-weight: 900; font-size: 13px; letter-spacing: 2px; color: var(--c); }
+  .it h3 { font-weight: 700; font-size: 15.5px; line-height: 1.5; margin-top: 2px; }
+  .it .m { margin-top: 3px; font-size: 12.5px; color: var(--ink2); }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.7; color: var(--ink2); }
+  .it.open .more { display: block; }
+  .lancet { position: relative; width: 64px; height: 86px; clip-path: path("M0 86 V30 Q0 0 32 0 Q64 0 64 30 V86 Z"); background: var(--lead); }
+  .lancet canvas { width: 100%; height: 100%; display: block; }
+  .it.open .lancet { box-shadow: 0 0 22px 4px var(--c); }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 10px 24px; background: linear-gradient(var(--stone2), var(--stone)); border-top: 2px solid var(--gold); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 700; font-size: 13px; color: var(--ink2); }
+  .tab i { width: 22px; height: 26px; clip-path: path("M0 26 V9 Q0 0 11 0 Q22 0 22 9 V26 Z"); background: var(--stone2); box-shadow: inset 0 0 0 2px var(--lead); }
+  .tab.on { color: var(--ink); }
+  .tab.on i { background: var(--c); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { stainedGlass, mulberry } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const JEWEL = ["#b3122e", "#1f4fa8", "#13824f", "#e59a1c", "#6b3fa0"];
+app.style.setProperty("--grain", `url(${grainURL(200, 0.07, 80)})`);
+app.style.setProperty("--stonetex", `url(${fiberURL(360, 120, "120,110,90", "255,255,250")})`);
+const markBlue = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<em>${esc(k)}</em>`) : t; };
+// 玫瑰窗：一圈圈扇形玻璃 + 铅条
+function rose(size, seed = 3, S = 2) {
+  const c = document.createElement("canvas"); c.width = c.height = size * S; const x = c.getContext("2d"), R = size * S / 2, rand = mulberry(seed);
+  const rings = [0.28, 0.62, 1], seg = [6, 12, 12];
+  for (let r = rings.length - 1; r >= 0; r--) for (let i = 0; i < seg[r]; i++) {
+    const a0 = (i / seg[r]) * Math.PI * 2 + (r === 1 ? Math.PI / seg[r] : 0), a1 = a0 + (Math.PI * 2) / seg[r];
+    x.fillStyle = JEWEL[Math.floor(rand() * JEWEL.length)]; x.beginPath(); x.moveTo(R, R); x.arc(R, R, R * rings[r], a0, a1); x.closePath(); x.fill();
+    x.strokeStyle = "#22201e"; x.lineWidth = 3 * S / 2; x.stroke();
+  }
+  x.fillStyle = "#e59a1c"; x.beginPath(); x.arc(R, R, R * 0.12, 0, 7); x.fill(); x.stroke();
+  return c;
+}
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>V G</span></div>
+  <header class="top"><div><h1><i>AI</i>热点</h1><div class="date">MMXXVI · X · XXII · 实时</div></div><button class="rose" id="rose"><canvas id="rc"></canvas><b>听</b></button></header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="window" id="win"><div class="frame"></div><div class="glass"><canvas id="gc"></canvas><i class="mull"></i><i class="bar" style="top:58%"></i></div></div>
+      <div class="spill" id="spill"><canvas id="sp"></canvas></div>
+      <div class="badge">I</div>
+      <h2>${markBlue(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 58))}</p>
+      <div class="m">热度 ${heatText(h1)} · ${h1.sources} 家来报</div>
+    </section>
+    <div class="cornice"></div>
+    <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}" style="--c:${JEWEL[i % 5]}"><div><div class="k">${["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"][h.rank]}</div><h3>${markBlue(h)}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="lancet"><canvas></canvas></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}" style="--c:${JEWEL[i]}"><i></i>${n}</button>`).join("")}</nav>
+  <div class="beam" id="beam"></div>`;
+
+const $ = (id) => document.getElementById(id);
+const put = (cv, src) => { cv.width = src.width; cv.height = src.height; cv.getContext("2d").drawImage(src, 0, 0); };
+(async () => {
+await fontsReady();
+// 尖拱：按实际尺寸生成 clip-path
+const win = $("win"), W = win.offsetWidth, H = win.offsetHeight;
+const arch = (w, h, o = 0) => `path("M${-o} ${h + o} V${h * 0.42} Q${-o} ${-o} ${w / 2} ${-o} Q${w + o} ${-o} ${w + o} ${h * 0.42} V${h + o} Z")`;
+win.style.setProperty("--arch", arch(W, H)); win.querySelector(".frame").style.setProperty("--arch2", arch(W + 14, H + 14).replace(/M-0/, "M0"));
+put($("rc"), rose(62));
+// 头图：真封面切成玻璃，先只有铅条和暗玻璃，再一块块亮起来
+const img = await loadImage(h1.cover), gc = $("gc");
+const G = stainedGlass(img, W * 2, H * 2, { cell: 30, lead: 3.4, seed: 7 });
+G.reveal(-1); put(gc, G.canvas);
+const sp = $("sp"); const t0 = performance.now() + 500, D = 2200;
+(function lightUp(now) {
+  const k = Math.min(1, Math.max(0, (now - t0) / D));
+  G.reveal(k * 1.02); const ctx = gc.getContext("2d"); ctx.drawImage(G.canvas, 0, 0);
+  if (k < 1) requestAnimationFrame(lightUp); else put(sp, G.canvas);
+})(performance.now());
+app.querySelector(".badge").animate([{ transform: "translateX(-50%) scale(0)" }, { transform: "translateX(-50%) scale(1)" }], { duration: 500, delay: 2500, easing: "cubic-bezier(.3,1.5,.5,1)", fill: "backwards" });
+app.querySelectorAll(".hero h2, .hero p, .hero .m").forEach((e, i) => e.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 700, delay: 2300 + i * 150, fill: "backwards" }));
+app.querySelectorAll(".it").forEach((li, i) => {
+  const h = rest[i], c = li.querySelector("canvas");
+  if (h.cover) loadImage(h.cover).then((im) => { const g = stainedGlass(im, 128, 172, { cell: 16, lead: 2.2, seed: 20 + i }); put(c, g.canvas); });
+  else { const k = document.createElement("canvas"); k.width = 128; k.height = 172; const x = k.getContext("2d"); x.fillStyle = JEWEL[i % 5]; x.fillRect(0, 0, 128, 172); x.strokeStyle = "#22201e"; x.lineWidth = 5; for (let y = 30; y < 172; y += 34) { x.beginPath(); x.moveTo(0, y); x.lineTo(128, y + 12); x.stroke(); } x.beginPath(); x.moveTo(64, 0); x.lineTo(64, 172); x.stroke(); x.save(); x.translate(26, 52); x.scale(1.2, 1.2); x.strokeStyle = "#fff6dc"; x.lineWidth = 5; x.stroke(new Path2D(DOODLE[h.rank])); x.restore(); put(c, k); }
+  li.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 600, delay: 2600 + i * 100, fill: "backwards" });
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+// 一道阳光慢慢扫过；落在地上的彩光跟着呼吸
+const beam = $("beam");
+beam.animate([{ left: "-60%" }, { left: "110%" }], { duration: 9000, iterations: Infinity, easing: "ease-in-out", delay: 2600 });
+$("spill").animate([{ opacity: 0.45 }, { opacity: 0.62 }, { opacity: 0.45 }], { duration: 5000, iterations: Infinity });
+const roseBtn = $("rose");
+roseBtn.addEventListener("click", () => { const on = roseBtn.classList.toggle("on"); roseBtn.querySelector("b").textContent = on ? "停" : "听"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

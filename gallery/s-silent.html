@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>默片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display+SC:wght@700;900&family=Old+Standard+TT:ital,wght@0,400;1,400&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --silver: #d8cfbe; --paper: #e6ddcb; --ink: #1e1a15; --ink2: #5a5046; --card: #14110d; --cream: #efe6d2; --velvet: #7a1e22; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #111; }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; overflow: hidden; background: var(--silver); }
+  .ui { position: relative; height: 100%; display: flex; flex-direction: column; translate: var(--wx, 0) var(--wy, 0); filter: brightness(var(--fl, 1)) sepia(.28) contrast(1.04); }
+  /* 拷贝：颗粒、划痕、灰尘、暗角 */
+  .print { position: absolute; inset: 0; pointer-events: none; z-index: 40; }
+  .print .grain { position: absolute; inset: 0; background-image: var(--grain); mix-blend-mode: multiply; opacity: .5; }
+  .print .vig { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 70% at 50% 48%, transparent 55%, rgba(30,20,10,.45)); }
+  .print i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,250,235,.55); }
+  .print i.d { background: rgba(20,15,10,.45); }
+  .print b { position: absolute; border-radius: 50%; background: rgba(20,15,10,.55); }
+
+  .valance { flex: none; height: 30px; background: radial-gradient(circle at 50% 0, var(--velvet) 0 14px, transparent 14.5px) 0 0 / 28px 30px, linear-gradient(var(--velvet), #5a1418); -webkit-mask: radial-gradient(circle at 50% 100%, transparent 9px, #000 9.5px) 0 0 / 28px 30px; mask: radial-gradient(circle at 50% 100%, transparent 9px, #000 9.5px) 0 0 / 28px 30px; }
+  .sb { position: absolute; left: 0; right: 0; top: 0; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-family: "Old Standard TT", serif; font-size: 14px; color: var(--cream); z-index: 2; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: flex-end; padding: 10px 18px 10px; }
+  .top h1 { font-family: "Playfair Display SC", "Noto Serif SC", serif; font-weight: 900; font-size: 34px; letter-spacing: 2px; line-height: 1; }
+  .top .d { font-family: "Old Standard TT", "Noto Serif SC", serif; font-style: italic; font-size: 13px; color: var(--ink2); margin-top: 4px; }
+  .piano { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
+  .keys { position: relative; display: flex; height: 26px; border: 1.5px solid var(--ink); background: var(--cream); }
+  .keys i { width: 9px; border-right: 1px solid var(--ink); transition: background .06s steps(1); }
+  .keys i:last-child { border-right: 0; }
+  .keys i.dn { background: #b8ac96; }
+  .keys s { position: absolute; top: 0; width: 6px; height: 15px; background: var(--ink); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .gate { position: relative; height: 252px; border-radius: 18px / 22px; overflow: hidden; background: #2a241d; box-shadow: inset 0 0 0 6px #1a1612, inset 0 0 30px 10px rgba(0,0,0,.6); }
+  .gate canvas { width: 100%; height: 100%; display: block; }
+  .gate .burn { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 26px 8px rgba(80,45,15,.55); pointer-events: none; }
+  .card { position: relative; margin: 14px 0 0; background: var(--card); color: var(--cream); padding: 22px 26px 22px; text-align: center; }
+  .card svg { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); overflow: visible; }
+  .card .k { font-family: "Playfair Display SC", serif; font-weight: 700; font-size: 12px; letter-spacing: 4px; opacity: .8; }
+  .card h2 { margin-top: 8px; font-weight: 900; font-size: 20px; line-height: 1.5; letter-spacing: 1px; }
+  .card p { margin-top: 8px; font-family: "Old Standard TT", "Noto Serif SC", serif; font-style: italic; font-size: 13px; opacity: .85; }
+  .sum { margin-top: 12px; font-size: 13.5px; line-height: 1.85; color: var(--ink2); font-weight: 500; text-indent: 2em; }
+
+  .reel { margin-top: 18px; text-align: center; font-family: "Playfair Display SC", serif; font-weight: 700; font-size: 12px; letter-spacing: 5px; color: var(--ink2); }
+  .reel::before, .reel::after { content: "❦"; margin: 0 10px; letter-spacing: 0; }
+  .it { position: relative; display: grid; grid-template-columns: 44px 1fr 74px; gap: 10px; align-items: center; padding: 12px 10px; margin-top: 10px; border: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: -5px; cursor: pointer; }
+  .it .n { font-family: "Playfair Display SC", serif; font-weight: 900; font-size: 22px; text-align: center; }
+  .it h3 { font-weight: 700; font-size: 15px; line-height: 1.5; }
+  .it .m { margin-top: 3px; font-family: "Old Standard TT", "Noto Serif SC", serif; font-style: italic; font-size: 12.5px; color: var(--ink2); }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.75; color: var(--ink2); }
+  .it.open .more { display: block; }
+  .it.open { background: rgba(20,17,13,.06); }
+  .it .tn { width: 74px; height: 58px; border-radius: 8px / 10px; overflow: hidden; background: #2a241d; box-shadow: inset 0 0 10px 3px rgba(0,0,0,.6); }
+  .it .tn canvas { width: 100%; height: 100%; display: block; }
+  .it .tn .t { height: 100%; display: grid; place-items: center; color: var(--cream); font-family: "Playfair Display SC", serif; font-size: 11px; letter-spacing: 2px; text-align: center; line-height: 1.4; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 24px; border-top: 3px double var(--ink); }
+  .tab { font-weight: 700; font-size: 14px; color: var(--ink2); padding: 6px 0; letter-spacing: 1px; }
+  .tab.on { color: var(--cream); background: var(--card); }
+  .iris { position: absolute; left: 50%; top: 40%; width: 0; height: 0; border-radius: 50%; z-index: 50; pointer-events: none; box-shadow: 0 0 0 200vmax #0d0b09, inset 0 0 18px 10px #0d0b09; transform: translate(-50%, -50%); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+const grains = Array.from({ length: 4 }, (_, i) => seeded(i + 1, () => grainURL(180, 0.5, 40)));
+// 装饰艺术边框：两道线 + 阶梯角 + 角上一把小扇子
+const deco = (w, h) => {
+  const s = 10, fan = (x, y, r) => Array.from({ length: 5 }, (_, i) => { const a = r + (i / 4) * Math.PI / 2; return `M${x} ${y} L${(x + Math.cos(a) * 12).toFixed(1)} ${(y + Math.sin(a) * 12).toFixed(1)}`; }).join(" ");
+  const step = `M${s} 0 H${w - s} V${s} H${w} V${h - s} H${w - s} V${h} H${s} V${h - s} H0 V${s} H${s} Z`;
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${step}" fill="none" stroke="#efe6d2" stroke-width="1.4"/><rect x="5" y="5" width="${w - 10}" height="${h - 10}" fill="none" stroke="#efe6d2" stroke-width=".7" opacity=".7"/><path d="${fan(s, s, 0)} ${fan(w - s, s, Math.PI / 2)} ${fan(w - s, h - s, Math.PI)} ${fan(s, h - s, Math.PI * 1.5)}" stroke="#efe6d2" stroke-width=".8" opacity=".8"/></svg>`;
+};
+
+app.innerHTML = `
+  <div class="ui" id="ui">
+    <div class="valance"></div>
+    <div class="sb"><span>${nowHM()}</span><span>第一本</span></div>
+    <header class="top"><div><h1>AI 热点</h1><div class="d">今晚放映 · 十月廿二 · 周四</div></div><button class="piano" id="piano"><span class="keys" id="keys">${"<i></i>".repeat(10)}${[1, 2, 4, 5, 6, 8, 9].map((k) => `<s style="left:${k * 10 - 3.5}px"></s>`).join("")}</span><span id="pl">钢琴伴奏</span></button></header>
+    <main class="scroll">
+      <section class="hero">
+        <div class="gate"><canvas id="gc"></canvas><div class="burn"></div></div>
+        <div class="card" id="card"><div class="k">第 一 幕</div><h2>${esc(shortTitle(h1))}</h2><p>热度 ${heatText(h1)} · ${h1.sources} 家报馆竞相报道</p></div>
+        <p class="sum">${esc(clip(firstLine(h1.summary), 60))}</p>
+      </section>
+      <div class="reel">后 续 各 幕</div>
+      <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}"><span class="n">${ROMAN[h.rank]}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? "<canvas></canvas>" : `<div class="t">无 影 像<br>${ROMAN[h.rank]}</div>`}</div></li>`).join("")}</ol>
+    </main>
+    <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>
+  </div>
+  <div class="print" id="print"><div class="grain" id="grain"></div><div class="vig"></div></div>
+  <div class="iris" id="iris"></div>`;
+
+const $ = (id) => document.getElementById(id);
+// 雕版线描：灰度分 5 层 + 暗边描墨
+function engraved(img, w, h) {
+  const gray = posterCanvas(img, w, h, ["#1e1a15", "#4a4238", "#7f7566", "#b4aa98", "#e8dfcc"], { soft: 2 });
+  const g = gray.getContext("2d"), sk = sketchCanvas(img, w, h, { ink: "#14110d", gain: 2.6, hatch: true, soft: 2 });
+  g.globalAlpha = 0.85; g.drawImage(sk, 0, 0); g.globalAlpha = 1;
+  return gray;
+}
+(async () => {
+await fontsReady();
+const card = $("card"); card.insertAdjacentHTML("afterbegin", deco(card.offsetWidth - 12, card.offsetHeight - 12));
+const gc = $("gc"); loadImage(h1.cover).then((img) => { const e = engraved(img, gc.offsetWidth * 2, gc.offsetHeight * 2); gc.width = e.width; gc.height = e.height; gc.getContext("2d").drawImage(e, 0, 0); });
+app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (h.cover) loadImage(h.cover).then((img) => { const c = li.querySelector("canvas"), e = engraved(img, 148, 116); c.width = 148; c.height = 116; c.getContext("2d").drawImage(e, 0, 0); }); li.addEventListener("click", () => li.classList.toggle("open")); });
+
+// 开场：光圈从中间打开（16 帧/秒一格一格）
+const IR = "220vmax";
+$("iris").animate([{ width: "0px", height: "0px" }, { width: IR, height: IR }], { duration: 1100, delay: 150, easing: "steps(16, end)", fill: "forwards" });
+// 字幕卡：光圈开出
+card.animate([{ clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(80% at 50% 50%)" }], { duration: 900, delay: 1200, easing: "steps(14, end)", fill: "backwards" });
+app.querySelectorAll(".it").forEach((li, i) => li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 1800 + i * 120, easing: "steps(8, end)", fill: "backwards" }));
+
+// 放映：每 1/24 秒换颗粒、闪一下亮度、画面晃半个像素；划痕和灰尘随机出现几帧
+const ui = $("ui"), pr = $("print"), gr = $("grain"); let f = 0, scratches = [], dust = [];
+setInterval(() => {
+  f++;
+  gr.style.backgroundImage = `url(${grains[f % 4]})`;
+  ui.style.setProperty("--fl", (0.95 + Math.random() * 0.08).toFixed(3));
+  ui.style.setProperty("--wx", ((Math.random() - 0.5) * 1.2).toFixed(2) + "px");
+  ui.style.setProperty("--wy", ((Math.random() - 0.5) * 1.6 + (f % 97 === 0 ? 3 : 0)).toFixed(2) + "px");
+  scratches = scratches.filter((s) => (--s.life > 0) || (s.el.remove(), false));
+  if (Math.random() < 0.08) { const el = document.createElement("i"); if (Math.random() < 0.4) el.className = "d"; el.style.left = (Math.random() * 100).toFixed(1) + "%"; el.style.top = (Math.random() * 40) + "%"; el.style.bottom = (Math.random() * 30) + "%"; pr.appendChild(el); scratches.push({ el, life: 3 + Math.floor(Math.random() * 10) }); }
+  dust = dust.filter((s) => (--s.life > 0) || (s.el.remove(), false));
+  if (Math.random() < 0.15) { const el = document.createElement("b"), r = 1 + Math.random() * 3; Object.assign(el.style, { left: Math.random() * 100 + "%", top: Math.random() * 100 + "%", width: r + "px", height: r * (0.6 + Math.random()) + "px" }); pr.appendChild(el); dust.push({ el, life: 1 + Math.floor(Math.random() * 2) }); }
+}, 1000 / 24);
+
+// 钢琴伴奏：琴键按 16 帧/秒一下一下按
+const keys = [...$("keys").querySelectorAll("i")], piano = $("piano"); let pt = null;
+piano.addEventListener("click", () => {
+  const on = piano.classList.toggle("on"); $("pl").textContent = on ? "伴奏中…" : "钢琴伴奏";
+  clearInterval(pt); keys.forEach((k) => k.classList.remove("dn"));
+  if (on) { let n = 0; pt = setInterval(() => { n++; keys.forEach((k, i) => k.classList.toggle("dn", rnd(n * 7 + i) > 0.72)); }, 1000 / 8); }
+});
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); $("iris").animate([{ width: IR, height: IR }, { width: "0px", height: "0px", offset: 0.45 }, { width: "0px", height: "0px", offset: 0.55 }, { width: IR, height: IR }], { duration: 900, easing: "steps(16, end)" }); }));
+})();
+</script>
+</body>
+</html>

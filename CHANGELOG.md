@@ -1,5 +1,12 @@
 # 更新记录
 
+## 1.2.0 · 2026-10-23
+
+新增 10 种风格（共 30 种）：水彩、默片、皮影戏、蓝图、彩色玻璃、橡皮管卡通、视觉调查、新粗野主义、黏土风、Frutiger Aero。来源：lemo-opuscar 风格库、UI/UX Pro Max 风格表、2026 网页设计趋势。
+
+- 引擎：`mulberry` / `wcDeform` / `wcWash` / `wcStroke` / `watercolorCanvas`（水彩）、`stainedGlass`（彩色玻璃）
+- 图鉴分组：「手作 · 纸与墨」改名「手作 · 手工艺」，新增「界面潮流」
+
 ## 1.1.1 · 2026-10-23
 
 - `tools/snap.mjs` 加 `--video out.mp4 [--fps 24] [--dur 秒]`：视频页逐帧 seek 截图，ffmpeg 合成 MP4

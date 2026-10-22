@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黏土风</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #efeafd; --ink: #3b3355; --mute: #7d7499; --pink: #ffd3df; --blue: #cfe7ff; --mint: #d3f5e2; --butter: #fff0c2; --lilac: #e3d9ff; --peach: #ffe0cc; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Baloo 2", "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+  /* 黏土：外面一圈软阴影，里面左上亮、右下暗 */
+  .clay { background: var(--c, #fff); border-radius: var(--r, 28px); box-shadow: 0 16px 28px -14px rgba(70,50,130,.45), inset -7px -9px 14px rgba(60,40,110,.12), inset 7px 9px 14px rgba(255,255,255,.8); transition: transform .45s cubic-bezier(.34,1.8,.5,1); }
+  .well { border-radius: var(--r, 22px); box-shadow: inset 5px 7px 12px rgba(60,40,110,.22), inset -5px -6px 10px rgba(255,255,255,.7); overflow: hidden; }
+  .squish:active { transform: scale(.94, .9); transition-duration: .1s; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 800; font-size: 15px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 2px 18px 10px; }
+  h1 { font-weight: 900; font-size: 30px; letter-spacing: -.5px; }
+  h1 span { display: inline-block; font-family: "Baloo 2"; font-weight: 800; padding: 0 10px; margin-right: 4px; --c: var(--pink); --r: 16px; }
+  .date { font-size: 13px; color: var(--mute); font-weight: 700; margin-top: 2px; }
+  .listen { --c: var(--lilac); --r: 999px; display: flex; align-items: center; gap: 8px; padding: 9px 16px 9px 10px; font-weight: 900; font-size: 15px; }
+  .listen svg { width: 30px; height: 30px; }
+  .listen.on { --c: var(--mint); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 16px 120px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { --c: #fff; --r: 32px; padding: 12px; }
+  .pic { height: 200px; --r: 22px; }
+  .pic img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(1.15); }
+  .coin { position: absolute; left: 22px; top: 176px; width: 62px; height: 62px; --c: var(--butter); --r: 50%; display: grid; place-items: center; font-family: "Baloo 2"; font-weight: 800; font-size: 26px; z-index: 2; }
+  .hero { position: relative; }
+  .hero h2 { margin: 30px 4px 0; font-weight: 900; font-size: 20.5px; line-height: 1.45; }
+  .hero p { margin: 8px 4px 0; font-size: 13.5px; line-height: 1.7; color: var(--mute); font-weight: 500; }
+  .pills { display: flex; gap: 10px; margin: 12px 4px 4px; }
+  .pills span { --r: 999px; padding: 6px 14px; font-weight: 800; font-size: 13px; }
+
+  ol { list-style: none; display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
+  .it { --r: 26px; display: grid; grid-template-columns: 44px 1fr 72px; gap: 12px; align-items: center; padding: 12px; cursor: pointer; }
+  .it .n { width: 40px; height: 40px; --c: #fff; --r: 50%; display: grid; place-items: center; font-family: "Baloo 2"; font-weight: 800; font-size: 18px; }
+  .it h3 { font-weight: 700; font-size: 15px; line-height: 1.45; }
+  .it .m { margin-top: 3px; font-weight: 700; font-size: 12px; color: var(--mute); }
+  .it .more { display: none; margin-top: 6px; font-size: 12.5px; line-height: 1.6; color: var(--mute); font-weight: 500; }
+  .it.open .more { display: block; }
+  .it .tn { width: 72px; height: 62px; --r: 18px; display: grid; place-items: center; background: rgba(255,255,255,.55); }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; }
+  .it .tn svg { width: 38px; height: 38px; }
+
+  .dock { position: absolute; left: 14px; right: 14px; bottom: 20px; z-index: 5; --c: #fff; --r: 30px; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px; }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 54px; border-radius: 22px; font-weight: 800; font-size: 11.5px; color: var(--mute); transition: all .45s cubic-bezier(.34,1.8,.5,1); }
+  .tab svg { width: 21px; height: 21px; stroke-width: 2.4; }
+  .tab.on { color: var(--ink); background: var(--c2); box-shadow: 0 10px 18px -10px rgba(70,50,130,.5), inset -4px -5px 9px rgba(60,40,110,.12), inset 4px 5px 9px rgba(255,255,255,.8); transform: translateY(-3px); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const PAST = ["#ffd3df", "#cfe7ff", "#d3f5e2", "#fff0c2", "#e3d9ff", "#ffe0cc", "#cfe7ff"];
+// 黏土播放键：一颗鼓起来的球 + 一个鼓起来的三角
+const PLAY = `<svg viewBox="0 0 30 30"><defs><radialGradient id="pb" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#a593ff"/><stop offset="1" stop-color="#6c56d9"/></radialGradient></defs><circle cx="15" cy="15" r="14" fill="url(#pb)"/><ellipse cx="11" cy="9" rx="5" ry="3" fill="#fff" opacity=".45"/><path id="pi" d="M12 9.5 Q12 8 13.4 8.8 L20.5 13.6 Q21.8 14.5 20.5 15.4 L13.4 20.2 Q12 21 12 19.5 Z" fill="#fff"/></svg>`;
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ●</span></div>
+  <header class="top"><div><h1><span class="clay">AI</span>热点</h1><div class="date">10 月 22 日 · 周四 · 实时</div></div><button class="listen clay squish" id="listen">${PLAY}<span>听热点</span></button></header>
+  <main class="scroll">
+    <section class="hero clay" id="hero">
+      <div class="pic well"><img src="${h1.cover}" alt=""></div>
+      <div class="coin clay">1</div>
+      <h2>${esc(shortTitle(h1))}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 58))}</p>
+      <div class="pills"><span class="clay" style="--c:#ffd3df">热度 ${heatText(h1)}</span><span class="clay" style="--c:#cfe7ff">${h1.sources} 家在说</span></div>
+    </section>
+    <ol>${rest.map((h, i) => `<li class="it clay squish" data-r="${h.rank}" style="--c:${PAST[i]}"><span class="n clay">${h.rank}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn well">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#3b3355" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+  </main>
+  <nav class="dock clay">${TAB_NAMES.map((n, i) => `<button class="tab squish ${i ? "" : "on"}" style="--c2:${PAST[i]}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+// 鼓起来：先小，再横向撑开、竖向回弹，像捏好的黏土落下
+const inflate = (el, d) => el.animate([{ transform: "scale(.3)", opacity: 0 }, { transform: "scale(1.12, .88)", opacity: 1, offset: 0.45 }, { transform: "scale(.95, 1.06)", offset: 0.72 }, { transform: "none" }], { duration: 700, delay: d, easing: "ease-out", fill: "backwards" });
+(async () => {
+await fontsReady();
+inflate(app.querySelector("h1 span"), 100); inflate($("listen"), 250); inflate($("hero"), 400); inflate(app.querySelector(".coin"), 800);
+app.querySelectorAll(".pills span").forEach((s, i) => inflate(s, 950 + i * 120));
+app.querySelectorAll(".it").forEach((li, i) => { inflate(li, 1100 + i * 90); li.addEventListener("click", () => li.classList.toggle("open")); });
+inflate(app.querySelector(".dock"), 300);
+// 常驻：编号硬币和播放键轻轻上下浮
+app.querySelector(".coin").animate([{ translate: "0 0" }, { translate: "0 -5px" }, { translate: "0 0" }], { duration: 2400, iterations: Infinity, easing: "ease-in-out", delay: 1600 });
+app.querySelector(".listen svg").animate([{ transform: "rotate(-6deg)" }, { transform: "rotate(6deg)" }, { transform: "rotate(-6deg)" }], { duration: 2600, iterations: Infinity, easing: "ease-in-out" });
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.querySelector("span").textContent = on ? "在听 01" : "听热点"; $("pi").setAttribute("d", on ? "M10.5 9 Q10.5 8 11.5 8 H13 Q14 8 14 9 V21 Q14 22 13 22 H11.5 Q10.5 22 10.5 21 Z M16 9 Q16 8 17 8 H18.5 Q19.5 8 19.5 9 V21 Q19.5 22 18.5 22 H17 Q16 22 16 21 Z" : "M12 9.5 Q12 8 13.4 8.8 L20.5 13.6 Q21.8 14.5 20.5 15.4 L13.4 20.2 Q12 21 12 19.5 Z"); });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

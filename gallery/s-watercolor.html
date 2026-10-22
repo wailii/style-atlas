@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>水彩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500;1,600&family=Caveat:wght@500;600&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fbf8f1; --ink: #2e2a26; --ink2: #6b5e52; --ultra: #3b5ba9; --rose: #d4627a; --sap: #7fa25b; --ochre: #d9a441; --verm: #c8442a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; background: var(--paper) var(--fiber); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 30; }
+  canvas.wash { position: absolute; pointer-events: none; mix-blend-mode: multiply; }
+  .note { font-family: Caveat, cursive; color: var(--ink2); }
+  .write { clip-path: inset(0 100% 0 0); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: Caveat, cursive; font-size: 19px; font-weight: 600; }
+  .top { flex: none; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 4px 18px 6px 22px; }
+  .brand { position: relative; }
+  .brand canvas { left: -26px; top: -18px; width: 190px; height: 92px; }
+  h1 { position: relative; font-weight: 900; font-size: 36px; letter-spacing: 1px; }
+  h1 i { font-family: "Cormorant Garamond", serif; font-weight: 600; font-style: italic; font-size: 42px; margin-right: 4px; }
+  .brand .note { position: relative; font-size: 17px; margin-top: -2px; }
+  .listen { position: relative; width: 70px; height: 70px; display: grid; place-items: center; }
+  .listen canvas { inset: -10px; width: 90px; height: 90px; }
+  .listen b { position: relative; font-weight: 900; font-size: 20px; color: #fff; text-shadow: 0 0 6px rgba(40,50,90,.35); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 18px 26px; scrollbar-width: none; position: relative; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; padding-top: 6px; }
+  .paint { position: relative; height: 230px; }
+  .paint canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .lead { position: absolute; right: 2px; top: 196px; width: 150px; height: 70px; overflow: visible; }
+  .lead .note { position: absolute; right: 0; bottom: -2px; font-size: 18px; white-space: nowrap; }
+  .num { position: absolute; left: -6px; top: 178px; width: 76px; height: 76px; display: grid; place-items: center; }
+  .num canvas { inset: 0; width: 76px; height: 76px; }
+  .num b { position: relative; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 600; font-size: 34px; color: #fff; }
+  .text { position: relative; margin-top: 30px; }
+  .text canvas { left: -10px; top: -6px; }
+  .hero h2 { position: relative; font-weight: 900; font-size: 22px; line-height: 1.5; }
+  .hero p { position: relative; margin-top: 10px; font-size: 14px; line-height: 1.8; color: #4d443b; font-weight: 500; }
+  .sep { display: block; width: 100%; height: 24px; margin: 14px 0 0; }
+
+  .it { position: relative; display: grid; grid-template-columns: 34px 1fr 82px; gap: 12px; align-items: center; padding: 12px 0; cursor: pointer; }
+  .it .n { position: relative; width: 34px; height: 34px; display: grid; place-items: center; }
+  .it .n canvas { inset: -6px; width: 46px; height: 46px; }
+  .it .n b { position: relative; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 600; font-size: 22px; }
+  .it h3 { font-weight: 700; font-size: 15.5px; line-height: 1.55; }
+  .it .note { font-size: 16px; margin-top: 1px; }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.75; color: #4d443b; }
+  .it.open .more { display: block; }
+  .it .tn { position: relative; width: 82px; height: 66px; }
+  .it .tn canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .it .tn svg { position: absolute; left: 20px; top: 10px; width: 46px; height: 46px; }
+  .it .ln { position: absolute; left: 40px; right: 0; bottom: 0; height: 10px; width: calc(100% - 40px); }
+
+  .tabs { flex: none; position: relative; display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 8px 24px; }
+  .tabs > canvas { position: absolute; left: 0; top: 0; width: 100%; height: 14px; }
+  .tab { position: relative; height: 44px; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: var(--ink2); }
+  .tab canvas { position: absolute; left: 50%; top: 50%; width: 64px; height: 44px; margin: -22px 0 0 -32px; }
+  .tab span { position: relative; }
+  .tab.on { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { wcWash, wcStroke, watercolorCanvas, wcDeform, mulberry } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const PIG = ["#3b5ba9", "#d4627a", "#7fa25b", "#d9a441", "#8a6fb0"];
+app.style.setProperty("--grain", `url(${grainURL(200, 0.07, 90)})`);
+app.style.setProperty("--fiber", `url(${fiberURL(420, 300, "150,130,100", "255,255,250")})`);
+const sized = (cv, S = 2) => { cv.width = Math.round(cv.offsetWidth * S); cv.height = Math.round(cv.offsetHeight * S); const x = cv.getContext("2d"); x.scale(S, S); return x; };
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ~</span></div>
+  <header class="top">
+    <div class="brand"><canvas class="wash" id="tw"></canvas><h1><i>AI</i>热点</h1><div class="note write">Oct 22 · 周四 · 今晚的热榜</div></div>
+    <button class="listen" id="listen"><canvas class="wash" id="lw"></canvas><b>听</b></button>
+  </header>
+  <main class="scroll" id="scroll">
+    <section class="hero">
+      <div class="paint"><canvas id="pc"></canvas></div>
+      <div class="num"><canvas class="wash" id="nw"></canvas><b>01</b></div>
+      <svg class="lead" viewBox="0 0 150 70"><path id="leadp" d="M118 4 C112 22 96 32 70 44" fill="none" stroke="#2e2a26" stroke-width="1.3" stroke-linecap="round"/><path d="M70 44 l7 -6 M70 44 l9 1" fill="none" stroke="#2e2a26" stroke-width="1.3" stroke-linecap="round" id="leadh"/><text></text></svg>
+      <div class="lead" style="pointer-events:none"><span class="note write" id="leadn">${h1.sources} 家在说 · 热度 ${heatText(h1)}</span></div>
+      <div class="text"><canvas class="wash" id="kw"></canvas><h2 id="h2">${esc(shortTitle(h1))}</h2><p>${esc(clip(firstLine(h1.summary), 58))}</p></div>
+      <canvas class="sep" id="sep"></canvas>
+    </section>
+    <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}"><span class="n"><canvas class="wash"></canvas><b>${h.rank}</b></span><div><h3>${esc(shortTitle(h))}</h3><div class="note">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn"><canvas></canvas>${h.cover ? "" : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#2e2a26" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div><canvas class="ln"></canvas></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs"><canvas id="tl"></canvas>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}"><canvas class="wash"></canvas><span>${n}</span></button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+// 一层层刷上去：每帧多画几层
+function paintIn(cv, draw, { dur = 1200, delay = 0, layers = 26 } = {}) {
+  const x = sized(cv), W = cv.offsetWidth, H = cv.offsetHeight, t0 = performance.now() + delay;
+  (function f(now) {
+    const k = Math.min(1, Math.max(0, (now - t0) / dur)), e = 1 - Math.pow(1 - k, 2);
+    x.clearRect(0, 0, W, H); draw(x, W, H, Math.ceil(e * layers), e);
+    if (k < 1) requestAnimationFrame(f);
+  })(performance.now());
+}
+const line = (W, y, n = 30, amp = 2, seed = 1) => Array.from({ length: n }, (_, i) => [6 + (i / (n - 1)) * (W - 12), y + Math.sin(i / 3 + seed) * amp]);
+const reveal = (el, d, dur = 900) => el.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: dur, delay: d, fill: "forwards", easing: "ease-in-out" });
+
+(async () => {
+await fontsReady();
+// 标题后面一团玫瑰色；播放键是一团群青
+paintIn($("tw"), (x, W, H, n) => wcWash(x, 120, 44, 52, PIG[1], { seed: 3, upto: n, squash: 0.5 }), { delay: 100 });
+paintIn($("lw"), (x, W, H, n) => wcWash(x, 45, 45, 30, PIG[0], { seed: 8, upto: n, alpha: 0.07 }), { delay: 300 });
+reveal(app.querySelector(".brand .note"), 700, 1100);
+
+// 头图：真封面转成水彩，再沿一条波浪边从左往右「刷」出来
+const img = await loadImage(h1.cover);
+const pc = $("pc"), pw = pc.offsetWidth, ph = pc.offsetHeight, S = 2;
+const art = watercolorCanvas(img, pw * S, ph * S, { k: 7, seed: 5 });
+// 画面边缘不齐，像纸上一块颜料
+const rand = mulberry(9), edge = wcDeform([[6, 8, 1], [pw - 6, 4, 1], [pw - 4, ph - 8, 1], [8, ph - 4, 1]].map(([a, b, c]) => [a * S, b * S, c]), 4, 0.05, rand);
+pc.width = pw * S; pc.height = ph * S; const px = pc.getContext("2d");
+const t0 = performance.now() + 500, D = 1800;
+(function wipe(now) {
+  const k = Math.min(1, Math.max(0, (now - t0) / D)), X = (k * 1.25 - 0.1) * pw * S;
+  px.clearRect(0, 0, pc.width, pc.height); px.save();
+  px.beginPath(); edge.forEach(([a, b], i) => (i ? px.lineTo(a, b) : px.moveTo(a, b))); px.closePath(); px.clip();
+  px.beginPath(); px.moveTo(0, 0);
+  for (let y = 0; y <= ph * S; y += 8) px.lineTo(X + Math.sin(y / 23) * 18 + Math.sin(y / 9) * 6, y);
+  px.lineTo(0, ph * S); px.closePath(); px.clip();
+  px.drawImage(art, 0, 0); px.restore();
+  if (k < 1) requestAnimationFrame(wipe);
+})(performance.now());
+
+paintIn($("nw"), (x, W, H, n) => wcWash(x, 38, 38, 26, getComputedStyle(document.body).getPropertyValue("--verm").trim(), { seed: 21, upto: n, alpha: 0.08 }), { delay: 1700, dur: 900 });
+$("leadp").style.strokeDasharray = 90; $("leadp").animate([{ strokeDashoffset: 90 }, { strokeDashoffset: 0 }], { duration: 700, delay: 2100, fill: "both" });
+$("leadh").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 2700, fill: "both" });
+reveal($("leadn"), 2300);
+
+// 标题里的重点词下面刷一笔赭黄
+const key = KEY[h1.rank], h2 = $("h2");
+h2.innerHTML = esc(shortTitle(h1)).replace(esc(key), `<span id="kspan">${esc(key)}</span>`);
+const kcv = $("kw"), tb = app.querySelector(".text").getBoundingClientRect();
+kcv.style.width = tb.width + 20 + "px"; kcv.style.height = tb.height + 12 + "px";
+const rects = [...$("kspan").getClientRects()];
+paintIn(kcv, (x, W, H, n, e) => rects.forEach((r, i) => wcStroke(x, line(r.width + 8, 0, 24, 1.5, i).map(([a, b]) => [a + r.left - tb.left + 4, b + r.top - tb.top + r.height * 0.78]), { width: r.height * 0.55, color: PIG[3], alpha: 0.55, seed: 4 + i, upto: e })), { delay: 1900, dur: 900 });
+app.querySelectorAll(".hero h2, .hero p").forEach((el, i) => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, delay: 1500 + i * 300, fill: "both" }));
+paintIn($("sep"), (x, W, H, n, e) => wcStroke(x, line(W, H / 2, 40, 2, 3), { width: 6, color: PIG[2], alpha: 0.5, seed: 12, upto: e, bristles: 6 }), { delay: 2300, dur: 1000 });
+
+// 列表：编号后面一点颜色、小图转水彩、下面一笔细线
+const items = [...app.querySelectorAll(".it")];
+items.forEach((li, i) => {
+  const h = rest[i], d = 2600 + i * 160, col = PIG[i % PIG.length];
+  paintIn(li.querySelector(".n canvas"), (x, W, H, n) => wcWash(x, 23, 23, 14, col, { seed: 40 + i, upto: n, alpha: 0.06 }), { delay: d, dur: 800 });
+  const tc = li.querySelector(".tn canvas");
+  if (h.cover) loadImage(h.cover).then((im) => {
+    const tw = tc.offsetWidth, th = tc.offsetHeight, a = watercolorCanvas(im, tw * 2, th * 2, { k: 5, seed: 30 + i, blur: 1.6 });
+    const r2 = mulberry(50 + i), e2 = wcDeform([[3, 4, 1], [tw - 3, 2, 1], [tw - 2, th - 4, 1], [4, th - 2, 1]].map(([p, q, c]) => [p * 2, q * 2, c]), 4, 0.06, r2);
+    tc.width = tw * 2; tc.height = th * 2; const x = tc.getContext("2d");
+    x.beginPath(); e2.forEach(([p, q], j) => (j ? x.lineTo(p, q) : x.moveTo(p, q))); x.closePath(); x.clip(); x.drawImage(a, 0, 0);
+    tc.animate([{ opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0)" }], { duration: 900, delay: d, fill: "both" });
+  });
+  else paintIn(tc, (x, W, H, n) => wcWash(x, W / 2, H / 2, 26, col, { seed: 60 + i, upto: n, squash: 0.8 }), { delay: d, dur: 1000 });
+  paintIn(li.querySelector(".ln"), (x, W, H, n, e) => wcStroke(x, line(W, H / 2, 30, 1, i), { width: 2.2, color: "#6b5e52", alpha: 0.35, seed: 70 + i, upto: e, bristles: 2 }), { delay: d + 200, dur: 800 });
+  li.querySelectorAll("h3, .note").forEach((el) => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: d, fill: "both" }));
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+
+// 底栏：上沿一笔，当前项后面一团颜色
+paintIn($("tl"), (x, W, H, n, e) => wcStroke(x, line(W, H / 2, 40, 1.5, 7), { width: 3, color: "#6b5e52", alpha: 0.3, seed: 90, upto: e, bristles: 3 }), { delay: 600 });
+const tabs = [...app.querySelectorAll(".tab")];
+const mark = (t, i) => { tabs.forEach((x) => { x.classList.toggle("on", x === t); if (x !== t) { const c = x.querySelector("canvas"); c.getContext("2d").clearRect(0, 0, c.width, c.height); } }); paintIn(t.querySelector("canvas"), (x, W, H, n) => wcWash(x, W / 2, H / 2, 20, PIG[i % PIG.length], { seed: 100 + i, upto: n, squash: 0.6, alpha: 0.06 }), { dur: 700 }); };
+tabs.forEach((t, i) => t.addEventListener("click", () => mark(t, i)));
+mark(tabs[0], 0);
+
+// 播放：群青一圈圈晕出去
+const listen = $("listen"); let ringT = null;
+listen.addEventListener("click", () => {
+  const on = listen.classList.toggle("on"); listen.querySelector("b").textContent = on ? "停" : "听";
+  clearInterval(ringT);
+  let s = 0;
+  const once = () => paintIn($("lw"), (x, W, H, n) => { wcWash(x, 45, 45, 30, PIG[0], { seed: 8, alpha: 0.07 }); if (on) wcWash(x, 45, 45, 30 + 12 * (n / 26), PIG[0], { seed: 200 + s, upto: n, alpha: 0.025 }); }, { dur: 900 });
+  if (on) { once(); ringT = setInterval(() => { s++; once(); }, 1000); } else once();
+});
+})();
+</script>
+</body>
+</html>

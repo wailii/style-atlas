@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>皮影戏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --cloth: #f6dcaa; --lamp: #ffe9bf; --ink: #2a1a10; --ink2: #6e4a2c; --verm: #a8321f; --ochre: #c98a2a; --mala: #2f7d5b; --indigo: #2c4f8a; --lacq: #5b1a12; --gold: #c9a14a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--lacq); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  /* 幕布：织纹 + 灯光（一大团 + 一个热点）+ 暖色暗角 */
+  .cloth { position: absolute; inset: 0; background: var(--cloth) var(--weave); }
+  .light { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 55% 40% at var(--lx, 50%) 34%, rgba(255,250,230,.9), rgba(255,240,200,0) 70%), radial-gradient(ellipse 120% 90% at 50% 40%, rgba(255,236,190,.0) 40%, rgba(120,60,20,.55) 100%); opacity: var(--lo, 1); mix-blend-mode: soft-light; }
+  .warm { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 90% 75% at 50% 42%, transparent 50%, rgba(90,40,10,.42)); }
+  .app > *:not(.cloth):not(.light):not(.warm) { position: relative; z-index: 2; }
+  .hide { mix-blend-mode: multiply; }
+
+  .lintel { flex: none; height: 44px; background: linear-gradient(#6b2216, var(--lacq)); border-bottom: 2px solid var(--gold); box-shadow: 0 6px 14px rgba(90,40,10,.35); display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; color: #f0d9a8; font-size: 13px; font-weight: 700; }
+  .top { flex: none; position: relative; height: 104px; }
+  .plaque { position: absolute; left: 18px; top: 12px; width: 190px; height: 66px; }
+  .plaque canvas { width: 100%; height: 100%; }
+  .rod { position: absolute; width: 2px; background: var(--ink); opacity: .85; transform-origin: top; }
+  .date { position: absolute; left: 24px; top: 84px; font-size: 12.5px; color: var(--ink2); letter-spacing: 2px; font-weight: 700; }
+  .lampbtn { position: absolute; right: 18px; top: 6px; width: 64px; height: 92px; display: flex; flex-direction: column; align-items: center; }
+  .lampbtn svg { width: 46px; height: 64px; overflow: visible; }
+  .lampbtn b { font-size: 13px; font-weight: 900; }
+  .flame { transform-origin: 23px 40px; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .stage { position: relative; height: 300px; }
+  .set { position: absolute; left: 0; right: 92px; top: 6px; height: 214px; }
+  .set canvas { width: 100%; height: 100%; }
+  .puppet { position: absolute; right: -6px; top: 2px; width: 120px; height: 300px; overflow: visible; }
+  .seal { position: absolute; left: 6px; top: 196px; width: 56px; height: 56px; }
+  .seal canvas { width: 100%; height: 100%; }
+  .hero h2 { margin-top: 2px; font-weight: 900; font-size: 21px; line-height: 1.5; }
+  em { font-style: normal; color: var(--verm); }
+  .hero p { margin-top: 8px; font-size: 13.5px; line-height: 1.85; color: var(--ink2); font-weight: 500; }
+  .strip { display: block; width: 100%; height: 22px; margin: 14px 0 4px; }
+
+  .it { position: relative; display: grid; grid-template-columns: 40px 1fr 78px; gap: 12px; align-items: center; padding: 12px 0; cursor: pointer; }
+  .it .n { width: 36px; height: 36px; }
+  .it .n canvas { width: 100%; height: 100%; }
+  .it h3 { font-weight: 700; font-size: 15.5px; line-height: 1.5; }
+  .it .m { margin-top: 2px; font-size: 12.5px; color: var(--ink2); font-weight: 500; }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.7; color: var(--ink2); }
+  .it.open .more { display: block; }
+  .it .tn { width: 78px; height: 62px; }
+  .it .tn canvas { width: 100%; height: 100%; }
+  .it + .it { border-top: 1px dashed rgba(42,26,16,.3); }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); background: linear-gradient(var(--lacq), #3d110b); border-top: 2px solid var(--gold); padding: 12px 6px 24px; }
+  .tab { font-weight: 700; font-size: 14px; color: #d9b98a; padding: 4px 0; position: relative; }
+  .tab.on { color: #ffe9bf; }
+  .tab.on::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 6px; height: 6px; margin-left: -3px; background: var(--gold); transform: rotate(45deg); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { mulberry } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const DYES = ["#2a1a10", "#a8321f", "#c98a2a", "#2f7d5b", "#2c4f8a", "#e2b77a", "#fff1d2"];
+// 幕布织纹
+app.style.setProperty("--weave", `url(${weave()})`);
+function weave() {
+  const c = document.createElement("canvas"); c.width = c.height = 120; const x = c.getContext("2d"), id = x.createImageData(120, 120);
+  for (let y = 0; y < 120; y++) for (let X = 0; X < 120; X++) { const v = (Math.sin(X * 1.6) * Math.sin(y * 1.6) + 1) * 6 + Math.random() * 10; const i = (y * 120 + X) * 4; id.data[i] = 150; id.data[i + 1] = 100; id.data[i + 2] = 50; id.data[i + 3] = v; }
+  x.putImageData(id, 0, 0); return c.toDataURL();
+}
+// 兽皮：染色 + 皮纹 + 镂空（钱眼孔透光）
+function hide(src, w, h, { holes = 9, edge = 0.16, seed = 1, carve = true } = {}) {
+  const c = typeof src === "function" ? src(w, h) : posterCanvas(src, w, h, DYES, { edge, edgeInk: "#2a1a10", soft: 3 });
+  const x = c.getContext("2d"), rand = mulberry(seed);
+  // 皮纹
+  x.globalCompositeOperation = "multiply";
+  for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(${120 + rand() * 60},${70 + rand() * 40},${30},${0.05 + rand() * 0.08})`; x.beginPath(); x.ellipse(rand() * w, rand() * h, 4 + rand() * 30, 2 + rand() * 12, rand() * 3, 0, 7); x.fill(); }
+  x.globalCompositeOperation = "source-over";
+  if (carve) {
+    // 在偏暗的地方打一排排钱眼孔：圆孔里留一个方块皮
+    const L = lumaOf(c);
+    for (let y = holes; y < h - holes / 2; y += holes) for (let X = holes + ((y / holes) % 2) * holes / 2; X < w - holes / 2; X += holes) {
+      const v = L[Math.floor(y) * w + Math.floor(X)];
+      if (v < 0.42 && v > 0.08) { x.fillStyle = "#fff4d8"; x.beginPath(); x.arc(X, y, holes * 0.3, 0, 7); x.fill(); x.fillStyle = "#6a4020"; x.fillRect(X - holes * 0.09, y - holes * 0.09, holes * 0.18, holes * 0.18); }
+    }
+  }
+  return c;
+}
+// 刻字皮牌：深色兽皮，字挖掉让光透出来，边上一圈花边孔
+function plaque(text, w, h, S = 2) {
+  const c = document.createElement("canvas"); c.width = w * S; c.height = h * S; const x = c.getContext("2d"); x.scale(S, S);
+  x.fillStyle = "#3a2214"; x.beginPath(); x.roundRect(2, 2, w - 4, h - 4, 10); x.fill();
+  x.globalCompositeOperation = "destination-out";
+  x.font = `900 ${h * 0.56}px "Noto Serif SC"`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(text, w / 2, h / 2 + 2);
+  for (let i = 8; i < w - 6; i += 9) { x.beginPath(); x.arc(i, 7, 2, 0, 7); x.fill(); x.beginPath(); x.arc(i, h - 7, 2, 0, 7); x.fill(); }
+  x.globalCompositeOperation = "source-over";
+  x.fillStyle = "rgba(201,138,42,.55)"; x.globalCompositeOperation = "source-atop"; x.fillRect(0, 0, w, h * 0.5); x.globalCompositeOperation = "source-over";
+  return c;
+}
+// 圆形小印（编号）
+function seal(n, size, color, S = 2) {
+  const c = document.createElement("canvas"); c.width = c.height = size * S; const x = c.getContext("2d"); x.scale(S, S);
+  x.fillStyle = color; x.beginPath(); x.arc(size / 2, size / 2, size / 2 - 1, 0, 7); x.fill();
+  x.globalCompositeOperation = "destination-out"; x.font = `900 ${size * 0.42}px "Cormorant Garamond", serif`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(n, size / 2, size / 2 + 1);
+  x.lineWidth = 1.2; x.beginPath(); x.arc(size / 2, size / 2, size / 2 - 5, 0, 7); x.stroke();
+  return c;
+}
+const put = (cv, src) => { cv.width = src.width; cv.height = src.height; cv.getContext("2d").drawImage(src, 0, 0); };
+const markRed = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<em>${esc(k)}</em>`) : t; };
+// 皮影小人：头、身、两节手臂、手，关节上有铆钉，手上连一根竿子
+const PUPPET = `<svg class="puppet hide" id="pup" viewBox="0 0 120 300">
+  <defs><pattern id="lace" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#a8321f"/><circle cx="4" cy="4" r="1.7" fill="#fff1d2"/></pattern></defs>
+  <g id="body" style="transform-origin:62px 150px">
+    <path d="M48 104 L78 104 L86 170 L40 170 Z" fill="url(#lace)" stroke="#2a1a10" stroke-width="1.5"/>
+    <path d="M42 168 L84 168 L92 250 L34 250 Z" fill="#2f7d5b" stroke="#2a1a10" stroke-width="1.5" opacity=".9"/>
+    <path d="M42 196 H86 M40 222 H88" stroke="#fff1d2" stroke-width="2" stroke-dasharray="3 3"/>
+    <g id="head" style="transform-origin:63px 100px"><path d="M50 62 C50 48 76 48 76 62 L78 92 C78 102 50 102 48 92 Z" fill="#e2b77a" stroke="#2a1a10" stroke-width="1.5"/><path d="M44 58 L63 30 L82 58 Z" fill="#c98a2a" stroke="#2a1a10" stroke-width="1.5"/><circle cx="63" cy="44" r="3" fill="#fff1d2"/><path d="M56 74 Q60 71 63 74 M58 86 Q62 89 66 86" stroke="#2a1a10" stroke-width="1.6" fill="none"/></g>
+    <g id="arm1" style="transform-origin:52px 112px"><path d="M48 108 L56 108 L54 150 L46 150 Z" fill="#2c4f8a" stroke="#2a1a10" stroke-width="1.3"/>
+      <g id="arm2" style="transform-origin:50px 148px"><path d="M46 146 L54 146 L52 186 L44 186 Z" fill="#2c4f8a" stroke="#2a1a10" stroke-width="1.3"/><path d="M44 184 C40 194 52 196 54 186 Z" fill="#e2b77a" stroke="#2a1a10" stroke-width="1.2"/><circle cx="50" cy="148" r="3" fill="#2a1a10"/><circle cx="50" cy="148" r="1.2" fill="#f0d9a8"/>
+</g>
+      <circle cx="52" cy="111" r="3.2" fill="#2a1a10"/><circle cx="52" cy="111" r="1.3" fill="#f0d9a8"/></g>
+    <line x1="63" y1="100" x2="63" y2="420" stroke="#2a1a10" stroke-width="1.6" opacity=".9"/>
+  </g><line id="rod2" x1="0" y1="0" x2="0" y2="420" stroke="#2a1a10" stroke-width="1.6"/></svg>`;
+
+app.innerHTML = `
+  <div class="cloth"></div>
+  <div class="lintel"><span>${nowHM()}</span><span>今夜开场 · 第一出</span></div>
+  <header class="top">
+    <div class="plaque hide" id="plq"><canvas id="pq"></canvas></div><i class="rod" id="rod1" style="left:112px;top:76px;height:40px"></i>
+    <div class="date">十月廿二 · 周四 · 实时</div>
+    <button class="lampbtn" id="lamp"><svg viewBox="0 0 46 64"><path d="M23 0 V10" stroke="#2a1a10" stroke-width="1.5"/><path d="M10 22 Q23 8 36 22 L32 50 Q23 56 14 50 Z" fill="#a8321f" stroke="#2a1a10" stroke-width="1.5" opacity=".85" class="hide"/><path d="M14 30 H32 M15 40 H31" stroke="#fff1d2" stroke-width="1.5" stroke-dasharray="2 3"/><g class="flame" id="flame" opacity=".0"><path d="M23 24 C28 32 27 40 23 42 C19 40 18 32 23 24 Z" fill="#ffd27a"/></g></svg><b id="lt">点灯听</b></button>
+  </header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="stage">
+        <div class="set hide"><canvas id="setc"></canvas></div>
+        ${PUPPET}
+        <div class="seal hide"><canvas id="sealc"></canvas></div>
+      </div>
+      <h2>${markRed(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 58))}</p>
+    </section>
+    <canvas class="strip hide" id="strip"></canvas>
+    <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}"><span class="n hide"><canvas></canvas></span><div><h3>${markRed(h)}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn hide"><canvas></canvas></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>
+  <div class="light" id="light"></div><div class="warm"></div>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+put($("pq"), plaque("AI 热点", 190, 66));
+put($("sealc"), seal("01", 56, "#a8321f"));
+const img = await loadImage(h1.cover), sc = $("setc");
+const set = hide(img, sc.offsetWidth * 2, sc.offsetHeight * 2, { holes: 14, seed: 3 });
+// 布景边上一圈花边
+const sx = set.getContext("2d"); sx.globalCompositeOperation = "destination-out";
+for (let i = 10; i < set.width - 6; i += 22) { sx.beginPath(); sx.arc(i, 0, 9, 0, 7); sx.fill(); sx.beginPath(); sx.arc(i, set.height, 9, 0, 7); sx.fill(); }
+sx.globalCompositeOperation = "source-over"; sx.strokeStyle = "#2a1a10"; sx.lineWidth = 4; sx.strokeRect(10, 14, set.width - 20, set.height - 28);
+put(sc, set);
+// 地面条：一条镂空的花边皮
+const st = $("strip"); st.width = st.offsetWidth * 2; st.height = 44; const sx2 = st.getContext("2d");
+sx2.fillStyle = "#c98a2a"; sx2.fillRect(0, 8, st.width, 28); sx2.globalCompositeOperation = "destination-out";
+for (let i = 12; i < st.width; i += 24) { sx2.beginPath(); sx2.moveTo(i, 22); sx2.lineTo(i + 8, 14); sx2.lineTo(i + 16, 22); sx2.lineTo(i + 8, 30); sx2.closePath(); sx2.fill(); }
+sx2.globalCompositeOperation = "source-over"; sx2.strokeStyle = "#2a1a10"; sx2.lineWidth = 2; sx2.strokeRect(1, 8, st.width - 2, 28);
+const COLS = ["#a8321f", "#2f7d5b", "#2c4f8a", "#c98a2a"];
+app.querySelectorAll(".it").forEach((li, i) => {
+  const h = rest[i]; put(li.querySelector(".n canvas"), seal(h.rank, 36, COLS[i % 4]));
+  const c = li.querySelector(".tn canvas");
+  if (h.cover) loadImage(h.cover).then((im) => put(c, hide(im, 156, 124, { holes: 10, seed: 10 + i })));
+  else put(c, hide((w, hh) => { const k = document.createElement("canvas"); k.width = w; k.height = hh; const x = k.getContext("2d"); x.fillStyle = COLS[i % 4]; x.beginPath(); x.roundRect(6, 6, w - 12, hh - 12, 12); x.fill(); x.strokeStyle = "#fff1d2"; x.lineWidth = 7; x.lineCap = "round"; x.save(); x.translate(w / 2 - 38, hh / 2 - 38); x.scale(1.2, 1.2); x.stroke(new Path2D(DOODLE[h.rank])); x.restore(); return k; }, 156, 124, { carve: false, seed: 20 + i }));
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+
+// 「贴上幕布」：从远处（模糊、偏大）压到布上（清楚）
+const press = (el, d, dur = 700) => el.animate([{ filter: "blur(9px)", transform: "scale(1.12)", opacity: 0 }, { filter: "blur(4px)", opacity: .8, offset: 0.5 }, { filter: "blur(0)", transform: "none", opacity: 1 }], { duration: dur, delay: d, easing: "cubic-bezier(.3,.7,.3,1)", fill: "backwards" });
+press($("plq"), 200); press(app.querySelector(".set"), 500, 900); press($("pup"), 900, 900); press(app.querySelector(".seal"), 1300);
+app.querySelectorAll(".hero h2, .hero p, .strip").forEach((el, i) => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: 1400 + i * 200, fill: "backwards" }));
+app.querySelectorAll(".it").forEach((li, i) => press(li, 1700 + i * 120, 600));
+
+// 一直在动：油灯跳（约 7 次/秒的小起伏）、小人摆身子、指着标题的手一抬一抬、皮牌在竿子上轻晃
+let lamps = 1;
+const rod2 = $("rod2"), light = $("light"), body = $("body"), head = $("head"), a1 = $("arm1"), a2 = $("arm2"), plq = $("plq"), flame = $("flame");
+(function tick(now) {
+  const t = now / 1000, fl = 0.94 + 0.04 * Math.sin(t * 44) + 0.03 * (rnd(Math.floor(t * 7)) - 0.5) * 2;
+  light.style.setProperty("--lo", (fl * (0.75 + 0.25 * lamps)).toFixed(3));
+  light.style.setProperty("--lx", (50 + Math.sin(t * 0.7) * 3).toFixed(1) + "%");
+  body.style.transform = `rotate(${(Math.sin(t * 1.3) * 1.6).toFixed(2)}deg)`;
+  head.style.transform = `rotate(${(Math.sin(t * 1.3 + 0.8) * 3).toFixed(2)}deg)`;
+  // 手臂抬起指向左边的标题：上臂转 110°，小臂再弯一点；竿子从手上垂直往下
+  const bR = Math.sin(t * 1.3) * 1.6, r1 = 112 + Math.sin(t * 1.7) * 8, r2 = -24 + Math.sin(t * 1.7 + 0.6) * 12;
+  a1.style.transform = `rotate(${r1.toFixed(2)}deg)`;
+  a2.style.transform = `rotate(${r2.toFixed(2)}deg)`;
+  const rot = (p, c, deg) => { const a = (deg * Math.PI) / 180, dx = p[0] - c[0], dy = p[1] - c[1]; return [c[0] + dx * Math.cos(a) - dy * Math.sin(a), c[1] + dx * Math.sin(a) + dy * Math.cos(a)]; };
+  const hand = rot(rot(rot([49, 190], [50, 148], r2), [52, 112], r1), [62, 150], bR);
+  rod2.setAttribute("x1", hand[0].toFixed(1)); rod2.setAttribute("y1", hand[1].toFixed(1)); rod2.setAttribute("x2", (hand[0] + 6).toFixed(1));
+  plq.style.transform = `rotate(${(Math.sin(t * 0.9) * 1.2).toFixed(2)}deg)`;
+  flame.style.transform = `scale(${(1 + Math.sin(t * 30) * 0.08).toFixed(3)}, ${(1 + Math.sin(t * 23) * 0.12).toFixed(3)})`;
+  requestAnimationFrame(tick);
+})(performance.now());
+const lamp = $("lamp");
+lamp.addEventListener("click", () => { const on = lamp.classList.toggle("on"); lamps = on ? 2 : 1; flame.setAttribute("opacity", on ? "1" : "0"); $("lt").textContent = on ? "灯亮了" : "点灯听"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

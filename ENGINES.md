@@ -65,6 +65,12 @@
 | `sprite(rows, colors, scale)` | 字符画数组 → 精灵画布 |
 | `vhs(img, w, h)` | 录像带画质画布 |
 | `isoP(x, y, z, s, ox, oy)` / `isoCube(...)` | 等距投影 / 一个三面方块的 SVG 字符串 |
+| `mulberry(seed)` | 可重复的随机数发生器（返回函数） |
+| `wcWash(ctx, cx, cy, r, color, { layers, alpha, seed, sides, spread, upto, squash })` | 水彩晕染块：同一形状叠 layers 层，每层再抖；upto 控制画到第几层（做「刷上去」动画） |
+| `wcStroke(ctx, pts, { width, color, alpha, seed, bristles, upto })` | 水彩一笔：变宽色带 + 断续笔毛；upto 0～1 是画到多长 |
+| `wcDeform(poly, depth, spread, rand)` | 多边形递归中点位移（顶点第三个值是该点的乱度） |
+| `watercolorCanvas(img, w, h, { k, passes, blur, paper, seed })` | 真图 → 水彩（k 种主色分区，多遍 multiply，最亮一区留纸） |
+| `stainedGlass(img, w, h, { cell, lead, sat, bright, seed, pale })` → `{ canvas, reveal(k) }` | 真图 → 彩色玻璃（泰森多边形 + 铅条）；`reveal(k)` 按随机顺序点亮到 k（0～1），-1 全暗 |
 
 ## 视频用（seek）
 

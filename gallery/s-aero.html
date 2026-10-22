@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frutiger Aero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,600;6..12,700;6..12,800&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --sky1: #39aef0; --sky2: #bfe9ff; --grass1: #7ed957; --grass2: #2f9e3f; --ink: #0d3a5c; --mute: #3f6f8f; --aqua1: #6fd0ff; --aqua2: #1679d6; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--sky2); }
+  body { font-family: "Nunito Sans", "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; overflow: hidden; background: linear-gradient(var(--sky1) 0%, #7ccdf7 38%, var(--sky2) 72%, #e9f8ff 100%); }
+  .sun { position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,240,.95) 0 18%, rgba(255,255,220,.35) 40%, transparent 70%); }
+  .cloud { position: absolute; border-radius: 50%; background: radial-gradient(ellipse at 50% 40%, #fff 0 45%, rgba(255,255,255,0) 70%); filter: blur(2px); opacity: .9; }
+  .hills { position: absolute; left: -20px; right: -20px; bottom: 0; height: 170px; }
+  .hills svg { width: 100%; height: 100%; }
+  .bubble { position: absolute; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0 10%, rgba(255,255,255,.25) 22%, rgba(150,220,255,.15) 55%, rgba(120,200,255,.45) 85%, rgba(255,255,255,.75) 100%); box-shadow: inset 0 0 6px rgba(255,255,255,.6); pointer-events: none; }
+  .ui { position: relative; height: 100%; display: flex; flex-direction: column; z-index: 2; }
+  /* Aero 玻璃：上半更亮（反光），细白边，轻投影 */
+  .glass { background: linear-gradient(rgba(255,255,255,.72), rgba(255,255,255,.42) 50%, rgba(255,255,255,.32) 51%, rgba(255,255,255,.5)); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 8px 22px -8px rgba(13,58,92,.35), inset 0 1px 0 #fff; backdrop-filter: blur(10px) saturate(1.3); border-radius: 18px; }
+  /* Aqua 按钮：蓝色胶囊 + 上面一道白色高光 */
+  .aqua { position: relative; overflow: hidden; border-radius: 999px; background: linear-gradient(var(--aqua1), var(--aqua2)); color: #fff; box-shadow: 0 4px 10px rgba(22,121,214,.45), inset 0 -3px 6px rgba(0,60,140,.35); text-shadow: 0 1px 1px rgba(0,50,120,.5); }
+  .aqua::before { content: ""; position: absolute; left: 8%; right: 8%; top: 2px; height: 48%; border-radius: 999px; background: linear-gradient(rgba(255,255,255,.9), rgba(255,255,255,.15)); }
+  .aqua::after { content: ""; position: absolute; top: 0; bottom: 0; width: 30%; left: -40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); transform: skewX(-20deg); animation: shine 4s ease-in-out infinite; }
+  @keyframes shine { 0%, 60% { left: -40%; } 100% { left: 130%; } }
+  .orb { display: grid; place-items: center; border-radius: 50%; color: #fff; font-weight: 800; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 120%, var(--o1), var(--o2) 70%); box-shadow: 0 3px 8px rgba(0,0,0,.25), inset 0 -2px 4px rgba(0,0,0,.2); text-shadow: 0 1px 1px rgba(0,0,0,.35); }
+  .orb::before { content: ""; position: absolute; left: 14%; right: 14%; top: 4%; height: 46%; border-radius: 50%; background: linear-gradient(rgba(255,255,255,.95), rgba(255,255,255,.1)); }
+  .orb span { position: relative; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 800; font-size: 15px; color: #fff; text-shadow: 0 1px 2px rgba(0,60,120,.4); }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 4px 16px 10px; }
+  h1 { font-weight: 900; font-size: 32px; color: #fff; letter-spacing: .5px; text-shadow: 0 2px 6px rgba(0,60,120,.45); }
+  h1 em { font-style: normal; background: linear-gradient(#fff, #c8f0ff); -webkit-background-clip: text; background-clip: text; }
+  .date { font-size: 13px; color: #fff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,60,120,.4); }
+  .listen { padding: 10px 18px; font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .listen span, .listen i { position: relative; z-index: 1; }
+  .listen i { width: 0; height: 0; border-left: 11px solid #fff; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 26px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { padding: 12px; position: relative; }
+  .pic { height: 190px; border-radius: 12px; overflow: hidden; border: 2px solid #fff; box-shadow: 0 6px 14px rgba(13,58,92,.3); -webkit-box-reflect: below 4px linear-gradient(transparent 80%, rgba(255,255,255,.4)); margin-bottom: 44px; }
+  .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero .orb { position: absolute; right: 22px; top: 176px; width: 50px; height: 50px; font-size: 20px; --o1: #ffd36b; --o2: #ff8a1e; z-index: 2; }
+  .hero h2 { margin-top: 6px; font-weight: 900; font-size: 20px; line-height: 1.45; }
+  .hero p { margin-top: 6px; font-size: 13.5px; line-height: 1.65; color: var(--mute); font-weight: 500; }
+  .badges { display: flex; gap: 8px; margin-top: 10px; }
+  .badges span { padding: 5px 12px; font-size: 12.5px; font-weight: 800; }
+  .badges span.g { background: linear-gradient(#9cf07a, #2f9e3f); box-shadow: 0 3px 8px rgba(47,158,63,.45), inset 0 -2px 4px rgba(0,80,20,.3); }
+
+  ol { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .it { display: grid; grid-template-columns: 40px 1fr 70px; gap: 10px; align-items: center; padding: 10px; cursor: pointer; position: relative; overflow: hidden; }
+  .it .orb { width: 36px; height: 36px; font-size: 15px; }
+  .it h3 { font-weight: 800; font-size: 14.5px; line-height: 1.45; }
+  .it .m { margin-top: 3px; font-size: 12px; color: var(--mute); font-weight: 700; }
+  .it .more { display: none; margin-top: 6px; font-size: 12.5px; line-height: 1.6; color: var(--mute); }
+  .it.open .more { display: block; }
+  .it .tn { width: 70px; height: 54px; border-radius: 10px; overflow: hidden; border: 2px solid #fff; box-shadow: 0 3px 8px rgba(13,58,92,.25); background: linear-gradient(#e8f7ff, #b8e4ff); display: grid; place-items: center; }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; }
+  .it .tn svg { width: 34px; height: 34px; }
+  .ripple { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); pointer-events: none; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 0 12px 20px; padding: 6px; gap: 4px; border-radius: 24px; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 0; border-radius: 18px; font-weight: 800; font-size: 11.5px; color: var(--mute); position: relative; overflow: hidden; }
+  .tab svg { width: 20px; height: 20px; position: relative; z-index: 1; }
+  .tab span { position: relative; z-index: 1; }
+  .tab.on { color: #fff; border-radius: 18px; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const ORB = [["#7ee6ff", "#1679d6"], ["#a6f27e", "#2f9e3f"], ["#ffd36b", "#ff8a1e"], ["#ff9ad1", "#d6337f"], ["#c7a6ff", "#6b3fd6"]];
+app.innerHTML = `
+  <div class="sun"></div>
+  ${[[20, 130, 150, 50], [210, 210, 120, 40], [60, 360, 180, 46], [240, 470, 140, 40]].map(([l, t, w, h], i) => `<i class="cloud" data-v="${0.12 + i * 0.05}" style="left:${l}px;top:${t}px;width:${w}px;height:${h}px"></i>`).join("")}
+  <div class="hills"><svg viewBox="0 0 430 170" preserveAspectRatio="none"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9df06e"/><stop offset="1" stop-color="#2f9e3f"/></linearGradient><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4f7a0"/><stop offset="1" stop-color="#4dbb4a"/></linearGradient></defs><path d="M0 90 Q110 30 230 80 T430 70 V170 H0 Z" fill="url(#g2)" opacity=".9"/><path d="M0 120 Q140 70 260 115 T430 105 V170 H0 Z" fill="url(#g1)"/><path d="M30 112 Q140 78 250 110" stroke="rgba(255,255,255,.55)" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div>
+  <div id="bub"></div>
+  <div class="ui">
+    <div class="sb"><span>${nowHM()}</span><span>5G ◉</span></div>
+    <header class="top"><div><h1>AI <em>热点</em></h1><div class="date">10 月 22 日 · 周四 · 实时</div></div><button class="listen aqua" id="listen"><i></i><span>听热点</span></button></header>
+    <main class="scroll">
+      <section class="hero glass" id="hero">
+        <div class="pic"><img src="${h1.cover}" alt=""></div>
+        <div class="orb"><span>1</span></div>
+        <h2>${esc(shortTitle(h1))}</h2>
+        <p>${esc(clip(firstLine(h1.summary), 56))}</p>
+        <div class="badges"><span class="aqua">热度 ${heatText(h1)}</span><span class="aqua g">${h1.sources} 家在说</span></div>
+      </section>
+      <ol>${rest.map((h, i) => `<li class="it glass" data-r="${h.rank}"><span class="orb" style="--o1:${ORB[i % 5][0]};--o2:${ORB[i % 5][1]}"><span>${h.rank}</span></span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#1679d6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+    </main>
+    <nav class="tabs glass">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on aqua"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>
+  </div>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+// 气泡从草地里冒上来，左右轻轻漂
+const bub = $("bub"), H = app.clientHeight;
+const bubbles = Array.from({ length: 9 }, (_, i) => { const b = document.createElement("i"), s = 10 + rnd(i) * 26; b.className = "bubble"; Object.assign(b.style, { width: s + "px", height: s + "px", left: rnd(i * 3) * 360 + "px" }); bub.appendChild(b); return { b, s, x: rnd(i * 3) * 360, y: H - 60 - rnd(i * 7) * H, v: 18 + rnd(i * 5) * 26, ph: i }; });
+let last = performance.now();
+(function float(now) {
+  const dt = (now - last) / 1000; last = now;
+  bubbles.forEach((o) => { o.y -= o.v * dt; if (o.y < -40) o.y = H - 40; o.b.style.transform = `translate(${(Math.sin(now / 900 + o.ph) * 8).toFixed(1)}px, ${o.y.toFixed(1)}px)`; });
+  app.querySelectorAll(".cloud").forEach((c) => { let x = parseFloat(c.style.left) + +c.dataset.v * dt * 20; if (x > 420) x = -180; c.style.left = x + "px"; });
+  requestAnimationFrame(float);
+})(last);
+// 入场：玻璃块从下面浮上来、带一点弹
+const rise = (el, d) => el.animate([{ transform: "translateY(40px) scale(.96)", opacity: 0 }, { transform: "translateY(-4px)", opacity: 1, offset: 0.7 }, { transform: "none", opacity: 1 }], { duration: 700, delay: d, easing: "ease-out", fill: "backwards" });
+rise($("hero"), 300); app.querySelectorAll(".it").forEach((li, i) => rise(li, 700 + i * 90)); rise(app.querySelector(".tabs"), 400);
+app.querySelector(".hero .orb").animate([{ transform: "scale(0)" }, { transform: "scale(1.2)" }, { transform: "none" }], { duration: 600, delay: 1000, fill: "backwards" });
+// 点一下：水波纹
+const ripple = (el, e) => { const r = el.getBoundingClientRect(), d = document.createElement("i"); d.className = "ripple"; Object.assign(d.style, { left: e.clientX - r.left + "px", top: e.clientY - r.top + "px", width: "0px", height: "0px" }); el.appendChild(d); d.animate([{ width: "0px", height: "0px", margin: "0", opacity: 1 }, { width: "240px", height: "240px", margin: "-120px", opacity: 0 }], { duration: 700, easing: "ease-out" }).onfinish = () => d.remove(); };
+app.querySelectorAll(".it").forEach((li) => li.addEventListener("click", (e) => { li.classList.toggle("open"); ripple(li, e); }));
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.querySelector("span").textContent = on ? "在听 01" : "听热点"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", (e) => { tabs.forEach((x) => { x.classList.toggle("on", x === t); x.classList.toggle("aqua", x === t); }); ripple(t, e); }));
+})();
+</script>
+</body>
+</html>

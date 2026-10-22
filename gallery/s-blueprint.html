@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>蓝图</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --blue: #1d4f91; --blue2: #174178; --line: #e8f1ff; --dim: rgba(232,241,255,.55); --faint: rgba(232,241,255,.14); --hi: #ffd166; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--blue); }
+  body { font-family: "IBM Plex Mono", "Noto Sans SC", monospace; color: var(--line); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-color: var(--blue); background-image: linear-gradient(var(--faint) 1px, transparent 1px), linear-gradient(90deg, var(--faint) 1px, transparent 1px), linear-gradient(rgba(232,241,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(232,241,255,.06) 1px, transparent 1px); background-size: 60px 60px, 60px 60px, 12px 12px, 12px 12px; }
+  .app::before { content: ""; position: absolute; inset: 0; background: var(--paper); mix-blend-mode: soft-light; opacity: .6; pointer-events: none; }
+  .app::after { content: ""; position: absolute; left: 0; right: 0; top: 46%; height: 1px; background: rgba(255,255,255,.12); box-shadow: 0 1px 0 rgba(0,0,0,.12); pointer-events: none; }
+  .border { position: absolute; inset: 8px; border: 1.5px solid var(--dim); pointer-events: none; }
+  .app > * { position: relative; }
+  .draw { stroke-dasharray: var(--L); stroke-dashoffset: var(--L); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-size: 13px; font-weight: 600; }
+  .block { flex: none; margin: 0 16px; display: grid; grid-template-columns: 1.7fr 1fr 1fr; border: 1.5px solid var(--line); }
+  .block > div { border-right: 1px solid var(--dim); border-bottom: 1px solid var(--dim); padding: 4px 8px; font-size: 10px; color: var(--dim); letter-spacing: .5px; }
+  .block > div:nth-child(3n) { border-right: 0; }
+  .block > div:nth-last-child(-n+3) { border-bottom: 0; }
+  .block b { display: block; font-family: "Noto Sans SC", sans-serif; font-weight: 700; font-size: 14px; color: var(--line); letter-spacing: 1px; }
+  .block .t { grid-row: span 2; }
+  .block .t b { font-size: 26px; letter-spacing: 3px; margin-top: 2px; }
+  .listen { display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+  .listen svg { width: 22px; height: 22px; overflow: visible; }
+  .listen.on b { color: var(--hi); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .fig { position: relative; height: 300px; }
+  .fig canvas { position: absolute; left: 26px; top: 26px; width: calc(100% - 52px); height: 196px; }
+  .fig svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .fig text, .heat text { font-family: "IBM Plex Mono", "Noto Sans SC", monospace; fill: var(--line); font-size: 10px; }
+  .heat text { font-size: 11px; font-weight: 600; }
+  .hero h2 { font-family: "Noto Sans SC", sans-serif; font-weight: 700; font-size: 20px; line-height: 1.5; letter-spacing: .5px; }
+  .hero p { margin-top: 8px; font-family: "Noto Sans SC", sans-serif; font-size: 13px; line-height: 1.75; color: var(--dim); }
+  .heat { position: relative; height: 36px; margin-top: 10px; }
+  .heat svg { width: 100%; height: 100%; overflow: visible; }
+
+  .bom { margin-top: 18px; border: 1.5px solid var(--line); }
+  .bom .hd, .it { display: grid; grid-template-columns: 34px 1fr 50px 64px; }
+  .bom .hd > span { font-size: 10px; color: var(--dim); padding: 5px 6px; border-right: 1px solid var(--dim); border-bottom: 1.5px solid var(--line); letter-spacing: .5px; }
+  .bom .hd > span:last-child { border-right: 0; }
+  .it { border-bottom: 1px solid var(--dim); cursor: pointer; position: relative; }
+  .it:last-child { border-bottom: 0; }
+  .it > * { border-right: 1px solid var(--dim); padding: 8px 6px; }
+  .it > *:last-child { border-right: 0; padding: 4px; }
+  .it .n { font-size: 13px; font-weight: 600; text-align: center; }
+  .it h3 { font-family: "Noto Sans SC", sans-serif; font-weight: 500; font-size: 13.5px; line-height: 1.45; }
+  .it .h { font-size: 12px; text-align: right; }
+  .it canvas { width: 100%; height: 44px; display: block; }
+  .it .more { display: none; grid-column: 2 / -1; font-family: "Noto Sans SC"; font-size: 12px; line-height: 1.6; color: var(--dim); border-right: 0; }
+  .it.open { background: repeating-linear-gradient(45deg, rgba(232,241,255,.10) 0 1px, transparent 1px 7px); }
+  .it.open .more { display: block; }
+  .it.open .n { color: var(--hi); }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 0 16px 22px; border: 1.5px solid var(--line); }
+  .tab { padding: 8px 0 7px; font-family: "Noto Sans SC"; font-weight: 500; font-size: 13px; border-right: 1px solid var(--dim); color: var(--dim); }
+  .tab:last-child { border-right: 0; }
+  .tab.on { color: var(--blue); background: var(--line); font-weight: 700; }
+  .cross { position: absolute; width: 30px; height: 30px; pointer-events: none; z-index: 5; }
+  .cross::before, .cross::after { content: ""; position: absolute; background: var(--hi); }
+  .cross::before { left: 14px; top: 0; width: 1.5px; height: 30px; } .cross::after { top: 14px; left: 0; height: 1.5px; width: 30px; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const maxHeat = Math.max(...HOT.map((h) => h.heat));
+app.style.setProperty("--paper", `url(${grainURL(220, 0.25, 255)})`);
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); p && p.appendChild(e); return e; };
+// 尺寸线：两头箭头 + 界线 + 中间数字
+function dimLine(svg, x1, y1, x2, y2, label, off = 14) {
+  const g = el("g", { stroke: "#e8f1ff", "stroke-width": 1, fill: "none" }, svg);
+  const ang = Math.atan2(y2 - y1, x2 - x1), nx = -Math.sin(ang) * off, ny = Math.cos(ang) * off;
+  el("path", { d: `M${x1} ${y1} l${nx * 1.2} ${ny * 1.2} M${x2} ${y2} l${nx * 1.2} ${ny * 1.2}`, opacity: 0.6 }, g);
+  const ax = x1 + nx, ay = y1 + ny, bx = x2 + nx, by = y2 + ny;
+  el("path", { d: `M${ax} ${ay} L${bx} ${by}` }, g);
+  const ah = (x, y, a) => `M${x} ${y} l${Math.cos(a + 0.35) * 7} ${Math.sin(a + 0.35) * 7} M${x} ${y} l${Math.cos(a - 0.35) * 7} ${Math.sin(a - 0.35) * 7}`;
+  el("path", { d: ah(ax, ay, ang) + ah(bx, by, ang + Math.PI) }, g);
+  const t = el("text", { x: (ax + bx) / 2, y: (ay + by) / 2 - 4, "text-anchor": "middle", stroke: "none", transform: Math.abs(ang) > 1 ? `rotate(-90 ${(ax + bx) / 2} ${(ay + by) / 2})` : "" }, g);
+  t.textContent = label;
+  return g;
+}
+const leader = (svg, x, y, tx, ty, n) => { const g = el("g", { stroke: "#e8f1ff", "stroke-width": 1, fill: "none" }, svg); el("circle", { cx: x, cy: y, r: 2.5, fill: "#e8f1ff" }, g); el("path", { d: `M${x} ${y} L${tx} ${ty}` }, g); el("circle", { cx: tx, cy: ty, r: 9 }, g); const t = el("text", { x: tx, y: ty + 3.5, "text-anchor": "middle", stroke: "none" }, g); t.textContent = n; return g; };
+const prep = (root) => root.querySelectorAll("path, circle, line, rect").forEach((p) => { const L = (p.getTotalLength ? p.getTotalLength() : 100) + 1; p.style.setProperty("--L", L); p.classList.add("draw"); });
+
+app.innerHTML = `
+  <div class="border"></div>
+  <div class="sb"><span>${nowHM()}</span><span>5G · 图纸 1/1</span></div>
+  <div class="block">
+    <div class="t">项目名称<b>AI 热点</b></div><div>图号<b>01</b></div><div>比例<b>1:1</b></div>
+    <div>日期<b>10.22</b></div><div class="listen" id="listen"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="none" stroke="#e8f1ff" stroke-width="1.3"/><path d="M8 6.5 L16 11 L8 15.5 Z" fill="none" stroke="#e8f1ff" stroke-width="1.3" id="pi"/></svg><b>听热点</b></div>
+  </div>
+  <main class="scroll">
+    <section class="hero">
+      <div class="fig" id="fig"><canvas id="cv"></canvas><svg id="dims"></svg></div>
+      <h2>${esc(shortTitle(h1))}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 60))}</p>
+      <div class="heat"><svg id="heat"></svg></div>
+    </section>
+    <div class="bom"><div class="hd"><span>序号</span><span>名称</span><span>热度</span><span>图样</span></div>
+      ${rest.map((h) => `<div class="it" data-r="${h.rank}"><span class="n">${pad2(h.rank)}</span><h3>${esc(shortTitle(h))}</h3><span class="h">${heatText(h)}</span><span><canvas></canvas></span><div class="more">${esc(clip(firstLine(h.summary), 80))} · ${h.sources} 家来源</div></div>`).join("")}
+    </div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>
+  <div class="cross" id="cross"></div>`;
+
+const $ = (id) => document.getElementById(id);
+// 描图：白线稿 + 一圈细框
+const trace = (img, w, h, gain = 3) => { const c = sketchCanvas(img, w, h, { ink: "#e8f1ff", gain, hatch: true, soft: 2 }); const x = c.getContext("2d"); x.strokeStyle = "rgba(232,241,255,.8)"; x.lineWidth = 2; x.strokeRect(1, 1, w - 2, h - 2); return c; };
+(async () => {
+await fontsReady();
+const cv = $("cv"), W = cv.offsetWidth, H = cv.offsetHeight;
+loadImage(h1.cover).then((img) => { const t = trace(img, W * 2, H * 2); cv.width = t.width; cv.height = t.height; cv.getContext("2d").drawImage(t, 0, 0); cv.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 1600, delay: 400, easing: "linear", fill: "both" }); });
+// 尺寸线、引线编号、剖切符号
+const fig = $("fig"), FW = fig.offsetWidth, svg = $("dims");
+svg.setAttribute("viewBox", `0 0 ${FW} 300`);
+const L = 26, R = FW - 26, T = 26, B = 222;
+dimLine(svg, L, B, R, B, `${Math.round(R - L)}`, 16);
+dimLine(svg, L, T, L, B, `${B - T}`, -16);
+leader(svg, L + (R - L) * 0.32, T + 70, L + 30, 270, "1");
+leader(svg, L + (R - L) * 0.7, T + 120, R - 40, 268, "2");
+const cut = el("g", { stroke: "#e8f1ff", "stroke-width": 1.4, fill: "none" }, svg);
+el("path", { d: `M${R + 4} ${T + 40} h10 M${R + 4} ${B - 40} h10 M${R + 9} ${T + 40} v-10 M${R + 9} ${B - 40} v10`, "stroke-dasharray": "none" }, cut);
+const lab = (x, y, s) => { const t = el("text", { x, y, "font-size": 11, "font-weight": 600 }, svg); t.textContent = s; return t; };
+lab(L + 56, 274, `头条 · ${h1.sources} 家来源`); lab(R - 108, 290, `参与 ${h1.people} 人`); lab(R + 2, T + 26, "A"); lab(R + 2, B - 30, "A");
+prep(svg);
+svg.querySelectorAll(".draw").forEach((p, i) => p.animate([{ strokeDashoffset: p.style.getPropertyValue("--L") }, { strokeDashoffset: 0 }], { duration: 700, delay: 1200 + i * 40, easing: "ease-out", fill: "forwards" }));
+svg.querySelectorAll("text").forEach((t, i) => t.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 1700 + i * 60, fill: "both" }));
+// 热度：一条尺寸线，长度按热度
+const hs = $("heat"), HW = hs.parentElement.offsetWidth; hs.setAttribute("viewBox", `0 0 ${HW} 36`);
+const hl = 30 + (HW - 60) * (h1.heat / maxHeat);
+const hg = dimLine(hs, 0, 6, hl, 6, `热度 ${heatText(h1)}`, 14); prep(hs);
+hs.querySelectorAll(".draw").forEach((p) => p.animate([{ strokeDashoffset: p.style.getPropertyValue("--L") }, { strokeDashoffset: 0 }], { duration: 900, delay: 2100, fill: "forwards" }));
+app.querySelectorAll(".hero h2, .hero p").forEach((e, i) => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 1500 + i * 200, fill: "both" }));
+// 明细表一行行出现，小图描线
+app.querySelectorAll(".it").forEach((li, i) => {
+  const h = rest[i], c = li.querySelector("canvas"), w = c.offsetWidth, hh = c.offsetHeight;
+  if (h.cover) loadImage(h.cover).then((img) => { const t = trace(img, w * 2, hh * 2, 2.4); c.width = t.width; c.height = t.height; c.getContext("2d").drawImage(t, 0, 0); });
+  else { c.width = w * 2; c.height = hh * 2; const x = c.getContext("2d"); x.strokeStyle = "#e8f1ff"; x.lineWidth = 4; x.lineCap = "round"; x.translate(w - 40, 4); x.scale(1.25, 1.25); x.stroke(new Path2D(DOODLE[h.rank])); }
+  li.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, delay: 2200 + i * 90, easing: "linear", fill: "backwards" });
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+// 黄色十字准星在图上几个点之间移动，像在一处处量
+const cross = $("cross"), pts = [[L + 30, T + 30], [R - 40, T + 60], [L + (R - L) / 2, B - 20], [R - 20, B - 10]];
+let k = 0; const move = () => { const r = fig.getBoundingClientRect(), a = app.getBoundingClientRect(), [x, y] = pts[k++ % pts.length]; cross.animate([{}, { left: r.left - a.left + x - 15 + "px", top: r.top - a.top + y - 15 + "px" }], { duration: 900, easing: "cubic-bezier(.6,0,.2,1)", fill: "forwards" }); };
+cross.style.left = "-40px"; cross.style.top = "200px"; setTimeout(() => { move(); setInterval(move, 1800); }, 2600);
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); $("pi").setAttribute("d", on ? "M8 6.5 V15.5 M14 6.5 V15.5" : "M8 6.5 L16 11 L8 15.5 Z"); listen.querySelector("b").textContent = on ? "在听 01" : "听热点"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

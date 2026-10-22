@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新粗野主义</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Archivo+Black&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #fff4e0; --ink: #111; --yel: #ffd23f; --pink: #ff7ab6; --blue: #6c8cff; --green: #4ade80; --orange: #ff8a3d; --purple: #b497ff; --b: 3px solid var(--ink); --sh: 5px 5px 0 var(--ink); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Space Grotesk", "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); background-image: radial-gradient(rgba(17,17,17,.13) 1.2px, transparent 1.4px); background-size: 18px 18px; }
+  .box { border: var(--b); box-shadow: var(--sh); transition: transform .08s, box-shadow .08s; }
+  .press:active { transform: translate(5px, 5px); box-shadow: 0 0 0 var(--ink); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: "Archivo Black"; font-size: 14px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 2px 16px 12px; }
+  h1 { display: flex; gap: 6px; align-items: center; font-weight: 900; font-size: 30px; }
+  h1 span { background: var(--yel); border: var(--b); box-shadow: 3px 3px 0 var(--ink); padding: 0 8px 2px; transform: rotate(-3deg); }
+  .listen { background: var(--pink); border-radius: 999px; padding: 9px 16px; font-weight: 900; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .listen i { width: 0; height: 0; border-left: 11px solid var(--ink); border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+  .listen.on { background: var(--green); }
+  .listen.on i { width: 11px; height: 13px; border: 0; background: linear-gradient(90deg, var(--ink) 35%, transparent 35% 65%, var(--ink) 65%); }
+
+  .marquee { flex: none; background: var(--ink); color: var(--yel); border-top: var(--b); border-bottom: var(--b); overflow: hidden; white-space: nowrap; font-family: "Archivo Black", "Noto Sans SC"; font-weight: 900; font-size: 14px; padding: 6px 0; }
+  .marquee div { display: inline-block; animation: mq 22s linear infinite; }
+  .marquee span { padding: 0 14px; }
+  .marquee span::after { content: "✦"; margin-left: 28px; color: var(--pink); }
+  @keyframes mq { to { transform: translateX(-50%); } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 16px 26px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; background: #fff; padding: 12px; }
+  .pic { border: var(--b); height: 196px; overflow: hidden; }
+  .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .burst { position: absolute; right: -14px; top: -20px; width: 86px; height: 86px; display: grid; place-items: center; z-index: 2; }
+  .burst svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: spin 12s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .burst b { position: relative; font-family: "Archivo Black"; font-size: 15px; line-height: 1; text-align: center; transform: rotate(-10deg); }
+  .hero h2 { margin-top: 12px; font-weight: 900; font-size: 21px; line-height: 1.45; }
+  .hero h2 mark { background: var(--yel); color: inherit; padding: 0 3px; box-shadow: inset 0 -3px 0 var(--ink); }
+  .hero p { margin-top: 8px; font-size: 13.5px; line-height: 1.7; font-weight: 500; }
+  .stats { display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-top: 12px; }
+  .stat { padding: 8px 10px; font-weight: 700; font-size: 12px; }
+  .stat b { display: block; font-family: "Archivo Black"; font-size: 28px; line-height: 1.05; }
+  .stat:first-child { background: var(--pink); } .stat:last-child { background: var(--blue); }
+
+  .h4 { display: inline-block; margin: 26px 0 12px; background: var(--green); padding: 3px 10px; font-weight: 900; font-size: 15px; transform: rotate(-2deg); }
+  ol { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .it { display: grid; grid-template-columns: 38px 1fr 70px; gap: 10px; align-items: center; padding: 10px; background: var(--c); cursor: pointer; }
+  .it .n { width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-family: "Archivo Black"; font-size: 15px; }
+  .it h3 { font-weight: 900; font-size: 15px; line-height: 1.45; }
+  .it .m { margin-top: 4px; display: inline-block; background: #fff; border: 2px solid var(--ink); padding: 0 6px; font-weight: 700; font-size: 11.5px; }
+  .it .more { display: none; margin-top: 8px; background: #fff; border: 2px solid var(--ink); padding: 6px 8px; font-size: 12.5px; line-height: 1.6; font-weight: 500; }
+  .it.open .more { display: block; }
+  .it .tn { width: 70px; height: 60px; border: var(--b); background: #fff; overflow: hidden; display: grid; place-items: center; }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; }
+  .it .tn svg { width: 38px; height: 38px; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px 10px 24px; background: var(--bg); border-top: var(--b); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 5px; border: 2px solid transparent; border-radius: 12px; font-weight: 900; font-size: 11.5px; }
+  .tab svg { width: 20px; height: 20px; stroke-width: 2.6; }
+  .tab.on { background: var(--yel); border: var(--b); box-shadow: 3px 3px 0 var(--ink); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const COLS = ["#ffd23f", "#ff7ab6", "#6c8cff", "#4ade80", "#ff8a3d", "#b497ff", "#ffd23f"];
+const burst = (n = 14, r1 = 42, r2 = 33) => Array.from({ length: n * 2 }, (_, i) => { const a = (i / (n * 2)) * Math.PI * 2, r = i % 2 ? r2 : r1; return `${(43 + Math.cos(a) * r).toFixed(1)},${(43 + Math.sin(a) * r).toFixed(1)}`; }).join(" ");
+const mark = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<mark>${esc(k)}</mark>`) : t; };
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ▲</span></div>
+  <header class="top"><h1><span>AI</span>热点</h1><button class="listen box press" id="listen"><i></i><span>听热点</span></button></header>
+  <div class="marquee"><div>${[0, 1].map(() => HOT.map((h) => `<span>${esc(h.latest || h.title)}</span>`).join("")).join("")}</div></div>
+  <main class="scroll">
+    <section class="hero box" id="hero">
+      <div class="burst"><svg viewBox="0 0 86 86"><polygon points="${burst()}" fill="#ff8a3d" stroke="#111" stroke-width="3" stroke-linejoin="round"/></svg><b>HOT<br>#1</b></div>
+      <div class="pic"><img src="${h1.cover}" alt=""></div>
+      <h2>${mark(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 58))}</p>
+      <div class="stats"><div class="stat box">热度<b>${heatText(h1)}</b></div><div class="stat box">来源<b>${h1.sources} 家</b></div></div>
+    </section>
+    <div class="h4 box">其余 ${rest.length} 条 →</div>
+    <ol>${rest.map((h, i) => `<li class="it box press" data-r="${h.rank}" style="--c:${COLS[i]}"><span class="n">${h.rank}</span><div><h3>${esc(shortTitle(h))}</h3><span class="m">热度 ${heatText(h)} · ${h.sources} 家</span><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab press ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const POP = "cubic-bezier(.34,1.8,.5,1)";
+(async () => {
+await fontsReady();
+// 啪一下弹出来：从歪着、缩小、没有影子，到立正、有影子
+const pop = (el, d, r = -6) => el.animate([{ transform: `scale(.6) rotate(${r}deg)`, boxShadow: "0 0 0 #111", opacity: 0 }, { transform: "none", boxShadow: "5px 5px 0 #111", opacity: 1 }], { duration: 450, delay: d, easing: POP, fill: "backwards" });
+app.querySelectorAll("h1 span").forEach((s) => s.animate([{ transform: "scale(0) rotate(-30deg)" }, { transform: "rotate(-3deg)" }], { duration: 500, delay: 100, easing: POP, fill: "backwards" }));
+pop($("listen"), 250, 8);
+app.querySelector(".marquee").animate([{ transform: "translateY(-100%)" }, { transform: "none" }], { duration: 400, delay: 300, easing: POP, fill: "backwards" });
+pop($("hero"), 450, -3);
+app.querySelector(".burst").animate([{ transform: "scale(0) rotate(-90deg)" }, { transform: "none" }], { duration: 600, delay: 900, easing: POP, fill: "backwards" });
+app.querySelectorAll(".stat").forEach((s, i) => pop(s, 1000 + i * 120, 6));
+pop(app.querySelector(".h4"), 1200, -10);
+app.querySelectorAll(".it").forEach((li, i) => { pop(li, 1300 + i * 90, i % 2 ? 4 : -4); li.addEventListener("click", () => { li.classList.toggle("open"); li.animate([{ rotate: "0deg" }, { rotate: "-1.5deg" }, { rotate: "1.5deg" }, { rotate: "0deg" }], { duration: 260 }); }); });
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.querySelector("span").textContent = on ? "在听 01" : "听热点"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); t.animate([{ transform: "scale(.8)" }, { transform: "none" }], { duration: 300, easing: POP }); }));
+})();
+</script>
+</body>
+</html>

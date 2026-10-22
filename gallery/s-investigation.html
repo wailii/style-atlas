@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>视觉调查</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Source+Serif+4:ital,wght@1,500&display=swap" rel="stylesheet">
+<style>
+  @property --k { syntax: "<number>"; inherits: true; initial-value: 0; }
+  :root { --ground: #f4f3ef; --panel: #ffffff; --line: #d6d4ce; --ink: #17181a; --mute: #7b7f86; --tick: #aeb2b8; --red: #ff4a2e; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--ground); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .mono { font-family: "IBM Plex Mono", monospace; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-family: "IBM Plex Mono", "Noto Sans SC", monospace; font-size: 10.5px; color: var(--mute); }
+  .chip::before { content: ""; width: 6px; height: 12px; background: var(--ink); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: "IBM Plex Mono"; font-size: 13px; font-weight: 600; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 16px 10px; border-bottom: 1px solid var(--line); }
+  h1 { font-weight: 700; font-size: 26px; letter-spacing: -.5px; }
+  .top .chip { margin-top: 4px; }
+  .play { display: flex; align-items: center; gap: 8px; border: 1px solid var(--ink); padding: 6px 10px; font-family: "IBM Plex Mono", "Noto Sans SC"; font-size: 12px; font-weight: 600; }
+  .play i { width: 0; height: 0; border-left: 8px solid var(--ink); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .play.on { background: var(--ink); color: #fff; } .play.on i { border-left-color: var(--red); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .desk { position: relative; height: 352px; }
+  .desk svg.links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 3; }
+  .ev { position: absolute; background: var(--panel); border: 1px solid var(--line); padding: 6px; }
+  .ev .chip { position: absolute; left: 0; top: -17px; }
+  .ev canvas { display: block; width: 100%; height: 100%; }
+  .ev.main { left: 0; top: 18px; width: 232px; height: 160px; }
+  .ev.zoom { left: 248px; top: 18px; width: 110px; height: 110px; }
+  .src { position: absolute; background: var(--panel); border: 1px solid var(--line); padding: 5px 8px; font-size: 11.5px; line-height: 1.35; max-width: 132px; }
+  .src b { display: block; font-family: "IBM Plex Mono", "Noto Sans SC"; font-weight: 600; font-size: 10px; color: var(--mute); }
+  .hit { position: absolute; left: 186px; top: 300px; width: 14px; height: 14px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 5px rgba(255,74,46,.18); z-index: 4; }
+  .verdict { position: absolute; left: 96px; top: 324px; white-space: nowrap; display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; }
+  .verdict svg { width: 20px; height: 20px; }
+  .hero h2 { margin-top: 6px; font-weight: 700; font-size: 21px; line-height: 1.42; letter-spacing: -.2px; }
+  .quote { margin-top: 10px; font-family: "Source Serif 4", "Noto Sans SC", serif; font-style: italic; font-size: 13.5px; line-height: 1.75; color: #3d3f43; border-left: 2px solid var(--ink); padding-left: 10px; }
+  .quote mark { background: none; position: relative; color: inherit; }
+  .quote mark::before { content: ""; position: absolute; inset: 1px -2px; background: var(--red); opacity: .55; mix-blend-mode: multiply; transform-origin: left; transform: scaleX(var(--k, 0)); }
+  .chart { margin-top: 14px; background: var(--panel); border: 1px solid var(--line); padding: 10px 10px 6px; position: relative; }
+  .chart .chip { margin-bottom: 4px; }
+  .chart svg { width: 100%; height: 90px; overflow: visible; }
+  .clock { position: absolute; right: 10px; top: 8px; font-family: "IBM Plex Mono"; font-weight: 600; font-size: 18px; }
+  .clock small { font-size: 10px; color: var(--mute); margin-right: 4px; }
+
+  .sect { margin: 20px 0 4px; display: flex; justify-content: space-between; font-family: "IBM Plex Mono", "Noto Sans SC"; font-size: 11px; color: var(--mute); }
+  .it { position: relative; display: grid; grid-template-columns: 76px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); cursor: pointer; }
+  .it canvas { width: 76px; height: 58px; display: block; background: #e7e5e0; }
+  .it .ph { width: 76px; height: 58px; border: 1px dashed var(--tick); display: grid; place-items: center; font-family: "IBM Plex Mono"; font-size: 10px; color: var(--mute); }
+  .it h3 { font-weight: 500; font-size: 14.5px; line-height: 1.45; }
+  .it .m { margin-top: 5px; display: flex; align-items: center; gap: 8px; font-family: "IBM Plex Mono", "Noto Sans SC"; font-size: 10.5px; color: var(--mute); }
+  .ok { display: inline-grid; place-items: center; width: 14px; height: 14px; background: var(--red); }
+  .ok svg { width: 10px; height: 10px; }
+  .uncertain { border: 1px dashed var(--tick); padding: 1px 5px; }
+  .it .more { display: none; margin-top: 6px; font-size: 12.5px; line-height: 1.65; color: #3d3f43; }
+  .it.open .more { display: block; }
+  .it.open::before { content: ""; position: absolute; left: -8px; top: 12px; bottom: 12px; width: 3px; background: var(--red); }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--ink); padding: 10px 6px 24px; background: var(--panel); }
+  .tab { font-size: 13px; font-weight: 500; color: var(--mute); position: relative; padding-top: 4px; }
+  .tab.on { color: var(--ink); font-weight: 700; }
+  .tab.on::before { content: ""; position: absolute; left: 30%; right: 30%; top: -11px; height: 3px; background: var(--red); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const NS = "http://www.w3.org/2000/svg";
+const OK = `<svg viewBox="0 0 10 10"><path d="M2 5.2 L4.2 7.4 L8 2.8" fill="none" stroke="#fff" stroke-width="1.6"/></svg>`;
+// 来源卡：每家来源一张，摆在左下，连线汇到同一个点
+const srcs = h1.names.slice(0, 4).map((n) => { const [type, who] = n.includes("：") ? n.split("：") : ["X", n]; return { type: /X/.test(type) ? "X" : "网站", who: (who || type).replace(/\s*\(.*\)/, "").slice(0, 14) }; });
+const SRCPOS = [[0, 196], [0, 252], [132, 214], [252, 150]];
+const key = KEY[h1.rank], sumText = clip(firstLine(h1.summary), 64);
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top"><div><h1>AI 热点 · 调查</h1><div class="chip">10.22 · ${h1.sources} 个来源交叉核对</div></div><button class="play" id="play"><i></i><span>回放</span></button></header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="desk" id="desk">
+        <div class="ev main"><span class="chip">图 · 首图</span><canvas id="mc"></canvas></div>
+        <div class="ev zoom"><span class="chip">局部 · ×3</span><canvas id="zc"></canvas></div>
+        ${srcs.map((s, i) => `<div class="src" style="left:${SRCPOS[i][0]}px;top:${SRCPOS[i][1]}px"><b>${s.type}</b>${esc(s.who)}</div>`).join("")}
+        <i class="hit" id="hit"></i>
+        <div class="verdict" id="verdict"><span class="ok">${OK}</span>${h1.sources} 个来源指向同一件事</div>
+        <svg class="links" id="links"></svg>
+      </div>
+      <h2>${esc(shortTitle(h1))}</h2>
+      <p class="quote" id="quote">${esc(sumText).replace(esc(key), `<mark>${esc(key)}</mark>`)}</p>
+      <div class="chart"><span class="chip">数据 · 热度走势</span><span class="clock"><small>热度</small><span id="clk">0</span></span><svg id="ch"></svg></div>
+    </section>
+    <div class="sect"><span>其余线索</span><span>来源数</span></div>
+    <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}">${h.cover ? "<canvas></canvas>" : `<span class="ph">无图</span>`}<div><h3>${esc(shortTitle(h))}</h3><div class="m"><span>#${pad2(h.rank)}</span><span>热度 ${heatText(h)}</span>${h.sources > 1 ? `<span class="ok">${OK}</span><span>${h.sources} 个来源</span>` : `<span class="uncertain">≈ 单一来源，待核实</span>`}</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); p && p.appendChild(e); return e; };
+// 统一调色：证据一律灰度、提对比
+const grade = (img, w, h, sx = 0, sy = 0, sw = 1, sh = 1) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.filter = "grayscale(1) contrast(1.22) brightness(.96)"; const s = Math.max(w / (img.width * sw), h / (img.height * sh)); x.drawImage(img, img.width * sx, img.height * sy, img.width * sw, img.height * sh, (w - img.width * sw * s) / 2, (h - img.height * sh * s) / 2, img.width * sw * s, img.height * sh * s); return c; };
+const put = (cv, src) => { cv.width = src.width; cv.height = src.height; cv.getContext("2d").drawImage(src, 0, 0); };
+const draw = (p, d, dur = 600) => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, delay: d, easing: "cubic-bezier(.6,0,.2,1)", fill: "both" }); };
+(async () => {
+await fontsReady();
+const img = await loadImage(h1.cover), mc = $("mc"), zc = $("zc");
+put(mc, grade(img, mc.offsetWidth * 2, mc.offsetHeight * 2));
+put(zc, grade(img, zc.offsetWidth * 2, zc.offsetHeight * 2, 0.36, 0.3, 0.28, 0.4));
+// 红框圈出局部、连线到放大图；来源卡连线汇到一个红点
+const desk = $("desk"), svg = $("links"), D = desk.getBoundingClientRect();
+const rel = (e) => { const r = e.getBoundingClientRect(); return { l: r.left - D.left, t: r.top - D.top, r: r.right - D.left, b: r.bottom - D.top, cx: (r.left + r.right) / 2 - D.left, cy: (r.top + r.bottom) / 2 - D.top }; };
+const M = rel(app.querySelector(".ev.main")), Z = rel(app.querySelector(".ev.zoom"));
+const bx = M.l + 6 + (M.r - M.l - 12) * 0.36, by = M.t + 6 + (M.b - M.t - 12) * 0.3, bw = (M.r - M.l - 12) * 0.28, bh = (M.b - M.t - 12) * 0.4;
+const box = el("rect", { x: bx, y: by, width: bw, height: bh, fill: "none", stroke: "#ff4a2e", "stroke-width": 2 }, svg); draw(box, 700);
+const z1 = el("path", { d: `M${bx + bw} ${by} L${Z.l} ${Z.t}  M${bx + bw} ${by + bh} L${Z.l} ${Z.b}`, stroke: "#ff4a2e", "stroke-width": 1, fill: "none", opacity: 0.8 }, svg); draw(z1, 1100);
+app.querySelector(".ev.zoom").animate([{ clipPath: "inset(50% 50% 50% 50%)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, delay: 1300, easing: "cubic-bezier(.6,0,.2,1)", fill: "backwards" });
+const H = rel($("hit"));
+[...app.querySelectorAll(".src")].forEach((s, i) => {
+  const r = rel(s), sx = r.cx > H.cx ? r.l : r.r, sy = r.cy;
+  s.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 400, delay: 1500 + i * 150, fill: "backwards" });
+  const p = el("path", { d: `M${sx} ${sy} C${(sx + H.cx) / 2} ${sy}, ${(sx + H.cx) / 2} ${H.cy}, ${H.cx} ${H.cy}`, stroke: "#ff4a2e", "stroke-width": 1.2, fill: "none" }, svg); draw(p, 1700 + i * 150, 700);
+});
+$("hit").animate([{ transform: "scale(0)" }, { transform: "scale(1.4)" }, { transform: "scale(1)" }], { duration: 500, delay: 2500, fill: "backwards" });
+$("verdict").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, delay: 2700, fill: "backwards" });
+app.querySelectorAll(".ev.main, .hero h2").forEach((e, i) => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 200 + i * 500, fill: "backwards" }));
+// 原文里关键的一句用红色划过
+const mk = app.querySelector(".quote mark"); if (mk) mk.animate([{ "--k": 0 }, { "--k": 1 }], { duration: 600, delay: 3000, fill: "forwards" });
+// 热度走势：播放头扫过去，钟上的数跟着读
+const ch = $("ch"), CW = ch.parentElement.clientWidth - 20; ch.setAttribute("viewBox", `0 0 ${CW} 90`);
+const v = h1.spark.filter((x) => x != null), mx = Math.max(...v), pts = v.map((y, i) => [(i / (v.length - 1)) * CW, 82 - (y / mx) * 74]);
+for (let i = 0; i <= 4; i++) el("line", { x1: (i / 4) * CW, x2: (i / 4) * CW, y1: 82, y2: 86, stroke: "#aeb2b8" }, ch);
+el("line", { x1: 0, x2: CW, y1: 82, y2: 82, stroke: "#d6d4ce" }, ch);
+const curve = el("path", { d: pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" "), fill: "none", stroke: "#17181a", "stroke-width": 1.6 }, ch); draw(curve, 2000, 900);
+const ph = el("line", { x1: 0, x2: 0, y1: 0, y2: 86, stroke: "#ff4a2e", "stroke-width": 1.5 }, ch), dot = el("circle", { r: 3.5, fill: "#ff4a2e" }, ch);
+let playing = false, t0 = performance.now() + 2900;
+(function scrub(now) {
+  const k = playing ? ((now - t0) / 4000) % 1 : Math.min(1, Math.max(0, (now - t0) / 1600)), f = k * (pts.length - 1), a = Math.floor(f), b = Math.min(pts.length - 1, a + 1), x = pts[a][0] + (pts[b][0] - pts[a][0]) * (f - a), y = pts[a][1] + (pts[b][1] - pts[a][1]) * (f - a), val = v[a] + (v[b] - v[a]) * (f - a);
+  ph.setAttribute("x1", x); ph.setAttribute("x2", x); dot.setAttribute("cx", x); dot.setAttribute("cy", y); $("clk").textContent = Math.round(val);
+  requestAnimationFrame(scrub);
+})(performance.now());
+$("play").addEventListener("click", () => { playing = !playing; $("play").classList.toggle("on", playing); $("play").querySelector("span").textContent = playing ? "回放中" : "回放"; t0 = performance.now(); });
+// 其余线索
+app.querySelectorAll(".it").forEach((li, i) => {
+  const h = rest[i]; if (h.cover) loadImage(h.cover).then((im) => put(li.querySelector("canvas"), grade(im, 152, 116)));
+  li.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, delay: 3000 + i * 90, easing: "cubic-bezier(.6,0,.2,1)", fill: "backwards" });
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

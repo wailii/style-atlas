@@ -1,9 +1,9 @@
 // 20 种风格：名字、出处、招牌动效、能点的地方、适合做什么
 const LEMO = "https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles";
 const STYLES = [
-  // ── 手作 · 纸与墨 ──
+  // ── 手作 · 手工艺 ──
   {
-    id: "lineart", group: "手作 · 纸与墨", name: "线稿", file: "s-lineart.html",
+    id: "lineart", group: "手作 · 手工艺", name: "线稿", file: "s-lineart.html",
     line: "白纸黑线，像一页随手画的笔记。",
     from: [
       ["WY（@akokoi1）· 中华五千年线稿动画", "国内传得最广的一条：一句话让 Opus 5.5 做轻松有趣的线稿动画配音乐", "https://x.com/akokoi1/status/2102584165220962502"],
@@ -14,7 +14,7 @@ const STYLES = [
     fit: "读东西、学东西：知识卡片、日报、笔记、讲解视频",
   },
   {
-    id: "ink", group: "手作 · 纸与墨", name: "水墨", file: "s-ink.html",
+    id: "ink", group: "手作 · 手工艺", name: "水墨", file: "s-ink.html",
     line: "宣纸、墨色分层、一方红印。",
     from: [
       ["WY（@akokoi1）· 小蝌蚪找妈妈（水墨）", "同一位作者用代码做的水墨动画", "https://x.com/akokoi1/status/2102699703309898026"],
@@ -25,7 +25,7 @@ const STYLES = [
     fit: "文化、阅读、节气、茶和书法类；纪录片片头",
   },
   {
-    id: "collage", group: "手作 · 纸与墨", name: "纸拼贴", file: "s-collage.html",
+    id: "collage", group: "手作 · 手工艺", name: "纸拼贴", file: "s-collage.html",
     line: "剪报 + 网点照片 + 胶带，Vox 讲解片的样子。",
     from: [
       ["Alisa0808/vox-director · 2.4k★", "把一个选题做成 Vox 风纸拼贴讲解片的 skill", "https://github.com/Alisa0808/vox-director"],
@@ -36,7 +36,7 @@ const STYLES = [
     fit: "资讯、观点、杂志感强的内容；讲解视频",
   },
   {
-    id: "papercut", group: "手作 · 纸与墨", name: "窗花剪纸", file: "s-papercut.html",
+    id: "papercut", group: "手作 · 手工艺", name: "窗花剪纸", file: "s-papercut.html",
     line: "一张红纸对折几次剪出来的窗花。",
     from: [
       ["lemo-opuscar · 红色窗花剪纸", "风格库里的 papercut-red 规格", `${LEMO}/papercut-red/STYLE.md`],
@@ -48,7 +48,7 @@ const STYLES = [
     fit: "节日、年货、红包活动、国风品牌",
   },
   {
-    id: "popup", group: "手作 · 纸与墨", name: "立体书", file: "s-popup.html",
+    id: "popup", group: "手作 · 手工艺", name: "立体书", file: "s-popup.html",
     line: "翻开这一页，纸片一层层立起来。",
     from: [["lemo-opuscar · 纸片立体书", "风格库里的 paper-popup 规格", `${LEMO}/paper-popup/STYLE.md`]],
     moves: ["头条是一个立体书场景：书页倾斜，封面卡、丝带、树、编号一层层从折缝立起，影子跟着变深", "立好后整页轻轻转，手指划过有视差", "列表卡从桌面翻起，小图再单独立起来；底栏是书签"],
@@ -199,5 +199,95 @@ const STYLES = [
     moves: ["中文也做成点阵：小字号画上去，再一刀切成纯色像素", "封面真图缩成 16 色抖动像素图", "窗口一格格展开，对话框打字机出字，云、星星、小机器人都按 8 帧/秒走"],
     tap: ["点任一条：光标跳过去、窗口一晃、弹「+1 EXP」", "点「听热点」对话框重新打字"],
     fit: "打卡、习惯、游戏化（盯梢岛这类）",
+  },
+  // ── 第二批（1.2.0）──
+  {
+    id: "watercolor", group: "手作 · 手工艺", name: "水彩", file: "s-watercolor.html",
+    line: "透明颜色一层层刷出来，旁边是手写注释。",
+    from: [
+      ["JohnHeibel/PDoomVideo · 2.4k★", "Opus 5.5 用 p5.js + 笔刷库逐帧画的 MV《I'm Upping My P(doom)》", "https://github.com/JohnHeibel/PDoomVideo"],
+      ["lemo-opuscar · 水彩笔刷", "风格库里的 watercolor 规格", `${LEMO}/watercolor/STYLE.md`],
+    ],
+    moves: ["晕染块是同一个形状叠 26 层、每层再抖一下，边缘自然积色；入场时一层层刷上去", "真封面取 7 种主色分区、多遍叠色变成水彩，波浪边从左往右刷开", "手写注释像写字一样露出，钢笔引线长向画面"],
+    tap: ["点「听」：群青一圈圈往外晕", "切底栏：当前项后面刷一团颜色"],
+    fit: "生活方式、旅行、植物、手账、温柔的品牌",
+  },
+  {
+    id: "silent", group: "影像 · 屏幕", name: "默片", file: "s-silent.html",
+    line: "1920 年代默片拷贝：闪、晃、划痕、字幕卡。",
+    from: [["lemo-opuscar · 1920s 默片", "风格库里的 silent-film 规格", `${LEMO}/silent-film/STYLE.md`]],
+    moves: ["整屏每 1/24 秒换颗粒、闪一下亮度、晃半个像素，随机出划痕和灰尘", "封面做成雕版线描（灰度分层 + 墨线）", "开场和换页用光圈：中间一个圆洞变大变小"],
+    tap: ["点「钢琴伴奏」琴键开始一下下按", "切底栏：光圈合上再打开"],
+    fit: "历史、复古、品牌故事、文化活动",
+  },
+  {
+    id: "shadow", group: "手作 · 手工艺", name: "皮影戏", file: "s-shadow.html",
+    line: "油灯照着的幕布，染色兽皮透出光。",
+    from: [["lemo-opuscar · 皮影戏", "风格库里的 shadow-puppet 规格", `${LEMO}/shadow-puppet/STYLE.md`]],
+    moves: ["封面做成染色兽皮：几种染料平涂 + 皮纹 + 一排排钱眼孔透光", "关节小人举手指着头条，竿子从手上垂直挂下来", "东西出现时「贴上幕布」：先虚后实；灯光一直轻微跳"],
+    tap: ["点灯笼：再点一盏灯，整屏更亮", "点任一条：展开"],
+    fit: "春节、非遗、戏曲、民俗、儿童故事",
+  },
+  {
+    id: "blueprint", group: "印刷 · 版画", name: "蓝图", file: "s-blueprint.html",
+    line: "晒图纸：蓝底白线、尺寸线、标题栏。",
+    from: [["lemo-opuscar · 蓝图 / 工程制图", "风格库里的 blueprint 规格", `${LEMO}/blueprint/STYLE.md`]],
+    moves: ["封面描成白色线稿，周围的尺寸线、引线编号、剖切符号一条条画出来", "热度画成一条尺寸线，长度按热度", "黄色十字准星在图上几个点之间移动，像在量"],
+    tap: ["点明细表一行：打上剖面斜线", "点「听热点」播放键变暂停"],
+    fit: "硬件、工程、架构说明、产品原理页",
+  },
+  {
+    id: "stainedglass", group: "手作 · 手工艺", name: "彩色玻璃", file: "s-stainedglass.html",
+    line: "真图切成彩色玻璃，铅条隔开，阳光扫过。",
+    from: [["lemo-opuscar · 彩色玻璃窗", "风格库里的 stained-glass 规格", `${LEMO}/stained-glass/STYLE.md`]],
+    moves: ["真封面切成泰森多边形玻璃块、填平均色、提亮提饱和，块间是铅条", "入场先只有铅条和暗玻璃，再一块块亮起来", "一道阳光慢慢扫过，地上的彩光跟着呼吸"],
+    tap: ["点玫瑰窗：慢慢转", "点任一条：小尖窗发光"],
+    fit: "节日、文化、高端品牌、仪式感的页面",
+  },
+  {
+    id: "rubberhose", group: "影像 · 屏幕", name: "橡皮管卡通", file: "s-rubberhose.html",
+    line: "1930 年代黑白卡通：水管胳膊、白手套、跟着音乐跳。",
+    from: [["lemo-opuscar · 1930s 橡皮管卡通", "风格库里的 rubber-hose 规格", `${LEMO}/rubber-hose/STYLE.md`]],
+    moves: ["电视机吉祥物：饼形眼、水管胳膊白手套，一只手指头条、一只手举牌子", "所有卡片和标签按 120 拍一伸一缩，线条 12 帧/秒抖", "老胶片的颗粒、闪、晃、划痕"],
+    tap: ["点「听」牌子：吉祥物开始摇牌子", "点任一条：展开"],
+    fit: "儿童、游戏、复古活动、吉祥物导览",
+  },
+  {
+    id: "investigation", group: "影像 · 屏幕", name: "视觉调查", file: "s-investigation.html",
+    line: "调查报道工作台：证据、来源连线、红色只用来指。",
+    from: [["lemo-opuscar · 视觉调查", "风格库里的 visual-investigation 规格（原版深底，这里做亮色）", `${LEMO}/visual-investigation/STYLE.md`]],
+    moves: ["红框圈出局部、连到 ×3 放大图", "这条热点的几个真实来源各一张卡，连线汇成一个红点 → 「✓ 12 个来源指向同一件事」", "热度走势带播放头，钟上的数跟着读；只有一个来源的条目标「≈ 单一来源，待核实」"],
+    tap: ["点「回放」：播放头循环扫", "点任一条：左边出红条，展开"],
+    fit: "事实核查、复盘、调查报道、竞品分析",
+  },
+  {
+    id: "neubrutal", group: "界面潮流", name: "新粗野主义", file: "s-neubrutal.html",
+    line: "黑粗边、实心黑影、高饱和色块、歪着的贴纸。",
+    from: [
+      ["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "UI 设计 skill 风格表里的 Neubrutalism", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"],
+      ["2026 网页设计趋势", "新粗野主义从整页风格变成强调用法", "https://www.netguru.com/blog/modern-web-design-trends"],
+    ],
+    moves: ["每块从歪着、没有影子「啪」地弹到位", "跑马灯一直滚；星形「HOT #1」贴纸慢转", "按下去往右下挪 5px、影子消失"],
+    tap: ["按任何卡片、按钮", "点任一条：左右晃一下并展开"],
+    fit: "年轻、创作者、工具、活动页",
+  },
+  {
+    id: "clay", group: "界面潮流", name: "黏土风", file: "s-clay.html",
+    line: "软黏土捏出来的界面：鼓、圆、糖果色。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Claymorphism", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["外软影 + 内高光 + 内暗边，图片放在凹槽里", "入场像黏土落下：鼓起来、横撑竖弹", "按下去被捏扁再弹回；编号硬币和播放球一直轻浮"],
+    tap: ["按任何卡片", "切底栏：选中项鼓起来"],
+    fit: "儿童教育、健康、轻松的消费产品",
+  },
+  {
+    id: "aero", group: "界面潮流", name: "Frutiger Aero", file: "s-aero.html",
+    line: "蓝天草地、水晶气泡、Aqua 按钮、带倒影的图。",
+    from: [
+      ["2026 设计趋势 · Frutiger Aero 回潮", "2000 年代科技怀旧风", "https://www.gleamstudio.design/blog-post/design-trends-2026"],
+      ["nextlevelbuilder/ui-ux-pro-max-skill", "风格表里的 Skeuomorphism / Y2K 系", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"],
+    ],
+    moves: ["气泡从草地冒上来、云在飘", "Aqua 按钮每 4 秒扫过一道光", "玻璃块浮上来；点一下有水波纹"],
+    tap: ["点任一条：水波纹 + 展开", "切底栏：选中项变成 Aqua 胶囊"],
+    fit: "饮料、户外、怀旧活动、年轻消费品牌",
   },
 ];

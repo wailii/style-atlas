@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>橡皮管卡通</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Noto+Sans+SC:wght@500;700;900&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #e6e0d3; --g1: #cfc8b9; --g2: #a9a294; --g3: #77716a; --ink: #141210; --white: #fbf9f3; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #0e0d0c; }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; overflow: hidden; background: var(--paper); border-radius: 26px; }
+  .ui { position: relative; height: 100%; display: flex; flex-direction: column; translate: var(--wx, 0) var(--wy, 0); filter: brightness(var(--fl, 1)) contrast(1.1) grayscale(1); background: var(--paper) repeating-linear-gradient(90deg, transparent 0 22px, rgba(20,18,16,.05) 22px 24px); }
+  .film { position: absolute; inset: 0; pointer-events: none; z-index: 40; border-radius: 26px; box-shadow: inset 0 0 40px 14px rgba(14,13,12,.55); }
+  .film .g { position: absolute; inset: 0; background-image: var(--grain); mix-blend-mode: multiply; opacity: .45; border-radius: 26px; }
+  .film i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,250,.6); }
+  .film b { position: absolute; border-radius: 50%; background: rgba(14,13,12,.6); }
+  .boil0 { filter: url(#bo0); } .boil1 { filter: url(#bo1); } .boil2 { filter: url(#bo2); }
+  .outline { -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; color: var(--white); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 26px 0; font-family: Rye, serif; font-size: 14px; }
+  .top { flex: none; position: relative; height: 128px; }
+  .banner { position: absolute; left: 12px; top: 6px; width: 236px; height: 74px; }
+  .banner svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .banner h1 { position: absolute; inset: 0; display: grid; place-items: center; font-family: "Noto Sans SC"; font-weight: 900; font-size: 34px; letter-spacing: 2px; padding-bottom: 6px; }
+  .sub { position: absolute; left: 30px; top: 86px; font-family: "Noto Serif SC"; font-weight: 700; font-size: 13px; letter-spacing: 3px; color: var(--g3); }
+  .mascot { position: absolute; right: -4px; top: -10px; width: 150px; height: 180px; z-index: 5; overflow: visible; }
+  .sign { cursor: pointer; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .oval { position: relative; height: 240px; border-radius: 50% / 46%; overflow: hidden; border: 5px solid var(--ink); box-shadow: 0 0 0 7px var(--white), 0 0 0 11px var(--ink), 0 0 0 16px var(--g1), 0 0 0 20px var(--ink); margin: 16px 14px 0; }
+  .oval canvas { width: 100%; height: 100%; display: block; }
+  .tag { position: relative; width: max-content; margin: -20px auto 0; z-index: 2; background: var(--white); border: 4px solid var(--ink); border-radius: 14px; padding: 4px 14px; font-family: Rye, "Noto Sans SC"; font-size: 15px; box-shadow: 0 4px 0 var(--ink); }
+  .hero h2 { margin-top: 14px; text-align: center; font-family: "Noto Serif SC"; font-weight: 900; font-size: 21px; line-height: 1.45; }
+  .hero p { margin-top: 8px; text-align: center; font-size: 13.5px; line-height: 1.7; color: var(--g3); font-weight: 500; }
+
+  .it { position: relative; display: grid; grid-template-columns: 46px 1fr 70px; gap: 10px; align-items: center; margin-top: 14px; padding: 10px 10px 10px 8px; background: var(--white); border: 4px solid var(--ink); border-radius: 18px; box-shadow: inset -10px -6px 0 var(--g1), 0 5px 0 var(--ink); cursor: pointer; transform-origin: 50% 100%; }
+  .it .n { font-family: Rye, serif; font-size: 30px; text-align: center; }
+  .it h3 { font-weight: 900; font-size: 15px; line-height: 1.45; }
+  .it .m { margin-top: 3px; font-size: 12px; color: var(--g3); font-weight: 700; }
+  .it .more { display: none; margin-top: 6px; font-size: 12.5px; line-height: 1.65; color: var(--g3); }
+  .it.open .more { display: block; }
+  .it .tn { width: 70px; height: 58px; border: 3px solid var(--ink); border-radius: 50% / 40%; overflow: hidden; background: var(--g1); display: grid; place-items: center; }
+  .it .tn canvas { width: 100%; height: 100%; display: block; }
+  .it .tn svg { width: 38px; height: 38px; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 10px 26px; background: var(--g1); border-top: 4px solid var(--ink); }
+  .tab { font-weight: 900; font-size: 13.5px; padding: 6px 0; border-radius: 12px; }
+  .tab.on { background: var(--ink); color: var(--white); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="bo0"><feTurbulence baseFrequency=".05" numOctaves="2" seed="2"/><feDisplacementMap in="SourceGraphic" scale="1.8"/></filter>
+  <filter id="bo1"><feTurbulence baseFrequency=".05" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="1.8"/></filter>
+  <filter id="bo2"><feTurbulence baseFrequency=".05" numOctaves="2" seed="9"/><feDisplacementMap in="SourceGraphic" scale="1.8"/></filter>
+</svg>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const grains = Array.from({ length: 4 }, (_, i) => seeded(i + 3, () => grainURL(180, 0.55, 30)));
+// 吉祥物：一台小电视，饼形眼、咧嘴笑、水管胳膊、白手套、大黑鞋
+const MASCOT = `<svg class="mascot boil0" id="mascot" viewBox="0 0 150 180">
+  <g id="legs" fill="none" stroke="#141210" stroke-width="7" stroke-linecap="round"><path id="legL"/><path id="legR"/></g>
+  <ellipse id="shoeL" rx="15" ry="8" fill="#141210"/><ellipse id="shoeR" rx="15" ry="8" fill="#141210"/>
+  <g id="bodyg">
+    <path d="M58 18 L50 2 M82 18 L92 2" stroke="#141210" stroke-width="3" stroke-linecap="round"/><circle cx="50" cy="2" r="4" fill="#141210"/><circle cx="92" cy="2" r="4" fill="#fbf9f3" stroke="#141210" stroke-width="3"/>
+    <rect x="34" y="18" width="76" height="66" rx="16" fill="#fbf9f3" stroke="#141210" stroke-width="5"/>
+    <rect x="42" y="26" width="52" height="46" rx="10" fill="#cfc8b9" stroke="#141210" stroke-width="3"/>
+    <path d="M100 30 h4 M100 40 h4" stroke="#141210" stroke-width="3" stroke-linecap="round"/>
+    <g id="eyes"><ellipse cx="58" cy="44" rx="7" ry="10" fill="#fbf9f3" stroke="#141210" stroke-width="2.5"/><ellipse cx="78" cy="44" rx="7" ry="10" fill="#fbf9f3" stroke="#141210" stroke-width="2.5"/>
+      <path d="M59 40 a4.5 6.5 0 1 0 3 4.5 l-4 -1 z" fill="#141210" id="pupL"/><path d="M79 40 a4.5 6.5 0 1 0 3 4.5 l-4 -1 z" fill="#141210" id="pupR"/>
+      <rect id="lids" x="50" y="33" width="36" height="0" fill="#cfc8b9"/></g>
+    <path d="M54 58 Q68 72 84 58" fill="#141210" stroke="#141210" stroke-width="3" stroke-linejoin="round"/><path d="M60 62 Q68 68 77 62" fill="#fbf9f3"/><path d="M50 58 l4 1 M84 58 l4 -1" stroke="#141210" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g fill="none" stroke="#141210" stroke-width="7" stroke-linecap="round"><path id="armL"/><path id="armR"/></g>
+  <g id="gloveL"></g><g id="gloveR"></g>
+  <g class="sign" id="sign"><rect x="104" y="96" width="44" height="34" rx="6" fill="#fbf9f3" stroke="#141210" stroke-width="4"/><text x="126" y="120" text-anchor="middle" font-family="Noto Sans SC" font-weight="900" font-size="18" fill="#141210" id="signT">听</text><path d="M126 130 V150" stroke="#141210" stroke-width="4"/></g>
+</svg>`;
+const glove = (x, y, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot})"><path d="M-9 4 C-12 -6 -6 -12 0 -12 C6 -12 12 -6 9 4 Z" fill="#fbf9f3" stroke="#141210" stroke-width="2.6"/><circle cx="-6" cy="-12" r="4" fill="#fbf9f3" stroke="#141210" stroke-width="2.4"/><circle cx="0" cy="-15" r="4" fill="#fbf9f3" stroke="#141210" stroke-width="2.4"/><circle cx="6" cy="-12" r="4" fill="#fbf9f3" stroke="#141210" stroke-width="2.4"/><path d="M-10 4 h20 l-2 6 h-16 z" fill="#fbf9f3" stroke="#141210" stroke-width="2.4"/><path d="M-3 -4 v5 M3 -4 v5" stroke="#141210" stroke-width="1.5"/></g>`;
+
+app.innerHTML = `
+  <div class="ui" id="ui">
+    <div class="sb"><span>${nowHM()}</span><span>SOUND ♪</span></div>
+    <header class="top">
+      <div class="banner boil1"><svg viewBox="0 0 236 74"><path d="M14 18 L222 10 L214 38 L228 64 L18 70 L28 44 Z" fill="#77716a" stroke="#141210" stroke-width="4" stroke-linejoin="round"/><path d="M0 26 L18 22 L24 46 L4 52 L12 38 Z" fill="#a9a294" stroke="#141210" stroke-width="3.5" stroke-linejoin="round"/><path d="M236 18 L218 16 L212 40 L234 46 L224 32 Z" fill="#a9a294" stroke="#141210" stroke-width="3.5" stroke-linejoin="round"/></svg><h1 class="outline">AI 热点</h1></div>
+      <div class="sub">一部有声动画 · 第一集 · 十月廿二</div>
+      ${MASCOT}
+    </header>
+    <main class="scroll">
+      <section class="hero">
+        <div class="oval boil2"><canvas id="oc"></canvas></div>
+        <div class="tag">热度 ${heatText(h1)} · ${h1.sources} 家</div>
+        <h2>${esc(shortTitle(h1))}</h2>
+        <p>${esc(clip(firstLine(h1.summary), 56))}</p>
+      </section>
+      <ol>${rest.map((h, i) => `<li class="it boil${i % 3}" data-r="${h.rank}"><span class="n outline">${h.rank}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? "<canvas></canvas>" : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#141210" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+    </main>
+    <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>
+  </div>
+  <div class="film" id="film"><div class="g" id="g"></div></div>`;
+
+const $ = (id) => document.getElementById(id);
+// 老胶片的灰：灰度 + 提对比 + 一点颗粒
+const bw = (img, w, h) => { const c = coverCanvas(img, w, h), x = c.getContext("2d"); x.filter = "grayscale(1) contrast(1.35) brightness(1.05)"; x.drawImage(c, 0, 0); x.filter = "none"; return c; };
+(async () => {
+await fontsReady();
+const oc = $("oc"); loadImage(h1.cover).then((img) => { const c = bw(img, oc.offsetWidth * 2, oc.offsetHeight * 2); oc.width = c.width; oc.height = c.height; oc.getContext("2d").drawImage(c, 0, 0); });
+app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (h.cover) loadImage(h.cover).then((img) => { const c = li.querySelector("canvas"), b = bw(img, 140, 116); c.width = 140; c.height = 116; c.getContext("2d").drawImage(b, 0, 0); }); li.addEventListener("click", () => li.classList.toggle("open")); });
+
+// ── 12 帧/秒的总时钟：线条三版轮换、所有东西跟着 120 拍一伸一缩、吉祥物摆手踢腿 ──
+const ui = $("ui"), g = $("g"), film = $("film"); let f = 0, scratches = [];
+const boilEls = [...app.querySelectorAll(".boil0, .boil1, .boil2")].map((el) => ({ el, base: [...el.classList].find((c) => c.startsWith("boil")) }));
+const cards = [...app.querySelectorAll(".it")], banner = app.querySelector(".banner"), tag = app.querySelector(".tag");
+const legL = $("legL"), legR = $("legR"), shoeL = $("shoeL"), shoeR = $("shoeR"), bodyg = $("bodyg"), armL = $("armL"), armR = $("armR"), gL = $("gloveL"), gR = $("gloveR"), lids = $("lids"), sign = $("sign");
+let playing = false;
+function frame() {
+  f++;
+  const beat = (f % 6) / 6, sq = beat < 0.5 ? 1 - 0.07 * Math.sin(beat * 2 * Math.PI) : 1 + 0.05 * Math.sin((beat - 0.5) * 2 * Math.PI);
+  boilEls.forEach(({ el }, i) => { el.classList.remove("boil0", "boil1", "boil2"); el.classList.add("boil" + ((f + i) % 3)); });
+  // 卡片和标签跟拍子压扁、弹起
+  cards.forEach((c, i) => (c.style.transform = `scale(${(2 - sq).toFixed(3)}, ${sq.toFixed(3)})`));
+  banner.style.transform = `translateY(${((1 - sq) * 20).toFixed(1)}px) rotate(${(Math.sin(f / 6) * 1.2).toFixed(2)}deg)`;
+  tag.style.transform = `scale(${sq.toFixed(3)})`;
+  // 吉祥物：身子上下颠，两条腿交替踢，左手指头条，右手举牌子（播放时摇牌子）
+  const up = (1 - sq) * 30, step = Math.sin((f / 6) * Math.PI);
+  bodyg.setAttribute("transform", `translate(0 ${(up + 6).toFixed(1)}) translate(72 84) scale(${(2 - sq).toFixed(3)} ${sq.toFixed(3)}) translate(-72 -84)`);
+  const hip = 90 + up, fl = [52 + step * 6, 168], fr = [92 - step * 6, 168];
+  legL.setAttribute("d", `M60 ${hip} Q${48 + step * 10} ${(hip + 168) / 2} ${fl[0]} ${fl[1] - 6}`); legR.setAttribute("d", `M84 ${hip} Q${96 - step * 10} ${(hip + 168) / 2} ${fr[0]} ${fr[1] - 6}`);
+  shoeL.setAttribute("cx", fl[0] - 6); shoeL.setAttribute("cy", fl[1]); shoeR.setAttribute("cx", fr[0] + 6); shoeR.setAttribute("cy", fr[1]);
+  const sh = 60 + up, hL = [-2 + Math.sin(f / 3) * 3, 130 + Math.cos(f / 3) * 3], wave = playing ? Math.sin(f / 1.5) * 10 : 0, hR = [124 + wave, 104];
+  armL.setAttribute("d", `M36 ${sh} Q${10} ${sh + 10} ${hL[0] + 8} ${hL[1] - 6}`);
+  armR.setAttribute("d", `M108 ${sh} Q${132} ${sh + 30} ${hR[0] - 2} ${hR[1] + 22}`);
+  gL.innerHTML = glove(hL[0] + 6, hL[1] - 4, -120); gR.innerHTML = glove(hR[0] - 2, hR[1] + 24, 10);
+  sign.setAttribute("transform", `translate(${wave} ${(-up * 0.4).toFixed(1)}) rotate(${(wave * 0.6).toFixed(1)} 126 140)`);
+  lids.setAttribute("height", f % 36 < 2 ? 22 : 0);
+  // 胶片：颗粒、闪、晃、划痕
+  g.style.backgroundImage = `url(${grains[f % 4]})`;
+  ui.style.setProperty("--fl", (0.95 + Math.random() * 0.07).toFixed(3));
+  ui.style.setProperty("--wx", ((Math.random() - 0.5) * 1.6).toFixed(2) + "px"); ui.style.setProperty("--wy", ((Math.random() - 0.5) * 1.6).toFixed(2) + "px");
+  scratches = scratches.filter((s) => (--s.life > 0) || (s.el.remove(), false));
+  if (Math.random() < 0.12) { const el = document.createElement("i"); el.style.left = Math.random() * 100 + "%"; film.appendChild(el); scratches.push({ el, life: 2 + Math.floor(Math.random() * 6) }); }
+  if (Math.random() < 0.3) { const el = document.createElement("b"), r = 1 + Math.random() * 3; Object.assign(el.style, { left: Math.random() * 100 + "%", top: Math.random() * 100 + "%", width: r + "px", height: r + "px" }); film.appendChild(el); scratches.push({ el, life: 1 }); }
+}
+setInterval(frame, 1000 / 12); frame();
+// 开场：光圈从黑里打开；卡片一张张「蹦」进来
+app.animate([{ clipPath: "circle(0% at 50% 45%)" }, { clipPath: "circle(120% at 50% 45%)" }], { duration: 900, easing: "steps(11, end)" });
+cards.forEach((c, i) => c.animate([{ translate: "0 60px", opacity: 0 }, { translate: "0 -10px", opacity: 1, offset: 0.7 }, { translate: "0 0", opacity: 1 }], { duration: 500, delay: 900 + i * 120, easing: "steps(6, end)", fill: "backwards" }));
+sign.addEventListener("click", () => { playing = !playing; $("signT").textContent = playing ? "♪" : "听"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

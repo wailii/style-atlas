@@ -316,8 +316,144 @@ const jitterAt = (f, i, { every = 2, amp = 0.45, rot = 0.25 } = {}) => {
   return { tx: (rnd(k * 7 + i) - 0.5) * 2 * amp, ty: (rnd(k * 3 + i * 5) - 0.5) * 2 * amp, rot: (rnd(k * 11 + i * 3) - 0.5) * 2 * rot };
 };
 
+// ── 水彩（水彩手绘）──
+// 可重复的随机数发生器
+function mulberry(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const gauss = (rand) => { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+// 多边形递归中点位移（每个顶点带自己的「乱度」）
+function wcDeform(poly, depth, spread, rand) {
+  let pts = poly;
+  for (let d = 0; d < depth; d++) {
+    const out = [];
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i], b = pts[(i + 1) % pts.length], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const g = gauss(rand) * spread * len * a[2], ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + Math.PI / 2;
+      out.push(a, [(a[0] + b[0]) / 2 + Math.cos(ang) * g, (a[1] + b[1]) / 2 + Math.sin(ang) * g, ((a[2] + b[2]) / 2) * (0.85 + rand() * 0.3)]);
+    }
+    pts = out;
+  }
+  return pts;
+}
+// 一团水彩晕染：同一个形状叠 layers 层、每层再抖一次、每层很淡——边缘自然积色
+// upto：只画前多少层（做「一层层刷上去」的动画）
+function wcWash(ctx, cx, cy, r, color, { layers = 26, alpha = 0.045, seed = 1, sides = 10, spread = 0.32, upto = Infinity, squash = 1 } = {}) {
+  const rand = mulberry(seed);
+  const base = Array.from({ length: sides }, (_, i) => { const a = (i / sides) * Math.PI * 2, rr = r * (0.75 + rand() * 0.5); return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * squash, 0.4 + rand() * 1.1]; });
+  const shape = wcDeform(base, 3, spread, rand);
+  ctx.save(); ctx.fillStyle = color; ctx.globalAlpha = alpha;
+  for (let l = 0; l < Math.min(layers, upto); l++) {
+    const p = wcDeform(shape, 3, spread * 0.6, rand);
+    ctx.beginPath(); p.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+// 一笔：宽度沿路径变化的色带 + 几条断断续续的笔毛（飞白）
+function wcStroke(ctx, pts, { width = 8, color = "#3b5ba9", alpha = 0.5, seed = 1, bristles = 5, upto = 1 } = {}) {
+  const rand = mulberry(seed), n = Math.max(2, Math.floor(pts.length * upto));
+  const P = pts.slice(0, n);
+  const side = (k, off) => P.map(([x, y], i) => {
+    const [x2, y2] = P[Math.min(P.length - 1, i + 1)], [x0, y0] = P[Math.max(0, i - 1)], ang = Math.atan2(y2 - y0, x2 - x0) + Math.PI / 2;
+    const t = i / (pts.length - 1), w = width * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.1 + 0.05)), 0.6) * (0.8 + 0.4 * rnd(seed * 31 + i * 7 + k));
+    return [x + Math.cos(ang) * w * off, y + Math.sin(ang) * w * off];
+  });
+  ctx.save(); ctx.fillStyle = color; ctx.strokeStyle = color; ctx.lineCap = "round";
+  ctx.globalAlpha = alpha;
+  const top = side(0, 0.5), bot = side(1, -0.5).reverse();
+  ctx.beginPath(); [...top, ...bot].forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
+  for (let b = 0; b < bristles; b++) {
+    const off = (rand() - 0.5) * 0.9, line = side(b + 2, off), stop = 0.55 + rand() * 0.45;
+    ctx.globalAlpha = 0.3 + rand() * 0.5; ctx.lineWidth = 0.6 + rand() * 1.2;
+    ctx.setLineDash([2 + rand() * 14, 1 + rand() * 6]);
+    ctx.beginPath(); line.slice(0, Math.max(2, Math.floor(line.length * stop))).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
+  }
+  ctx.restore();
+}
+// 真图 → 水彩：取图里 k 种主色，按颜色分区，每区模糊后用颜色多遍叠（multiply），最亮的一区留白当纸
+function watercolorCanvas(img, w, h, { k = 6, passes = 3, blur = 2.4, paper = "#fbf8f1", seed = 1, soft = 3 } = {}) {
+  const small = coverCanvas(img, Math.round(w / soft), Math.round(h / soft)), sw = small.width, sh = small.height;
+  const d = small.getContext("2d").getImageData(0, 0, sw, sh).data, rand = mulberry(seed);
+  // k-means（小图上跑几轮就够）
+  let C = Array.from({ length: k }, () => { const i = Math.floor(rand() * sw * sh) * 4; return [d[i], d[i + 1], d[i + 2]]; });
+  const lab = new Uint8Array(sw * sh);
+  for (let it = 0; it < 8; it++) {
+    const acc = C.map(() => [0, 0, 0, 0]);
+    for (let p = 0; p < sw * sh; p++) {
+      let best = 0, bd = 1e9; for (let c = 0; c < k; c++) { const dr = d[p * 4] - C[c][0], dg = d[p * 4 + 1] - C[c][1], db = d[p * 4 + 2] - C[c][2], dd = dr * dr + dg * dg + db * db; if (dd < bd) { bd = dd; best = c; } }
+      lab[p] = best; acc[best][0] += d[p * 4]; acc[best][1] += d[p * 4 + 1]; acc[best][2] += d[p * 4 + 2]; acc[best][3]++;
+    }
+    C = C.map((c, i) => (acc[i][3] ? [acc[i][0] / acc[i][3], acc[i][1] / acc[i][3], acc[i][2] / acc[i][3]] : c));
+  }
+  const out = document.createElement("canvas"); out.width = w; out.height = h; const o = out.getContext("2d");
+  o.fillStyle = paper; o.fillRect(0, 0, w, h);
+  const lum = (c) => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+  const order = C.map((c, i) => i).sort((a, b) => lum(C[b]) - lum(C[a]));   // 先浅后深
+  const mask = document.createElement("canvas"); mask.width = sw; mask.height = sh; const m = mask.getContext("2d");
+  const layer = document.createElement("canvas"); layer.width = w; layer.height = h; const L = layer.getContext("2d");
+  for (const c of order) {
+    if (lum(C[c]) > 0.9) continue;                                          // 最亮的当纸，留白
+    const md = m.createImageData(sw, sh);
+    for (let p = 0; p < sw * sh; p++) if (lab[p] === c) md.data[p * 4 + 3] = 255;
+    m.putImageData(md, 0, 0);
+    // 颜色稍微提饱和，像颜料
+    const col = C[c].map((v) => Math.max(0, Math.min(255, v + (v - lum(C[c]) * 255) * 0.25)));
+    for (let ps = 0; ps < passes; ps++) {
+      L.clearRect(0, 0, w, h); L.filter = `blur(${blur + ps * 0.8}px)`;
+      const jx = (rand() - 0.5) * 3, jy = (rand() - 0.5) * 3, sc = 1 + (rand() - 0.5) * 0.012;
+      L.drawImage(mask, jx, jy, w * sc, h * sc); L.filter = "none";
+      L.globalCompositeOperation = "source-in"; L.fillStyle = `rgb(${col.map(Math.round).join(",")})`; L.fillRect(0, 0, w, h); L.globalCompositeOperation = "source-over";
+      o.globalCompositeOperation = "multiply"; o.globalAlpha = 0.5; o.drawImage(layer, 0, 0); o.globalAlpha = 1; o.globalCompositeOperation = "source-over";
+    }
+  }
+  return out;
+}
+
+// ── 彩色玻璃 ──
+// 真图 → 彩色玻璃：抖动网格上撒种子点，按最近种子分块（泰森多边形），每块填该区平均色（提亮、提饱和），
+// 块与块之间留铅条（最近和次近种子距离差小于 lead 的地方）。返回 { canvas, reveal(k) }：reveal(0~1) 按随机顺序点亮玻璃
+function stainedGlass(img, w, h, { cell = 18, lead = 2.6, sat = 1.45, bright = 1.12, seed = 1, leadColor = [34, 32, 30], unlit = [58, 56, 60], pale = [[239, 226, 184], [214, 226, 232], [233, 214, 200], [214, 228, 205], [228, 220, 238]] } = {}) {
+  const src = coverCanvas(img, w, h), d = src.getContext("2d").getImageData(0, 0, w, h).data, rand = mulberry(seed);
+  const cols = Math.ceil(w / cell) + 1, rows = Math.ceil(h / cell) + 1, S = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) S.push([(c + 0.15 + rand() * 0.7) * cell, (r + 0.15 + rand() * 0.7) * cell]);
+  const id = new Int32Array(w * h), edge = new Float32Array(w * h), acc = S.map(() => [0, 0, 0, 0]);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const cc = Math.floor(x / cell), rr = Math.floor(y / cell); let b1 = 1e9, b2 = 1e9, i1 = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const c = cc + dx, r = rr + dy; if (c < 0 || r < 0 || c >= cols || r >= rows) continue;
+      const k = r * cols + c, ddx = S[k][0] - x, ddy = S[k][1] - y, dd = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dd < b1) { b2 = b1; b1 = dd; i1 = k; } else if (dd < b2) b2 = dd;
+    }
+    const p = y * w + x; id[p] = i1; edge[p] = (b2 - b1) / 2;
+    acc[i1][0] += d[p * 4]; acc[i1][1] += d[p * 4 + 1]; acc[i1][2] += d[p * 4 + 2]; acc[i1][3]++;
+  }
+  // 太亮（接近白）的块换成淡色教堂玻璃，不然整窗发白
+  const col = acc.map(([r, g, b, n], i) => {
+    if (!n) return [0, 0, 0];
+    r /= n; g /= n; b /= n; const l = 0.299 * r + 0.587 * g + 0.114 * b;
+    if (l > 225 && pale) { const t = pale[Math.floor(rand() * pale.length)], k = 0.9 + rand() * 0.1; return t.map((v) => v * k); }
+    return [r, g, b].map((v) => Math.max(0, Math.min(255, (l + (v - l) * sat) * bright)));
+  });
+  const order = S.map(() => rand());
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const x = cv.getContext("2d"), out = x.createImageData(w, h);
+  const draw = (k) => {
+    for (let p = 0; p < w * h; p++) {
+      const e = edge[p], i = id[p]; let r, g, b;
+      if (e < lead) [r, g, b] = leadColor;
+      else {
+        const lit = order[i] <= k, c = lit ? col[i] : unlit, shade = 0.86 + 0.14 * Math.min(1, (e - lead) / (cell * 0.35)), n = 0.94 + ((p * 2654435761) % 1000) / 1000 * 0.08;
+        r = c[0] * shade * n; g = c[1] * shade * n; b = c[2] * shade * n;
+      }
+      out.data[p * 4] = r; out.data[p * 4 + 1] = g; out.data[p * 4 + 2] = b; out.data[p * 4 + 3] = 255;
+    }
+    x.putImageData(out, 0, 0);
+  };
+  draw(1);
+  return { canvas: cv, reveal: draw };
+}
+
 return {
+  stainedGlass,
   frameAt, dropAt, jitterAt,
+  mulberry, wcDeform, wcWash, wcStroke, watercolorCanvas,
   smooth, smoothLinear, springCurve,
   sketchy,
   tornPoly, tear, halftoneCutout,
