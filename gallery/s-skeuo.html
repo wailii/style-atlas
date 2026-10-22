@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拟物</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700;900&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --linen: #dfe2e6; --ink: #2b2f36; --mute: #6d7480; --leather: #6b4a2e; --blue: #2f7fe0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--linen); }
+  body { font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--linen) var(--linentex); }
+  .emboss { text-shadow: 0 1px 0 rgba(255,255,255,.85); }
+
+  .bar { flex: none; position: relative; background: linear-gradient(#8a6440, #6b4a2e 60%, #5a3d25) , var(--leather); padding: 0 14px 10px; box-shadow: 0 3px 8px rgba(0,0,0,.4), inset 0 -1px 0 rgba(0,0,0,.4); }
+  .bar::before { content: ""; position: absolute; inset: 0; background-image: var(--leathertex); mix-blend-mode: multiply; opacity: .55; }
+  .bar::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 5px; border-bottom: 2px dashed rgba(240,215,170,.75); }
+  .bar > * { position: relative; z-index: 1; }
+  .sb { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 0; font-weight: 700; font-size: 14px; color: #f6e8d2; text-shadow: 0 -1px 0 rgba(0,0,0,.6); }
+  .navrow { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; }
+  h1 { font-weight: 900; font-size: 25px; color: #f9ecd6; text-shadow: 0 -1px 0 rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.15); letter-spacing: .5px; }
+  .date { font-size: 12px; color: #e7cfa8; text-shadow: 0 -1px 0 rgba(0,0,0,.6); margin-top: 2px; }
+  .knob { position: relative; width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 50% 30%, #fdfdfd, #b9bec7 45%, #7e848f 70%, #c9cdd4); box-shadow: 0 3px 6px rgba(0,0,0,.5), inset 0 1px 1px #fff, inset 0 -2px 3px rgba(0,0,0,.35); display: grid; place-items: center; }
+  .knob::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: repeating-conic-gradient(rgba(255,255,255,.15) 0 4deg, rgba(0,0,0,.05) 4deg 8deg); }
+  .knob i { position: relative; width: 0; height: 0; border-left: 13px solid #3b404a; border-top: 8px solid transparent; border-bottom: 8px solid transparent; margin-left: 4px; filter: drop-shadow(0 1px 0 rgba(255,255,255,.8)); }
+  .knob .led { position: absolute; right: -2px; top: -2px; width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #8a8f99, #3c4048); box-shadow: inset 0 1px 1px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.3); }
+  .knob.on .led { background: radial-gradient(circle at 40% 35%, #e6ffd6, #3bd14a 60%, #1c8a28); box-shadow: 0 0 8px 2px rgba(59,209,74,.7); }
+  .knob:active { box-shadow: 0 1px 2px rgba(0,0,0,.5), inset 0 2px 5px rgba(0,0,0,.45); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 14px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .desk { position: relative; height: 262px; }
+  .polaroid { position: absolute; left: 4px; top: 6px; width: 228px; padding: 10px 10px 34px; background: #fbfbf8; box-shadow: 0 6px 14px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.2); transform: rotate(-3deg); }
+  .polaroid .ph { height: 168px; overflow: hidden; background: #2b2b2b; }
+  .polaroid img { width: 100%; height: 100%; object-fit: cover; display: block; filter: var(--dev, none); }
+  .polaroid .cap { position: absolute; left: 12px; bottom: 7px; font-family: Kalam, cursive; font-size: 17px; color: #2a3a8c; }
+  .tape { position: absolute; width: 74px; height: 22px; background: rgba(250,240,200,.75); box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .gauge { position: absolute; right: 0; top: 34px; width: 134px; height: 122px; border-radius: 12px; background: linear-gradient(#e9eaed, #c5c8ce); box-shadow: 0 4px 10px rgba(0,0,0,.35), inset 0 1px 0 #fff, inset 0 -1px 0 rgba(0,0,0,.2); padding: 8px; }
+  .gauge .face { position: relative; height: 76px; border-radius: 8px; background: radial-gradient(ellipse at 50% 120%, #fffbe8, #f3e7c2); box-shadow: inset 0 2px 6px rgba(0,0,0,.35); overflow: hidden; }
+  .gauge svg { width: 100%; height: 100%; }
+  .gauge .plate { margin-top: 6px; text-align: center; font-size: 11px; font-weight: 700; color: #3b404a; letter-spacing: 1px; padding: 3px 0; border-radius: 4px; background: linear-gradient(90deg, #c9ccd2, #eef0f3, #c9ccd2); box-shadow: inset 0 1px 1px rgba(0,0,0,.25); }
+  .notepad { position: relative; margin-top: 2px; background: #fff7b8; background-image: repeating-linear-gradient(transparent 0 25px, #a9c4e8 25px 26px); background-position: 0 30px; box-shadow: 0 4px 10px rgba(0,0,0,.25); padding: 34px 14px 14px 42px; border-radius: 2px; }
+  .notepad::before { content: ""; position: absolute; left: 32px; top: 0; bottom: 0; width: 1.5px; background: #e8807b; }
+  .notepad::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 18px; background: radial-gradient(circle at 50% 100%, #dfe2e6 4px, transparent 4.5px) 0 0 / 18px 18px, linear-gradient(#cf3b33, #b52c25); }
+  .notepad h2 { font-weight: 900; font-size: 19px; line-height: 26px; }
+  .notepad p { font-family: Kalam, "Noto Sans SC", cursive; font-size: 14px; line-height: 26px; color: #2a3a8c; }
+
+  .group { margin-top: 18px; border-radius: 10px; background: #fff; border: 1px solid #a9adb5; box-shadow: 0 1px 0 rgba(255,255,255,.8), 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
+  .ghead { margin: 18px 10px 6px; font-weight: 700; font-size: 14px; color: #4c566a; text-shadow: 0 1px 0 rgba(255,255,255,.9); }
+  .row { display: grid; grid-template-columns: 52px 1fr 14px; gap: 10px; align-items: center; padding: 9px 10px; border-top: 1px solid #d9dce1; background: linear-gradient(#fff, #f6f7f9); cursor: pointer; }
+  .row:first-child { border-top: 0; }
+  .row:active, .row.open { background: linear-gradient(#5ea7ff, #2f7fe0); color: #fff; }
+  .row.open .m, .row.open .more { color: #e8f2ff; }
+  .icon { position: relative; width: 52px; height: 52px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.4); background: linear-gradient(#7fb2ff, #2f6fd0); display: grid; place-items: center; }
+  .icon img { width: 100%; height: 100%; object-fit: cover; }
+  .icon svg { width: 30px; height: 30px; }
+  .icon::after { content: ""; position: absolute; left: -10%; right: -10%; top: -40%; height: 85%; border-radius: 0 0 50% 50%; background: linear-gradient(rgba(255,255,255,.6), rgba(255,255,255,.1)); }
+  .row h3 { font-weight: 700; font-size: 14.5px; line-height: 1.4; }
+  .row .m { margin-top: 2px; font-size: 12px; color: var(--mute); }
+  .row .more { display: none; margin-top: 4px; font-size: 12.5px; line-height: 1.5; }
+  .row.open .more { display: block; }
+  .chev { width: 9px; height: 9px; border-right: 3px solid #a3a8b2; border-top: 3px solid #a3a8b2; transform: rotate(45deg); }
+  .row.open .chev { border-color: #fff; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 5px 6px 22px; background: linear-gradient(#4a4d55, #2a2c31 50%, #1b1c20 51%, #141518); box-shadow: inset 0 1px 0 rgba(255,255,255,.2); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: 5px; font-weight: 700; font-size: 10.5px; color: #9a9ea8; }
+  .tab svg { width: 24px; height: 24px; stroke-width: 2.4; }
+  .tab.on { background: rgba(255,255,255,.12); box-shadow: inset 0 1px 3px rgba(0,0,0,.6); color: #fff; }
+  .tab.on svg { color: #7cc4ff; filter: drop-shadow(0 0 4px rgba(90,170,255,.9)); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const maxHeat = 500;
+// 亚麻布：细横竖交织 + 噪点
+const linen = () => { const c = document.createElement("canvas"); c.width = c.height = 120; const x = c.getContext("2d"); for (let i = 0; i < 120; i += 2) { x.fillStyle = `rgba(80,90,105,${0.03 + Math.random() * 0.04})`; x.fillRect(0, i, 120, 1); x.fillRect(i, 0, 1, 120); } return c.toDataURL(); };
+const leather = () => { const c = document.createElement("canvas"); c.width = c.height = 160; const x = c.getContext("2d"); for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(40,20,5,${Math.random() * 0.25})`; x.beginPath(); x.arc(Math.random() * 160, Math.random() * 160, Math.random() * 1.6, 0, 7); x.fill(); } return c.toDataURL(); };
+app.style.setProperty("--linentex", `url(${linen()})`);
+const ICON_BG = ["linear-gradient(#ffb36b,#e8672a)", "linear-gradient(#8fe08a,#2f9e3f)", "linear-gradient(#c79bff,#6b3fd6)", "linear-gradient(#ff8a9c,#d6334f)"];
+app.innerHTML = `
+  <header class="bar" id="bar">
+    <div class="sb"><span>${nowHM()}</span><span>中国移动 3G ▮▮▮</span></div>
+    <div class="navrow"><div><h1>AI 热点</h1><div class="date">10月22日 星期四 · 实时</div></div><button class="knob" id="knob"><i></i><span class="led"></span></button></div>
+  </header>
+  <main class="scroll">
+    <section class="desk">
+      <div class="polaroid" id="pol"><div class="ph"><img id="pimg" src="${h1.cover}" alt=""></div><span class="cap">No.1 · 今晚头条</span><i class="tape" style="left:70px;top:-10px;transform:rotate(-4deg)"></i></div>
+      <div class="gauge"><div class="face"><svg viewBox="0 0 118 76" id="g"></svg></div><div class="plate">热度 ${heatText(h1)}</div></div>
+    </section>
+    <div class="notepad"><h2>${esc(shortTitle(h1))}</h2><p>${esc(clip(firstLine(h1.summary), 50))} · ${h1.sources} 家来源</p></div>
+    <div class="ghead">其余热点</div>
+    <div class="group">${rest.map((h, i) => `<div class="row" data-r="${h.rank}"><span class="icon" style="background:${ICON_BG[i % 4]}">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 70))}</div></div><i class="chev"></i></div>`).join("")}</div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+document.getElementById("bar").style.setProperty("--leathertex", `url(${leather()})`);
+
+const $ = (id) => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg", el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+// 表盘：刻度、数字、红区、指针（有质量的弹簧：甩过头再晃回来）
+const g = $("g"), cx = 59, cy = 70, R = 56, A0 = -150, A1 = -30;
+const ang = (v) => ((A0 + (A1 - A0) * Math.min(1, v / maxHeat)) * Math.PI) / 180;
+for (let v = 0; v <= maxHeat; v += 25) { const a = ang(v), big = v % 100 === 0; el("line", { x1: cx + Math.cos(a) * (R - (big ? 10 : 6)), y1: cy + Math.sin(a) * (R - (big ? 10 : 6)), x2: cx + Math.cos(a) * R, y2: cy + Math.sin(a) * R, stroke: v >= 400 ? "#c4302b" : "#3b404a", "stroke-width": big ? 1.6 : 0.8 }, g); if (big) { const t = el("text", { x: cx + Math.cos(a) * (R - 18), y: cy + Math.sin(a) * (R - 18) + 3, "text-anchor": "middle", "font-size": 7, "font-weight": 700, fill: "#3b404a" }, g); t.textContent = v; } }
+el("path", { d: `M${cx + Math.cos(ang(400)) * (R + 1)} ${cy + Math.sin(ang(400)) * (R + 1)} A${R + 1} ${R + 1} 0 0 1 ${cx + Math.cos(ang(500)) * (R + 1)} ${cy + Math.sin(ang(500)) * (R + 1)}`, stroke: "#c4302b", "stroke-width": 3, fill: "none" }, g);
+const needle = el("line", { x1: cx, y1: cy, x2: cx, y2: cy - R + 4, stroke: "#1b1d21", "stroke-width": 1.6, "stroke-linecap": "round" }, g);
+el("circle", { cx, cy, r: 5, fill: "#3b404a" }, g); el("circle", { cx, cy, r: 2, fill: "#c9ccd2" }, g);
+let nv = 0, nvv = 0, target = h1.heat, jitter = 0;
+(function swing(now) {
+  const t = target + jitter * Math.sin(now / 90) * 4;
+  for (let i = 0; i < 4; i++) { const acc = -60 * (nv - t) - 7 * nvv; nvv += acc / 240; nv += nvv / 240; }
+  const a = ang(Math.max(0, nv)); needle.setAttribute("x2", cx + Math.cos(a) * (R - 4)); needle.setAttribute("y2", cy + Math.sin(a) * (R - 4));
+  requestAnimationFrame(swing);
+})(0);
+(async () => {
+await fontsReady();
+// 拍立得显影：从一片灰白慢慢出颜色
+$("pimg").animate([{ filter: "brightness(2.2) contrast(.3) saturate(0) sepia(.4)" }, { filter: "brightness(1.4) contrast(.6) saturate(.4) sepia(.3)", offset: 0.4 }, { filter: "none" }], { duration: 3200, delay: 400, easing: "ease-out", fill: "backwards" });
+$("pol").animate([{ transform: "translateY(-60px) rotate(-12deg)", opacity: 0 }, { transform: "rotate(-3deg)", opacity: 1 }], { duration: 600, delay: 100, easing: "cubic-bezier(.3,1.3,.5,1)", fill: "backwards" });
+app.querySelector(".gauge").animate([{ transform: "translateX(60px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 500, delay: 300, easing: "cubic-bezier(.3,1.3,.5,1)", fill: "backwards" });
+app.querySelector(".notepad").animate([{ transform: "translateY(40px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 500, delay: 500, easing: "ease-out", fill: "backwards" });
+app.querySelectorAll(".row").forEach((r, i) => { r.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, delay: 700 + i * 70, fill: "backwards" }); r.addEventListener("click", () => r.classList.toggle("open")); });
+// 播放：指示灯亮、指针跟着「音量」抖
+const knob = $("knob");
+knob.addEventListener("click", () => { const on = knob.classList.toggle("on"); jitter = on ? 1 : 0; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

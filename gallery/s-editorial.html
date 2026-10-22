@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>编辑杂志</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Noto+Serif+SC:wght@500;700;900&family=Inter:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fbfaf7; --ink: #111; --ink2: #555; --rule: #111; --hair: #d9d6cf; --red: #d93a26; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Source Serif 4", "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .kick { font-family: Inter, "Noto Sans SC", sans-serif; font-weight: 700; font-size: 10.5px; letter-spacing: .18em; color: var(--red); text-transform: uppercase; }
+  .rule { height: 1px; background: var(--rule); transform-origin: center; }
+  .rv { opacity: 0; transform: translateY(18px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  .sb { height: 36px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: Inter; font-weight: 600; font-size: 12px; }
+  .mast { flex: none; padding: 2px 16px 0; text-align: center; }
+  .mast .rule.t { height: 3px; }
+  .mast h1 { font-family: "Playfair Display", "Noto Serif SC", serif; font-weight: 900; font-size: 46px; line-height: 1.05; letter-spacing: var(--ls, 0); padding: 6px 0 2px; }
+  .mast .meta { display: flex; justify-content: space-between; align-items: center; font-family: Inter, "Noto Sans SC"; font-size: 10px; font-weight: 600; letter-spacing: .08em; padding: 5px 0; }
+  .listen { font-family: Inter, "Noto Sans SC"; font-weight: 700; font-size: 10px; letter-spacing: .1em; border-bottom: 1.5px solid var(--ink); padding-bottom: 1px; }
+  .listen.on { color: var(--red); border-color: var(--red); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 14px 16px 30px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero h2 { margin-top: 6px; font-family: "Noto Serif SC", serif; font-weight: 900; font-size: 29px; line-height: 1.22; letter-spacing: var(--ls2, -.01em); }
+  .dek { margin-top: 10px; font-style: italic; font-size: 16px; line-height: 1.55; color: var(--ink2); }
+  .by { margin-top: 10px; font-family: Inter, "Noto Sans SC"; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; color: var(--ink2); }
+  figure { margin: 14px -16px 0; }
+  figure .ph { height: 230px; overflow: hidden; }
+  figure img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(var(--sc, 1.08)); transition: transform .1s linear; }
+  figcaption { padding: 6px 16px 0; font-family: Inter, "Noto Sans SC"; font-size: 10px; color: var(--ink2); letter-spacing: .04em; }
+  .body { margin-top: 16px; font-size: 15px; line-height: 1.8; columns: 1; }
+  .body::first-letter { float: left; font-family: "Playfair Display", "Noto Serif SC", serif; font-weight: 900; font-size: 58px; line-height: .86; padding: 4px 8px 0 0; color: var(--red); }
+  .pull { margin: 20px 0 6px; padding: 14px 4px; border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); font-family: "Playfair Display", "Noto Serif SC", serif; font-style: italic; font-weight: 700; font-size: 21px; line-height: 1.4; text-align: center; }
+  .pull::before { content: "“"; display: block; font-size: 46px; line-height: .6; color: var(--red); }
+
+  .sec { margin: 28px 0 4px; display: flex; align-items: baseline; justify-content: space-between; }
+  .sec h4 { font-family: "Playfair Display", "Noto Serif SC"; font-weight: 900; font-size: 20px; }
+  .lead { padding: 14px 0; border-bottom: 1px solid var(--hair); cursor: pointer; }
+  .lead .ph { height: 160px; overflow: hidden; margin-bottom: 10px; }
+  .lead .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .it { display: grid; grid-template-columns: 32px 1fr 84px; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--hair); cursor: pointer; }
+  .it .n, .lead .n { font-family: "Playfair Display"; font-weight: 900; font-size: 24px; line-height: 1; color: var(--red); }
+  h3 { font-family: "Noto Serif SC"; font-weight: 700; font-size: 17px; line-height: 1.4; }
+  .lead h3 { font-size: 21px; font-weight: 900; margin-top: 6px; }
+  .sm { margin-top: 5px; font-size: 13.5px; line-height: 1.55; color: var(--ink2); }
+  .it .tn { width: 84px; height: 64px; overflow: hidden; background: #ece9e2; display: grid; place-items: center; }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(.2); }
+  .it .tn svg { width: 36px; height: 36px; }
+  .more { display: none; margin-top: 6px; font-size: 13.5px; line-height: 1.7; }
+  .open .more { display: block; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--ink); padding: 10px 6px 24px; background: var(--paper); }
+  .tab { font-family: Inter, "Noto Sans SC"; font-weight: 600; font-size: 12.5px; color: var(--ink2); letter-spacing: .06em; padding-bottom: 3px; }
+  .tab.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--red); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, h2x, ...more] = HOT;
+const summary = firstLine(h1.summary);
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="mast">
+    <div class="rule t" id="r1"></div>
+    <h1 id="mh">AI 热点</h1>
+    <div class="rule" id="r2"></div>
+    <div class="meta"><span>二〇二六年十月二十二日 · 星期四</span><button class="listen" id="listen">朗读本期</button></div>
+    <div class="rule" id="r3"></div>
+  </header>
+  <main class="scroll" id="scroll">
+    <article class="hero">
+      <div class="kick rv">科技 · 头条</div>
+      <h2 class="rv" id="hh">${esc(shortTitle(h1))}</h2>
+      <p class="dek rv">${esc(h1.latest)}</p>
+      <div class="by rv">据 ${h1.sources} 家来源 · 热度 ${heatText(h1)}</div>
+      <figure class="rv"><div class="ph"><img id="fig" src="${h1.cover}" alt=""></div><figcaption>图：Claude 官网</figcaption></figure>
+      <p class="body rv">${esc(clip(summary, 120))}</p>
+      <blockquote class="pull rv">${esc(clip(firstLine(h2x.latest || h2x.title), 34))}</blockquote>
+    </article>
+    <div class="sec rv"><h4>其余报道</h4><span class="kick">${HOT.length - 1} 篇</span></div>
+    <div class="lead rv" data-r="${h2x.rank}"><div class="ph"><img src="${h2x.cover}" alt=""></div><span class="n">${pad2(h2x.rank)}</span><h3>${esc(shortTitle(h2x))}</h3><p class="sm">${esc(clip(firstLine(h2x.summary), 56))}</p><div class="more">热度 ${heatText(h2x)} · ${h2x.sources} 家来源</div></div>
+    ${more.map((h) => `<div class="it rv" data-r="${h.rank}"><span class="n">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3><p class="sm">${esc(clip(h.latest, 30))}</p><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></div>`).join("")}
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+const EASE = "cubic-bezier(.2,.7,.2,1)";
+// 报头：三道线从中间往两边画开；刊名字距从松收紧
+["r1", "r2", "r3"].forEach((id, i) => $(id).animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: 900, delay: 100 + i * 120, easing: EASE, fill: "backwards" }));
+$("mh").animate([{ letterSpacing: ".4em", opacity: 0 }, { letterSpacing: "0em", opacity: 1 }], { duration: 1400, delay: 150, easing: EASE, fill: "backwards" });
+// 滚到哪儿，哪儿浮上来；大图跟着滚动从 1.08 慢慢缩到 1
+const scroll = $("scroll");
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { const d = Math.max(0, 500 - performance.now()) + (+e.target.dataset.k || 0) * 110; setTimeout(() => e.target.classList.add("in"), d); io.unobserve(e.target); } }), { root: scroll, threshold: 0.12 });
+[...app.querySelectorAll(".rv")].forEach((el, i) => { el.dataset.k = i % 6; io.observe(el); });
+$("hh").animate([{ letterSpacing: ".06em" }, { letterSpacing: "-.01em" }], { duration: 1600, delay: 700, easing: EASE, fill: "backwards" });
+const fig = $("fig");
+const onScroll = () => { const r = fig.parentElement.getBoundingClientRect(), k = Math.min(1, Math.max(0, 1 - r.top / innerHeight)); fig.style.setProperty("--sc", (1.08 - 0.08 * k).toFixed(3)); };
+scroll.addEventListener("scroll", onScroll); onScroll();
+app.querySelectorAll(".it, .lead").forEach((el) => el.addEventListener("click", () => el.classList.toggle("open")));
+$("listen").addEventListener("click", () => { const on = $("listen").classList.toggle("on"); $("listen").textContent = on ? "朗读中 · 第 1 篇" : "朗读本期"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

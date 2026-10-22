@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Material 3 Expressive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --p: #6750a4; --onp: #fff; --pc: #eaddff; --onpc: #21005d; --sc: #e8def8; --onsc: #1d192b; --t: #7d5260; --tc: #ffd8e4; --surf: #fef7ff; --scont: #f3edf7; --scont2: #ece6f0; --on: #1d1b20; --onv: #49454f; --out: #79747e; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--surf); }
+  body { font-family: "Roboto Flex", "Noto Sans SC", sans-serif; color: var(--on); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--surf); transition: background .6s; }
+  .wide { font-variation-settings: "wdth" 125; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 600; font-size: 14px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 4px 16px 10px; }
+  h1 { font-weight: 900; font-size: 34px; letter-spacing: -.5px; font-variation-settings: "wdth" 130; }
+  .sub { font-size: 13px; color: var(--onv); margin-top: 2px; }
+  .seed { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--onv); margin-top: 6px; }
+  .seed i { width: 14px; height: 14px; border-radius: 50%; background: var(--p); box-shadow: 0 0 0 2px var(--pc); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 120px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; background: var(--scont); border-radius: 32px; padding: 14px; }
+  .cookie { position: relative; height: 250px; display: grid; place-items: center; }
+  .cookie .clip { width: 250px; height: 250px; clip-path: var(--shape); background: var(--pc); }
+  .cookie img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .badge { position: absolute; left: 4px; top: 4px; width: 64px; height: 64px; display: grid; place-items: center; }
+  .badge svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .badge b { position: relative; font-weight: 900; font-size: 22px; color: var(--onpc); font-variation-settings: "wdth" 120; }
+  .hero h2 { margin-top: 10px; font-weight: 800; font-size: 22px; line-height: 1.35; letter-spacing: -.2px; }
+  .hero p { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--onv); }
+  .group { display: flex; gap: 4px; margin-top: 14px; height: 48px; }
+  .group button { flex: 1; border-radius: 24px; background: var(--sc); color: var(--onsc); font-weight: 700; font-size: 13.5px; transition: flex .45s cubic-bezier(.34,1.5,.5,1), border-radius .45s cubic-bezier(.34,1.5,.5,1), background .3s; white-space: nowrap; overflow: hidden; }
+  .group button:first-child { border-radius: 24px 8px 8px 24px; } .group button:last-child { border-radius: 8px 24px 24px 8px; } .group button:nth-child(2) { border-radius: 8px; }
+  .group button.on { flex: 1.8; background: var(--p); color: var(--onp); border-radius: 24px; }
+
+  .h4 { margin: 24px 4px 10px; font-weight: 800; font-size: 16px; font-variation-settings: "wdth" 115; }
+  ol { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .it { display: grid; grid-template-columns: 48px 1fr 72px; gap: 12px; align-items: center; padding: 12px; background: var(--scont); border-radius: 24px; cursor: pointer; transition: border-radius .45s cubic-bezier(.34,1.5,.5,1), background .3s; }
+  .it:first-child { border-radius: 28px 28px 10px 10px; } .it:last-child { border-radius: 10px 10px 28px 28px; } .it:not(:first-child):not(:last-child) { border-radius: 10px; }
+  .it.open { background: var(--pc); border-radius: 28px; }
+  .it .sh { position: relative; width: 48px; height: 48px; display: grid; place-items: center; }
+  .it .sh svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transition: transform .6s cubic-bezier(.34,1.5,.5,1); }
+  .it.open .sh svg { transform: rotate(90deg) scale(1.08); }
+  .it .sh b { position: relative; font-weight: 900; font-size: 17px; color: var(--onpc); }
+  .it h3 { font-weight: 600; font-size: 15px; line-height: 1.42; }
+  .it .m { margin-top: 3px; font-size: 12.5px; color: var(--onv); }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.55; color: var(--onv); }
+  .it.open .more { display: block; }
+  .it .tn { width: 72px; height: 60px; border-radius: 16px; overflow: hidden; background: var(--tc); display: grid; place-items: center; }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; }
+  .it .tn svg { width: 34px; height: 34px; }
+
+  .fab { position: absolute; right: 16px; bottom: 100px; z-index: 6; height: 64px; padding: 0 22px 0 18px; display: flex; align-items: center; gap: 10px; background: var(--pc); color: var(--onpc); border-radius: 20px; font-weight: 800; font-size: 16px; box-shadow: 0 6px 14px rgba(0,0,0,.18); transition: border-radius .5s cubic-bezier(.34,1.5,.5,1), background .3s; }
+  .fab svg { width: 30px; height: 30px; overflow: visible; }
+  .fab.on { border-radius: 32px; background: var(--p); color: var(--onp); }
+  .nav { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 6px 22px; background: var(--scont2); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 600; font-size: 12px; color: var(--onv); }
+  .tab .ind { width: 56px; height: 32px; border-radius: 16px; display: grid; place-items: center; transition: background .3s, width .45s cubic-bezier(.34,1.5,.5,1); }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.on { color: var(--on); font-weight: 800; }
+  .tab.on .ind { background: var(--sc); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { springCurve } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+// M3 形状库的几种：曲奇（波浪边）、花、太阳、四叶草——都写成「半径随角度变化」的函数，方便互相变形
+const SHAPES = { cookie: [12, 0.07], flower: [8, 0.16], sunny: [8, 0.09], clover: [4, 0.2], soft: [6, 0.05], circle: [1, 0] };
+const shapeR = ([n, a], th) => 1 + a * Math.cos(n * th);
+function shapePath(w, h, sA, sB = sA, k = 0, rot = 0, pts = 120) {
+  const R = Math.min(w, h) / 2 / 1.2; let d = "";
+  for (let i = 0; i <= pts; i++) { const th = (i / pts) * Math.PI * 2, r = R * ((1 - k) * shapeR(sA, th - rot) + k * shapeR(sB, th - rot)); d += `${i ? "L" : "M"}${(w / 2 + Math.cos(th) * r * 1.1).toFixed(1)} ${(h / 2 + Math.sin(th) * r * 1.1).toFixed(1)} `; }
+  return d + "Z";
+}
+// 动态取色：从封面里挑最「有颜色」的一类当种子色，生成一整套色调
+function seedFrom(img) {
+  const c = coverCanvas(img, 40, 40), d = c.getContext("2d").getImageData(0, 0, 40, 40).data, bins = new Array(36).fill(0).map(() => [0, 0, 0, 0]);
+  for (let i = 0; i < d.length; i += 4) { const [h, s, l] = rgb2hsl(d[i], d[i + 1], d[i + 2]); if (s < 0.25 || l < 0.15 || l > 0.9) continue; const b = Math.floor(h / 10) % 36; bins[b][0] += s; bins[b][1] += h; bins[b][2] += s; bins[b][3]++; }
+  const best = bins.reduce((a, b, i) => (b[0] > bins[a][0] ? i : a), 0);
+  return bins[best][3] ? bins[best][1] / bins[best][3] : 265;
+}
+function rgb2hsl(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2; let h = 0, s = 0; if (mx !== mn) { const d = mx - mn; s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; } return [h, s, l]; }
+function applyTheme(h) {
+  const hsl = (H, S, L) => `hsl(${((H % 360) + 360) % 360} ${S}% ${L}%)`, set = (k, v) => document.documentElement.style.setProperty(k, v);
+  set("--p", hsl(h, 55, 42)); set("--onp", "#fff"); set("--pc", hsl(h, 80, 90)); set("--onpc", hsl(h, 70, 16));
+  set("--sc", hsl(h + 20, 40, 90)); set("--onsc", hsl(h + 20, 35, 15)); set("--t", hsl(h + 60, 35, 42)); set("--tc", hsl(h + 60, 70, 90));
+  set("--surf", hsl(h, 40, 98.5)); set("--scont", hsl(h, 30, 95)); set("--scont2", hsl(h, 25, 92)); set("--onv", hsl(h, 8, 30));
+  return hsl(h, 55, 42);
+}
+const SH_KEYS = ["flower", "sunny", "clover", "cookie", "soft", "flower", "sunny"];
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ◑</span></div>
+  <header class="top"><div><h1>AI 热点</h1><div class="sub">10 月 22 日 · 周四 · 实时</div><div class="seed"><i></i><span id="seedT">配色取自头条封面</span></div></div></header>
+  <main class="scroll">
+    <section class="hero" id="hero">
+      <div class="cookie"><div class="clip" id="clip"><img id="img" src="${h1.cover}" alt=""></div><div class="badge"><svg viewBox="0 0 64 64"><path id="bshape" fill="var(--pc)"/></svg><b>01</b></div></div>
+      <h2>${esc(shortTitle(h1))}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 56))}</p>
+      <div class="group" id="group"><button class="on">热度 ${heatText(h1)}</button><button>${h1.sources} 家</button><button>${h1.people} 人</button></div>
+    </section>
+    <div class="h4">其余 ${rest.length} 条</div>
+    <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}"><span class="sh"><svg viewBox="0 0 48 48"><path d="${shapePath(48, 48, SHAPES[SH_KEYS[i]])}" fill="var(--pc)"/></svg><b>${h.rank}</b></span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="var(--t)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+  </main>
+  <button class="fab" id="fab"><svg viewBox="0 0 30 30"><path id="fabs" fill="currentColor"/></svg><span>听热点</span></button>
+  <nav class="nav">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}"><span class="ind">${iconSVG(i)}</span>${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const SP = springCurve(380, 22), SOFT = springCurve(200, 20);
+(async () => {
+await fontsReady();
+const img = await loadImage(h1.cover);
+const seed = seedFrom(img); applyTheme(seed);
+$("seedT").textContent = `配色取自头条封面 · 色相 ${Math.round(seed)}°`;
+// 头图：曲奇形状的轮廓一直慢慢转（图不动），播放时形状在曲奇、花、太阳之间变
+const clipEl = $("clip"), bshape = $("bshape"), fabs = $("fabs"); let playing = false;
+const order = ["cookie", "flower", "sunny", "clover", "cookie"];
+(function spin(now) {
+  const t = now / 1000, rot = t * 0.25;
+  let a = SHAPES.cookie, b = SHAPES.cookie, k = 0;
+  if (playing) { const ph = (t * 0.6) % (order.length - 1), i = Math.floor(ph); a = SHAPES[order[i]]; b = SHAPES[order[i + 1]]; k = (1 - Math.cos((ph - i) * Math.PI)) / 2; }
+  clipEl.style.setProperty("--shape", `path("${shapePath(250, 250, a, b, k, rot)}")`);
+  bshape.setAttribute("d", shapePath(64, 64, SHAPES.flower, SHAPES.sunny, (Math.sin(t * 1.2) + 1) / 2, -t * 0.6));
+  // 按钮里的小图形：平时是「播放」三角，播放时是一个一直变形旋转的加载形状
+  fabs.setAttribute("d", playing ? shapePath(30, 30, SHAPES[order[Math.floor(t * 1.5) % 4]], SHAPES[order[(Math.floor(t * 1.5) + 1) % 4]], (t * 1.5) % 1, t * 3) : "M10 7 L23 15 L10 23 Z");
+  requestAnimationFrame(spin);
+})(0);
+// 入场：弹簧
+const pop = (el, d, from = "scale(.85)") => el.animate([{ transform: from, opacity: 0 }, { transform: "none", opacity: 1 }], { duration: SP.ms, delay: d, easing: SP.easing, fill: "backwards" });
+pop(app.querySelector("h1"), 100, "translateY(16px)"); pop($("hero"), 250, "scale(.92)");
+$("clip").animate([{ transform: "scale(0) rotate(-90deg)" }, { transform: "none" }], { duration: SOFT.ms, delay: 400, easing: SOFT.easing, fill: "backwards" });
+app.querySelectorAll(".it").forEach((li, i) => { pop(li, 700 + i * 60, "translateY(24px)"); li.addEventListener("click", () => li.classList.toggle("open")); });
+pop($("fab"), 600, "scale(0)");
+// 按钮组：按下的那个变宽，旁边的让开
+const gb = [...$("group").querySelectorAll("button")];
+gb.forEach((b) => b.addEventListener("click", () => gb.forEach((x) => x.classList.toggle("on", x === b))));
+const fab = $("fab");
+fab.addEventListener("click", () => { playing = !playing; fab.classList.toggle("on", playing); fab.querySelector("span").textContent = playing ? "正在听 01" : "听热点"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); t.querySelector(".ind").animate([{ width: "24px" }, { width: "56px" }], { duration: SP.ms, easing: SP.easing }); }));
+})();
+</script>
+</body>
+</html>

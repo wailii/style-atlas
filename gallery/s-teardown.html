@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>产品拆解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg1: #f1f2f4; --bg2: #d9dce1; --ink: #15171b; --mute: #6a707a; --line: #c9cdd4; --acc: #ff5b1f; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg1); }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: linear-gradient(var(--bg1) 0%, #e8eaed 46%, var(--bg2) 100%); }
+  .mono { font-family: "JetBrains Mono", monospace; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 700; font-size: 14px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 16px 0; }
+  h1 { font-weight: 800; font-size: 28px; letter-spacing: -.8px; }
+  .k { font-family: "JetBrains Mono"; font-size: 10.5px; color: var(--mute); letter-spacing: .5px; margin-top: 2px; }
+  .btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 12px; background: var(--ink); color: #fff; font-weight: 700; font-size: 13px; }
+  .btn i { width: 8px; height: 8px; border-radius: 50%; background: var(--acc); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .stage { position: relative; height: 446px; perspective: 1100px; perspective-origin: 40% 30%; }
+  .rig { position: absolute; left: 26px; top: 226px; width: 210px; height: 140px; transform-style: preserve-3d; transform: rotateX(var(--rx, 56deg)) rotateZ(var(--rz, -32deg)); }
+  .L { position: absolute; inset: 0; transform-style: preserve-3d; transform: translateZ(var(--z, 0px)); border-radius: 14px; }
+  .L .dot { position: absolute; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 0 3px rgba(255,91,31,.22); }
+  .L.base { background: linear-gradient(135deg, #fff, #e9ebee); box-shadow: 0 0 0 1px #c9cdd4; }
+  .L.img, .L.txt, .L.chip { outline: 1px dashed rgba(21,23,27,.3); outline-offset: -1px; }
+  .L.txt, .L.chip { background: rgba(250,251,252,.5); }
+  .L .c { position: absolute; }
+  .L.img .c { inset: 10px 10px 58px; border-radius: 9px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+  .L.img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .L.txt .c { inset: auto 12px 12px; height: 36px; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+  .L.txt i { display: block; height: 7px; border-radius: 4px; background: #2a2e35; }
+  .L.chip .c { right: 16px; top: 16px; width: 34px; height: 22px; border-radius: 7px; background: var(--acc); color: #fff; font: 700 11px/22px "JetBrains Mono"; text-align: center; }
+  .L.glass { background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,.12)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.9), 0 0 0 1px rgba(150,160,175,.4); }
+  .shadow { position: absolute; left: 36px; top: 376px; width: 230px; height: 40px; border-radius: 50%; background: radial-gradient(rgba(20,25,35,.35), rgba(20,25,35,0) 70%); filter: blur(4px); transform: scaleX(var(--sw, 1)); }
+  svg.lead { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .lab { position: absolute; right: 14px; width: 118px; font-size: 11px; line-height: 1.35; padding-left: 8px; border-left: 2px solid var(--ink); }
+  .lab b { display: block; font-family: "JetBrains Mono"; font-size: 13px; font-weight: 700; }
+  .lab span { color: var(--mute); }
+
+  .info { padding: 0 16px; }
+  .info h2 { font-weight: 800; font-size: 21px; line-height: 1.4; letter-spacing: -.3px; }
+  .info p { margin-top: 8px; font-size: 13.5px; line-height: 1.65; color: var(--mute); }
+  .spec { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border-radius: 14px; box-shadow: 0 1px 0 rgba(0,0,0,.05), 0 8px 20px -12px rgba(20,25,35,.3); }
+  .spec div { padding: 10px 12px; font-size: 11px; color: var(--mute); }
+  .spec div + div { border-left: 1px solid #eceef1; }
+  .spec b { display: block; font-family: "JetBrains Mono"; font-size: 18px; color: var(--ink); }
+
+  .bom { margin: 22px 16px 26px; background: #fff; border-radius: 16px; box-shadow: 0 8px 20px -12px rgba(20,25,35,.3); overflow: hidden; }
+  .bom h4 { display: flex; justify-content: space-between; padding: 12px 14px 8px; font-size: 13px; font-weight: 800; }
+  .bom h4 span { font-family: "JetBrains Mono"; font-size: 10.5px; color: var(--mute); font-weight: 500; }
+  .it { display: grid; grid-template-columns: 40px 1fr 64px; gap: 10px; align-items: center; padding: 10px 14px; border-top: 1px solid #eceef1; cursor: pointer; }
+  .it .ic { width: 36px; height: 36px; }
+  .it .ic svg { width: 100%; height: 100%; overflow: visible; }
+  .it .pn { font-family: "JetBrains Mono"; font-size: 10px; color: var(--mute); }
+  .it h3 { font-weight: 600; font-size: 14px; line-height: 1.4; }
+  .it .h { text-align: right; font-family: "JetBrains Mono"; font-weight: 700; font-size: 14px; }
+  .it .h small { display: block; font-size: 10px; color: var(--mute); font-weight: 500; }
+  .it .more { display: none; grid-column: 2 / -1; font-size: 12.5px; line-height: 1.6; color: var(--mute); }
+  .it.open .more { display: block; }
+  .it.open .ic svg g { transform: translateY(var(--o)); }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 24px; background: rgba(255,255,255,.85); border-top: 1px solid var(--line); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: 600; font-size: 11.5px; color: var(--mute); }
+  .tab svg { width: 21px; height: 21px; }
+  .tab.on { color: var(--ink); }
+  .tab.on svg { color: var(--acc); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const titleLen = [...shortTitle(h1).replace(/\s/g, "")].length;
+// 每一层：名字、真实数字、离底板的高度、锚点（层内百分比位置）
+const LAYERS = [
+  { cls: "base", z: 0, name: "卡片底板", val: "358 × 236", unit: "px", at: [92, 80] },
+  { cls: "img", z: 50, name: "封面", val: "960 × 540", unit: "px · jpg", at: [88, 20] },
+  { cls: "txt", z: 120, name: "标题", val: `${titleLen} 字`, unit: `摘要 ${[...firstLine(h1.summary)].length} 字`, at: [93, 78] },
+  { cls: "chip", z: 170, name: "编号 / 热度", val: `#01 · ${heatText(h1)}`, unit: `${h1.sources} 家来源`, at: [92, 19] },
+  { cls: "glass", z: 220, name: "玻璃罩", val: "1 层", unit: "白边 1px", at: [100, 6] },
+];
+const exploded = (on) => LAYERS.forEach((l, i) => l.target = on ? l.z : i * 2);
+const isoIcon = (n, gap) => `<svg viewBox="0 0 36 36">${Array.from({ length: n }, (_, k) => `<g style="--o:${-k * 3}px;transition:transform .5s cubic-bezier(.34,1.5,.5,1)"><path d="M18 ${20 - k * gap} L32 ${13 - k * gap} L18 ${6 - k * gap} L4 ${13 - k * gap} Z" fill="${k === n - 1 ? "#ff5b1f" : k ? "#fff" : "#e3e6ea"}" stroke="#15171b" stroke-width="1.2"/></g>`).join("")}</svg>`;
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top"><div><h1>AI 热点</h1><div class="k">TEARDOWN · 10.22 · 头条卡片 5 层</div></div><button class="btn" id="tog"><i></i><span>合上</span></button></header>
+  <main class="scroll">
+    <section class="stage" id="stage">
+      <div class="shadow" id="shd"></div>
+      <div class="rig" id="rig">${LAYERS.map((l) => `<div class="L ${l.cls}">${l.cls === "img" ? `<div class="c"><img src="${h1.cover}" alt=""></div>` : l.cls === "txt" ? "<div class='c'><i style='width:92%'></i><i style='width:64%'></i></div>" : l.cls === "chip" ? "<div class='c'>01</div>" : ""}<span class="dot" style="left:${l.at[0]}%;top:${l.at[1]}%"></span></div>`).join("")}</div>
+      <svg class="lead" id="lead"></svg>
+      ${LAYERS.map((l, i) => `<div class="lab" style="top:${368 - i * 76}px"><b>${l.val}</b>${l.name}<br><span>${l.unit}</span></div>`).join("")}
+    </section>
+    <section class="info"><h2>${esc(shortTitle(h1))}</h2><p>${esc(clip(firstLine(h1.summary), 56))}</p><div class="spec"><div>热度<b>${heatText(h1)}</b></div><div>来源<b>${h1.sources}</b></div><div>参与<b>${h1.people}</b></div></div></section>
+    <section class="bom"><h4>其余条目<span>P/N · 热度</span></h4>${rest.map((h, i) => `<div class="it" data-r="${h.rank}"><span class="ic">${isoIcon(2 + (h.sources > 4 ? 2 : h.sources > 1 ? 1 : 0), 5)}</span><div><div class="pn">P/N ${pad2(h.rank)} · ${h.sources} 个来源</div><h3>${esc(shortTitle(h))}</h3></div><div class="h">${heatText(h)}<small>热度</small></div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div>`).join("")}</section>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const rig = $("rig"), stage = $("stage"), lead = $("lead"), shd = $("shd");
+const layers = [...rig.querySelectorAll(".L")], dots = [...rig.querySelectorAll(".dot")], labs = [...stage.querySelectorAll(".lab")];
+LAYERS.forEach((l, i) => { l.z0 = i * 2; l.cur = i * 2; l.v = 0; });
+let open = false, auto = true, t0 = performance.now();
+exploded(false);
+// 每层用弹簧追目标高度，层与层错开一点出发；镜头一直绕着慢慢转
+(function frame(now) {
+  const t = (now - t0) / 1000;
+  if (auto) { const want = t > 0.8; if (want !== open) { open = want; exploded(open); $("tog").querySelector("span").textContent = open ? "合上" : "拆开"; } }
+  LAYERS.forEach((l, i) => { if (now - t0 < 800 + i * 120 && open) return; for (let s = 0; s < 4; s++) { const a = -170 * (l.cur - l.target) - 18 * l.v; l.v += a / 240; l.cur += l.v / 240; } layers[i].style.setProperty("--z", l.cur.toFixed(2) + "px"); });
+  rig.style.setProperty("--rz", (-32 + Math.sin(t * 0.35) * 8).toFixed(2) + "deg");
+  rig.style.setProperty("--rx", (56 + Math.sin(t * 0.27) * 4).toFixed(2) + "deg");
+  shd.style.setProperty("--sw", (1 + LAYERS[4].cur / 600).toFixed(3));
+  // 引线：从每层的锚点到右边标签
+  const S = stage.getBoundingClientRect(); let d = "";
+  dots.forEach((dt, i) => { const r = dt.getBoundingClientRect(), x = r.left + r.width / 2 - S.left, y = r.top + r.height / 2 - S.top, lb = labs[i].getBoundingClientRect(), lx = lb.left - S.left - 4, ly = lb.top - S.top + 9; d += `M${x.toFixed(1)} ${y.toFixed(1)} L${(lx - 18).toFixed(1)} ${ly.toFixed(1)} L${lx.toFixed(1)} ${ly.toFixed(1)} `; labs[i].style.opacity = open ? 1 : 0.25; });
+  lead.innerHTML = `<path d="${d}" fill="none" stroke="#15171b" stroke-width="1" opacity="${open ? 0.85 : 0.2}"/>`;
+  requestAnimationFrame(frame);
+})(t0);
+$("tog").addEventListener("click", () => { auto = false; open = !open; exploded(open); $("tog").querySelector("span").textContent = open ? "合上" : "拆开"; });
+(async () => {
+await fontsReady();
+labs.forEach((l, i) => l.animate([{ transform: "translateX(20px)", opacity: 0 }, { transform: "none" }], { duration: 500, delay: 1000 + i * 120, fill: "backwards" }));
+app.querySelectorAll(".info, .bom").forEach((e, i) => e.animate([{ transform: "translateY(20px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 600, delay: 600 + i * 200, fill: "backwards" }));
+app.querySelectorAll(".it").forEach((li) => li.addEventListener("click", () => li.classList.toggle("open")));
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

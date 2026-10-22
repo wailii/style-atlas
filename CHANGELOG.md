@@ -1,5 +1,11 @@
 # 更新记录
 
+## 1.3.0 · 2026-10-23
+
+新增 10 种风格（共 40 种）：Y2K 铬金属、孟菲斯、编辑杂志、拟物、Material 3 Expressive、产品拆解、装饰艺术、HD-2D、活体录屏、学院风。来源：UI/UX Pro Max 风格表、lemo-opuscar 风格库（teardown、art-deco、hd-2d、living-screencast）、Material Design 3。
+
+- 「按气质找」加「有故事、像游戏」「跟着内容换颜色」两类
+
 ## 1.2.0 · 2026-10-23
 
 新增 10 种风格（共 30 种）：水彩、默片、皮影戏、蓝图、彩色玻璃、橡皮管卡通、视觉调查、新粗野主义、黏土风、Frutiger Aero。来源：lemo-opuscar 风格库、UI/UX Pro Max 风格表、2026 网页设计趋势。

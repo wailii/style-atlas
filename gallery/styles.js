@@ -1,4 +1,4 @@
-// 20 种风格：名字、出处、招牌动效、能点的地方、适合做什么
+// 40 种风格：名字、出处、招牌动效、能点的地方、适合做什么
 const LEMO = "https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles";
 const STYLES = [
   // ── 手作 · 手工艺 ──
@@ -289,5 +289,86 @@ const STYLES = [
     moves: ["气泡从草地冒上来、云在飘", "Aqua 按钮每 4 秒扫过一道光", "玻璃块浮上来；点一下有水波纹"],
     tap: ["点任一条：水波纹 + 展开", "切底栏：选中项变成 Aqua 胶囊"],
     fit: "饮料、户外、怀旧活动、年轻消费品牌",
+  },
+  // ── 第三批（1.3.0）──
+  {
+    id: "y2k", group: "界面潮流", name: "Y2K 铬金属", file: "s-y2k.html",
+    line: "液态铬、镭射彩虹、果冻胶囊按钮、到处闪的星光。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Y2K Aesthetic", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["铬字放大带模糊落下，图框绕 Y 轴转进来", "镭射色一直转；铬滴流动；斜光扫过图片", "随机位置冒十字星；按胶囊由粉变青"],
+    tap: ["点「听热点」胶囊", "点任一条：展开"],
+    fit: "潮牌、音乐、美妆、年轻人活动页",
+  },
+  {
+    id: "memphis", group: "界面潮流", name: "孟菲斯", file: "s-memphis.html",
+    line: "粗黑描边、糖果色几何碎片满屏飘、色块错位叠在后面。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Memphis Design", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["碎片从中间炸开弹到各自位置", "碎片一直自转漂移；分隔波浪线在游", "主图几层从不同方向飞进来；列表左右交替转着落位"],
+    tap: ["点粉圆播放按钮：三角转一下", "点任一条：展开"],
+    fit: "活动页、潮流品牌、设计周、儿童产品",
+  },
+  {
+    id: "editorial", group: "印刷 · 版画", name: "编辑杂志", file: "s-editorial.html",
+    line: "报头大字、红色栏目名、首字下沉、居中引语、满幅大图。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Editorial Grid / Magazine", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["报头三道线从中间画开，刊名字距收紧", "滚到哪儿，哪儿浮上来", "大图跟着滚动慢慢缩小"],
+    tap: ["点「朗读本期」", "点任一条：展开", "往下滚"],
+    fit: "长文、专题、品牌故事、年报",
+  },
+  {
+    id: "skeuo", group: "界面潮流", name: "拟物", file: "s-skeuo.html",
+    line: "iOS 6 的真实材质：亚麻、缝线皮革、金属旋钮、拍立得、便签。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Skeuomorphism", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["拍立得甩到桌上，从发白慢慢显影", "表盘指针弹簧甩到热度值，甩过头再回来", "按旋钮：凹下去、绿灯亮、指针跟着抖"],
+    tap: ["按顶栏金属旋钮", "点列表行：变 iOS 6 蓝"],
+    fit: "复古工具、音频软件、怀旧专题、手账",
+  },
+  {
+    id: "m3", group: "界面潮流", name: "Material 3 Expressive", file: "s-m3.html",
+    line: "配色从封面取、曲奇花朵形状、按下的按钮变宽、全是弹簧。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Material 3 Expressive (Mobile)", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"], ["Material Design 3", "官方站（Expressive 更新）", "https://m3.material.io"]],
+    moves: ["整套颜色从头条封面算出来", "曲奇形裁图一直慢转，播放时在曲奇、花、太阳、四叶草之间变", "按钮组按下的那个变宽变圆；入场全是弹簧"],
+    tap: ["点按钮组任一个", "点播放", "点任一条：编号形状转 90°、卡片变全圆角"],
+    fit: "安卓产品、工具、内容平台、多主题内容",
+  },
+  {
+    id: "teardown", group: "数字 · 三维", name: "产品拆解", file: "s-teardown.html",
+    line: "把卡片拆成五层浮起来，引线标着真实数字，镜头一直绕。",
+    from: [["lemo-opuscar 风格库 · teardown", "Exploded Teardown：一根轴上的爆炸图、数字长在物体上", `${LEMO}/teardown/STYLE.md`]],
+    moves: ["五层依次弹开，标签从右滑进", "镜头慢慢绕，引线每帧跟着锚点走", "合上 / 拆开都是弹簧"],
+    tap: ["点「合上 / 拆开」", "点物料清单任一条：小图标各层上浮并展开"],
+    fit: "硬件、SaaS 架构、产品功能讲解",
+  },
+  {
+    id: "deco", group: "印刷 · 版画", name: "装饰艺术", file: "s-deco.html",
+    line: "黑、金、象牙；光芒、阶梯拱门、灯泡跑马灯，一切从中轴展开。",
+    from: [["lemo-opuscar 风格库 · art-deco", "金线黑漆、中轴对称、灯泡一盏盏亮", `${LEMO}/art-deco/STYLE.md`]],
+    moves: ["光芒扇面从 0° 开到 180°，拱门从底边升起", "灯泡三相追逐；金字扫光", "所有东西从中轴往两边展开"],
+    tap: ["点「收听头条」：扇子摆、灯泡加速", "点任一条：从中间展开"],
+    fit: "酒店、珠宝、颁奖、周年庆、高端邀请",
+  },
+  {
+    id: "hd2d", group: "数字 · 三维", name: "HD-2D", file: "s-hd2d.html",
+    line: "像素小人站在有光有雾的立体小镇里，对话框逐字打出头条。",
+    from: [["lemo-opuscar 风格库 · hd-2d", "像素精灵 + 立体场景 + 移轴 + 实际光源（语法学自《八方旅人》）", `${LEMO}/hd-2d/STYLE.md`]],
+    moves: ["镜头推进，焦点从远处拉到告示牌", "灯笼闪、光柱呼吸、光点往上飘；小人 2 帧呼吸", "对话框 steps(4) 弹开，标题逐字打出"],
+    tap: ["点列表任一条：像素箭头跳过去，告示牌和对话框换成那一条", "点告示牌：换下一条"],
+    fit: "游戏、文旅、城市导览、故事型落地页",
+  },
+  {
+    id: "screencast", group: "影像 · 屏幕", name: "活体录屏", file: "s-screencast.html",
+    line: "像一段产品录屏：光标是用户，像素小家伙替软件干活。",
+    from: [["lemo-opuscar 风格库 · living-screencast", "高清界面里住着一只低清像素小家伙；Screen Studio 式自动推近", `${LEMO}/living-screencast/STYLE.md`]],
+    moves: ["光标点头条，镜头推近", "小家伙跳上标题走一遍，荧光笔跟着划", "小家伙踩播放按钮；跳到列表指着热度；12 秒一遍循环"],
+    tap: ["点桌布空白处：重放", "界面里的按钮、头条照常能点"],
+    fit: "产品演示、功能介绍、更新日志、引导页",
+  },
+  {
+    id: "academia", group: "印刷 · 版画", name: "学院风", file: "s-academia.html",
+    line: "羊皮纸、拱顶老照片、红色首字、目录卡抽屉、火漆按钮。",
+    from: [["nextlevelbuilder/ui-ux-pro-max-skill · 13.8 万★", "风格表里的 Academia (Scholarly Mobile)", "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"]],
+    moves: ["刊名像墨水从左写到右；照片像显影一样沉下来", "火漆转着盖下来，落定压一下", "目录卡从抽屉里一张张立起来"],
+    tap: ["点火漆：开始朗读", "点目录卡：抽出来、展开"],
+    fit: "读书、课程、研究机构、博物馆、出版社",
   },
 ];

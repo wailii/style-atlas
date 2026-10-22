@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HD-2D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --cream: #fbf4e4; --navy: #23305c; --navy2: #121a36; --gold: #c9a24a; --gold-hi: #f3d98e; --mute: #6c6352; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--cream); }
+  body { font-family: "Noto Serif SC", serif; color: var(--navy2); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  canvas, .px { image-rendering: pixelated; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--cream); }
+
+  .sb { position: absolute; z-index: 9; left: 0; right: 0; top: 0; height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: Cinzel; font-weight: 700; font-size: 14px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* 场景：远景楼（虚）→ 地面（远虚近实）→ 精灵（实）→ 光柱、光点 → 前景枝叶（虚） */
+  .scene { position: relative; height: 468px; overflow: hidden; background: linear-gradient(#f8d9a6 0%, #fbe8c4 34%, #f4dcb0 52%); perspective: 380px; perspective-origin: 50% 36%; }
+  .far { position: absolute; left: -10px; right: -10px; top: 70px; height: 150px; filter: blur(var(--fb, 2px)) saturate(1.05); }
+  .far canvas { width: 100%; height: 100%; }
+  .ground, .ground2 { position: absolute; left: -420px; right: -420px; bottom: -40px; height: 760px; transform-origin: 50% 100%; transform: rotateX(76deg); background-size: 54px 54px; }
+  .ground2 { filter: blur(3px); -webkit-mask: linear-gradient(#000 0%, #000 30%, transparent 62%); mask: linear-gradient(#000 0%, #000 30%, transparent 62%); }
+  .pool { position: absolute; left: 50%; top: 210px; width: 420px; height: 170px; margin-left: -210px; border-radius: 50%; background: radial-gradient(rgba(255,226,150,.75), rgba(255,200,110,0) 66%); mix-blend-mode: soft-light; }
+  .focus { position: absolute; inset: 0; filter: blur(var(--nb, 0px)); }
+  .spr { position: absolute; transform: translate(-50%, -100%); }
+  .spr::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 120%; height: 10px; margin-left: -60%; border-radius: 50%; background: rgba(60,35,10,.38); filter: blur(2px); z-index: -1; }
+  .board { display: flex; flex-direction: column; align-items: center; }
+  .board .plank { padding: 4px 10px 3px; background: #8a5a2b; box-shadow: 0 0 0 3px #4a2c14; }
+  .board .frame { margin-top: 6px; padding: 5px; background: #a8733a; box-shadow: 0 0 0 3px #4a2c14, inset 0 0 0 2px #c9925a; }
+  .board .frame canvas { display: block; width: 156px; height: 88px; }
+  .board .legs { display: flex; gap: 120px; }
+  .board .legs i { width: 8px; height: 34px; background: #6b4220; box-shadow: 0 0 0 2px #4a2c14; }
+  .hero { animation: bob .9s steps(1) infinite; }
+  @keyframes bob { 50% { transform: translate(-50%, calc(-100% - 3px)); } }
+  .lamp .glow { position: absolute; left: 50%; top: 4px; width: 120px; height: 120px; margin: -50px 0 0 -60px; border-radius: 50%; background: radial-gradient(rgba(255,214,120,.95), rgba(255,170,60,.35) 30%, rgba(255,170,60,0) 66%); mix-blend-mode: screen; animation: flick 2.6s infinite; }
+  @keyframes flick { 0%, 100% { opacity: .9; } 12% { opacity: .65; } 18% { opacity: 1; } 47% { opacity: .78; } 62% { opacity: .95; } }
+  .ray { position: absolute; top: -80px; width: 60px; height: 560px; transform-origin: 50% 0; background: linear-gradient(rgba(255,244,214,0), rgba(255,244,214,.55) 30%, rgba(255,244,214,0) 85%); mix-blend-mode: screen; filter: blur(6px); }
+  .mote { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff7d6; box-shadow: 0 0 6px 2px rgba(255,214,130,.85); }
+  .leaf { position: absolute; top: -16px; filter: blur(3.4px); opacity: .95; }
+  .vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 46%, rgba(0,0,0,0) 54%, rgba(60,30,10,.32) 100%); }
+  .dlg { position: absolute; left: 12px; right: 12px; bottom: 14px; min-height: 92px; padding: 16px 16px 14px; background: linear-gradient(rgba(28,38,78,.92), rgba(14,20,46,.94)); border-radius: 6px; box-shadow: 0 0 0 1px var(--gold), 0 0 0 3px rgba(14,20,46,.9), 0 0 0 4px rgba(201,162,74,.6), 0 10px 24px rgba(0,0,0,.35); color: #f6efdc; transform-origin: 50% 50%; }
+  .dlg .name { position: absolute; left: 14px; top: -13px; padding: 2px 12px; background: var(--navy2); border-radius: 4px; box-shadow: 0 0 0 1px var(--gold); font-family: Cinzel, "Noto Serif SC"; font-weight: 700; font-size: 12px; color: var(--gold-hi); letter-spacing: .1em; }
+  .dlg p { font-weight: 700; font-size: 15.5px; line-height: 1.6; min-height: 50px; }
+  .dlg .meta { margin-top: 4px; font-size: 11.5px; color: rgba(246,239,220,.65); }
+  .dlg .nx { position: absolute; right: 14px; bottom: 10px; width: 0; height: 0; border: 6px solid transparent; border-top: 8px solid var(--gold-hi); animation: nx .8s steps(1) infinite; }
+  @keyframes nx { 50% { transform: translateY(3px); } }
+
+  .menu { margin: 18px 12px 26px; padding: 12px 6px 6px 8px; background: #fffaf0; border-radius: 6px; box-shadow: 0 0 0 2px var(--navy), inset 0 0 0 3px #fffaf0, inset 0 0 0 4px var(--gold), 0 8px 20px -10px rgba(35,48,92,.4); }
+  .menu h4 { display: flex; justify-content: space-between; align-items: baseline; padding: 0 10px 8px 28px; font-weight: 900; font-size: 17px; color: var(--navy); }
+  .menu h4 span { font-family: Cinzel; font-size: 11px; color: var(--gold); letter-spacing: .14em; }
+  .menu ul { position: relative; list-style: none; }
+  .row { display: grid; grid-template-columns: 44px 1fr 72px; gap: 10px; align-items: center; padding: 9px 10px 9px 28px; border-top: 1px dashed rgba(35,48,92,.18); cursor: pointer; }
+  .row .ic { width: 44px; height: 44px; display: grid; place-items: center; background: #efe5cf; box-shadow: 0 0 0 2px var(--navy); }
+  .row .ic canvas { width: 44px; height: 44px; }
+  .row .ic canvas.icon { width: 32px; height: 32px; }
+  .row h3 { font-weight: 700; font-size: 14.5px; line-height: 1.45; }
+  .row .hp { font-family: Cinzel; font-weight: 700; font-size: 11px; color: var(--mute); text-align: right; }
+  .row .hp b { display: block; font-size: 16px; color: var(--navy); }
+  .row .bar { margin-top: 3px; height: 6px; background: #d8ccb2; box-shadow: 0 0 0 1px var(--navy); }
+  .row .bar i { display: block; height: 100%; background: linear-gradient(#ffe9a6, #e2a83a); box-shadow: inset 0 -2px 0 rgba(0,0,0,.15); }
+  .row.on h3 { color: #9c5b10; }
+  .cur { position: absolute; left: 6px; top: 0; transition: transform .24s steps(4); }
+  .cur canvas { animation: poke .7s steps(1) infinite; }
+  @keyframes poke { 50% { transform: translateX(3px); } }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 24px; background: #fffaf0; box-shadow: 0 -1px 0 var(--gold), 0 -3px 0 #fffaf0, 0 -4px 0 var(--navy); }
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: 700; font-size: 11.5px; color: #8c8370; }
+  .tab svg { width: 21px; height: 21px; }
+  .tab.on { color: var(--navy); }
+  .tab.on svg { filter: drop-shadow(0 0 4px rgba(226,168,58,.9)); color: #c47d12; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const app = document.getElementById("app");
+const { pxText, pxIcon, sprite } = Engines;
+const [h1, ...rest] = HOT;
+const WARM = ["#1d1a2e", "#3a3550", "#5d4a5e", "#8a5a4a", "#c07a4a", "#e0a65a", "#f2d38a", "#fbf0d0", "#ffffff", "#5a7ab0", "#8fb0d8", "#3f6b4a", "#7ea05a", "#c9455a", "#e87a8a", "#b0a8c0"];
+const HERO = ["...kkkk...", "..khhhhk..", ".khhhhhhk.", ".khsssshk.", ".ksessesk.", ".kssssssk.", "..kssssk..", ".kcccccck.", "kccbbbbcck", "ksccccccsk", ".kcccccck.", "..kpkkpk..", "..kpkkpk..", "..kokkok.."];
+const HC = { k: "#2a2238", h: "#8a4f2a", s: "#f2c9a0", e: "#2a2238", c: "#3b5ba8", b: "#e0a63a", p: "#4a3a5a", o: "#3a2a20" };
+const LAMP = ["..kkkk..", ".kyyyyk.", ".kyWWyk.", ".kyWWyk.", ".kyyyyk.", "..kkkk..", "...kk...", "...kk...", "...kk...", "...kk...", "...kk...", "...kk...", "...kk...", "...kk...", "..kkkk..", ".kkkkkk."];
+const CUR = ["kk....", "kgk...", "kggk..", "kgggk.", "kggk..", "kgk...", "kk...."];
+// 远景小镇：低分辨率随机房子，亮着窗
+function townCanvas(w, h) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d");
+  seeded(7, () => {
+    for (let layer = 0; layer < 2; layer++) {
+      let px = -6;
+      while (px < w) {
+        const bw = 14 + Math.floor(Math.random() * 16), bh = (layer ? 18 : 28) + Math.floor(Math.random() * 18), by = h - bh - (layer ? 0 : 6);
+        const wall = layer ? ["#e8c89a", "#d9a57a", "#f0dcb4", "#c98f6a"][Math.floor(Math.random() * 4)] : ["#c9b29a", "#b89a8a", "#d8c2a2"][Math.floor(Math.random() * 3)];
+        x.fillStyle = wall; x.fillRect(px, by, bw, bh);
+        x.fillStyle = layer ? "#9a4a3a" : "#8a6a6a"; for (let r = 0; r < 6; r++) x.fillRect(px - 1 + r, by - r - 1, bw + 2 - r * 2, 1);
+        x.fillStyle = "#ffe08a"; for (let wy = by + 4; wy < h - 6; wy += 7) for (let wx = px + 3; wx < px + bw - 3; wx += 6) if (Math.random() > 0.45) x.fillRect(wx, wy, 2, 3);
+        px += bw + (layer ? 1 : 3);
+      }
+    }
+  });
+  return c;
+}
+// 地砖：64 格石板，每块颜色略有出入
+function cobbleURL() {
+  const c = document.createElement("canvas"); c.width = c.height = 16; const x = c.getContext("2d");
+  x.fillStyle = "#9a8266"; x.fillRect(0, 0, 16, 16);
+  seeded(3, () => [[0, 0, 8, 8], [8, 0, 8, 8], [0, 8, 5, 8], [5, 8, 11, 8]].forEach(([a, b, w, h]) => { const v = Math.floor(Math.random() * 3); x.fillStyle = ["#d8c09a", "#ccb28a", "#e2cca6"][v]; x.fillRect(a + 1, b + 1, w - 1, h - 1); x.fillStyle = "rgba(255,255,255,.25)"; x.fillRect(a + 1, b + 1, w - 2, 1); }));
+  return c.toDataURL();
+}
+const LEAF = () => { const c = document.createElement("canvas"); c.width = 40; c.height = 22; const x = c.getContext("2d"); seeded(11, () => { for (let i = 0; i < 90; i++) { x.fillStyle = ["#4f7a3a", "#6f9a4a", "#3a5a2a", "#8ab060"][i % 4]; const r = Math.random(); x.fillRect(Math.floor(Math.random() * 40), Math.floor(r * r * 22), 3, 2); } }); c.style.width = "200px"; c.style.height = "110px"; return c; };
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <main class="scroll">
+    <section class="scene" id="scene">
+      <div class="far" id="far"></div>
+      <div class="ground" id="g1"></div><div class="ground2" id="g2"></div>
+      <div class="pool"></div>
+      <div class="focus" id="focus">
+        <div class="spr board" id="board" style="left:200px;top:286px"><div class="plank" id="plank"></div><div class="frame" id="poster"></div><div class="legs"><i></i><i></i></div></div>
+        <div class="spr hero" id="hero" style="left:92px;top:330px"></div>
+        <div class="spr lamp" id="lamp" style="left:330px;top:300px"><span class="glow"></span></div>
+      </div>
+      ${[[40, 18], [150, 24], [262, 14]].map(([l, r]) => `<span class="ray" style="left:${l}px;transform:rotate(${r}deg)"></span>`).join("")}
+      <div id="motes"></div>
+      <div class="vig"></div>
+      <div class="dlg" id="dlg"><span class="name">号外 · ${pad2(h1.rank)}</span><p id="say"></p><div class="meta" id="meta"></div><span class="nx"></span></div>
+    </section>
+    <section class="menu"><h4>今日热点<span>QUEST LOG</span></h4><ul id="ul">
+      <span class="cur" id="cur"></span>
+      ${HOT.map((h, i) => `<li class="row ${i ? "" : "on"}" data-i="${i}"><span class="ic" data-i="${i}"></span><div><h3>${esc(shortTitle(h))}</h3><div class="bar"><i style="width:${Math.round((h.heat / HOT[0].heat) * 100)}%"></i></div></div><div class="hp">热度<b>${heatText(h)}</b></div></li>`).join("")}
+    </ul></section>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+$("far").append(townCanvas(140, 54));
+const cob = cobbleURL(); ["g1", "g2"].forEach((id) => { $(id).style.backgroundImage = `url(${cob})`; $(id).style.imageRendering = "pixelated"; });
+$("plank").append(pxText("号外 · 今日头条", { size: 10, color: "#fff3d6", scale: 2, weight: 700 }));
+$("hero").append(sprite(HERO, HC, 4));
+$("lamp").append(sprite(LAMP, { k: "#3a2a20", y: "#e8a63a", W: "#fff4c0" }, 4));
+$("cur").append(sprite(CUR, { k: "#23305c", g: "#e2a83a" }, 3));
+const lf = LEAF(); lf.className = "leaf"; lf.style.left = "-40px"; $("scene").append(lf);
+const lf2 = LEAF(); lf2.className = "leaf"; lf2.style.right = "-50px"; lf2.style.transform = "scaleX(-1)"; $("scene").append(lf2);
+const motes = $("motes");
+seeded(5, () => { for (let i = 0; i < 22; i++) { const m = document.createElement("span"); m.className = "mote"; m.style.left = 20 + Math.random() * 350 + "px"; m.style.top = 120 + Math.random() * 220 + "px"; motes.append(m); const dx = (Math.random() - 0.5) * 40, dur = 4000 + Math.random() * 4000; m.animate([{ transform: "translate(0,0)", opacity: 0 }, { transform: `translate(${dx}px,-40px)`, opacity: 1, offset: 0.4 }, { transform: `translate(${-dx * 0.5}px,-110px)`, opacity: 0 }], { duration: dur, delay: -Math.random() * dur, iterations: Infinity, easing: "ease-in-out" }); } });
+
+// 对话框逐字打出；点列表里哪条，告示牌和对话框就换成哪条
+let typing = 0;
+function say(h) {
+  clearInterval(typing); const p = $("say"), chars = [...shortTitle(h)]; let n = 0; p.textContent = "";
+  $("meta").textContent = `${h.sources} 家来源 · ${h.people} 人参与 · 热度 ${heatText(h)}`;
+  $("dlg").querySelector(".name").textContent = `号外 · ${pad2(h.rank)}`;
+  typing = setInterval(() => { p.textContent = chars.slice(0, ++n).join(""); if (n >= chars.length) clearInterval(typing); }, 38);
+}
+const posterOf = async (h) => { const src = h.cover || h1.cover, im = await loadImage(src); const c = pixelCanvas(im, 78, 44, WARM, 0.12); if (!h.cover) { const x = c.getContext("2d"); x.fillStyle = "rgba(29,26,46,.55)"; x.fillRect(0, 0, 78, 44); x.drawImage(pxText(`No.${pad2(h.rank)}`, { size: 10, color: "#fff3d6", scale: 1, weight: 700 }), 22, 15); } return c; };
+(async () => {
+const imgs = await Promise.all([h1.cover, ...rest.map((h) => h.cover)].map((s) => s && loadImage(s)));
+app.querySelectorAll(".ic").forEach((el) => { const i = +el.dataset.i, h = HOT[i]; el.append(h.cover ? pixelCanvas(imgs[i], 22, 22, WARM, 0.1) : pxIcon(DOODLE[h.rank], { n: 16, vb: 64, lw: 5, color: "#23305c", scale: 2 })); });
+$("poster").append(await posterOf(h1));
+await fontsReady();
+const EASE = "cubic-bezier(.2,.75,.2,1)";
+// 镜头推进 + 对焦：一开始远景清楚、近处虚，然后焦点拉到告示牌
+$("scene").animate([{ transform: "scale(1.12) translateY(14px)" }, { transform: "none" }], { duration: 2400, easing: EASE, fill: "backwards" });
+$("focus").animate([{ "--nb": "6px", filter: "blur(6px)" }, { filter: "blur(0px)" }], { duration: 1400, delay: 300, easing: EASE, fill: "backwards" });
+$("far").animate([{ filter: "blur(0px) saturate(1.05)" }, { filter: "blur(2px) saturate(1.05)" }], { duration: 1400, delay: 300, easing: EASE, fill: "backwards" });
+app.querySelectorAll(".ray").forEach((r, i) => r.animate([{ opacity: 0.35 }, { opacity: 1 }, { opacity: 0.35 }], { duration: 5000 + i * 900, delay: -i * 1300, iterations: Infinity, easing: "ease-in-out" }));
+$("dlg").animate([{ transform: "scaleY(0)", opacity: 0 }, { transform: "scaleY(1)", opacity: 1 }], { duration: 260, delay: 1200, easing: "steps(4)", fill: "backwards" });
+setTimeout(() => say(h1), 1450);
+const rows = [...app.querySelectorAll(".row")], cur = $("cur");
+const point = (i) => { rows.forEach((r, k) => r.classList.toggle("on", k === i)); cur.style.transform = `translateY(${rows[i].offsetTop + rows[i].offsetHeight / 2 - 10}px)`; };
+point(0);
+rows.forEach((r, i) => r.addEventListener("click", async () => { point(i); say(HOT[i]); const c = await posterOf(HOT[i]); $("poster").replaceChildren(c); $("scene").scrollIntoView({ behavior: "smooth" }); }));
+$("board").addEventListener("click", () => { const i = (rows.findIndex((r) => r.classList.contains("on")) + 1) % rows.length; rows[i].click(); });
+app.querySelectorAll(".menu").forEach((e) => e.animate([{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duration: 700, delay: 900, easing: EASE, fill: "backwards" }));
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

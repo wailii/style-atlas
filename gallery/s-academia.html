@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学院风</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Noto+Serif+SC:wght@500;700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #f4ecdb; --paper2: #ebe0c8; --ink: #2b2118; --ink2: #5e5040; --crim: #8c1d2c; --brass: #a8843a; --card: #fbf7ec; --rule-b: #9fb6cf; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .app::before { content: ""; position: absolute; inset: 0; background-image: var(--fiber); background-size: 420px; opacity: .7; pointer-events: none; }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, rgba(255,236,190,.55) 0%, rgba(255,236,190,0) 38%), radial-gradient(ellipse at 50% 40%, transparent 60%, rgba(90,60,30,.14)); }
+  .lat { font-family: "Cormorant Garamond", serif; }
+
+  .sb { position: relative; z-index: 2; height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: "Cormorant Garamond"; font-weight: 700; font-size: 15px; }
+  .mast { position: relative; z-index: 2; flex: none; text-align: center; padding: 4px 16px 10px; }
+  .mast .ex { font-family: "Cormorant Garamond"; font-style: italic; font-weight: 600; font-size: 13px; color: var(--crim); letter-spacing: .08em; }
+  .mast h1 { font-weight: 900; font-size: 32px; letter-spacing: .14em; line-height: 1.25; }
+  .mast .vol { display: flex; align-items: center; justify-content: center; gap: 10px; font-family: "Cormorant Garamond"; font-weight: 600; font-size: 12.5px; letter-spacing: .2em; color: var(--ink2); }
+  .mast .vol b { width: 46px; height: 0; border-top: 1px solid var(--brass); }
+  .mast svg { width: 22px; height: 22px; color: var(--brass); }
+
+  .scroll { position: relative; z-index: 2; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 18px 28px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .arch { position: relative; margin: 6px auto 0; width: 300px; height: 250px; }
+  .arch .fr { position: absolute; inset: -7px; border: 1px solid var(--brass); border-radius: 157px 157px 4px 4px; }
+  .arch canvas { width: 100%; height: 100%; display: block; border-radius: 150px 150px 3px 3px; box-shadow: 0 8px 20px -10px rgba(60,40,20,.5); }
+  figcaption { margin-top: 12px; text-align: center; font-family: "Cormorant Garamond"; font-style: italic; font-size: 13.5px; color: var(--ink2); }
+  .hero h2 { margin-top: 16px; text-align: center; font-weight: 900; font-size: 22px; line-height: 1.5; }
+  .orn { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0 2px; color: var(--brass); font-family: "Cormorant Garamond"; font-size: 16px; }
+  .orn b { width: 60px; height: 0; border-top: 1px solid var(--brass); }
+  .body { margin-top: 10px; font-size: 14.5px; line-height: 1.9; text-align: justify; color: #3a2e22; }
+  .body::first-letter { float: left; font-family: "Cormorant Garamond", "Noto Serif SC"; font-weight: 700; font-size: 60px; line-height: .82; padding: 6px 8px 0 0; color: var(--crim); }
+  .seal-row { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; }
+  .seal { position: relative; width: 74px; height: 74px; display: grid; place-items: center; }
+  .seal svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(80,10,20,.35)); }
+  .seal span { position: relative; font-weight: 900; font-size: 22px; color: #f3d7cf; text-shadow: 0 -1px 0 rgba(0,0,0,.35), 0 1px 0 rgba(255,200,190,.25); }
+  .seal-row .lbl { font-family: "Cormorant Garamond"; font-style: italic; font-weight: 600; font-size: 15px; color: var(--crim); line-height: 1.2; }
+  .seal-row .lbl small { display: block; font-family: "Noto Serif SC"; font-style: normal; font-size: 12px; color: var(--ink2); }
+
+  .sec { margin: 30px 0 12px; text-align: center; }
+  .sec h4 { font-weight: 900; font-size: 18px; letter-spacing: .3em; }
+  .sec span { font-family: "Cormorant Garamond"; font-style: italic; font-size: 13px; color: var(--ink2); }
+  .drawer { position: relative; padding: 12px 10px 4px; background: linear-gradient(#7a4f2c, #63401f); border-radius: 6px; box-shadow: inset 0 2px 0 rgba(255,255,255,.15), inset 0 -10px 18px rgba(0,0,0,.25), 0 8px 18px -10px rgba(40,25,10,.6); }
+  .drawer .pull { margin: 0 auto 10px; width: 90px; height: 26px; border-radius: 4px; background: linear-gradient(#e2c27a, #a8843a); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 1px 2px rgba(0,0,0,.4); display: grid; place-items: center; font-family: "Courier Prime"; font-weight: 700; font-size: 11px; color: #3a2a12; }
+  .card { position: relative; margin-bottom: 8px; padding: 10px 14px 12px; background: var(--card); border-radius: 3px; background-image: linear-gradient(transparent 31px, #c9504f 31px, #c9504f 32px, transparent 32px), repeating-linear-gradient(transparent 0 23px, var(--rule-b) 23px 24px); background-position: 0 0, 0 32px; box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 2px 4px rgba(40,25,10,.25); cursor: pointer; transition: transform .45s cubic-bezier(.3,1.4,.5,1); }
+  .card .cn { display: flex; justify-content: space-between; font-family: "Courier Prime"; font-size: 12px; color: var(--ink2); line-height: 20px; }
+  .card h3 { margin-top: 6px; font-family: "Courier Prime", "Noto Serif SC"; font-weight: 700; font-size: 14.5px; line-height: 24px; }
+  .card .more { display: none; font-family: "Courier Prime", "Noto Serif SC"; font-size: 13px; line-height: 24px; color: #3a2e22; }
+  .card.open { transform: translateY(-6px) rotate(-.6deg); }
+  .card.open .more { display: block; }
+
+  .tabs { position: relative; z-index: 3; flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 6px 24px; background: var(--paper2); border-top: 1px solid var(--brass); box-shadow: 0 -3px 0 var(--paper2), 0 -4px 0 rgba(168,132,58,.6); }
+  .tab { position: relative; font-weight: 700; font-size: 13px; color: var(--ink2); letter-spacing: .2em; padding-top: 6px; }
+  .tab.on { color: var(--crim); }
+  .tab.on::before { content: ""; position: absolute; left: 50%; top: -17px; width: 14px; height: 20px; margin-left: -7px; background: var(--crim); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 74%, 0 100%); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+app.style.setProperty("--fiber", `url(${fiberURL(420, 220, "120,90,50", "255,250,235")})`);
+// 拱顶老照片：棕褐色调 + 暗角 + 少量霉点
+function sepia(img, w, h) {
+  const c = coverCanvas(img, w, h), x = c.getContext("2d"), id = x.getImageData(0, 0, w, h), d = id.data;
+  seeded(9, () => {
+    for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) {
+      const i = (y * w + xx) * 4; let L = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255;
+      L = Math.pow(L, 1.15) * 0.92 + 0.04 + (Math.random() - 0.5) * 0.05;
+      const dx = xx / w - 0.5, dy = y / h - 0.55, v = 1 - Math.min(0.55, (dx * dx + dy * dy) * 1.5);
+      L *= v; d[i] = Math.min(255, 40 + L * 222); d[i + 1] = Math.min(255, 26 + L * 196); d[i + 2] = Math.min(255, 14 + L * 150);
+    }
+  });
+  x.putImageData(id, 0, 0);
+  seeded(4, () => { for (let k = 0; k < 14; k++) { x.fillStyle = `rgba(120,80,40,${0.05 + Math.random() * 0.1})`; x.beginPath(); x.arc(Math.random() * w, Math.random() * h, 1 + Math.random() * 5, 0, 7); x.fill(); } });
+  return c;
+}
+// 火漆：边缘不规则的圆，带几处溢出
+function sealPath(R = 37, seed = 3) {
+  let d = ""; seeded(seed, () => { const n = 64, bumps = [0.3, 1.9, 3.6, 5.1].map((a) => [a + Math.random() * 0.4, 0.08 + Math.random() * 0.08]);
+    for (let i = 0; i <= n; i++) { const a = (i / n) * Math.PI * 2; let r = R * (1 + (Math.random() - 0.5) * 0.04); bumps.forEach(([b, k]) => { const da = Math.atan2(Math.sin(a - b), Math.cos(a - b)); r += R * k * Math.exp(-da * da * 40); }); d += `${i ? "L" : "M"}${(37 + r * Math.cos(a)).toFixed(1)} ${(37 + r * Math.sin(a)).toFixed(1)}`; } });
+  return d + "Z";
+}
+const CREST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M12 3 L19 6 V12 C19 16.5 15.8 19.6 12 21 C8.2 19.6 5 16.5 5 12 V6 Z"/><path d="M9 10 H15 M12 7.5 V15.5 M9.5 15.5 H14.5"/></svg>`;
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="mast"><div class="ex">Ex Libris · 外力的书房</div><h1 id="mh">AI 热点</h1><div class="vol"><b></b>${CREST}<span>VOL. X · XXII</span><b></b></div></header>
+  <main class="scroll">
+    <section class="hero">
+      <figure class="arch"><span class="fr" id="fr"></span><canvas id="cv" width="600" height="500"></canvas></figure>
+      <figcaption>Fig. I — 图：Claude 官网</figcaption>
+      <h2 id="ht">${esc(shortTitle(h1))}</h2>
+      <div class="orn"><b></b>❦<b></b></div>
+      <p class="body">${esc(clip(firstLine(h1.summary), 110))}</p>
+      <div class="seal-row"><button class="seal" id="seal"><svg viewBox="0 0 74 74"><defs><radialGradient id="wax" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#b8354a"/><stop offset=".55" stop-color="#8c1d2c"/><stop offset="1" stop-color="#5e0f1c"/></radialGradient></defs><path d="${sealPath()}" fill="url(#wax)"/><circle cx="37" cy="37" r="24" fill="none" stroke="#5e0f1c" stroke-width="2" opacity=".55"/><circle cx="37" cy="37" r="22" fill="none" stroke="#d4646f" stroke-width="1" opacity=".35"/></svg><span>听</span></button><div class="lbl" id="lbl">Lege mihi<small>启封朗读 · 约一分钟</small></div></div>
+    </section>
+    <div class="sec"><h4>藏书目录</h4><span>Catalogus · II — VIII</span></div>
+    <div class="drawer"><div class="pull">AI 000–999</div>${rest.map((h) => `<div class="card"><div class="cn"><span>AI ${String(h.rank).padStart(3, "0")}.${h.sources}</span><span>卷 ${ROMAN[h.rank]} · 热 ${heatText(h)}</span></div><h3>${esc(shortTitle(h))}</h3><div class="more">${esc(clip(firstLine(h.summary), 60))}</div></div>`).join("")}</div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+const img = await loadImage(h1.cover);
+const cv = $("cv"), sp = sepia(img, 600, 500);
+await fontsReady();
+const EASE = "cubic-bezier(.25,.7,.2,1)";
+// 刊名像墨水一样从左写到右；照片像显影一样从模糊的浅褐慢慢沉下来
+$("mh").animate([{ clipPath: "inset(0 100% 0 0)", filter: "blur(2px)" }, { clipPath: "inset(0 0 0 0)", filter: "blur(0)" }], { duration: 1400, delay: 150, easing: "cubic-bezier(.5,0,.3,1)", fill: "backwards" });
+app.querySelectorAll(".mast .vol b").forEach((b, i) => { b.style.transformOrigin = i ? "left" : "right"; b.animate([{ transform: "scaleX(0)" }, { transform: "none" }], { duration: 900, delay: 700, easing: EASE, fill: "backwards" }); });
+const x = cv.getContext("2d"), t0 = performance.now();
+(function dev(now) { const k = Math.min(1, (now - t0 - 300) / 2200); if (k > 0) { const e = 1 - Math.pow(1 - k, 3); x.globalAlpha = 1; x.fillStyle = "#efe2c4"; x.fillRect(0, 0, 600, 500); x.filter = `blur(${(1 - e) * 10}px) contrast(${0.5 + e * 0.5})`; x.globalAlpha = e; x.drawImage(sp, 0, 0); x.filter = "none"; } if (k < 1) requestAnimationFrame(dev); })(t0);
+$("fr").animate([{ transform: "scale(.92)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 1200, delay: 600, easing: EASE, fill: "backwards" });
+app.querySelectorAll(".hero figcaption, .hero h2, .orn, .body, .seal-row").forEach((e, i) => e.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 900, delay: 900 + i * 160, easing: EASE, fill: "backwards" }));
+// 火漆盖下来：从大到小、略转、落定时压一下
+$("seal").animate([{ transform: "scale(1.6) rotate(-25deg)", opacity: 0 }, { transform: "scale(.94) rotate(4deg)", opacity: 1, offset: 0.7 }, { transform: "none" }], { duration: 700, delay: 1800, easing: "cubic-bezier(.5,0,.6,1)", fill: "backwards" });
+// 目录卡片像从抽屉里一张张立起来
+app.querySelectorAll(".card").forEach((c, i) => c.animate([{ transform: "translateY(26px) rotateX(-50deg)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 650, delay: 1100 + i * 90, easing: EASE, fill: "backwards" }));
+app.querySelectorAll(".card").forEach((c) => c.addEventListener("click", () => c.classList.toggle("open")));
+$("seal").addEventListener("click", () => {
+  const on = $("seal").classList.toggle("on");
+  $("seal").animate([{ transform: "none" }, { transform: "scale(.86) rotate(-6deg)" }, { transform: "none" }], { duration: 380, easing: "ease-out" });
+  $("lbl").firstChild.textContent = on ? "Legimus…" : "Lege mihi"; $("lbl").querySelector("small").textContent = on ? "朗读中 · 第 I 卷" : "启封朗读 · 约一分钟";
+});
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

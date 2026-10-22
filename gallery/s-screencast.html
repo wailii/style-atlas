@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>活体录屏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+SC:wght@500;700;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #15171c; --mute: #7a808c; --line: #eef0f3; --acc: #3d6bff; --mark: #ffe36b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #eef1fb; }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  canvas { image-rendering: pixelated; display: block; }
+
+  /* 桌布：浅色渐变 + 三团虚光，窗口浮在上面 */
+  .stage { position: relative; height: 100vh; overflow: hidden; background: linear-gradient(140deg, #e6ecff 0%, #f6eefc 50%, #fff3e2 100%); }
+  .blob { position: absolute; border-radius: 50%; filter: blur(40px); opacity: .8; }
+  .sb { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 700; font-size: 14px; }
+  .win { position: absolute; left: 16px; top: 54px; width: 358px; height: 716px; transform-origin: 0 0; border-radius: 28px; background: #fff; box-shadow: 0 0 0 1px rgba(20,25,40,.06), 0 30px 60px -20px rgba(40,50,90,.35), 0 12px 24px -12px rgba(40,50,90,.2); overflow: hidden; }
+  .app { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 20px 18px 10px; }
+  .top small { display: block; font-size: 11.5px; color: var(--mute); font-weight: 600; }
+  .top h1 { font-weight: 800; font-size: 26px; letter-spacing: -.5px; display: inline-block; }
+  .ava { width: 34px; height: 34px; border-radius: 50%; background: #e9edf8; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: var(--acc); }
+  .main { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 0 14px 20px; }
+  .main::-webkit-scrollbar { display: none; }
+  .hero { padding: 10px; border-radius: 18px; background: #f6f7f9; cursor: pointer; }
+  .hero .ph { height: 168px; border-radius: 12px; overflow: hidden; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero h2 { display: inline; margin: 0; font-weight: 800; font-size: 17px; line-height: 1.5; background: linear-gradient(var(--mark), var(--mark)) 0 88% / 0% 40% no-repeat; transition: background-size 1.8s linear; }
+  .hero h2.mark { background-size: 100% 40%; }
+  .hero .tt { display: block; padding: 10px 4px 0; }
+  .hero .meta { padding: 6px 4px 2px; font-size: 12px; color: var(--mute); font-weight: 600; }
+  .hero .sum { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s cubic-bezier(.3,.7,.2,1); }
+  .hero .sum > p { overflow: hidden; font-size: 13px; line-height: 1.65; color: #4a505c; padding: 0 4px; }
+  .hero.open .sum { grid-template-rows: 1fr; }
+  .hero.open .sum > p { padding: 6px 4px 4px; }
+  .listen { margin-top: 10px; width: 100%; height: 48px; border-radius: 14px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 14.5px; transition: transform .12s; }
+  .listen.press { transform: scale(.95) translateY(2px); }
+  .listen.on { background: var(--acc); }
+  .eq { display: none; gap: 3px; align-items: flex-end; height: 16px; }
+  .eq i { width: 3px; background: #fff; border-radius: 2px; animation: eq .5s ease-in-out infinite alternate; }
+  .eq i:nth-child(2) { animation-delay: -.2s; } .eq i:nth-child(3) { animation-delay: -.35s; } .eq i:nth-child(4) { animation-delay: -.1s; }
+  @keyframes eq { from { height: 4px; } to { height: 16px; } }
+  .listen.on .eq { display: flex; } .listen.on .play { display: none; }
+  .sec { margin: 20px 4px 4px; display: flex; justify-content: space-between; font-weight: 800; font-size: 15px; }
+  .sec span { font-weight: 600; font-size: 12px; color: var(--mute); }
+  .row { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 13px 4px; border-bottom: 1px solid var(--line); }
+  .row .n { font-family: "JetBrains Mono"; font-size: 13px; color: var(--mute); }
+  .row h3 { font-weight: 600; font-size: 14.5px; line-height: 1.45; }
+  .row .h { font-family: "JetBrains Mono"; font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #f2f4f8; }
+  .row.hit .h { background: var(--mark); }
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 6px 18px; border-top: 1px solid var(--line); background: #fff; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: 600; font-size: 11px; color: #a3a8b3; }
+  .tab svg { width: 21px; height: 21px; }
+  .tab.on { color: var(--ink); }
+
+  /* 录屏层：小家伙、光标、点击圈都在窗口里，跟着镜头一起放大 */
+  .bot { position: absolute; left: 0; top: 0; width: 48px; height: 44px; z-index: 5; pointer-events: none; }
+  .bot .flip { width: 100%; height: 100%; }
+  .bot .say { position: absolute; left: 34px; top: -26px; padding: 3px 7px; background: #fff; border-radius: 4px; box-shadow: 0 0 0 2px var(--ink); font-weight: 900; font-size: 11px; white-space: nowrap; opacity: 0; }
+  .cur { position: absolute; left: 0; top: 0; width: 24px; height: 24px; z-index: 6; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+  .rip { position: absolute; z-index: 6; width: 40px; height: 40px; margin: -20px; border-radius: 50%; border: 2px solid var(--acc); background: rgba(61,107,255,.12); pointer-events: none; }
+  .cap { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px; border-radius: 999px; background: rgba(255,255,255,.88); box-shadow: 0 8px 24px -10px rgba(40,50,90,.4), 0 0 0 1px rgba(20,25,40,.06); font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .cap .rec { display: flex; align-items: center; gap: 5px; font-family: "JetBrains Mono"; font-size: 11px; color: #e5484d; }
+  .cap .rec i { width: 7px; height: 7px; border-radius: 50%; background: #e5484d; animation: rec 1s steps(1) infinite; }
+  @keyframes rec { 50% { opacity: .2; } }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <span class="blob" style="left:-60px;top:80px;width:220px;height:220px;background:#c9d6ff"></span>
+  <span class="blob" style="right:-70px;top:360px;width:240px;height:240px;background:#ffd3e6"></span>
+  <span class="blob" style="left:40px;bottom:-60px;width:260px;height:200px;background:#ffe9b8"></span>
+  <div class="sb"><span id="clock"></span><span>5G</span></div>
+  <div class="win" id="win"><div class="app" id="app"></div></div>
+  <div class="cap"><span class="rec"><i></i><span id="tc">00:00</span></span><span id="cap"></span></div>
+</div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { sprite } = Engines;
+const win = document.getElementById("win"), app = document.getElementById("app"), $ = (id) => document.getElementById(id);
+$("clock").textContent = nowHM();
+const [h1, ...rest] = HOT;
+app.innerHTML = `
+  <header class="top"><div><small>10 月 22 日 · 星期四</small><h1 id="ttl">AI 热点</h1></div><span class="ava">外</span></header>
+  <main class="main" id="main">
+    <article class="hero" id="hero"><div class="ph"><img src="${h1.cover}" alt=""></div><span class="tt"><h2 id="htitle">${esc(shortTitle(h1))}</h2></span><div class="meta">${h1.sources} 家来源 · ${h1.people} 人参与 · 热度 ${heatText(h1)}</div><div class="sum"><p>${esc(clip(firstLine(h1.summary), 70))}</p></div></article>
+    <button class="listen" id="listen"><span class="play">▶</span><span class="eq"><i></i><i></i><i></i><i></i></span><span id="lt">听头条 · 约 1 分钟</span></button>
+    <div class="sec">其余 ${rest.length} 条<span>按热度</span></div>
+    ${rest.map((h) => `<div class="row"><span class="n">${pad2(h.rank)}</span><h3>${esc(shortTitle(h))}</h3><span class="h">${heatText(h)}</span></div>`).join("")}
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+// 小家伙：12×11 的像素精灵，五帧
+const PAD = (r) => "." + r + ".";
+const BODY = ["....kk....", "...kyyk...", "..kkkkkk..", ".koooooook".slice(0, 10), "kookookook", "kooooooook", "kopoooopok", ".kooooook."];
+const LEGS = { idle: ["..kk..kk..", "..kk..kk.."], walk: [".kk....kk.", ".k......k."], jump: [".kk....kk.", "kk......kk"], squash: ["kkkkkkkkkk", ".........."] };
+const BC = { k: "#1d1f2b", y: "#ffd84a", o: "#ff8a3d", p: "#ff5f8a" };
+const frame = (legs, body = BODY) => sprite([...body, ...LEGS[legs]].map(PAD), BC, 4);
+const FR = { idle: frame("idle"), walk: frame("walk"), jump: frame("jump"), squash: frame("squash", ["..........", "..........", "....kk....", "..kkkkkk..", ".koooooook".slice(0, 10), "kookookook", "kooooooook", "kopoooopok"]), point: sprite([...BODY.map((r, i) => (i === 5 ? "." + r + "k" : PAD(r))), ...LEGS.idle.map(PAD)], BC, 4) };
+win.insertAdjacentHTML("beforeend", `<div class="bot" id="bot"><div class="flip" id="flip"></div><span class="say" id="say"></span></div><svg class="cur" id="cur" viewBox="0 0 24 24"><path d="M4 2 L4 19 L8.5 15 L11.5 22 L14.5 20.8 L11.6 14 L18 14 Z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`);
+const bot = $("bot"), flip = $("flip"), cur = $("cur");
+const setFrame = (n) => flip.replaceChildren(FR[n]);
+setFrame("idle");
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// 窗口内坐标（不受镜头缩放影响）
+const rel = (el) => { const W = win.getBoundingClientRect(), s = W.width / win.offsetWidth, r = el.getBoundingClientRect(); return { x: (r.left - W.left) / s, y: (r.top - W.top) / s, w: r.width / s, h: r.height / s }; };
+// 镜头：把窗口里某点推到屏幕中间，缓入缓出
+let cs = 1, cx = 0, cy = 0, camA;
+function cam(px, py, s, dur = 900) {
+  const tx = s === 1 ? 0 : 195 - 16 - px * s, ty = s === 1 ? 0 : 410 - 54 - py * s;
+  const a = win.animate([{ transform: `translate(${cx}px,${cy}px) scale(${cs})` }, { transform: `translate(${tx}px,${ty}px) scale(${s})` }], { duration: dur, easing: "cubic-bezier(.65,0,.25,1)", fill: "forwards" });
+  camA?.cancel(); camA = a; cs = s; cx = tx; cy = ty; return sleep(dur);
+}
+let ux = 330, uy = 680, curA;
+function moveCur(x, y, dur = 800) {
+  const a = cur.animate([{ transform: `translate(${ux}px,${uy}px)` }, { transform: `translate(${x}px,${y}px)` }], { duration: dur, easing: "cubic-bezier(.5,0,.15,1)", fill: "forwards" });
+  curA?.cancel(); curA = a; ux = x; uy = y; return sleep(dur);
+}
+async function click(el) {
+  cur.animate([{ transform: `translate(${ux}px,${uy}px) scale(1)` }, { transform: `translate(${ux}px,${uy}px) scale(.8)` }, { transform: `translate(${ux}px,${uy}px) scale(1)` }], { duration: 260 });
+  ripple(ux + 4, uy + 3); el?.click(); await sleep(300);
+}
+function ripple(x, y) { const r = document.createElement("span"); r.className = "rip"; r.style.left = x + "px"; r.style.top = y + "px"; win.append(r); r.animate([{ transform: "scale(.3)", opacity: 1 }, { transform: "scale(1.5)", opacity: 0 }], { duration: 600, easing: "ease-out" }).onfinish = () => r.remove(); }
+// 小家伙：脚底坐标 (bx, by)
+let bx = 0, by = 0, botA, walkT;
+const place = (x, y) => `translate(${x - 24}px,${y - 44}px)`;
+function face(x) { flip.style.transform = x < bx ? "scaleX(-1)" : "none"; }
+function walkTo(x, y, dur) {
+  face(x); let k = 0; clearInterval(walkT); walkT = setInterval(() => setFrame(++k % 2 ? "walk" : "idle"), 130);
+  const a = bot.animate([{ transform: place(bx, by) }, { transform: place(x, y) }], { duration: dur, easing: "linear", fill: "forwards" });
+  botA?.cancel(); botA = a; bx = x; by = y; return sleep(dur).then(() => { clearInterval(walkT); setFrame("idle"); });
+}
+async function hopTo(x, y, dur = 650) {
+  face(x); clearInterval(walkT); setFrame("squash"); await sleep(90); setFrame("jump");
+  const top = Math.min(by, y) - 50, ks = Array.from({ length: 13 }, (_, i) => { const t = i / 12, px = bx + (x - bx) * t, py = (1 - t) * (1 - t) * by + 2 * (1 - t) * t * top + t * t * y; return { transform: place(px, py) }; });
+  const a = bot.animate(ks, { duration: dur, easing: "cubic-bezier(.3,.1,.5,1)", fill: "forwards" });
+  botA?.cancel(); botA = a; bx = x; by = y; await sleep(dur); setFrame("squash"); await sleep(110); setFrame("idle");
+}
+function say(t, ms = 1200) { const s = $("say"); s.textContent = t; s.animate([{ opacity: 0, transform: "translateY(4px)" }, { opacity: 1, transform: "none", offset: 0.15 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], { duration: ms }); }
+function setCap(t) { const c = $("cap"); c.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 300, easing: "ease-out" }); c.textContent = t; }
+let t0 = performance.now();
+setInterval(() => { const s = Math.floor((performance.now() - t0) / 1000); $("tc").textContent = `00:${pad2(s % 60)}`; }, 250);
+
+// 一遍脚本：点开头条 → 小家伙读标题 → 踩按钮开听 → 往下看 → 回到原位
+async function tour() {
+  t0 = performance.now();
+  $("hero").classList.remove("open"); $("htitle").classList.remove("mark"); $("listen").classList.remove("on"); $("lt").textContent = "听头条 · 约 1 分钟"; $("main").scrollTop = 0;
+  app.querySelectorAll(".row").forEach((r) => r.classList.remove("hit"));
+  const T = rel($("ttl")); bx = T.x + T.w + 34; by = T.y + T.h - 2; bot.style.transform = place(bx, by); botA?.cancel(); setFrame("idle"); face(bx - 1);
+  ux = 330; uy = 690; cur.style.transform = `translate(${ux}px,${uy}px)`; curA?.cancel();
+  setCap("录屏 · 跟小家伙看今天的 AI 热点");
+  await sleep(700);
+  const card = rel($("hero"));
+  setCap("① 点开头条");
+  moveCur(card.x + card.w * 0.72, card.y + card.h * 0.3, 900);
+  await cam(card.x + card.w / 2, card.y + 170, 1.25, 1000);
+  await click($("hero"));
+  setCap("② 小家伙替你读一遍");
+  const ttl = rel($("htitle"));
+  await hopTo(ttl.x + 16, ttl.y + 2, 620);
+  $("htitle").classList.add("mark"); say("念标题…", 1700);
+  await walkTo(ttl.x + Math.min(ttl.w, 300) - 20, ttl.y + 2, 1700);
+  setCap("③ 踩一下就开听");
+  const b = rel($("listen"));
+  cam(0, 0, 1, 900);
+  moveCur(b.x + b.w * 0.82, b.y + b.h * 0.7, 900);
+  await hopTo(b.x + 70, b.y, 800);
+  $("listen").classList.add("press"); setFrame("squash"); ripple(b.x + 70, b.y + b.h / 2);
+  await sleep(160); $("listen").classList.remove("press"); $("listen").classList.add("on"); $("lt").textContent = "播放中 · 头条"; setFrame("idle"); say("♪", 2200);
+  await sleep(2200);
+  setCap(`④ 往下看其余 ${rest.length} 条`);
+  moveCur(300, 560, 600);
+  $("main").scrollTo({ top: 210, behavior: "smooth" });
+  await sleep(700);
+  const r2 = app.querySelectorAll(".row")[0], R = rel(r2), H = rel(r2.querySelector(".h"));
+  await hopTo(H.x - 18, R.y + 4, 700);
+  setFrame("point"); r2.classList.add("hit"); say(`${heatText(rest[0])}！`, 1300);
+  await sleep(1500); setFrame("idle");
+  setCap("录完了 · 点任意处重放");
+  $("main").scrollTo({ top: 0, behavior: "smooth" });
+  moveCur(340, 740, 800);
+  await sleep(500);
+  const T2 = rel($("ttl"));
+  await hopTo(T2.x + T2.w + 34, T2.y + T2.h - 2, 800);
+  face(bx - 1);
+}
+let running = false;
+async function run() { if (running) return; running = true; await tour(); running = false; await sleep(3500); run(); }
+(async () => {
+  await fontsReady();
+  win.animate([{ transform: "translateY(30px) scale(.96)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 600, easing: "cubic-bezier(.2,.8,.2,1)" });
+  await sleep(300);
+  run();
+  $("stage").addEventListener("click", (e) => { if (!win.contains(e.target)) run(); });
+  $("listen").addEventListener("click", () => { const on = $("listen").classList.toggle("on"); $("lt").textContent = on ? "播放中 · 头条" : "听头条 · 约 1 分钟"; });
+  $("hero").addEventListener("click", () => $("hero").classList.add("open"));
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>孟菲斯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@600;800;900&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #fffdf6; --ink: #1a1a1a; --pink: #ff71ce; --yel: #ffce5c; --teal: #86ccca; --blue: #6a7bb4; --red: #ff5a4e; --bw: repeating-linear-gradient(45deg, #1a1a1a 0 3px, transparent 3px 8px); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Rubik", "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+  .confetti { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .confetti svg { position: absolute; overflow: visible; }
+  .app > *:not(.confetti) { position: relative; z-index: 1; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 800; font-size: 14px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 16px 10px; }
+  h1 { font-weight: 900; font-size: 34px; letter-spacing: -1px; position: relative; }
+  h1 span { display: inline-block; }
+  h1 .a { background: var(--yel); padding: 0 6px; border: 3px solid var(--ink); transform: rotate(-4deg); margin-right: 6px; }
+  .date { font-weight: 800; font-size: 12px; letter-spacing: 1px; margin-top: 4px; }
+  .listen { position: relative; width: 66px; height: 66px; }
+  .listen .c { position: absolute; inset: 0; border-radius: 50%; background: var(--pink); border: 3px solid var(--ink); }
+  .listen .t { position: absolute; left: 10px; top: 32px; width: 0; height: 0; border-left: 22px solid transparent; border-right: 22px solid transparent; border-bottom: 34px solid var(--teal); filter: drop-shadow(0 0 0 var(--ink)); transform: rotate(18deg); }
+  .listen b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 18px; }
+  .listen.on .c { background: var(--yel); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 18px 26px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; }
+  .stack { position: relative; height: 214px; margin: 8px 10px 0 0; }
+  .stack .back { position: absolute; inset: 14px -12px -12px 14px; background: var(--teal); border: 3px solid var(--ink); }
+  .stack .grid { position: absolute; left: -10px; top: -10px; width: 90px; height: 70px; background-image: linear-gradient(var(--ink) 2px, transparent 2px), linear-gradient(90deg, var(--ink) 2px, transparent 2px); background-size: 12px 12px; }
+  .stack .pic { position: absolute; inset: 0; border: 3px solid var(--ink); overflow: hidden; background: #fff; }
+  .stack .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .stack .dot { position: absolute; right: -24px; top: -22px; width: 70px; height: 70px; border-radius: 50%; background: var(--yel); border: 3px solid var(--ink); display: grid; place-items: center; font-weight: 900; font-size: 26px; z-index: 2; }
+  .stack .stripe { position: absolute; left: 30px; bottom: -22px; width: 120px; height: 18px; background: var(--bw); border: 3px solid var(--ink); background-color: #fff; z-index: 2; }
+  .hero h2 { margin-top: 34px; font-weight: 900; font-size: 21px; line-height: 1.45; }
+  .hero h2 mark { background: linear-gradient(transparent 55%, var(--pink) 55%); color: inherit; }
+  .hero p { margin-top: 8px; font-size: 13.5px; line-height: 1.7; font-weight: 500; }
+  .squig { display: block; width: 100%; height: 22px; margin: 18px 0 8px; overflow: visible; }
+
+  ol { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+  .it { position: relative; display: grid; grid-template-columns: 1fr 72px; gap: 12px; align-items: center; padding: 12px 12px 12px 54px; background: #fff; border: 3px solid var(--ink); cursor: pointer; }
+  .it::after { content: ""; position: absolute; inset: 8px -8px -8px 8px; z-index: -1; background: var(--c); border: 3px solid var(--ink); }
+  .it .n { position: absolute; left: -12px; top: 50%; margin-top: -22px; width: 44px; height: 44px; display: grid; place-items: center; font-weight: 900; font-size: 18px; }
+  .it .n svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .it .n b { position: relative; }
+  .it h3 { font-weight: 700; font-size: 15px; line-height: 1.45; }
+  .it .m { margin-top: 4px; font-weight: 800; font-size: 11.5px; letter-spacing: .5px; }
+  .it .more { display: none; margin-top: 6px; font-size: 12.5px; line-height: 1.6; font-weight: 500; }
+  .it.open .more { display: block; }
+  .it .tn { width: 72px; height: 60px; border: 3px solid var(--ink); overflow: hidden; display: grid; place-items: center; background: var(--bw), #fff; }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; }
+  .it .tn svg { width: 38px; height: 38px; background: #fff; border-radius: 50%; padding: 3px; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 24px; border-top: 3px solid var(--ink); background: #fff; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: 800; font-size: 11.5px; }
+  .tab svg { width: 22px; height: 22px; stroke-width: 2.6; padding: 2px; }
+  .tab.on svg { background: var(--c); border: 2.5px solid var(--ink); border-radius: 50%; width: 30px; height: 30px; padding: 3px; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const C = ["#ff71ce", "#ffce5c", "#86ccca", "#6a7bb4", "#ff5a4e"];
+// 孟菲斯碎片：波浪线、三角、圆点、锯齿、半圆、十字
+const SHAPES = [
+  (c) => `<path d="M2 12 Q8 2 14 12 T26 12 T38 12 T50 12" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/>`,
+  (c) => `<polygon points="4,30 18,4 32,30" fill="${c}" stroke="#1a1a1a" stroke-width="2.5"/>`,
+  (c) => `<circle cx="14" cy="14" r="10" fill="${c}" stroke="#1a1a1a" stroke-width="2.5"/>`,
+  (c) => `<path d="M2 20 L10 6 L18 20 L26 6 L34 20" fill="none" stroke="${c}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`,
+  (c) => `<path d="M4 22 A12 12 0 0 1 28 22 Z" fill="${c}" stroke="#1a1a1a" stroke-width="2.5"/>`,
+  (c) => `<path d="M14 2 V26 M2 14 H26" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`,
+  () => `<g fill="#1a1a1a">${[0, 1, 2].map((r) => [0, 1, 2].map((q) => `<circle cx="${4 + q * 9}" cy="${4 + r * 9}" r="2.2"/>`).join("")).join("")}</g>`,
+];
+const mark = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<mark>${esc(k)}</mark>`) : t; };
+const NUMSH = [(c) => `<circle cx="22" cy="22" r="19" fill="${c}" stroke="#1a1a1a" stroke-width="3"/>`, (c) => `<rect x="4" y="4" width="36" height="36" fill="${c}" stroke="#1a1a1a" stroke-width="3" transform="rotate(12 22 22)"/>`, (c) => `<polygon points="22,2 42,40 2,40" fill="${c}" stroke="#1a1a1a" stroke-width="3"/>`];
+app.innerHTML = `
+  <div class="confetti" id="conf"></div>
+  <div class="sb"><span>${nowHM()}</span><span>5G ◆</span></div>
+  <header class="top"><div><h1><span class="a">AI</span><span>热点</span></h1><div class="date">10·22 · 周四 · 实时</div></div><button class="listen" id="listen"><span class="c"></span><span class="t"></span><b>听</b></button></header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="stack"><div class="back"></div><div class="grid"></div><div class="pic"><img src="${h1.cover}" alt=""></div><div class="dot">01</div><div class="stripe"></div></div>
+      <h2>${mark(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 58))} · 热度 ${heatText(h1)} · ${h1.sources} 家</p>
+    </section>
+    <svg class="squig" id="squig" viewBox="0 0 354 22" preserveAspectRatio="none"><path fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/></svg>
+    <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}" style="--c:${C[i % 5]}"><span class="n"><svg viewBox="0 0 44 44">${NUMSH[i % 3](C[(i + 2) % 5])}</svg><b>${h.rank}</b></span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}" style="--c:${C[i]}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+// 撒碎片：每块记住自己的位置、转速、漂移
+const conf = $("conf"), W = app.clientWidth, H = app.clientHeight;
+const bits = Array.from({ length: 22 }, (_, i) => {
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"), k = Math.floor(rnd(i * 3) * SHAPES.length), size = 22 + rnd(i * 5) * 22;
+  s.setAttribute("viewBox", "0 0 52 34"); s.style.width = size + "px"; s.style.height = size * 0.66 + "px";
+  s.innerHTML = SHAPES[k](C[i % 5]); conf.appendChild(s);
+  return { s, x: rnd(i * 7) * (W - 30), y: 50 + rnd(i * 11) * (H - 120), r: rnd(i) * 360, vr: (rnd(i * 13) - 0.5) * 30, ph: i };
+});
+(function drift(now) {
+  const t = now / 1000;
+  bits.forEach((b) => (b.s.style.transform = `translate(${(b.x + Math.sin(t * 0.4 + b.ph) * 6).toFixed(1)}px, ${(b.y + Math.cos(t * 0.5 + b.ph) * 6).toFixed(1)}px) rotate(${(b.r + t * b.vr).toFixed(1)}deg)`));
+  // 分隔的波浪线一直在动
+  let d = "M2 11"; for (let x = 2; x <= 352; x += 6) d += ` L${x} ${(11 + Math.sin(x / 14 + t * 3) * 7).toFixed(1)}`;
+  $("squig").querySelector("path").setAttribute("d", d);
+  requestAnimationFrame(drift);
+})(0);
+(async () => {
+await fontsReady();
+const SPRING = "cubic-bezier(.34,1.7,.5,1)";
+// 入场：碎片从中间炸开飞到各自位置；卡片转着落位
+bits.forEach((b, i) => b.s.animate([{ translate: `${W / 2 - b.x}px ${H / 3 - b.y}px`, scale: 0 }, { translate: "0 0", scale: 1 }], { duration: 900, delay: i * 25, easing: SPRING, fill: "backwards" }));
+app.querySelectorAll("h1 span").forEach((s, i) => s.animate([{ transform: "translateY(-40px) rotate(-30deg)", opacity: 0 }, { transform: i ? "none" : "rotate(-4deg)", opacity: 1 }], { duration: 600, delay: 200 + i * 120, easing: SPRING, fill: "backwards" }));
+const st = app.querySelector(".stack");
+[[".back", "translate(30px,30px)"], [".pic", "scale(.7) rotate(-8deg)"], [".grid", "translate(-30px,-30px)"], [".dot", "scale(0) rotate(-180deg)"], [".stripe", "translateX(-200px)"]].forEach(([s, f], i) => st.querySelector(s).animate([{ transform: f, opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 650, delay: 400 + i * 110, easing: SPRING, fill: "backwards" }));
+app.querySelectorAll(".it").forEach((li, i) => { li.animate([{ transform: `translateX(${i % 2 ? 60 : -60}px) rotate(${i % 2 ? 6 : -6}deg)`, opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 600, delay: 1000 + i * 90, easing: SPRING, fill: "backwards" }); li.addEventListener("click", (e) => { li.classList.toggle("open"); li.querySelector(".n").animate([{ transform: "rotate(0) scale(1)" }, { transform: "rotate(200deg) scale(1.3)" }, { transform: "rotate(360deg) scale(1)" }], { duration: 600, easing: SPRING }); }); });
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.querySelector("b").textContent = on ? "停" : "听"; listen.querySelector(".t").animate([{ transform: "rotate(18deg)" }, { transform: "rotate(378deg)" }], { duration: 700, easing: SPRING }); });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

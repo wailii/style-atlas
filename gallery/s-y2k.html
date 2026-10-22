@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Y2K 铬金属</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  @property --a { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+  :root { --ink: #2a2140; --mute: #6c6488; --pink: #ff69b4; --cyan: #29e0ff; --purple: #9b5cff; --chrome: linear-gradient(180deg, #ffffff 0%, #c9cbd6 22%, #6f7182 42%, #f4f5fa 52%, #a3a6b8 64%, #e9eaf2 82%, #8b8ea1 100%); --holo: conic-gradient(from var(--a), #ff9ad5, #a3f7ff, #c8a8ff, #fff3a8, #ff9ad5); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #f3eefc; }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(120% 70% at 20% 0%, #ffe3f4 0%, transparent 55%), radial-gradient(120% 70% at 100% 30%, #dcfbff 0%, transparent 55%), radial-gradient(120% 80% at 50% 100%, #ece3ff 0%, transparent 60%), #f6f2ff; animation: spin 14s linear infinite; }
+  @keyframes spin { to { --a: 360deg; } }
+  .chrometext { background: var(--chrome); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1px rgba(60,55,90,.55); filter: drop-shadow(0 2px 0 #fff) drop-shadow(0 4px 6px rgba(80,60,140,.35)); }
+  .holo { background: var(--holo); }
+  .spark { position: absolute; pointer-events: none; z-index: 30; width: 18px; height: 18px; }
+  .spark::before, .spark::after { content: ""; position: absolute; left: 50%; top: 50%; background: #fff; border-radius: 2px; box-shadow: 0 0 6px #fff, 0 0 12px rgba(160,120,255,.8); }
+  .spark::before { width: 2px; height: 100%; transform: translate(-50%, -50%); } .spark::after { width: 100%; height: 2px; transform: translate(-50%, -50%); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: Michroma, sans-serif; font-size: 12px; color: var(--mute); }
+  .top { flex: none; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0 16px 8px; }
+  h1 { font-family: Michroma, "Noto Sans SC", sans-serif; font-weight: 900; font-size: 38px; letter-spacing: 1px; line-height: 1.1; }
+  .date { font-family: Michroma, "Noto Sans SC"; font-size: 10px; letter-spacing: 2px; color: var(--mute); margin-top: 2px; }
+  .pill { position: relative; overflow: hidden; border-radius: 999px; padding: 10px 18px; font-weight: 900; font-size: 14px; color: #fff; background: linear-gradient(180deg, #ff9fd2, #ff4fae 55%, #d2308e); box-shadow: 0 6px 14px rgba(255,79,174,.45), inset 0 -3px 6px rgba(120,0,70,.3), inset 0 0 0 2px rgba(255,255,255,.55); text-shadow: 0 1px 2px rgba(120,0,70,.5); }
+  .pill::before { content: ""; position: absolute; left: 10%; right: 10%; top: 3px; height: 45%; border-radius: 999px; background: linear-gradient(rgba(255,255,255,.95), rgba(255,255,255,.1)); }
+  .pill span { position: relative; }
+  .pill.on { background: linear-gradient(180deg, #8ff4ff, #29c6ee 55%, #1394c4); box-shadow: 0 6px 14px rgba(41,198,238,.45), inset 0 -3px 6px rgba(0,60,100,.3), inset 0 0 0 2px rgba(255,255,255,.55); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 26px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .frame { position: relative; border-radius: 34px; padding: 5px; background: var(--chrome); box-shadow: 0 14px 30px -12px rgba(80,60,140,.45); }
+  .frame .in { position: relative; height: 210px; border-radius: 29px; overflow: hidden; }
+  .frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .frame .ir { position: absolute; inset: 0; background: var(--holo); mix-blend-mode: soft-light; opacity: .75; }
+  .frame .gl { position: absolute; left: -30%; top: 0; bottom: 0; width: 30%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.7), transparent); transform: skewX(-18deg); animation: gl 3.6s ease-in-out infinite; }
+  @keyframes gl { 0%, 55% { left: -30%; } 100% { left: 130%; } }
+  .blob { position: absolute; right: -10px; top: 156px; width: 92px; height: 92px; z-index: 3; }
+  .blob svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 8px rgba(80,60,140,.35)); }
+  .blob b { position: absolute; inset: 0; display: grid; place-items: center; font-family: Michroma; font-size: 22px; color: var(--ink); text-shadow: 0 1px 0 #fff; }
+  .hero h2 { margin-top: 18px; font-weight: 900; font-size: 21px; line-height: 1.45; }
+  .hero h2 mark { color: transparent; background: linear-gradient(90deg, var(--pink), var(--purple), var(--cyan)); -webkit-background-clip: text; background-clip: text; }
+  .hero p { margin-top: 8px; font-size: 13.5px; line-height: 1.7; color: var(--mute); font-weight: 500; }
+  .chips { display: flex; gap: 8px; margin-top: 12px; }
+  .chips span { border-radius: 999px; padding: 5px 12px; font-family: Michroma, "Noto Sans SC"; font-size: 11px; font-weight: 700; background: rgba(255,255,255,.7); box-shadow: inset 0 0 0 1.5px rgba(155,92,255,.45), 0 3px 8px rgba(80,60,140,.15); }
+
+  ol { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-top: 22px; }
+  .it { position: relative; display: grid; grid-template-columns: 44px 1fr 70px; gap: 10px; align-items: center; padding: 10px 12px 10px 10px; border-radius: 22px; background: rgba(255,255,255,.62); backdrop-filter: blur(8px); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.95), 0 8px 18px -10px rgba(80,60,140,.4); cursor: pointer; overflow: hidden; }
+  .it::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; background: var(--holo); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: .8; }
+  .it .n { font-family: Michroma; font-size: 20px; text-align: center; }
+  .it h3 { font-weight: 700; font-size: 14.5px; line-height: 1.45; }
+  .it .m { margin-top: 3px; font-family: Michroma, "Noto Sans SC"; font-size: 10px; color: var(--mute); }
+  .it .more { display: none; margin-top: 6px; font-size: 12.5px; line-height: 1.6; color: var(--mute); }
+  .it.open .more { display: block; }
+  .it .tn { position: relative; width: 70px; height: 56px; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(155,92,255,.35); display: grid; place-items: center; background: var(--holo); }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; }
+  .it .tn i { position: absolute; inset: 0; background: var(--holo); mix-blend-mode: soft-light; opacity: .7; }
+  .it .tn svg { width: 34px; height: 34px; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 0 12px 20px; padding: 6px; border-radius: 999px; background: var(--chrome); box-shadow: 0 10px 22px -10px rgba(80,60,140,.45); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 0; border-radius: 999px; font-weight: 900; font-size: 11px; color: #3b3552; }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { background: linear-gradient(180deg, #ff9fd2, #ff4fae); color: #fff; box-shadow: inset 0 -2px 4px rgba(120,0,70,.3), inset 0 0 0 1.5px rgba(255,255,255,.6); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const mark = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<mark>${esc(k)}</mark>`) : t; };
+// 液态铬：一团起伏的金属滴，表面用多段灰白渐变当反光
+const blobPath = (t, R = 40, c = 46) => { let d = ""; for (let i = 0; i <= 48; i++) { const a = (i / 48) * Math.PI * 2, r = R * (1 + 0.1 * Math.sin(a * 3 + t) + 0.06 * Math.sin(a * 5 - t * 1.3)); d += `${i ? "L" : "M"}${(c + Math.cos(a) * r).toFixed(1)} ${(c + Math.sin(a) * r).toFixed(1)} `; } return d + "Z"; };
+const BLOB = `<svg viewBox="0 0 92 92"><defs><linearGradient id="cr" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".22" stop-color="#c9cbd6"/><stop offset=".42" stop-color="#5f6274"/><stop offset=".52" stop-color="#f4f5fa"/><stop offset=".66" stop-color="#9da0b4"/><stop offset=".84" stop-color="#eceef6"/><stop offset="1" stop-color="#7d8096"/></linearGradient><radialGradient id="hl" cx="35%" cy="28%" r="30%"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><path id="bp" fill="url(#cr)" stroke="rgba(60,55,90,.4)" stroke-width="1"/><path id="bh" fill="url(#hl)"/></svg>`;
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ★</span></div>
+  <header class="top"><div><h1 class="chrometext">AI热点</h1><div class="date">2026 · 10 · 22 · LIVE</div></div><button class="pill" id="listen"><span>▶ 听热点</span></button></header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="frame" id="frame"><div class="in"><img src="${h1.cover}" alt=""><i class="ir"></i><i class="gl"></i></div></div>
+      <div class="blob">${BLOB}<b>01</b></div>
+      <h2>${mark(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 56))}</p>
+      <div class="chips"><span>HEAT ${heatText(h1)}</span><span>${h1.sources} 家在说</span><span>★ NEW</span></div>
+    </section>
+    <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}"><span class="n chrometext">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">HEAT ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? `<img src="${h.cover}" alt=""><i></i>` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+// 铬滴一直在流动
+const bp = $("bp"), bh = $("bh");
+(function flow(now) { const t = now / 700; bp.setAttribute("d", blobPath(t)); bh.setAttribute("d", blobPath(t + 0.4, 26, 40)); requestAnimationFrame(flow); })(0);
+// 闪光星：随机位置一闪
+const spk = [0, 1, 2, 3, 4].map(() => { const s = document.createElement("i"); s.className = "spark"; app.appendChild(s); return s; });
+const twinkle = (s, i) => { Object.assign(s.style, { left: 20 + rnd(Date.now() / 1000 + i) * 340 + "px", top: 40 + rnd(Date.now() / 700 + i * 3) * 700 + "px" }); s.animate([{ transform: "scale(0) rotate(0)", opacity: 0 }, { transform: "scale(1.2) rotate(45deg)", opacity: 1 }, { transform: "scale(0) rotate(90deg)", opacity: 0 }], { duration: 900, easing: "ease-in-out" }).onfinish = () => setTimeout(() => twinkle(s, i), 300 + i * 260); };
+spk.forEach((s, i) => setTimeout(() => twinkle(s, i), 600 + i * 300));
+// 入场：铬字从上面滑下来带回弹；卡片从模糊里亮出来
+const BOUNCE = "cubic-bezier(.34,1.7,.5,1)";
+app.querySelector("h1").animate([{ transform: "translateY(-30px) scale(1.3)", opacity: 0, filter: "blur(6px)" }, { transform: "none", opacity: 1, filter: "none" }], { duration: 700, delay: 100, easing: BOUNCE, fill: "backwards" });
+$("listen").animate([{ transform: "scale(0)" }, { transform: "none" }], { duration: 600, delay: 300, easing: BOUNCE, fill: "backwards" });
+$("frame").animate([{ transform: "rotateY(70deg) scale(.8)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 900, delay: 400, easing: BOUNCE, fill: "backwards" });
+app.querySelector(".blob").animate([{ transform: "scale(0) rotate(-120deg)" }, { transform: "none" }], { duration: 800, delay: 900, easing: BOUNCE, fill: "backwards" });
+app.querySelectorAll(".chips span").forEach((c, i) => c.animate([{ transform: "translateY(10px) scale(.6)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 500, delay: 1100 + i * 100, easing: BOUNCE, fill: "backwards" }));
+app.querySelectorAll(".it").forEach((li, i) => { li.animate([{ transform: "translateX(40px)", opacity: 0, filter: "blur(4px) hue-rotate(90deg)" }, { transform: "none", opacity: 1, filter: "none" }], { duration: 600, delay: 1300 + i * 90, easing: BOUNCE, fill: "backwards" }); li.addEventListener("click", () => li.classList.toggle("open")); });
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.querySelector("span").textContent = on ? "■ 在听 01" : "▶ 听热点"; listen.animate([{ transform: "scale(.88)" }, { transform: "none" }], { duration: 400, easing: BOUNCE }); });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

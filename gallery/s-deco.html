@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>装饰艺术</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Limelight&family=Poiret+One&family=ZCOOL+QingKe+HuangYou&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ivory: #f5eedc; --ivory2: #ece2c8; --ink: #15120d; --gold: #b38a35; --gold-hi: #ecd08a; --gold-lo: #8a6421; --mute: #6b604c; }
+  @property --fan { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--ivory); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--ivory); }
+  .gold { background: linear-gradient(100deg, var(--gold-lo) 0%, var(--gold) 22%, var(--gold-hi) 42%, #fff6d8 50%, var(--gold-hi) 58%, var(--gold) 78%, var(--gold-lo) 100%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lat { font-family: "Poiret One", sans-serif; letter-spacing: .22em; }
+
+  .sb { height: 36px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: "Poiret One"; font-weight: 700; font-size: 14px; letter-spacing: .1em; }
+  .mast { position: relative; flex: none; margin: 4px 12px 0; padding: 14px 16px 12px; background: var(--ink); text-align: center; }
+  .mast::before { content: ""; position: absolute; inset: 5px; border: 1px solid var(--gold); pointer-events: none; }
+  .bulbs { position: absolute; left: 14px; right: 14px; height: 6px; display: flex; justify-content: space-between; }
+  .bulbs.t { top: 9px; } .bulbs.b { bottom: 9px; }
+  .bulbs i { width: 5px; height: 5px; border-radius: 50%; background: #ffe7a6; animation: chase .9s steps(1) infinite; animation-delay: calc(var(--k) * -.3s); }
+  @keyframes chase { 0% { opacity: 1; box-shadow: 0 0 6px 2px rgba(255,214,120,.8); } 33% { opacity: .22; box-shadow: none; } }
+  .mast.fast .bulbs i { animation-duration: .36s; animation-delay: calc(var(--k) * -.12s); }
+  .mast h1 { font-family: "Limelight", "ZCOOL QingKe HuangYou", sans-serif; font-weight: 400; font-size: 46px; line-height: 1.05; margin-top: 8px; animation: sheen 5s linear infinite; }
+  .mast h1 span { font-family: "ZCOOL QingKe HuangYou"; }
+  @keyframes sheen { from { background-position: 120% 0; } to { background-position: -130% 0; } }
+  .mast .sub { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0 6px; font-size: 10.5px; color: var(--gold-hi); }
+  .mast .sub b { width: 34px; height: 1px; background: var(--gold); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 0 28px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; padding: 18px 16px 0; text-align: center; }
+  .no { position: relative; z-index: 2; display: inline-block; padding: 0 12px; background: var(--ivory); font-family: "Limelight"; font-size: 15px; color: var(--gold-lo); letter-spacing: .2em; }
+  .stage { position: relative; height: 236px; margin-top: 8px; }
+  .burst { position: absolute; left: 50%; bottom: 0; width: 480px; height: 240px; margin-left: -240px; border-radius: 240px 240px 0 0; background: repeating-conic-gradient(from -90deg at 50% 100%, rgba(179,138,53,.55) 0 2.2deg, transparent 2.2deg 7.5deg); -webkit-mask: conic-gradient(from calc(-1 * var(--fan) / 2) at 50% 100%, #000 var(--fan), transparent 0); mask: conic-gradient(from calc(-1 * var(--fan) / 2) at 50% 100%, #000 var(--fan), transparent 0); --fan: 180deg; }
+  .burst::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 100%, var(--ivory) 0 30%, transparent 70%); }
+  .arch { position: absolute; left: 50%; bottom: 0; width: 248px; height: 222px; margin-left: -124px; --steps: polygon(0% 100%, 0% 24%, 9% 24%, 9% 14%, 21% 14%, 21% 6%, 35% 6%, 35% 0%, 65% 0%, 65% 6%, 79% 6%, 79% 14%, 91% 14%, 91% 24%, 100% 24%, 100% 100%); clip-path: var(--steps); background: linear-gradient(160deg, var(--gold-hi), var(--gold) 40%, var(--gold-lo)); padding: 3px; }
+  .arch > div { width: 100%; height: 100%; clip-path: var(--steps); background: var(--ink); padding: 3px; }
+  .arch canvas { display: block; width: 100%; height: 100%; clip-path: var(--steps); }
+  .arch .glint { position: absolute; inset: 0; clip-path: var(--steps); background: linear-gradient(115deg, transparent 35%, rgba(255,240,200,.55) 48%, transparent 60%); background-size: 300% 100%; background-position: 120% 0; mix-blend-mode: screen; pointer-events: none; }
+  .hero h2 { margin-top: 18px; font-weight: 900; font-size: 23px; line-height: 1.45; }
+  .rule { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px auto 0; width: 220px; }
+  .rule b { flex: 1; height: 0; border-top: 3px double var(--gold); }
+  .rule i { width: 8px; height: 8px; background: var(--gold); transform: rotate(45deg); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  .stats div { padding: 4px 0; }
+  .stats div + div { border-left: 1px solid var(--gold); }
+  .stats small { display: block; font-size: 10.5px; color: var(--mute); letter-spacing: .3em; }
+  .stats b { font-family: "Limelight"; font-weight: 400; font-size: 24px; }
+  .shell { position: relative; margin: 16px auto 0; display: flex; align-items: center; gap: 10px; padding: 0 22px 0 12px; height: 46px; background: var(--ink); color: var(--gold-hi); font-weight: 700; font-size: 14px; letter-spacing: .3em; clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%); }
+  .shell .fan { width: 30px; height: 15px; margin-top: 8px; border-radius: 15px 15px 0 0; background: repeating-conic-gradient(from -90deg at 50% 100%, var(--gold-hi) 0 8deg, var(--gold-lo) 8deg 20deg); transform-origin: 50% 100%; }
+  .shell.on .fan { animation: wave .7s ease-in-out infinite alternate; }
+  @keyframes wave { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+
+  .sec { margin: 28px 16px 8px; display: flex; align-items: center; gap: 10px; }
+  .sec h4 { font-family: "ZCOOL QingKe HuangYou"; font-weight: 400; font-size: 24px; letter-spacing: .1em; }
+  .sec b { flex: 1; height: 0; border-top: 3px double var(--gold); }
+  .sec span { font-size: 10.5px; color: var(--mute); }
+  .it { position: relative; margin: 0 16px; padding: 14px 0; display: grid; grid-template-columns: 44px 1fr 58px; gap: 12px; align-items: center; border-bottom: 1px solid rgba(179,138,53,.5); cursor: pointer; }
+  .oct { width: 44px; height: 44px; display: grid; place-items: center; background: var(--ink); clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); font-family: "Limelight"; font-size: 15px; color: var(--gold-hi); }
+  .it h3 { font-weight: 700; font-size: 15.5px; line-height: 1.45; }
+  .it .src { margin-top: 2px; font-size: 11px; color: var(--mute); letter-spacing: .1em; }
+  .zig { justify-self: end; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .zig i { display: block; height: 4px; background: var(--gold); }
+  .zig b { margin-top: 4px; font-family: "Limelight"; font-weight: 400; font-size: 15px; }
+  .more { grid-column: 1 / -1; display: none; font-size: 13px; line-height: 1.75; color: #3d3527; padding: 10px 12px; background: var(--ivory2); border-left: 3px double var(--gold); }
+  .it.open .more { display: block; animation: open .45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes open { from { clip-path: inset(0 50% 0 50%); } to { clip-path: inset(0 0 0 0); } }
+
+  .tabs { flex: none; position: relative; display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 6px 24px; background: var(--ink); border-top: 3px double var(--gold); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11.5px; color: rgba(236,208,138,.5); letter-spacing: .15em; }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { color: var(--gold-hi); }
+  .tab.on::before { content: ""; position: absolute; top: -1px; width: 0; height: 0; border: 6px solid transparent; border-top-color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+const maxHeat = Math.max(...HOT.map((h) => h.heat));
+// 金色双色调：亮度映射到 黑 → 暗金 → 亮金 → 象牙
+function goldTone(img, w, h) {
+  const c = coverCanvas(img, w, h), ctx = c.getContext("2d"), id = ctx.getImageData(0, 0, w, h), d = id.data;
+  const stops = [[0, [21, 18, 13]], [0.42, [110, 80, 30]], [0.72, [210, 172, 92]], [1, [250, 240, 214]]];
+  for (let i = 0; i < d.length; i += 4) {
+    let L = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255; L = Math.min(1, Math.max(0, (L - 0.5) * 1.25 + 0.5));
+    let k = 1; while (k < stops.length - 1 && L > stops[k][0]) k++;
+    const [a, ca] = stops[k - 1], [b, cb] = stops[k], t = (L - a) / (b - a);
+    for (let j = 0; j < 3; j++) d[i + j] = ca[j] + (cb[j] - ca[j]) * t;
+  }
+  ctx.putImageData(id, 0, 0);
+  return c;
+}
+const bulbs = (cls) => `<div class="bulbs ${cls}">${Array.from({ length: 22 }, (_, i) => `<i style="--k:${i % 3}"></i>`).join("")}</div>`;
+const zig = (h) => { const n = Math.max(1, Math.round((h.heat / maxHeat) * 5)); return Array.from({ length: n }, (_, k) => `<i style="width:${14 + (n - 1 - k) * 8}px"></i>`).reverse().join(""); };
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="mast" id="mast">${bulbs("t")}${bulbs("b")}
+    <h1 class="gold" id="mh">AI <span>热点</span></h1>
+    <div class="sub lat"><b></b>X · XXII · MMXXVI<b></b></div>
+  </header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="no">No. ${ROMAN[1]}</div>
+      <div class="stage"><div class="burst" id="burst"></div><div class="arch" id="arch"><div><canvas id="cv" width="484" height="432"></canvas></div><span class="glint" id="glint"></span></div></div>
+      <h2>${esc(shortTitle(h1))}</h2>
+      <div class="rule" id="rule"><b></b><i></i><b></b></div>
+      <div class="stats"><div><small>热度</small><b>${heatText(h1)}</b></div><div><small>来源</small><b>${h1.sources}</b></div><div><small>参与</small><b>${h1.people}</b></div></div>
+      <button class="shell" id="listen"><span class="fan"></span><span>收听头条</span></button>
+    </section>
+    <div class="sec"><h4>今日要闻</h4><b></b><span class="lat">II — VIII</span></div>
+    ${rest.map((h) => `<div class="it"><span class="oct">${ROMAN[h.rank]}</span><div><h3>${esc(shortTitle(h))}</h3><div class="src">${h.sources} 家来源 · ${h.people} 人参与</div></div><div class="zig">${zig(h)}<b>${heatText(h)}</b></div><div class="more">${esc(clip(firstLine(h.summary), 90))}</div></div>`).join("")}
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+const img = await loadImage(h1.cover);
+$("cv").getContext("2d").drawImage(goldTone(img, 484, 432), 0, 0);
+await fontsReady();
+const EASE = "cubic-bezier(.22,.8,.2,1)";
+// 一切从中轴往两边对称展开：报头字、光芒、金线、列表
+$("mh").animate([{ clipPath: "inset(0 50% 0 50%)" }, { clipPath: "inset(0 0% 0 0%)" }], { duration: 1100, delay: 100, easing: EASE, fill: "backwards" });
+app.querySelectorAll(".mast .sub b").forEach((b) => b.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: 800, delay: 600, easing: EASE, fill: "backwards" }));
+$("burst").animate([{ "--fan": "0deg" }, { "--fan": "180deg" }], { duration: 1500, delay: 300, easing: EASE, fill: "backwards" });
+$("arch").animate([{ clipPath: "polygon(0% 100%, 0% 100%, 9% 100%, 9% 100%, 21% 100%, 21% 100%, 35% 100%, 35% 100%, 65% 100%, 65% 100%, 79% 100%, 79% 100%, 91% 100%, 91% 100%, 100% 100%, 100% 100%)" }, { clipPath: "polygon(0% 100%, 0% 24%, 9% 24%, 9% 14%, 21% 14%, 21% 6%, 35% 6%, 35% 0%, 65% 0%, 65% 6%, 79% 6%, 79% 14%, 91% 14%, 91% 24%, 100% 24%, 100% 100%)" }], { duration: 1200, delay: 500, easing: EASE, fill: "backwards" });
+$("glint").animate([{ backgroundPosition: "120% 0" }, { backgroundPosition: "-120% 0" }], { duration: 1600, delay: 1500, easing: "ease-in-out", iterations: Infinity, iterationStart: 0, direction: "normal", endDelay: 0, composite: "replace" });
+app.querySelectorAll("#rule b").forEach((b, i) => { b.style.transformOrigin = i ? "left" : "right"; b.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: 900, delay: 1100, easing: EASE, fill: "backwards" }); });
+$("rule").querySelector("i").animate([{ transform: "rotate(45deg) scale(0)" }, { transform: "rotate(225deg) scale(1)" }], { duration: 900, delay: 1000, easing: EASE, fill: "backwards" });
+app.querySelectorAll(".hero h2, .stats, .shell").forEach((e, i) => e.animate([{ opacity: 0, transform: "scaleX(.86)" }, { opacity: 1, transform: "none" }], { duration: 800, delay: 1100 + i * 140, easing: EASE, fill: "backwards" }));
+app.querySelectorAll(".sec, .it").forEach((e, i) => e.animate([{ opacity: 0, clipPath: "inset(0 50% 0 50%)" }, { opacity: 1, clipPath: "inset(0 0% 0 0%)" }], { duration: 700, delay: 1500 + i * 90, easing: EASE, fill: "backwards" }));
+app.querySelectorAll(".it").forEach((el) => el.addEventListener("click", () => el.classList.toggle("open")));
+$("listen").addEventListener("click", () => { const on = $("listen").classList.toggle("on"); $("mast").classList.toggle("fast", on); $("listen").lastChild.textContent = on ? "正在收听" : "收听头条"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>
