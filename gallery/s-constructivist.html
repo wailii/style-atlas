@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>构成主义</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #ece2cc; --red: #d22e26; --ink: #121110; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 40; }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: "Russo One"; font-size: 14px; }
+  .top { flex: none; position: relative; height: 78px; }
+  .band { position: absolute; left: -20px; top: 8px; height: 52px; padding: 0 22px 0 34px; background: var(--ink); color: var(--paper); display: flex; align-items: center; gap: 10px; transform: rotate(-4deg); transform-origin: left; }
+  .band b { font-weight: 900; font-size: 32px; letter-spacing: 2px; }
+  .band small { font-family: "Russo One"; font-size: 12px; color: var(--red); letter-spacing: 1px; }
+  .horn { position: absolute; right: 16px; top: 6px; width: 70px; height: 62px; }
+  .horn svg { width: 100%; height: 100%; overflow: visible; }
+  .horn .w { opacity: 0; }
+  .horn.on .w { animation: wave 1s infinite steps(3); }
+  .horn.on .w:nth-of-type(2) { animation-delay: .33s; } .horn.on .w:nth-of-type(3) { animation-delay: .66s; }
+  @keyframes wave { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .poster { position: relative; height: 430px; }
+  .rays { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+  .disc { position: absolute; left: 150px; top: 20px; width: 220px; height: 220px; border-radius: 50%; overflow: hidden; border: 10px solid var(--ink); background: var(--paper); }
+  .disc canvas { width: 100%; height: 100%; display: block; }
+  .no { position: absolute; left: 14px; top: 14px; font-family: "Russo One"; font-size: 120px; line-height: 1; color: var(--red); }
+  .arrow { position: absolute; left: 18px; top: 196px; width: 200px; height: 34px; transform: rotate(-18deg); transform-origin: left center; }
+  .arrow i { position: absolute; left: 0; top: 11px; height: 12px; right: 26px; background: var(--ink); transform-origin: left; }
+  .arrow b { position: absolute; right: 0; top: 0; width: 0; height: 0; border-left: 30px solid var(--ink); border-top: 17px solid transparent; border-bottom: 17px solid transparent; }
+  .slash { position: absolute; left: -40px; right: -40px; top: 262px; height: 112px; background: var(--red); transform: rotate(-9deg); display: flex; align-items: center; padding: 0 56px; }
+  .slash h2 { color: #fff; font-weight: 900; font-size: 22px; line-height: 1.32; letter-spacing: .5px; }
+  .meta { position: absolute; right: 16px; bottom: 6px; background: var(--ink); color: var(--paper); font-family: "Russo One", "Noto Sans SC"; font-size: 12.5px; padding: 6px 10px; transform: rotate(-9deg); }
+  .sum { padding: 14px 18px 0; font-size: 13.5px; line-height: 1.7; font-weight: 500; border-left: 8px solid var(--red); margin: 6px 16px 0; padding-left: 12px; }
+
+  ol { list-style: none; margin-top: 22px; border-top: 6px solid var(--ink); }
+  .it { position: relative; display: grid; grid-template-columns: 64px 1fr 60px; gap: 10px; align-items: center; padding: 12px 16px 12px 0; border-bottom: 2px solid var(--ink); cursor: pointer; overflow: hidden; }
+  .it .n { height: 40px; background: var(--red); color: #fff; font-family: "Russo One"; font-size: 20px; display: flex; align-items: center; justify-content: center; clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%); }
+  .it:nth-child(2n) .n { background: var(--ink); }
+  .it h3 { font-weight: 900; font-size: 15.5px; line-height: 1.4; }
+  .it .m { margin-top: 4px; font-family: "Russo One", "Noto Sans SC"; font-size: 11.5px; color: var(--red); }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.6; font-weight: 500; }
+  .it.open .more { display: block; }
+  .it.open { background: var(--ink); color: var(--paper); }
+  .it .tn { width: 56px; height: 56px; position: relative; }
+  .it .tn canvas { width: 100%; height: 100%; border-radius: 50%; display: block; border: 3px solid var(--ink); }
+  .it .tn .tri { width: 0; height: 0; border-left: 28px solid transparent; border-right: 28px solid transparent; border-bottom: 50px solid var(--red); margin-top: 3px; }
+  .it:nth-child(2n) .tn .tri { border-bottom-color: var(--ink); transform: rotate(180deg); }
+
+  .tabs { flex: none; position: relative; background: var(--ink); color: var(--paper); display: grid; grid-template-columns: repeat(5, 1fr); padding: 14px 4px 24px; }
+  .tab { position: relative; z-index: 1; font-weight: 900; font-size: 14px; letter-spacing: 2px; padding: 6px 0; }
+  .ind { position: absolute; top: 14px; height: 33px; background: var(--red); clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%); transition: left .28s cubic-bezier(.9,0,.1,1); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+app.style.setProperty("--grain", `url(${grainURL(200, 0.11, 50)})`);
+const rays = Array.from({ length: 14 }, (_, i) => { const a = (-150 + i * 9) * Math.PI / 180; return `<line x1="260" y1="130" x2="${(260 + Math.cos(a) * 420).toFixed(0)}" y2="${(130 + Math.sin(a) * 420).toFixed(0)}" stroke="${i % 3 ? "#121110" : "#d22e26"}" stroke-width="${i % 2 ? 2 : 5}"/>`; }).join("");
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top">
+    <div class="band" id="band"><b>AI 热点</b><small>10·22 / 实时</small></div>
+    <button class="horn" id="horn"><svg viewBox="0 0 70 62"><path d="M6 22 H20 L46 6 V56 L20 40 H6 Z" fill="#d22e26"/><rect x="10" y="40" width="8" height="16" fill="#121110"/><path class="w" d="M52 22 Q58 31 52 40" stroke="#121110" stroke-width="4" fill="none"/><path class="w" d="M58 16 Q68 31 58 46" stroke="#121110" stroke-width="4" fill="none"/><path class="w" d="M64 10 Q78 31 64 52" stroke="#121110" stroke-width="4" fill="none"/></svg></button>
+  </header>
+  <main class="scroll">
+    <section class="poster">
+      <svg class="rays" id="rays" viewBox="0 0 390 430" preserveAspectRatio="xMidYMid slice">${rays}</svg>
+      <div class="disc" id="disc"><canvas id="dc"></canvas></div>
+      <div class="no" id="no">01</div>
+      <div class="arrow" id="arrow"><i></i><b></b></div>
+      <div class="slash" id="slash"><h2>${esc(shortTitle(h1))}</h2></div>
+      <div class="meta" id="meta">热度 ${heatText(h1)} / ${h1.sources} 家</div>
+    </section>
+    <p class="sum" id="sum">${esc(clip(firstLine(h1.summary), 56))}</p>
+    <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}"><span class="n">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} — ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? "<canvas></canvas>" : `<div class="tri"></div>`}</div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs"><i class="ind" id="ind"></i>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+// 沿 -18° 斜线猛冲进来，冲过头一点再停
+const SLAM = "cubic-bezier(.9,0,.15,1.25)";
+const slam = (el, d, dist = 500, ang = -18, base = "") => { const a = ang * Math.PI / 180; el.animate([{ transform: `translate(${-Math.cos(a) * dist}px, ${-Math.sin(a) * dist}px) ${base}` }, { transform: `translate(0,0) ${base}` }], { duration: 420, delay: d, easing: SLAM, fill: "backwards" }); };
+(async () => {
+await fontsReady();
+const img = await loadImage(h1.cover);
+const dc = $("dc"); const t = thresholdCanvas(img, 400, 400, { cut: 0.6, ink: "#121110", paper: "#ece2cc", soft: 2 }); dc.width = 400; dc.height = 400; dc.getContext("2d").drawImage(t, 0, 0);
+app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (!h.cover) return; loadImage(h.cover).then((im) => { const c = li.querySelector("canvas"); const tt = thresholdCanvas(im, 112, 112, { cut: 0.55, ink: "#121110", paper: "#ece2cc" }); c.width = 112; c.height = 112; c.getContext("2d").drawImage(tt, 0, 0); }); });
+
+slam($("band"), 100, 420, 0, "rotate(-4deg)");
+$("horn").animate([{ transform: "scale(0) rotate(-40deg)" }, { transform: "none" }], { duration: 380, delay: 350, easing: SLAM, fill: "backwards" });
+$("rays").querySelectorAll("line").forEach((l, i) => { const L = 420; l.style.strokeDasharray = L; l.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 500, delay: 300 + i * 30, easing: "cubic-bezier(.7,0,.2,1)", fill: "backwards" }); });
+$("disc").animate([{ transform: "scale(0) rotate(-200deg)" }, { transform: "none" }], { duration: 700, delay: 450, easing: "cubic-bezier(.7,0,.2,1.15)", fill: "backwards" });
+slam($("no"), 650, 300, 0);
+$("arrow").querySelector("i").animate([{ transform: "scaleX(0)" }, { transform: "none" }], { duration: 380, delay: 850, easing: SLAM, fill: "backwards" });
+$("arrow").querySelector("b").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1, delay: 1180, fill: "backwards" });
+slam($("slash"), 950, 600, -9, "rotate(-9deg)");
+$("slash").querySelector("h2").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 420, delay: 1250, easing: "cubic-bezier(.7,0,.2,1)", fill: "backwards" });
+slam($("meta"), 1400, 300, -9, "rotate(-9deg)");
+$("sum").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, delay: 1500, easing: "cubic-bezier(.7,0,.2,1)", fill: "backwards" });
+app.querySelectorAll(".it").forEach((li, i) => {
+  slam(li.querySelector(".n"), 1600 + i * 90, 120, 0);
+  li.querySelector("div").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1, delay: 1700 + i * 90, fill: "backwards" });
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+// 圆一直慢慢转
+$("disc").querySelector("canvas").animate([{ transform: "rotate(0)" }, { transform: "rotate(360deg)" }], { duration: 40000, iterations: Infinity });
+const horn = $("horn"); horn.addEventListener("click", () => horn.classList.toggle("on"));
+const tabs = [...app.querySelectorAll(".tab")], ind = $("ind");
+const place = (t) => { ind.style.left = t.offsetLeft + 4 + "px"; ind.style.width = t.offsetWidth - 8 + "px"; };
+place(tabs[0]);
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); place(t); }));
+})();
+</script>
+</body>
+</html>

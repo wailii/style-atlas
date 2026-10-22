@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>间谍片头</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --cream: #efe4c9; --ink: #151412; --org: #e4572e; --org2: #f08a4b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--cream); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 30; }
+  .bars { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .bars i { position: absolute; background: var(--ink); }
+  .app > *:not(.bars) { position: relative; z-index: 1; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: Oswald, sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 4px 18px 12px; }
+  .cutword { display: flex; align-items: flex-end; gap: 1px; }
+  .cutword span { display: inline-block; font-weight: 900; font-size: 50px; line-height: 1; }
+  .cutword .o { color: var(--org); }
+  .date { font-family: Oswald, "Noto Sans SC", sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 3px; margin-top: 6px; }
+  .spiral { width: 62px; height: 62px; border-radius: 50%; background: var(--org); display: grid; place-items: center; position: relative; }
+  .spiral svg { width: 54px; height: 54px; }
+  .spiral.on svg { animation: spin 2.4s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spiral b { position: absolute; bottom: -18px; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 0 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; height: 330px; margin: 6px 0 0; }
+  .slab { position: absolute; left: 0; right: 64px; top: 0; height: 232px; background: var(--org); }
+  .slab canvas { position: absolute; left: 18px; top: 18px; width: calc(100% - 36px); height: calc(100% - 36px); mix-blend-mode: multiply; }
+  .disc { position: absolute; right: 18px; top: 26px; width: 120px; height: 120px; border-radius: 50%; border: 14px solid var(--ink); }
+  .arm { position: absolute; right: 0; top: 150px; width: 210px; height: 30px; background: var(--ink); clip-path: polygon(0 30%, 18% 0, 40% 20%, 62% 0, 100% 10%, 100% 100%, 0 100%); }
+  .no { position: absolute; right: 22px; top: 176px; font-family: Oswald, sans-serif; font-weight: 700; font-size: 96px; line-height: .9; color: var(--ink); }
+  .hero h2 { position: absolute; left: 18px; right: 18px; top: 246px; font-weight: 900; font-size: 22px; line-height: 1.38; }
+  .hero h2 i { font-style: normal; color: var(--org); }
+  .sum { padding: 6px 18px 0 18px; font-size: 13.5px; line-height: 1.7; font-weight: 500; }
+  .beat { display: flex; gap: 4px; align-items: flex-end; padding: 12px 18px 0; height: 34px; }
+  .beat i { width: 6px; background: var(--ink); }
+  .beat i:nth-child(3n) { background: var(--org); }
+  .beat span { margin-left: 10px; font-family: Oswald, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+
+  .credits { margin-top: 22px; }
+  .it { position: relative; display: grid; grid-template-columns: 62px 1fr; gap: 12px; padding: 12px 18px 12px 0; cursor: pointer; }
+  .it .n { background: var(--ink); color: var(--cream); font-family: Oswald, sans-serif; font-weight: 700; font-size: 22px; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; height: 34px; clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%); }
+  .it:nth-child(2n) .n { background: var(--org); color: var(--ink); }
+  .it h3 { font-weight: 900; font-size: 16px; line-height: 1.42; }
+  .it p { margin-top: 4px; font-family: Oswald, "Noto Sans SC", sans-serif; font-size: 12px; letter-spacing: 1px; font-weight: 500; }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.65; font-weight: 500; }
+  .it.open .more { display: block; }
+  .it h3 i { font-style: normal; color: var(--org); }
+  .it.open h3 { color: var(--org); }
+
+  .tabs { flex: none; background: var(--ink); color: var(--cream); display: grid; grid-template-columns: repeat(5, 1fr); padding: 14px 6px 24px; position: relative; }
+  .tab { font-weight: 700; font-size: 13.5px; letter-spacing: 2px; opacity: .6; }
+  .tab.on { opacity: 1; }
+  .ul { position: absolute; top: 0; height: 6px; background: var(--org); width: 52px; transition: left .24s steps(3, end); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+app.style.setProperty("--grain", `url(${grainURL(200, 0.1, 40)})`);
+const cutWord = (t) => [...t].map((c, i) => `<span class="${i === 1 ? "o" : ""}" style="transform:translateY(${((rnd(i * 7) - 0.5) * 6).toFixed(1)}px) rotate(${((rnd(i * 3) - 0.5) * 9).toFixed(1)}deg)">${c}</span>`).join("");
+const markOrg = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<i>${esc(k)}</i>`) : t; };
+// 眩晕螺旋
+let sp = "M27 27"; for (let a = 0; a < Math.PI * 8; a += 0.15) { const r = 1 + a * 0.98; sp += ` L${(27 + Math.cos(a) * r).toFixed(1)} ${(27 + Math.sin(a) * r).toFixed(1)}`; }
+
+app.innerHTML = `
+  <div class="bars" id="bars"></div>
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top">
+    <div><div class="cutword">${cutWord("AI热点")}</div><div class="date">10·22 · 周四 · 实时</div></div>
+    <button class="spiral" id="listen"><svg viewBox="0 0 54 54"><path d="${sp}" fill="none" stroke="#151412" stroke-width="3.2" stroke-linecap="round"/></svg><b>听</b></button>
+  </header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="slab" id="slab"><canvas id="sil"></canvas></div>
+      <div class="disc"></div><div class="arm"></div>
+      <div class="no">01</div>
+      <h2>${markOrg(h1)}</h2>
+    </section>
+    <p class="sum">${esc(clip(firstLine(h1.summary), 58))}</p>
+    <div class="beat" id="beat">${Array.from({ length: 22 }, (_, i) => `<i style="height:${8 + Math.round(rnd(i + 3) * 22)}px"></i>`).join("")}<span>${heatText(h1)} · ${h1.sources} 家</span></div>
+    <ol class="credits">${rest.map((h) => `<li class="it" data-r="${h.rank}"><span class="n">${pad2(h.rank)}</span><div><h3>${markOrg(h)}</h3><p>热度 ${heatText(h)} — ${h.sources} 家</p><div class="more">${esc(clip(firstLine(h.summary), 90))}</div></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs"><i class="ul" id="ul"></i>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const CUT = "steps(1, end)";
+const at = (el, ms, kf = [{ visibility: "hidden" }, { visibility: "visible" }]) => el.animate(kf, { duration: 1, delay: ms, fill: "backwards", easing: CUT });
+
+(async () => {
+await fontsReady();
+// ── 开场：黑条从四边扫进来、停在构图位置，然后按节拍硬切出现 ──
+const B = $("bars"), W = app.clientWidth, H = app.clientHeight;
+const bars = [
+  { x: -W, y: 128, w: W * 0.62, h: 10, to: [0, 128] },
+  { x: W, y: 300, w: 46, h: 300, to: [W - 46, 300] },
+  { x: 40, y: -400, w: 12, h: 380, to: [40, -260] },
+  { x: -200, y: H - 150, w: 160, h: 10, to: [0, H - 150] },
+];
+bars.forEach((b, i) => {
+  const el = document.createElement("i"); Object.assign(el.style, { left: 0, top: 0, width: b.w + "px", height: b.h + "px" }); B.appendChild(el);
+  el.animate([{ transform: `translate(${b.x}px,${b.y}px)` }, { transform: `translate(${b.to[0]}px,${b.to[1]}px)` }], { duration: 520, delay: 80 + i * 120, easing: "cubic-bezier(.8,0,.2,1)", fill: "both" });
+  el.animate([{ opacity: 1 }, { opacity: 0.0 }], { duration: 400, delay: 1500 + i * 60, fill: "forwards" });
+});
+const beat = 240; // 爵士鼓点，一拍 0.24 秒
+const seq = [".cutword span:nth-child(1)", ".cutword span:nth-child(2)", ".cutword span:nth-child(3)", ".cutword span:nth-child(4)", ".date", "#listen", ".slab", ".disc", ".arm", ".no", ".hero h2", ".sum", "#beat"];
+seq.forEach((s, i) => app.querySelectorAll(s).forEach((el) => at(el, 300 + i * beat * 0.5)));
+$("slab").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 300, delay: 300 + 6 * beat * 0.5, easing: "cubic-bezier(.8,0,.2,1)", fill: "backwards" });
+app.querySelector(".arm").animate([{ transform: "translateX(220px)" }, { transform: "none" }], { duration: 260, delay: 300 + 8 * beat * 0.5, easing: "cubic-bezier(.8,0,.2,1)", fill: "backwards" });
+app.querySelectorAll(".it").forEach((li, i) => {
+  li.querySelector(".n").animate([{ transform: "translateX(-70px)" }, { transform: "none" }], { duration: 220, delay: 300 + (13 + i) * beat * 0.5, easing: "cubic-bezier(.8,0,.2,1)", fill: "backwards" });
+  at(li.querySelector("div"), 300 + (13.5 + i) * beat * 0.5);
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+// 剪影：封面切成黑白两色，压在橙色上
+loadImage(h1.cover).then((img) => { const c = $("sil"), r = c.getBoundingClientRect(); const t = thresholdCanvas(img, Math.round(r.width * 2), Math.round(r.height * 2), { cut: 0.62, ink: "#151412", soft: 3 }); c.width = t.width; c.height = t.height; c.getContext("2d").drawImage(t, 0, 0); });
+// 鼓点：节奏条按拍子跳
+const beatBars = [...$("beat").querySelectorAll("i")]; let k = 0;
+setInterval(() => { k++; beatBars.forEach((b, i) => (b.style.height = `${6 + Math.round(rnd(k * 13 + i) * 24)}px`)); app.querySelector(".disc").style.transform = k % 2 ? "scale(1.06)" : "none"; }, beat);
+
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.querySelector("b").textContent = on ? "在听" : "听"; });
+const tabs = [...app.querySelectorAll(".tab")], ul = $("ul");
+const place = (t) => { ul.style.left = t.offsetLeft + (t.offsetWidth - 52) / 2 + "px"; };
+place(tabs[0]);
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); place(t); }));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数学讲解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,500;0,600;1,500;1,600&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #121315; --fg: #ececec; --mute: #8a8d93; --blue: #58c4dd; --yel: #f4d345; --teal: #5cd0b3; --green: #83c167; --red: #fc6255; --gold: #f0ac5f; --purple: #9a72ac; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "STIX Two Text", "Noto Serif SC", serif; color: var(--fg); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; }
+  i.m { font-style: italic; font-family: "STIX Two Text", serif; }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-size: 15px; font-weight: 600; color: var(--mute); }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 2px 18px 6px; }
+  .top svg.t { height: 44px; width: 180px; overflow: visible; }
+  .top .d { font-size: 13px; color: var(--mute); }
+  .play { width: 46px; height: 46px; }
+  .play svg { width: 100%; height: 100%; overflow: visible; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .plot { display: block; width: 100%; height: 250px; overflow: visible; }
+  .eq { display: flex; gap: 18px; justify-content: center; margin: 4px 0 2px; font-size: 19px; }
+  .eq span { opacity: 0; }
+  .ttl { display: block; width: 100%; overflow: visible; margin-top: 10px; }
+  .sum { margin-top: 6px; font-family: "Noto Serif SC"; font-size: 13.5px; line-height: 1.75; color: #b9bcc2; min-height: 48px; }
+
+  .sect { margin: 20px 0 6px; display: flex; align-items: center; gap: 10px; color: var(--mute); font-size: 13px; }
+  .sect::after { content: ""; flex: 1; height: 1px; background: #2a2c30; }
+  .it { display: grid; grid-template-columns: 58px 1fr 78px; gap: 10px; align-items: center; padding: 11px 4px; border-bottom: 1px solid #222428; cursor: pointer; }
+  .it .n { font-size: 17px; color: var(--mute); }
+  .it h3 { font-family: "Noto Serif SC"; font-weight: 700; font-size: 14.5px; line-height: 1.5; }
+  .it svg { width: 78px; height: 34px; overflow: visible; }
+  .it.on .n { color: var(--yel); }
+  .it.on h3 { color: var(--yel); }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 24px; border-top: 1px solid #222428; position: relative; }
+  .tab { font-family: "Noto Serif SC"; font-size: 13.5px; font-weight: 700; color: var(--mute); padding: 6px 0; }
+  .tab.on { color: var(--fg); }
+  .ul { position: absolute; top: -1px; height: 2px; background: var(--blue); transition: left .6s cubic-bezier(.65,0,.35,1), width .6s cubic-bezier(.65,0,.35,1); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { smooth } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const COLS = ["#58c4dd", "#5cd0b3", "#83c167", "#f4d345", "#f0ac5f", "#fc6255", "#9a72ac", "#58c4dd"];
+const NS = "http://www.w3.org/2000/svg";
+// Manim 的 smooth：两头慢中间快
+const SMOOTH = `linear(${Array.from({ length: 40 }, (_, i) => smooth(i / 39).toFixed(4)).join(",")})`;
+// 曲线重采样成固定 60 个点，方便两条曲线之间插值
+const resample = (h, n = 60) => { const v = h.spark.filter((x) => x != null); return Array.from({ length: n }, (_, i) => { const f = (i / (n - 1)) * (v.length - 1), a = Math.floor(f), b = Math.min(v.length - 1, a + 1); return v[a] + (v[b] - v[a]) * (f - a); }); };
+const YMAX = 500;
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top"><div><svg class="t" id="t1" viewBox="0 0 180 44"></svg><div class="d"><i class="m">t</i> = 10月22日 · 实时</div></div><button class="play" id="play"><svg viewBox="0 0 46 46"><circle cx="23" cy="23" r="20" fill="none" stroke="#ececec" stroke-width="2"/><path id="pi" d="M18 14 L32 23 L18 32 Z" fill="none" stroke="#f4d345" stroke-width="2" stroke-linejoin="round"/></svg></button></header>
+  <main class="scroll">
+    <svg class="plot" id="plot" viewBox="0 0 358 250"></svg>
+    <div class="eq" id="eq"><span><i class="m">n</i> = <b id="en">1</b></span><span><i class="m">H</i> = <b id="eh">${heatText(h1)}</b></span><span><i class="m">S</i> = <b id="es">${h1.sources}</b></span></div>
+    <svg class="ttl" id="ttl"></svg>
+    <p class="sum" id="sum"></p>
+    <div class="sect"><i class="m">n</i> = 2, 3, …, 8</div>
+    <ol>${rest.map((h, i) => `<li class="it" data-k="${i + 1}"><span class="n"><i class="m">n</i> = ${h.rank}</span><h3>${esc(shortTitle(h))}</h3><svg viewBox="0 0 78 34"><path fill="none" stroke="${COLS[i + 1]}" stroke-width="1.8" d=""/></svg></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs"><i class="ul" id="ul"></i>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+// Write：先描边、再填色
+function write(svg, lines, { size = 22, color = "#ececec", lh = 1.42, delay = 0, weight = 900, family = "Noto Serif SC", w = 358 } = {}) {
+  svg.innerHTML = ""; svg.style.height = lines.length * size * lh + 6 + "px"; svg.style.width = w + "px"; svg.setAttribute("viewBox", `0 0 ${w} ${lines.length * size * lh + 6}`);
+  lines.forEach((l, i) => {
+    const t = el("text", { x: 0, y: (i + 0.82) * size * lh, "font-size": size, "font-weight": weight, "font-family": family, fill: color, stroke: color, "stroke-width": 0.9, "fill-opacity": 0, "stroke-dasharray": 1600, "stroke-dashoffset": 1600 }, svg);
+    t.textContent = l;
+    t.animate([{ strokeDashoffset: 1600, fillOpacity: 0 }, { strokeDashoffset: 0, fillOpacity: 0, offset: 0.65 }, { strokeDashoffset: 0, fillOpacity: 1, strokeWidth: 0 }], { duration: 1300 + l.length * 25, delay: delay + i * 250, easing: SMOOTH, fill: "forwards" });
+  });
+}
+
+(async () => {
+await fontsReady();
+write($("t1"), ["AI 热点"], { size: 30, delay: 100, w: 180, lh: 1.3 });
+
+// ── 坐标轴：Create 一笔画出来；曲线沿着画；面积淡入；黄点带着数值跑 ──
+const plot = $("plot"), X0 = 34, Y0 = 214, PW = 312, PH = 186;
+const sx = (i, n) => X0 + (i / (n - 1)) * PW, sy = (v) => Y0 - (v / YMAX) * PH;
+const axes = el("g", { stroke: "#ececec", "stroke-width": 1.6, fill: "none" }, plot);
+const ax = [el("path", { d: `M${X0 - 6} ${Y0} H${X0 + PW + 6}` }, axes), el("path", { d: `M${X0} ${Y0 + 6} V${Y0 - PH - 8}` }, axes), el("path", { d: `M${X0 + PW + 2} ${Y0 - 4} L${X0 + PW + 8} ${Y0} L${X0 + PW + 2} ${Y0 + 4}` }, axes), el("path", { d: `M${X0 - 4} ${Y0 - PH - 2} L${X0} ${Y0 - PH - 8} L${X0 + 4} ${Y0 - PH - 2}` }, axes)];
+for (let v = 100; v <= 400; v += 100) { const y = sy(v); ax.push(el("path", { d: `M${X0 - 4} ${y} H${X0 + 4}` }, axes)); const tx = el("text", { x: X0 - 10, y: y + 4, "text-anchor": "end", "font-size": 11, fill: "#8a8d93", "font-family": "STIX Two Text", stroke: "none" }, plot); tx.textContent = v; tx.style.opacity = 0; tx.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 900, fill: "forwards" }); }
+const lab = (x, y, s, it) => { const t = el("text", { x, y, "font-size": 15, fill: "#ececec", "font-family": "STIX Two Text", "font-style": it ? "italic" : "normal" }, plot); t.textContent = s; t.style.opacity = 0; t.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 1000, fill: "forwards" }); };
+lab(X0 + PW - 4, Y0 + 22, "t", true); lab(X0 + 8, Y0 - PH - 2, "热度", false);
+ax.forEach((p, i) => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 900, delay: 200 + i * 40, easing: SMOOTH, fill: "backwards" }); });
+
+let cur = resample(h1), color = COLS[0];
+const area = el("path", { fill: color, "fill-opacity": 0.22, stroke: "none" }, plot);
+const curve = el("path", { fill: "none", stroke: color, "stroke-width": 3, "stroke-linejoin": "round", "stroke-linecap": "round" }, plot);
+const drop = el("path", { stroke: "#f4d345", "stroke-width": 1.2, "stroke-dasharray": "4 4" }, plot);
+const dot = el("circle", { r: 5.5, fill: "#f4d345" }, plot);
+const val = el("text", { "font-size": 15, fill: "#f4d345", "font-family": "STIX Two Text" }, plot);
+const dPath = (vs) => vs.map((v, i) => `${i ? "L" : "M"}${sx(i, vs.length).toFixed(1)} ${sy(v).toFixed(1)}`).join(" ");
+const aPath = (vs) => dPath(vs) + ` L${sx(vs.length - 1, vs.length)} ${Y0} L${X0} ${Y0} Z`;
+function setCurve(vs) { curve.setAttribute("d", dPath(vs)); area.setAttribute("d", aPath(vs)); }
+setCurve(cur);
+const L = curve.getTotalLength(); curve.style.strokeDasharray = L;
+curve.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 1600, delay: 1100, easing: SMOOTH, fill: "backwards" }).onfinish = () => (curve.style.strokeDasharray = "");
+area.animate([{ fillOpacity: 0 }, { fillOpacity: 0.22 }], { duration: 800, delay: 2600, fill: "backwards" });
+const tStart = performance.now() + 2700;
+(function run(now) {
+  const u = Math.max(0, (now - tStart) / 1000), ph = (Math.sin(u * 0.6 - Math.PI / 2) + 1) / 2, show = u > 0;
+  const f = ph * (cur.length - 1), a = Math.floor(f), b = Math.min(cur.length - 1, a + 1), v = cur[a] + (cur[b] - cur[a]) * (f - a);
+  const x = X0 + ph * PW, y = sy(v);
+  dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.style.opacity = show ? 1 : 0;
+  drop.setAttribute("d", `M${x} ${y} V${Y0}`); drop.style.opacity = show ? 0.8 : 0;
+  val.setAttribute("x", Math.min(x + 8, X0 + PW - 40)); val.setAttribute("y", y - 12); val.textContent = v.toFixed(1); val.style.opacity = show ? 1 : 0;
+  requestAnimationFrame(run);
+})(performance.now());
+app.querySelectorAll(".eq span").forEach((s, i) => s.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 600, delay: 2500 + i * 200, easing: SMOOTH, fill: "forwards" }));
+const showStory = (h, d) => {
+  write($("ttl"), splitLines(shortTitle(h), "900 21px 'Noto Serif SC'", 352), { size: 21, delay: d });
+  $("sum").textContent = clip(firstLine(h.summary), 54);
+  $("sum").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: d + 900, fill: "backwards" });
+};
+showStory(h1, 1700);
+
+// 小曲线
+app.querySelectorAll(".it").forEach((li, i) => {
+  const vs = resample(rest[i], 30), mx = Math.max(...vs), mn = Math.min(...vs);
+  const p = li.querySelector("path"); p.setAttribute("d", vs.map((v, k) => `${k ? "L" : "M"}${(k / 29 * 76 + 1).toFixed(1)} ${(32 - ((v - mn) / Math.max(1, mx - mn)) * 30).toFixed(1)}`).join(" "));
+  const Lp = p.getTotalLength(); p.style.strokeDasharray = Lp;
+  p.animate([{ strokeDashoffset: Lp }, { strokeDashoffset: 0 }], { duration: 900, delay: 2600 + i * 120, easing: SMOOTH, fill: "backwards" });
+  li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 2500 + i * 120, fill: "backwards" });
+  // Transform：头图的曲线变形成这一条的曲线，颜色、数字一起过渡
+  li.addEventListener("click", () => {
+    app.querySelectorAll(".it").forEach((x) => x.classList.toggle("on", x === li));
+    const h = rest[i], from = cur.slice(), to = resample(h), c0 = color, c1 = COLS[i + 1], t0 = performance.now(), D = 1100;
+    const n0 = +$("eh").textContent, n1 = Math.round(h.heat), s0 = +$("es").textContent;
+    (function morph(now) {
+      const k = Math.min(1, (now - t0) / D), e = smooth(k);
+      cur = from.map((v, j) => v + (to[j] - v) * e); setCurve(cur);
+      const mix = (a, b) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, j) => Math.round(v + (B[j] - v) * e)).join(",")})`; };
+      curve.setAttribute("stroke", mix(c0, c1)); area.setAttribute("fill", mix(c0, c1));
+      $("eh").textContent = Math.round(n0 + (n1 - n0) * e); $("es").textContent = Math.round(s0 + (h.sources - s0) * e);
+      if (k < 1) requestAnimationFrame(morph); else color = c1;
+    })(t0);
+    $("en").textContent = h.rank;
+    showStory(h, 0);
+    app.querySelector(".scroll").scrollTo({ top: 0, behavior: "smooth" });
+  });
+});
+const play = $("play"); let on = false;
+play.addEventListener("click", () => { on = !on; $("pi").setAttribute("d", on ? "M17 15 V31 M29 15 V31" : "M18 14 L32 23 L18 32 Z"); });
+const tabs = [...app.querySelectorAll(".tab")], ul = $("ul");
+const place = (t) => { ul.style.left = t.offsetLeft + 18 + "px"; ul.style.width = t.offsetWidth - 36 + "px"; };
+place(tabs[0]);
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); place(t); }));
+})();
+</script>
+</body>
+</html>

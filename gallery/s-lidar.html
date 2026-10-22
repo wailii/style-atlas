@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>点云测绘</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f3f5f7; --ink: #1f2a37; --mute: #6b7685; --grid: #e2e7ec; --acc: #0ea5e9; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "JetBrains Mono", "Noto Sans SC", monospace; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; background: var(--bg); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; background-position: -1px -1px; }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-size: 13px; font-weight: 700; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 16px 8px; }
+  .k { font-size: 11px; color: var(--mute); letter-spacing: 1px; }
+  h1 { font-family: "Noto Sans SC"; font-weight: 900; font-size: 30px; letter-spacing: -.5px; line-height: 1.1; }
+  .radar { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--ink); padding: 6px 10px; font-family: "Noto Sans SC"; font-weight: 700; font-size: 13px; background: rgba(255,255,255,.7); }
+  .radar svg { width: 20px; height: 20px; }
+  .radar .sw { transform-origin: 10px 10px; }
+  .radar.on .sw { animation: rot 1.2s linear infinite; }
+  .radar.on { background: var(--ink); color: #fff; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .view { position: relative; height: 276px; border: 1.5px solid var(--ink); background: rgba(255,255,255,.72); }
+  .view canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .view .hud { position: absolute; font-size: 10.5px; color: var(--mute); letter-spacing: .5px; line-height: 1.5; }
+  .view .hud b { color: var(--ink); font-weight: 700; }
+  .view .tick { position: absolute; width: 12px; height: 12px; border-color: var(--ink); border-style: solid; }
+  .hero h2 { margin-top: 14px; font-family: "Noto Sans SC"; font-weight: 900; font-size: 21px; line-height: 1.42; }
+  .hero p { margin-top: 8px; font-family: "Noto Sans SC"; font-size: 13.5px; line-height: 1.7; color: var(--mute); }
+  .tbl { margin-top: 12px; display: grid; grid-template-columns: repeat(3, 1fr); border: 1.5px solid var(--ink); background: rgba(255,255,255,.72); }
+  .tbl div { padding: 7px 10px; font-size: 10.5px; color: var(--mute); }
+  .tbl div + div { border-left: 1px solid var(--grid); }
+  .tbl b { display: block; font-size: 18px; color: var(--ink); }
+
+  .sect { margin: 20px 0 6px; font-size: 11px; color: var(--mute); letter-spacing: 1px; }
+  .it { display: grid; grid-template-columns: 74px 1fr; gap: 12px; padding: 10px; margin-bottom: 8px; border: 1.5px solid var(--ink); background: rgba(255,255,255,.72); cursor: pointer; }
+  .it canvas { width: 74px; height: 64px; display: block; background: #fff; border: 1px solid var(--grid); }
+  .it .id { font-size: 10.5px; color: var(--acc); font-weight: 700; letter-spacing: 1px; }
+  .it h3 { margin-top: 2px; font-family: "Noto Sans SC"; font-weight: 700; font-size: 14.5px; line-height: 1.45; }
+  .it .m { margin-top: 4px; font-size: 10.5px; color: var(--mute); }
+  .it .more { display: none; margin-top: 6px; font-family: "Noto Sans SC"; font-size: 12.5px; line-height: 1.6; color: var(--mute); }
+  .it.open { border-color: var(--acc); box-shadow: 0 0 0 2px rgba(14,165,233,.2); }
+  .it.open .more { display: block; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1.5px solid var(--ink); background: rgba(255,255,255,.9); padding: 10px 6px 24px; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: "Noto Sans SC"; font-size: 11.5px; font-weight: 700; color: var(--mute); }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { color: var(--acc); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { cloudFrom, cloudFromPath, renderCloud: render } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+// 高程色带：蓝 → 青 → 绿 → 黄 → 红
+
+// 封面 → 点云：横竖是图片坐标，高度取「暗度」
+// 投影：绕竖轴转 yaw，俯仰 pitch
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ◢</span></div>
+  <header class="top"><div><div class="k">SURVEY · 10/22 · 实时</div><h1>AI 热点</h1></div><button class="radar" id="radar"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="1"/><path class="sw" d="M10 10 L10 1.5" stroke="#0ea5e9" stroke-width="2"/></svg>听热点</button></header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="view" id="view"><canvas id="cv"></canvas>
+        <span class="tick" style="left:6px;top:6px;border-width:1.5px 0 0 1.5px"></span><span class="tick" style="right:6px;top:6px;border-width:1.5px 1.5px 0 0"></span><span class="tick" style="left:6px;bottom:6px;border-width:0 0 1.5px 1.5px"></span><span class="tick" style="right:6px;bottom:6px;border-width:0 1.5px 1.5px 0"></span>
+        <div class="hud" style="left:14px;top:12px">SCAN <b>#01</b><br>PTS <b id="pts">0</b></div>
+        <div class="hud" style="right:14px;top:12px;text-align:right">YAW <b id="yaw">0.0°</b><br>Z <b>0–${heatText(h1)}</b></div>
+        <div class="hud" style="left:14px;bottom:12px">SRC <b>${h1.sources}</b> · PPL <b>${h1.people}</b></div>
+      </div>
+      <h2>${esc(shortTitle(h1))}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 58))}</p>
+      <div class="tbl"><div>热度<b>${heatText(h1)}</b></div><div>来源<b>${h1.sources}</b></div><div>参与<b>${h1.people}</b></div></div>
+    </section>
+    <div class="sect">— 其余 ${rest.length} 个扫描点 —</div>
+    <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}"><canvas></canvas><div><div class="id">SCAN #${pad2(h.rank)}</div><h3>${esc(shortTitle(h))}</h3><div class="m">Z=${heatText(h)} · SRC ${h.sources}</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+const D = 2, cv = $("cv"), W = cv.offsetWidth, H = cv.offsetHeight;
+cv.width = W * D; cv.height = H * D; const ctx = cv.getContext("2d"); ctx.scale(D, D);
+const img = await loadImage(h1.cover);
+const pts = cloudFrom(img, 120, 68);
+$("pts").textContent = pts.length.toLocaleString();
+// 小图
+const minis = await Promise.all([...app.querySelectorAll(".it")].map(async (li, i) => {
+  const h = rest[i], c = li.querySelector("canvas"); c.width = 148; c.height = 128; const x = c.getContext("2d"); x.scale(2, 2);
+  const p = h.cover ? cloudFrom(await loadImage(h.cover), 42, 30) : cloudFromPath(DOODLE[h.rank], 34);
+  li.addEventListener("click", () => li.classList.toggle("open"));
+  return { x, p, ph: i * 0.9 };
+}));
+// ── 激光从左往右扫一遍，扫过的地方才出现点；之后整团慢慢来回转 ──
+const t0 = performance.now();
+(function frame(now) {
+  const t = (now - t0) / 1000, reveal = Math.min(1.02, t / 1.8);
+  const yaw = Math.sin(t * 0.35) * 0.62;
+  render(ctx, W, H, pts, { yaw, pitch: 0.95, scale: W * 0.86, zs: 0.32, reveal, size: 1.25 });
+  if (reveal < 1.01) {
+    const sx = W / 2 + (reveal - 0.5) * W * 0.86 * Math.cos(yaw);
+    ctx.strokeStyle = "rgba(14,165,233,.9)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx, 20); ctx.lineTo(sx, H - 20); ctx.stroke();
+    ctx.fillStyle = "rgba(14,165,233,.12)"; ctx.fillRect(sx - 18, 20, 18, H - 40);
+  }
+  $("yaw").textContent = (yaw * 57.3).toFixed(1) + "°";
+  minis.forEach((m) => render(m.x, 74, 64, m.p, { yaw: Math.sin(t * 0.5 + m.ph) * 0.7, pitch: 1.0, scale: 66, zs: 0.38, reveal: Math.min(1.02, Math.max(0, t - 1.2 - m.ph * 0.15) / 1.2), size: 1.4 }));
+  requestAnimationFrame(frame);
+})(t0);
+app.querySelectorAll(".hero h2, .hero p, .tbl").forEach((el, i) => el.animate([{ opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0 0 0)" }], { duration: 600, delay: 1200 + i * 150, easing: "steps(12, end)", fill: "backwards" }));
+app.querySelectorAll(".it").forEach((li, i) => li.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 400, delay: 1500 + i * 90, fill: "backwards" }));
+const radar = $("radar");
+radar.addEventListener("click", () => radar.classList.toggle("on"));
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

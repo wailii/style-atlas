@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>浮世绘</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #f1e6cd; --blue: #22406b; --blue2: #6c8db3; --pale: #c9d8df; --red: #cc4a2c; --ochre: #d8a443; --ink: #1d1b19; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; background: var(--paper) var(--wood); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 20; }
+  .press { opacity: 0; }
+
+  .sky { position: absolute; left: 0; right: 0; top: 0; height: 120px; background: linear-gradient(var(--blue2), rgba(108,141,179,0) 100%); opacity: .55; }
+  .wave { position: absolute; left: 0; top: 34px; width: 100%; height: 150px; overflow: visible; }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-size: 13px; font-weight: 700; color: var(--blue); position: relative; z-index: 2; }
+  .top { flex: none; height: 116px; position: relative; z-index: 2; }
+  .cart { position: absolute; right: 22px; top: 4px; writing-mode: vertical-rl; background: var(--ochre); border: 2px solid var(--ink); padding: 10px 6px; font-weight: 900; font-size: 22px; letter-spacing: 6px; box-shadow: inset 0 0 0 3px var(--ochre), inset 0 0 0 4px var(--ink); }
+  .cart span { display: block; }
+  .cart .ai { text-combine-upright: all; -webkit-text-combine: horizontal; letter-spacing: 0; }
+  .cart small { display: block; font-size: 11px; letter-spacing: 3px; font-weight: 700; margin-right: 4px; }
+  .listen { position: absolute; left: 20px; top: 60px; width: 52px; height: 52px; border-radius: 50%; background: var(--red); color: #f6efe0; font-weight: 900; font-size: 18px; box-shadow: inset 0 0 0 3px var(--red), inset 0 0 0 4.5px #f6efe0; }
+  .listen.on { animation: bob 1.6s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-5px) rotate(-6deg); } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 30px 16px 24px; scrollbar-width: none; position: relative; z-index: 1; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; }
+  .print { position: relative; border: 2px solid var(--ink); padding: 6px; background: #f6eedb; }
+  .print canvas { display: block; width: 100%; height: 206px; }
+  .print .bokashi { position: absolute; left: 6px; right: 6px; top: 6px; height: 70px; background: linear-gradient(rgba(34,64,107,.75), rgba(34,64,107,0)); mix-blend-mode: multiply; pointer-events: none; }
+  .seal { position: absolute; left: -8px; top: 176px; width: 58px; height: 58px; border-radius: 50%; background: var(--red); color: #f6efe0; display: grid; place-items: center; font-weight: 900; font-size: 24px; box-shadow: inset 0 0 0 3px var(--red), inset 0 0 0 4.5px #f6efe0; z-index: 2; }
+  .hero h2 { margin: 18px 0 0 58px; font-weight: 900; font-size: 22.5px; line-height: 1.45; }
+  .hero h2 b { color: var(--red); }
+  .hero p { margin: 10px 2px 0; font-size: 14px; line-height: 1.8; color: #4a443b; font-weight: 500; }
+  .hero .meta { margin: 10px 2px 0; display: flex; gap: 14px; font-size: 12.5px; font-weight: 700; color: var(--blue); }
+  .sea { display: block; width: 100%; height: 22px; margin: 18px 0 6px; background: radial-gradient(circle at 50% 100%, transparent 6px, var(--blue) 6.5px 8px, transparent 8.5px 10.5px, var(--blue) 11px 12.5px, transparent 13px) 0 0 / 26px 13px, radial-gradient(circle at 50% 100%, transparent 6px, var(--blue2) 6.5px 8px, transparent 8.5px 10.5px, var(--blue2) 11px 12.5px, transparent 13px) 13px 9px / 26px 13px; opacity: .8; }
+
+  .it { position: relative; display: grid; grid-template-columns: 34px 1fr 76px; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid rgba(29,27,25,.25); cursor: pointer; }
+  .it .n { writing-mode: vertical-rl; border: 1.5px solid var(--ink); background: var(--ochre); font-weight: 900; font-size: 14px; letter-spacing: 3px; padding: 6px 4px; justify-self: center; align-self: start; }
+  .it h3 { font-weight: 700; font-size: 16px; line-height: 1.5; }
+  .it p { margin-top: 5px; font-size: 12.5px; line-height: 1.55; color: #6a6257; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .it .more { display: none; margin-top: 8px; font-size: 13.5px; line-height: 1.75; color: #4a443b; }
+  .it.open .more { display: block; }
+  .it.open .n { background: var(--red); color: #f6efe0; }
+  .it .tn { width: 76px; height: 64px; border: 1.5px solid var(--ink); padding: 3px; background: #f6eedb; }
+  .it .tn canvas { width: 100%; height: 100%; display: block; }
+  .it .tn .emb { width: 100%; height: 100%; display: grid; place-items: center; background: var(--blue); color: #f6efe0; font-weight: 900; font-size: 20px; }
+
+  .tabs { flex: none; position: relative; z-index: 2; background: var(--blue); display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 6px 24px; color: #e9dfc8; }
+  .tabs::before { content: ""; position: absolute; left: 0; right: 0; top: -12px; height: 13px; background: radial-gradient(circle at 50% 100%, var(--blue) 6px, transparent 6.5px) 0 0 / 13px 13px; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 700; font-size: 13px; opacity: .75; position: relative; }
+  .tab svg { width: 21px; height: 21px; }
+  .tab.on { opacity: 1; }
+  .tab.on::after { content: ""; position: absolute; right: 14px; top: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 1.5px #f6efe0; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const UKIYO = ["#1d1b19", "#22406b", "#6c8db3", "#c9d8df", "#f1e6cd", "#f6eedb", "#cc4a2c", "#d8a443", "#8a6d48"];
+app.style.setProperty("--grain", `url(${grainURL(220, 0.08, 90)})`);
+app.style.setProperty("--wood", `url(${wood()})`);
+function wood() {
+  const c = document.createElement("canvas"); c.width = 400; c.height = 300; const x = c.getContext("2d");
+  for (let y = 0; y < 300; y += 2) { x.fillStyle = `rgba(140,110,60,${Math.random() * 0.05})`; x.fillRect(0, y + Math.sin(y / 9) * 2, 400, 1 + Math.random() * 2); }
+  return c.toDataURL();
+}
+const SEIGAIHA = `<pattern id="sg" width="20" height="10" patternUnits="userSpaceOnUse"><g fill="none" stroke="#f1e6cd" stroke-width="1" opacity=".55"><circle cx="10" cy="10" r="9"/><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="3"/><circle cx="0" cy="5" r="9"/><circle cx="20" cy="5" r="9"/></g></pattern>`;
+const markRed = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<b>${esc(k)}</b>`) : t; };
+
+app.innerHTML = `
+  <div class="sky"></div>
+  <svg class="wave" id="wave" viewBox="0 0 390 150" preserveAspectRatio="none"><defs>${SEIGAIHA}</defs><path id="w2" fill="#6c8db3"/><path id="w1" fill="#22406b"/><path id="w1p" fill="url(#sg)"/><g id="foam" fill="#f6efe0"></g></svg>
+  <div class="sb"><span>${nowHM()}</span><span>五格</span></div>
+  <header class="top">
+    <div class="cart press"><span><span class="ai" style="display:inline">AI</span>热点</span><small>十月廿二 · 实时</small></div>
+    <button class="listen press" id="listen">听</button>
+  </header>
+  <main class="scroll">
+    <section class="hero">
+      <div class="print press"><canvas id="pc"></canvas><div class="bokashi"></div></div>
+      <div class="seal press">一</div>
+      <h2 class="press">${markRed(h1)}</h2>
+      <p class="press">${esc(clip(firstLine(h1.summary), 62))}</p>
+      <div class="meta press"><span>热度 ${heatText(h1)}</span><span>${h1.sources} 家来报</span></div>
+    </section>
+    <i class="sea press"></i>
+    <ol>${rest.map((h) => `<li class="it press" data-r="${h.rank}"><span class="n">${["", "一", "二", "三", "四", "五", "六", "七", "八"][h.rank]}</span><div><h3>${markRed(h)}</h3><p>${esc(h.latest)}</p><div class="more">${esc(clip(firstLine(h.summary), 90))}</div></div><div class="tn">${h.cover ? "<canvas></canvas>" : `<div class="emb">${["", "", "", "", "", "码", "合", "云", "财"][h.rank]}</div>`}</div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+// ── 大浪：两层浪一直起伏，浪尖带一串白沫 ──
+const w1 = document.getElementById("w1"), w1p = document.getElementById("w1p"), w2 = document.getElementById("w2"), foam = document.getElementById("foam");
+const crest = (x, t, k) => 62 + 16 * Math.sin(x / 46 + t * k) + 7 * Math.sin(x / 19 - t * 1.4 * k) + 4 * Math.sin(x / 9 + t * 2.1);
+function waveD(t, k, dy) {
+  let d = `M0 150 L0 ${crest(0, t, k) + dy}`;
+  for (let x = 0; x <= 390; x += 6) d += ` L${x} ${(crest(x, t, k) + dy).toFixed(1)}`;
+  return d + " L390 150 Z";
+}
+let rise = 0;
+function drawWave(now) {
+  const t = now / 1000; rise = Math.min(1, rise + 0.012);
+  const lift = (1 - Math.pow(1 - rise, 3)) * 0, off = (1 - rise) * 90;
+  w2.setAttribute("d", waveD(t + 2, 0.7, 14 + off));
+  const d1 = waveD(t, 1, 26 + off);
+  w1.setAttribute("d", d1); w1p.setAttribute("d", d1);
+  let html = "";
+  for (let x = 4; x < 390; x += 7) {
+    const y = crest(x, t, 1) + 26 + off, prev = crest(x - 7, t, 1), next = crest(x + 7, t, 1);
+    if (crest(x, t, 1) < prev && crest(x, t, 1) <= next) {
+      for (let k = 0; k < 4; k++) html += `<circle cx="${(x - 8 + k * 5).toFixed(1)}" cy="${(y - 3 - Math.sin(k) * 4).toFixed(1)}" r="${(2.6 - k * 0.4).toFixed(1)}"/>`;
+    } else if (rnd(x + Math.floor(t * 3)) > 0.86) html += `<circle cx="${x}" cy="${(y + 4).toFixed(1)}" r="1.1"/>`;
+  }
+  foam.innerHTML = html;
+  requestAnimationFrame(drawWave);
+}
+requestAnimationFrame(drawWave);
+
+(async () => {
+await fontsReady();
+// 木版：真封面压成几块平色 + 黑线
+loadImage(h1.cover).then((img) => { const c = document.getElementById("pc"), r = c.getBoundingClientRect(); const p = posterCanvas(img, Math.round(r.width * 2), Math.round(r.height * 2), UKIYO, { edge: 0.22, soft: 4 }); c.width = p.width; c.height = p.height; c.getContext("2d").drawImage(p, 0, 0); });
+app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (!h.cover) return; loadImage(h.cover).then((img) => { const c = li.querySelector("canvas"); const p = posterCanvas(img, 140, 116, UKIYO, { edge: 0.3, soft: 3 }); c.width = 140; c.height = 116; c.getContext("2d").drawImage(p, 0, 0); }); });
+
+// 每块像一版一版压上去：从上往下渐显，带一点下压
+const press = (el, delay) => el.animate([{ opacity: 0, clipPath: "inset(0 0 100% 0)", transform: "translateY(-4px)" }, { opacity: 1, clipPath: "inset(0 0 0 0)", transform: "none" }], { duration: 700, delay, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
+const stamp = (el, delay) => el.animate([{ opacity: 0, transform: "scale(1.8) rotate(-10deg)" }, { opacity: 1, transform: "none" }], { duration: 360, delay, easing: "cubic-bezier(.5,0,.6,1)", fill: "forwards" });
+press(app.querySelector(".cart"), 900); stamp(app.querySelector(".listen"), 1300);
+press(app.querySelector(".print"), 500); stamp(app.querySelector(".seal"), 1500);
+app.querySelectorAll(".hero h2, .hero p, .hero .meta").forEach((el, i) => press(el, 1200 + i * 200));
+press(app.querySelector(".sea"), 1700);
+app.querySelectorAll(".it").forEach((li, i) => { press(li, 1850 + i * 140); li.addEventListener("click", () => li.classList.toggle("open")); });
+const listen = document.getElementById("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.textContent = on ? "停" : "听"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

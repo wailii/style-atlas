@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>窗花剪纸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  @property --p { syntax: "<percentage>"; inherits: false; initial-value: 12.5%; }
+  :root { --paper: #fbf6ec; --red: #d2231e; --red2: #9e1611; --gold: #d9a441; --ink: #3a2a1e; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 30; }
+  .corner { position: absolute; top: 0; width: 92px; height: 92px; z-index: 0; opacity: .92; }
+  .corner.l { left: 0; } .corner.r { right: 0; transform: scaleX(-1); }
+  .corner canvas { width: 100%; height: 100%; }
+  .app > *:not(.corner) { position: relative; z-index: 1; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: center; gap: 120px; padding-top: 6px; font-size: 14px; font-weight: 700; color: var(--red2); }
+  .top { flex: none; display: flex; flex-direction: column; align-items: center; padding: 0 18px 4px; }
+  h1 { font-weight: 900; font-size: 32px; color: var(--red); letter-spacing: 4px; }
+  .date { font-size: 12.5px; color: #8a6f58; letter-spacing: 3px; margin-top: 2px; }
+  .meander { height: 14px; flex: none; margin: 8px 16px 0; background: var(--meander) repeat-x center / auto 14px; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 18px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { position: relative; padding-top: 4px; }
+  .hang { position: relative; width: 268px; margin: 0 auto; transform-origin: 50% -30px; }
+  .hang::before { content: ""; position: absolute; left: 50%; top: -30px; width: 2px; height: 34px; background: var(--red); }
+  .win { position: relative; width: 268px; height: 268px; border-radius: 50%; overflow: hidden; }
+  .win img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: sepia(.35) saturate(1.1) brightness(1.05); }
+  .win canvas { position: absolute; inset: 0; width: 100%; height: 100%; -webkit-mask-image: conic-gradient(from -90deg, #000 var(--p), transparent 0); mask-image: conic-gradient(from -90deg, #000 var(--p), transparent 0); filter: drop-shadow(0 2px 2px rgba(80,10,5,.35)); }
+  .win canvas.open { --p: 100%; transition: --p 1.6s steps(8, end); }
+  .listen { position: absolute; right: 2px; top: 200px; width: 62px; height: 62px; }
+  .listen canvas { width: 100%; height: 100%; }
+  .listen b { position: absolute; inset: 0; display: grid; place-items: center; color: var(--paper); font-weight: 900; font-size: 20px; }
+  .listen.on canvas { animation: spin 6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .dia { position: absolute; left: 6px; top: 210px; width: 48px; height: 48px; background: var(--red); transform: rotate(45deg); display: grid; place-items: center; box-shadow: inset 0 0 0 3px var(--red), inset 0 0 0 4.5px var(--paper); }
+  .dia b { transform: rotate(-45deg); color: var(--paper); font-weight: 900; font-size: 18px; }
+  .hero h2 { margin-top: 18px; text-align: center; font-weight: 900; font-size: 21px; line-height: 1.45; }
+  em { font-style: normal; color: var(--red); }
+  .hero p { margin-top: 8px; font-size: 13.5px; line-height: 1.75; color: #6b5442; text-align: center; padding: 0 6px; }
+  .hero .m { margin-top: 8px; text-align: center; font-size: 12.5px; color: var(--red2); font-weight: 700; letter-spacing: 2px; }
+
+  ol { list-style: none; margin-top: 16px; }
+  .it { position: relative; display: grid; grid-template-columns: 40px 1fr 70px; gap: 12px; align-items: center; padding: 13px 0; cursor: pointer; }
+  .it + .it { border-top: 1px dashed rgba(210,35,30,.35); }
+  .it .n { width: 30px; height: 30px; background: var(--red); transform: rotate(45deg); display: grid; place-items: center; margin-left: 4px; }
+  .it .n b { transform: rotate(-45deg); color: var(--paper); font-size: 13px; font-weight: 900; }
+  .it h3 { font-weight: 700; font-size: 15.5px; line-height: 1.5; }
+  .it .s { margin-top: 3px; font-size: 12px; color: #8a6f58; }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.7; color: #6b5442; }
+  .it.open .more { display: block; }
+  .it.open .n { background: var(--gold); }
+  .it .tn { width: 70px; height: 70px; -webkit-mask-image: var(--scallop); mask-image: var(--scallop); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; background: #f3e4d4; }
+  .it .tn canvas { width: 100%; height: 100%; display: block; }
+
+  .tabs { flex: none; padding: 0 8px 24px; }
+  .tabs .meander { margin: 0 8px 8px; }
+  .tabs .row { display: grid; grid-template-columns: repeat(5, 1fr); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 700; font-size: 13.5px; color: #8a6f58; }
+  .tab i { width: 9px; height: 9px; background: var(--red); transform: rotate(45deg) scale(0); transition: transform .3s; }
+  .tab.on { color: var(--red); }
+  .tab.on i { transform: rotate(45deg) scale(1); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { papercut, cornerCut } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const RED = "#d2231e";
+app.style.setProperty("--grain", `url(${grainURL(200, 0.06, 80)})`);
+app.style.setProperty("--meander", `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='28' height='14'><path d='M0 13 H26 V1 H6 V9 H18 V5 H12' fill='none' stroke='${RED}' stroke-width='2'/></svg>`)}")`);
+app.style.setProperty("--scallop", `url(${scallop()})`);
+function scallop() {
+  const c = document.createElement("canvas"); c.width = c.height = 140; const x = c.getContext("2d"); x.fillStyle = "#000";
+  x.fillRect(10, 10, 120, 120); for (let i = 0; i < 6; i++) { const p = 10 + 10 + i * 20; [[p, 10], [p, 130], [10, p], [130, p]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 10, 0, 7); x.fill(); }); }
+  return c.toDataURL();
+}
+
+// ── 程序剪窗花：只在一个扇区里剪，再旋转 8 次、每次镜像一次 ──
+// 角花：四分之一扇形
+const markRed = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<em>${esc(k)}</em>`) : t; };
+
+app.innerHTML = `
+  <div class="corner l"></div><div class="corner r"></div>
+  <div class="sb"><span>${nowHM()}</span><span>五格</span></div>
+  <header class="top"><h1>AI 热点</h1><div class="date">十月廿二 · 周四 · 实时</div></header>
+  <i class="meander"></i>
+  <main class="scroll">
+    <section class="hero">
+      <div style="height:34px"></div>
+      <div class="hang" id="hang"><div class="win"><img src="${h1.cover}" alt=""><canvas id="pc"></canvas></div></div>
+      <div class="dia"><b>01</b></div>
+      <button class="listen" id="listen"><canvas id="lc"></canvas><b>听</b></button>
+      <h2>${markRed(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 58))}</p>
+      <div class="m">热度 ${heatText(h1)} · ${h1.sources} 家</div>
+    </section>
+    <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}"><span class="n"><b>${pad2(h.rank)}</b></span><div><h3>${markRed(h)}</h3><div class="s">热度 ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn"><canvas></canvas></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs"><i class="meander" style="display:block"></i><div class="row">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}<i></i></button>`).join("")}</div></nav>`;
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+const put = (cv, src) => { cv.width = src.width; cv.height = src.height; cv.getContext("2d").drawImage(src, 0, 0); };
+put($("pc"), papercut(536, 3));
+put($("lc"), papercut(124, 11, { folds: 6, rim: false }));
+app.querySelectorAll(".corner").forEach((el, i) => { const cv = document.createElement("canvas"); put(cv, cornerCut(240)); el.appendChild(cv); });
+// 列表小图：封面剪成红色剪影；没封面就剪一朵小花
+app.querySelectorAll(".it").forEach((li, i) => {
+  const h = rest[i], cv = li.querySelector("canvas");
+  if (h.cover) loadImage(h.cover).then((img) => put(cv, thresholdCanvas(img, 140, 140, { cut: 0.55, ink: RED, paper: "#fbf6ec", soft: 2 })));
+  else put(cv, papercut(140, 20 + i, { folds: 6 }));
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+// ── 入场：剪好的纸一折一折打开，然后像挂在窗上一样轻轻摆 ──
+setTimeout(() => $("pc").classList.add("open"), 400);
+app.querySelectorAll(".corner canvas").forEach((c, i) => c.animate([{ transform: "scale(0) rotate(-90deg)", transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], { duration: 700, delay: 200 + i * 120, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "backwards" }));
+$("hang").animate([{ transform: "rotate(0)" }, { transform: "rotate(2.2deg)" }, { transform: "rotate(0)" }, { transform: "rotate(-2.2deg)" }, { transform: "rotate(0)" }], { duration: 5200, iterations: Infinity, easing: "ease-in-out" });
+const cutIn = (el, d) => el.animate([{ clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)" }, { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)" }], { duration: 600, delay: d, easing: "steps(10, end)", fill: "backwards" });
+cutIn(app.querySelector(".hero h2"), 1900); cutIn(app.querySelector(".hero p"), 2100);
+app.querySelector(".dia").animate([{ transform: "rotate(225deg) scale(0)" }, { transform: "rotate(45deg)" }], { duration: 600, delay: 1700, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "backwards" });
+app.querySelectorAll(".it").forEach((li, i) => cutIn(li, 2200 + i * 110));
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.querySelector("b").textContent = on ? "停" : "听"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

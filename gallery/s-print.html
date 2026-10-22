@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>打印纸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fbfaf5; --bar: #e3f0de; --ink: #25253a; --ink2: #5b5b72; --hole: #d9d6cb; --red: #c8382e; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #e9e6dc; }
+  body { font-family: "IBM Plex Mono", "Noto Sans SC", monospace; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-size: 13px; font-weight: 700; background: #e9e6dc; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; position: relative; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .sheet { position: relative; margin: 0 4px; min-height: 100%; padding: 14px 32px 40px; background: repeating-linear-gradient(var(--paper) 0 72px, var(--bar) 72px 144px); box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
+  .sheet::before, .sheet::after { content: ""; position: absolute; top: 0; bottom: 0; width: 24px; background: radial-gradient(circle at 12px 12px, #e9e6dc 0 5.5px, transparent 6px) 0 0 / 24px 24px, var(--paper); border-right: 1.5px dashed #cfcbbd; }
+  .sheet::before { left: 0; }
+  .sheet::after { right: 0; border-right: 0; border-left: 1.5px dashed #cfcbbd; }
+  .ribbon { position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: screen; opacity: .8; z-index: 3; }
+
+  .ln { position: relative; white-space: pre; font-size: 12.5px; line-height: 24px; height: 24px; overflow: hidden; text-shadow: 0 0 .6px rgba(37,37,58,.6); }
+  .ln.wrap { white-space: pre-wrap; height: auto; }
+  .ln.dim { color: var(--ink2); }
+  .ln.big { font-family: "Noto Sans SC", sans-serif; font-weight: 900; font-size: 22px; line-height: 32px; height: auto; white-space: normal; -webkit-mask-image: radial-gradient(circle, #000 .85px, transparent 1.15px); mask-image: radial-gradient(circle, #000 .85px, transparent 1.15px); -webkit-mask-size: 2.2px 2.2px; mask-size: 2.2px 2.2px; }
+  .ln.huge { font-weight: 900; font-size: 44px; line-height: 48px; height: 48px; letter-spacing: 2px; }
+  .ln.red { color: var(--red); }
+  .art { font-size: 7.2px; line-height: 7.2px; height: auto; letter-spacing: 0; color: var(--ink); text-shadow: none; padding: 6px 0; }
+  .art div { height: 7.2px; overflow: hidden; }
+  .row { cursor: pointer; }
+  .row .more { display: none; }
+  .row.open .more { display: block; }
+  .listen { position: absolute; right: 30px; top: 46px; font-size: 13px; font-weight: 700; padding: 0 2px; }
+  .listen.on { background: var(--ink); color: var(--paper); }
+  .head { position: absolute; z-index: 4; width: 9px; height: 18px; background: #44445c; border-radius: 2px; box-shadow: 0 0 0 2px rgba(68,68,92,.18); pointer-events: none; opacity: 0; }
+  .cur { display: inline-block; width: 8px; height: 15px; background: var(--ink); vertical-align: -3px; animation: bl 1s steps(1) infinite; }
+  @keyframes bl { 50% { opacity: 0; } }
+
+  .tabs { flex: none; display: flex; justify-content: space-between; padding: 10px 18px 24px; background: #e9e6dc; border-top: 1.5px dashed #b8b4a5; font-size: 13px; font-weight: 700; }
+  .tab { padding: 3px 5px; color: var(--ink2); }
+  .tab.on { background: var(--ink); color: var(--paper); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const maxHeat = Math.max(...HOT.map((h) => h.heat));
+const bar = (h, n) => { const k = Math.max(1, Math.round((h.heat / maxHeat) * n)); return "[" + "#".repeat(k) + "-".repeat(n - k) + "]"; };
+const RULE = "=".repeat(44), THIN = "-".repeat(44);
+const L = (t, cls = "") => `<div class="ln ${cls}">${t}</div>`;
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G [|||]</span></div>
+  <main class="scroll" id="scroll"><div class="sheet" id="sheet">
+    ${L(RULE)}
+    ${L("AI热点", "huge")}
+    ${L(`每日热榜 · 2026-10-22 周四`, "dim")}
+    ${L(`打印于 ${nowHM()}  ·  第 001 页`, "dim")}
+    ${L(RULE)}
+    ${L(`&gt; #01  ★★★★★  热度 ${heatText(h1)}`, "red")}
+    <div class="ln art" id="art"></div>
+    ${L(esc(shortTitle(h1)), "big")}
+    ${L(esc(clip(firstLine(h1.summary), 66)), "wrap dim")}
+    ${L(`热度 ${bar(h1, 22)} ${heatText(h1)}`)}
+    ${L(`来源 ${h1.sources} 家 · 参与 ${h1.people} 人`, "dim")}
+    ${L(THIN)}
+    ${rest.map((h) => `<div class="row" data-r="${h.rank}">
+      ${L(`${pad2(h.rank)}  ${esc(clip(shortTitle(h), 22))}`)}
+      ${L(`    ${bar(h, 16)} ${heatText(h)} · ${h.sources} 家`, "dim")}
+      <div class="more">${L(esc(clip(firstLine(h.summary), 70)), "wrap dim")}</div>
+    </div>`).join("")}
+    ${L(THIN)}
+    ${L(`-- 共 ${HOT.length} 条 · 到此为止 --`, "dim")}
+    <div class="ln" id="end">&gt; <span class="cur"></span></div>
+    <button class="listen" id="listen">[▶ 听热点]</button>
+    <div class="head" id="head"></div>
+  </div><div class="ribbon"></div></main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${i ? n : `[${n}]`}</button>`).join("")}</nav>`;
+app.querySelector(".ribbon").style.setProperty("--grain", `url(${grainURL(180, 0.5, 255)})`);
+
+const $ = (id) => document.getElementById(id);
+(async () => {
+await fontsReady();
+const img = await loadImage(h1.cover);
+$("art").innerHTML = asciiRows(img, 74, 24, " .,:;-=+*#%@").map((r) => `<div>${esc(r)}</div>`).join("");
+
+// ── 一行一行打出来：每行按字数分步揭开，打印头跟着走 ──
+const sheet = $("sheet"), head = $("head");
+const lines = [...sheet.querySelectorAll(".ln:not(.more .ln), #art > div")].filter((el) => el.id !== "art");
+let t = 200;
+lines.forEach((el) => {
+  const isArt = el.parentElement.id === "art";
+  const chars = Math.max(4, el.textContent.length), dur = isArt ? 70 : Math.min(520, chars * (el.classList.contains("huge") ? 70 : 16));
+  const steps = isArt ? 6 : Math.min(chars, 40);
+  el.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: dur, delay: t, easing: `steps(${steps}, end)`, fill: "backwards" });
+  const er = el.getBoundingClientRect(), top = er.top - sheet.getBoundingClientRect().top + (er.height - 18) / 2;
+  head.animate([{ opacity: 1, left: "32px", top: top + "px" }, { opacity: 1, left: Math.min(sheet.clientWidth - 40, 32 + el.scrollWidth) + "px", top: top + "px" }], { duration: dur, delay: t, easing: `steps(${steps}, end)` });
+  t += dur + (isArt ? 0 : 40);
+});
+$("listen").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 10, delay: 1200, fill: "backwards" });
+
+// 交互：点一条，把摘要接着打在下面
+sheet.querySelectorAll(".row").forEach((r) => r.addEventListener("click", () => {
+  const open = r.classList.toggle("open");
+  if (open) { const m = r.querySelector(".more .ln"); m.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 600, easing: "steps(24, end)" }); }
+}));
+$("listen").addEventListener("click", () => {
+  const on = $("listen").classList.toggle("on");
+  $("listen").textContent = on ? "[■ 在听 01]" : "[▶ 听热点]";
+});
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((tb, i) => tb.addEventListener("click", () => tabs.forEach((x, j) => { x.classList.toggle("on", x === tb); x.textContent = x === tb ? `[${TAB_NAMES[j]}]` : TAB_NAMES[j]; })));
+})();
+</script>
+</body>
+</html>

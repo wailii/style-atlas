@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>立体书</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --page: #fbf5e9; --page2: #f4ead6; --ink: #2f2a26; --coral: #f28b6e; --mint: #8fd1b8; --sky: #8ec3f0; --butter: #f7d774; --lilac: #b9a6e8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--page); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; background: linear-gradient(180deg, var(--page) 0 60%, var(--page2)); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 50; }
+  .card { background: #fffaf0; border-radius: 10px; box-shadow: 0 2px 0 #e3d6bd, 0 8px 16px -8px rgba(80,60,30,.35); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: Fredoka, sans-serif; font-weight: 600; font-size: 15px; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 2px 18px 4px; }
+  h1 { font-weight: 900; font-size: 34px; letter-spacing: -1px; display: flex; gap: 2px; perspective: 400px; }
+  h1 span { display: inline-block; padding: 2px 6px; border-radius: 8px; box-shadow: 0 2px 0 rgba(0,0,0,.12); transform-origin: bottom; }
+  .date { margin-top: 6px; font-size: 12.5px; color: #8a8072; font-weight: 500; }
+  .pull { position: relative; width: 96px; height: 44px; }
+  .pull .slot { position: absolute; inset: 8px 0 8px 18px; border-radius: 6px; background: #e9dcc2; box-shadow: inset 0 2px 4px rgba(80,60,30,.3); }
+  .pull .tabk { position: absolute; left: 0; top: 4px; height: 36px; padding: 0 12px 0 10px; border-radius: 8px; background: var(--coral); color: #fff; font-weight: 900; font-size: 14px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 0 #c96b51; transition: transform .45s cubic-bezier(.3,1.5,.5,1); }
+  .pull.on .tabk { transform: translateX(26px); background: var(--mint); box-shadow: 0 2px 0 #63a88f; color: var(--ink); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 28px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .stage { position: relative; height: 262px; perspective: 820px; perspective-origin: 50% 0%; }
+  .base { position: absolute; left: 6px; right: 6px; top: 70px; height: 230px; transform-style: preserve-3d; transform: rotateX(var(--tilt, 58deg)) rotateZ(var(--rz, 0deg)); transform-origin: 50% 50%; background: linear-gradient(90deg, rgba(0,0,0,0) 48%, rgba(80,60,30,.12) 50%, rgba(0,0,0,0) 52%), var(--page2); border-radius: 12px; box-shadow: 0 30px 40px -20px rgba(80,60,30,.35); }
+  .lay { position: absolute; transform-origin: 50% 100%; transform-style: preserve-3d; }
+  .sh { position: absolute; height: 26px; border-radius: 50%; background: radial-gradient(rgba(80,60,30,.35), rgba(80,60,30,0) 70%); transform-origin: 50% 0; }
+  .lay.pic { left: 34px; width: 270px; height: 160px; top: calc(70px - 160px); padding: 8px; }
+  .lay.pic img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; display: block; }
+  .lay.rib { left: 60px; width: 150px; height: 42px; top: calc(140px - 42px); background: var(--butter); box-shadow: 0 2px 0 #cfae45, 0 8px 16px -8px rgba(80,60,30,.4); border-radius: 6px; display: grid; place-items: center; font-weight: 900; font-size: 16px; clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%, 8% 50%); }
+  .lay.no { left: 18px; width: 74px; height: 74px; top: calc(206px - 74px); background: var(--mint); border-radius: 50%; box-shadow: 0 2px 0 #63a88f, 0 8px 16px -8px rgba(80,60,30,.4); display: grid; place-items: center; font-family: Fredoka, sans-serif; font-weight: 700; font-size: 32px; }
+  .lay.tree { width: 64px; height: 92px; top: calc(200px - 92px); }
+  .lay.tree svg { width: 100%; height: 100%; overflow: visible; }
+
+  .hero h2 { margin: 14px 2px 0; font-weight: 900; font-size: 22px; line-height: 1.42; }
+  .hero h2 mark { background: linear-gradient(transparent 55%, var(--butter) 55% 92%, transparent 92%); color: inherit; padding: 0 2px; }
+  .hero p { margin: 10px 2px 0; font-size: 14px; line-height: 1.75; color: #5d554b; }
+  .chips { display: flex; gap: 8px; margin: 12px 2px 0; }
+  .chips span { font-size: 12.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #fff; box-shadow: 0 2px 0 #e3d6bd; }
+
+  ol { list-style: none; display: flex; flex-direction: column; gap: 14px; margin-top: 22px; perspective: 700px; }
+  .it { position: relative; display: grid; grid-template-columns: 1fr 76px; gap: 12px; padding: 12px 14px 12px 14px; cursor: pointer; transform-origin: 50% 100%; }
+  .it .n { display: inline-block; font-family: Fredoka, sans-serif; font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: 999px; margin-bottom: 6px; }
+  .it h3 { font-weight: 700; font-size: 15.5px; line-height: 1.5; }
+  .it .more { max-height: 0; overflow: hidden; transition: max-height .5s cubic-bezier(.3,1.2,.5,1); font-size: 13px; line-height: 1.7; color: #5d554b; }
+  .it.open .more { max-height: 160px; }
+  .it .more div { padding-top: 8px; }
+  .it .tn { position: relative; perspective: 300px; }
+  .it .tn > div { position: absolute; inset: 0; border-radius: 8px; overflow: hidden; transform-origin: 50% 100%; box-shadow: 0 2px 0 rgba(0,0,0,.1); display: grid; place-items: center; }
+  .it .tn img { width: 100%; height: 100%; object-fit: cover; }
+  .it .tn svg { width: 46px; height: 46px; }
+  .it .tab { position: absolute; right: -8px; top: 14px; width: 20px; height: 34px; border-radius: 0 6px 6px 0; transition: transform .45s cubic-bezier(.3,1.5,.5,1); }
+  .it.open .tab { transform: translateX(10px); }
+
+  .tabs { flex: none; display: flex; gap: 6px; align-items: flex-end; padding: 0 12px; height: 86px; position: relative; }
+  .tabs::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18px; background: var(--page2); box-shadow: 0 -1px 0 #e3d6bd; z-index: 2; }
+  .tb { flex: 1; height: 66px; border-radius: 12px 12px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 7px; font-weight: 700; font-size: 12.5px; transform: translateY(8px); transition: transform .4s cubic-bezier(.3,1.6,.5,1); box-shadow: inset 0 -6px 8px -6px rgba(0,0,0,.15); }
+  .tb svg { width: 18px; height: 18px; }
+  .tb.on { transform: translateY(-6px); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const PAL = ["#f28b6e", "#8fd1b8", "#8ec3f0", "#f7d774", "#b9a6e8"];
+app.style.setProperty("--grain", `url(${grainURL(200, 0.05, 80)})`);
+const TREE = (c) => `<svg viewBox="0 0 64 92"><rect x="29" y="56" width="6" height="36" rx="2" fill="#a9876a"/><path d="M32 4 C50 18 58 34 54 50 C50 62 14 62 10 50 C6 34 14 18 32 4 Z" fill="${c}"/><path d="M32 18 C38 26 42 34 40 44" stroke="rgba(255,255,255,.55)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
+const mark = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<mark>${esc(k)}</mark>`) : t; };
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ◔</span></div>
+  <header class="top">
+    <div><h1>${["AI", "热", "点"].map((c, i) => `<span style="background:${PAL[i]}">${c}</span>`).join("")}</h1><div class="date">10 月 22 日 · 周四 · 实时</div></div>
+    <button class="pull" id="pull"><i class="slot"></i><span class="tabk">▶ 听热点</span></button>
+  </header>
+  <main class="scroll" id="scroll">
+    <section class="hero">
+      <div class="stage" id="stage"><div class="base" id="base">
+        <i class="sh" style="left:40px;width:260px;top:62px"></i><i class="sh" style="left:62px;width:150px;top:132px"></i><i class="sh" style="left:14px;width:84px;top:198px"></i><i class="sh" style="left:236px;width:70px;top:192px"></i><i class="sh" style="left:280px;width:54px;top:160px"></i>
+        <div class="lay pic card" data-d="0"><img src="${h1.cover}" alt=""></div>
+        <div class="lay tree" style="left:278px;width:50px;height:72px;top:calc(166px - 72px)" data-d="1">${TREE("#b9a6e8")}</div>
+        <div class="lay rib" data-d="2">今日头条</div>
+        <div class="lay tree" style="left:236px" data-d="3">${TREE("#8fd1b8")}</div>
+        <div class="lay no" data-d="4">01</div>
+      </div></div>
+      <h2>${mark(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 60))}</p>
+      <div class="chips"><span>热度 ${heatText(h1)}</span><span>${h1.sources} 家在说</span></div>
+    </section>
+    <ol>${rest.map((h, i) => `<li class="it card" data-r="${h.rank}"><i class="tab" style="background:${PAL[i % 5]}"></i><div><span class="n" style="background:${PAL[i % 5]}">No.${h.rank}</span><h3>${mark(h)}</h3><div class="more"><div>${esc(clip(firstLine(h.summary), 90))}</div></div></div><div class="tn"><div style="background:${PAL[(i + 2) % 5]}">${h.cover ? `<img src="${h.cover}" alt="">` : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#2f2a26" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tb ${i ? "" : "on"}" style="background:${PAL[i]}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const SPRING = "cubic-bezier(.3,1.55,.45,1)";
+(async () => {
+await fontsReady();
+// ── 翻开这一页：各层纸从书页上立起来，影子跟着变深 ──
+const tilt = 58;
+$("base").animate([{ transform: `rotateX(84deg)` }, { transform: `rotateX(${tilt}deg)` }], { duration: 900, delay: 100, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
+app.querySelectorAll(".lay").forEach((l) => {
+  const d = +l.dataset.d;
+  l.animate([{ transform: "rotateX(0deg)" }, { transform: `rotateX(${-tilt - 4}deg)` }], { duration: 900, delay: 600 + d * 160, easing: SPRING, fill: "both" });
+});
+app.querySelectorAll(".sh").forEach((s, i) => s.animate([{ transform: "scaleY(0)", opacity: 0 }, { transform: "scaleY(1)", opacity: 1 }], { duration: 700, delay: 600 + i * 160, fill: "both" }));
+app.querySelectorAll("h1 span").forEach((s, i) => s.animate([{ transform: "rotateX(90deg)" }, { transform: "none" }], { duration: 700, delay: 200 + i * 120, easing: SPRING, fill: "both" }));
+app.querySelectorAll(".hero h2, .hero p, .chips").forEach((el, i) => el.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 600, delay: 1300 + i * 140, fill: "both", easing: "ease-out" }));
+// 列表：卡片滚进来时从桌面翻起，小图再单独立起来
+const io = new IntersectionObserver((es) => es.forEach((e) => {
+  if (!e.isIntersecting) return;
+  const li = e.target, d = Math.max(0, 1500 - performance.now()) + (+li.dataset.k % 4) * 120;
+  li.animate([{ transform: "rotateX(80deg)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 800, delay: d, easing: SPRING, fill: "both" });
+  li.querySelector(".tn > div").animate([{ transform: "rotateX(-90deg)" }, { transform: "none" }], { duration: 700, delay: d + 300, easing: SPRING, fill: "both" });
+  io.unobserve(li);
+}), { root: $("scroll"), threshold: 0.1 });
+app.querySelectorAll(".it").forEach((li, i) => { li.dataset.k = i; io.observe(li); li.addEventListener("click", () => li.classList.toggle("open")); });
+app.querySelectorAll(".tb").forEach((t, i) => t.animate([{ transform: "translateY(60px)" }, { transform: t.classList.contains("on") ? "translateY(-6px)" : "translateY(8px)" }], { duration: 700, delay: 300 + i * 70, easing: SPRING }));
+
+// 立好之后整页轻轻转，手指拖动有视差
+const base = $("base"); let mx = 0, tmx = 0;
+$("stage").addEventListener("pointermove", (e) => { const r = e.currentTarget.getBoundingClientRect(); tmx = ((e.clientX - r.left) / r.width - 0.5) * 2; });
+$("stage").addEventListener("pointerleave", () => (tmx = 0));
+(function sway(now) { mx += (tmx - mx) * 0.08; base.style.setProperty("--rz", (Math.sin(now / 1600) * 3 + mx * 7).toFixed(2) + "deg"); requestAnimationFrame(sway); })(0);
+
+const pull = $("pull");
+pull.addEventListener("click", () => { const on = pull.classList.toggle("on"); pull.querySelector(".tabk").textContent = on ? "■ 在听" : "▶ 听热点"; });
+const tbs = [...app.querySelectorAll(".tb")];
+tbs.forEach((t) => t.addEventListener("click", () => tbs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

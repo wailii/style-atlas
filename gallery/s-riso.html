@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>孔版印刷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=ZCOOL+QingKe+HuangYou&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #f5f0e4; --blue: #0078bf; --pink: #ff48b0; --mx: 0px; --my: 0px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--blue); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .grain { position: absolute; inset: 0; pointer-events: none; z-index: 30; background-image: var(--grain); mix-blend-mode: multiply; opacity: .75; }
+  .speck { position: absolute; inset: 0; pointer-events: none; z-index: 31; background-image: var(--speck); mix-blend-mode: screen; opacity: .55; }
+
+  /* 粉色这一版整体可以错位：所有 .P 一起挪 */
+  .B { mix-blend-mode: multiply; }
+  .P { mix-blend-mode: multiply; translate: var(--mx) var(--my); }
+  .dbl { position: relative; }
+  .dbl::after { content: attr(data-t); position: absolute; inset: 0; color: var(--pink); mix-blend-mode: multiply; translate: calc(var(--mx) + 2px) calc(var(--my) + 1px); pointer-events: none; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: "Archivo Black", sans-serif; font-size: 14px; }
+
+  .top { flex: none; position: relative; display: flex; justify-content: space-between; align-items: flex-start; padding: 2px 18px 12px; }
+  h1 { font-family: "ZCOOL QingKe HuangYou", sans-serif; font-weight: 400; font-size: 60px; line-height: 1; letter-spacing: 1px; }
+  .date { margin-top: 4px; font-size: 12.5px; font-weight: 700; letter-spacing: 1.5px; color: var(--pink); mix-blend-mode: multiply; }
+  .listen { position: relative; margin-top: 10px; width: 108px; height: 46px; }
+  .listen .ink { position: absolute; inset: 0; border-radius: 23px; background: var(--pink); }
+  .listen .lbl { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 900; font-size: 15px; color: var(--blue); }
+  .listen .lbl i { width: 0; height: 0; border-left: 10px solid var(--blue); border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+  .ring { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; border: 3px dotted var(--pink); opacity: 0; pointer-events: none; }
+  .listen.on .ring { animation: ring 1.6s infinite steps(8, end); }
+  .listen.on .ring:nth-child(2) { animation-delay: .53s; } .listen.on .ring:nth-child(3) { animation-delay: 1.06s; }
+  @keyframes ring { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(3.2); opacity: 0; } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 30px; scrollbar-width: none; position: relative; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .hero { position: relative; }
+  .art { position: relative; height: 228px; -webkit-mask-image: var(--rough); mask-image: var(--rough); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+  .art canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .art canvas.P { mix-blend-mode: multiply; }
+  .num { position: absolute; left: -4px; top: 168px; font-family: "Archivo Black", sans-serif; font-size: 104px; line-height: 1; letter-spacing: -4px; color: var(--pink); z-index: 2; }
+  .hero h2 { position: relative; margin: 30px 0 0 6px; font-weight: 900; font-size: 24px; line-height: 1.38; padding-left: 120px; min-height: 66px; }
+  .hero h2 .k { white-space: nowrap; }
+  .hlp { position: absolute; background: var(--pink); }
+  .hero p { margin: 14px 2px 0 6px; font-size: 14px; line-height: 1.7; font-weight: 500; }
+  .stats { display: flex; align-items: center; gap: 12px; margin: 16px 2px 0 6px; font-weight: 900; font-size: 13px; }
+  .stats .h { font-family: "Archivo Black", sans-serif; font-size: 30px; line-height: 1; }
+  .dots { flex: 1; height: 16px; background-image: radial-gradient(circle, var(--pink) 0 var(--d, 2px), transparent calc(var(--d, 2px) + .5px)); background-size: 7px 7px; mix-blend-mode: multiply; translate: var(--mx) var(--my); -webkit-mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.25)); mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.25)); }
+
+  .rule { height: 6px; margin: 24px 0 2px; background-image: radial-gradient(circle, var(--blue) 0 1.5px, transparent 2px); background-size: 7px 6px; }
+
+  .it { position: relative; display: grid; grid-template-columns: 52px 1fr 80px; gap: 10px; padding: 16px 0 17px; cursor: pointer; }
+  .it::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background-image: radial-gradient(circle, var(--blue) 0 1px, transparent 1.4px); background-size: 6px 2px; opacity: .8; }
+  .it .n { position: relative; font-family: "Archivo Black", sans-serif; font-size: 32px; line-height: 1; color: var(--pink); mix-blend-mode: multiply; translate: var(--mx) var(--my); }
+  .it .n::before { content: ""; position: absolute; left: -4px; top: -4px; width: 46px; height: 42px; background: var(--blue); opacity: 0; mix-blend-mode: multiply; translate: calc(var(--mx) * -1) calc(var(--my) * -1); }
+  .it.open .n::before { opacity: 1; animation: stamp .3s steps(3, end); }
+  @keyframes stamp { from { transform: scale(1.4) rotate(-6deg); } to { transform: none; } }
+  .it h3 { font-size: 16.5px; font-weight: 900; line-height: 1.42; }
+  .it .m { margin-top: 7px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; }
+  .it .m .dots { flex: none; height: 9px; background-size: 5px 5px; --d: 1.6px; }
+  .it .more { display: none; margin-top: 8px; font-size: 13.5px; line-height: 1.7; font-weight: 500; }
+  .it.open .more { display: block; }
+  .tn { position: relative; width: 80px; height: 72px; -webkit-mask-image: var(--rough); mask-image: var(--rough); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+  .tn canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .tn .ty { position: absolute; inset: 0; display: grid; place-items: center; font-family: "Archivo Black", "Noto Sans SC", sans-serif; font-weight: 900; font-size: 25px; }
+  .tn .ty.blk { background: var(--blue); color: var(--paper); }
+  .tn .ty.pk { background: var(--pink); color: var(--blue); }
+
+  .tabs { flex: none; position: relative; z-index: 5; background: var(--blue); padding: 12px 8px 24px; display: grid; grid-template-columns: repeat(5, 1fr); -webkit-mask-image: var(--roughTop); mask-image: var(--roughTop); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--paper); font-weight: 900; font-size: 12px; padding-top: 4px; }
+  .tab svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; position: relative; }
+  .tab span { position: relative; }
+  .tab .pb { position: absolute; left: 50%; top: -2px; width: 56px; height: 52px; margin-left: -28px; background: var(--pink); mix-blend-mode: multiply; translate: var(--mx) var(--my); border-radius: 4px; display: none; }
+  .tab.on .pb { display: block; }
+
+  .roller { position: absolute; left: 0; right: 0; top: 0; height: 26px; z-index: 40; pointer-events: none; transform: translateY(-40px); }
+  .roller.b { background: linear-gradient(var(--blue), rgba(0,120,191,.0)); }
+  .roller.p { background: linear-gradient(var(--pink), rgba(255,72,176,.0)); mix-blend-mode: multiply; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { riso } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const maxHeat = Math.max(...HOT.map((h) => h.heat));
+const ICONS = [
+  "M4 6 H20 M4 12 H20 M4 18 H14",
+  "M12 3 C16 8 19 11 19 15 C19 19 16 21 12 21 C8 21 5 19 5 15 C5 11 9 10 9 6 C11 8 11 9 12 3 Z",
+  "M6 3 H15 L19 7 V21 H6 Z M9 11 H16 M9 15 H16",
+  "M5 20 V13 M10 20 V6 M15 20 V10 M20 20 V15",
+  "M5 12 A7 7 0 1 0 8 6.5 M4 4 L8 6.5 L5.5 10 M12 8 V12 L15 14",
+];
+const TY = { 5: ["40B", "pk"], 6: ["合并", "blk"], 7: ["GCP", "pk"], 8: ["168亿", "blk"] };
+
+// 纸张颗粒、漏墨白点、油墨边缘不齐的遮罩
+app.style.setProperty("--grain", `url(${grainURL(200, 0.16, 70)})`);
+app.style.setProperty("--speck", `url(${speckURL()})`);
+app.style.setProperty("--rough", `url(${roughMask(false)})`);
+app.style.setProperty("--roughTop", `url(${roughMask(true)})`);
+function speckURL() {
+  const c = document.createElement("canvas"); c.width = c.height = 260; const x = c.getContext("2d");
+  for (let i = 0; i < 140; i++) { x.fillStyle = `rgba(255,255,255,${0.4 + Math.random() * 0.6})`; x.beginPath(); x.arc(Math.random() * 260, Math.random() * 260, Math.random() * 1.1 + 0.2, 0, 7); x.fill(); }
+  return c.toDataURL();
+}
+function roughMask(topOnly) {
+  const W = 400, H = 300, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  x.fillStyle = "#000"; x.beginPath();
+  const j = () => Math.random() * 3;
+  x.moveTo(0, j());
+  for (let i = 0; i <= W; i += 4) x.lineTo(i, j());
+  for (let i = 0; i <= H; i += 4) x.lineTo(W - (topOnly ? 0 : j()), i);
+  for (let i = W; i >= 0; i -= 4) x.lineTo(i, H - (topOnly ? 0 : j()));
+  for (let i = H; i >= 0; i -= 4) x.lineTo(topOnly ? 0 : j(), i);
+  x.fill();
+  return c.toDataURL();
+}
+
+// 真封面分成两版：蓝版吃红光、粉版吃绿光，两个网角
+
+const tt = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<span class="k">${esc(k)}</span>`) : t; };
+app.innerHTML = `
+  <div class="grain" id="grain"></div><div class="speck"></div>
+  <div class="roller b" id="rb"></div><div class="roller p" id="rp"></div>
+  <div class="sb B"><span>${nowHM()}</span><span>5G ■■■</span></div>
+  <header class="top">
+    <div><h1 class="dbl B" data-t="AI热点">AI热点</h1><div class="date P">10.22 · 周四 · 实时</div></div>
+    <button class="listen" id="listen"><span class="ink P"></span><span class="ring P"></span><span class="ring P"></span><span class="ring P"></span><span class="lbl B"><i></i><span>听热点</span></span></button>
+  </header>
+  <main class="scroll" id="scroll">
+    <section class="hero">
+      <div class="art B" id="art"></div>
+      <div class="num P">01</div>
+      <h2 class="B">${tt(h1)}</h2>
+      <p class="B">${esc(clip(firstLine(h1.summary), 64))}</p>
+      <div class="stats B"><span class="h">${heatText(h1)}</span><span>热度<br>${h1.sources} 家在说</span><span class="dots P" style="--d:2.6px"></span></div>
+    </section>
+    <div class="rule B"></div>
+    <ol>${rest.map((h, i) => `
+      <li class="it B" data-r="${h.rank}">
+        <div class="n">${pad2(h.rank)}</div>
+        <div>
+          <h3>${esc(shortTitle(h))}</h3>
+          <div class="m"><span class="dots P" style="width:${Math.round(20 + (h.heat / maxHeat) * 90)}px"></span><span>${heatText(h)}</span></div>
+          <div class="more">${esc(clip(firstLine(h.summary), 90))}</div>
+        </div>
+        <div class="tn">${h.cover ? "" : `<div class="ty ${TY[h.rank][1]}">${TY[h.rank][0]}</div>`}</div>
+      </li>`).join("")}
+    </ol>
+  </main>
+  <nav class="tabs B">${["精选", "热点", "日报", "模型", "重置"].map((n, i) => `<button class="tab ${i ? "" : "on"}"><span class="pb"></span><svg viewBox="0 0 24 24"><path d="${ICONS[i]}"/></svg><span>${n}</span></button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const root = document.documentElement;
+const setReg = (x, y) => { root.style.setProperty("--mx", x.toFixed(2) + "px"); root.style.setProperty("--my", y.toFixed(2) + "px"); };
+
+(async () => {
+await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]);
+// 关键词底下垫一块粉色
+const hero = app.querySelector(".hero"), hr = hero.getBoundingClientRect();
+app.querySelectorAll(".hero h2 .k").forEach((k) => [...k.getClientRects()].forEach((r) => {
+  const d = document.createElement("div"); d.className = "hlp P";
+  Object.assign(d.style, { left: r.left - hr.left - 3 + "px", top: r.top - hr.top + r.height * 0.2 + "px", width: r.width + 6 + "px", height: r.height * 0.74 + "px" });
+  hero.insertBefore(d, hero.querySelector("h2"));
+}));
+await riso($("art"), h1.cover, 4.4);
+await Promise.all([...app.querySelectorAll(".it")].map((li, i) => (rest[i].cover ? riso(li.querySelector(".tn"), rest[i].cover, 3.2) : null)));
+
+// ── 印两遍：先过蓝版，再过粉版；粉版落下时对不准，晃几下才对上 ──
+const H = app.clientHeight;
+const plateEls = (cls) => [...app.querySelectorAll(cls)].filter((el) => !el.closest(".roller") && el.getBoundingClientRect().top < H);
+function pass(cls, roller, t0, pseudo) {
+  plateEls(cls).forEach((el) => {
+    const r = el.getBoundingClientRect(), top = Math.max(0, r.top), bot = Math.min(H, r.bottom);
+    el.animate([{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: Math.max(60, (bot - top) * 0.9), delay: t0 + top * 0.9, fill: "backwards", easing: "linear", pseudoElement: pseudo });
+  });
+  roller.animate([{ transform: "translateY(-40px)" }, { transform: `translateY(${H}px)` }], { duration: H * 0.9 + 60, delay: t0, easing: "linear" });
+}
+pass(".B", $("rb"), 120);
+pass(".P", $("rp"), 950);
+pass(".dbl", { animate() {} }, 950, "::after");
+setReg(10, -6);
+const t0 = performance.now() + 950;
+(function settle(now) {
+  const t = Math.max(0, (now - t0) / 1000), k = Math.exp(-3.2 * t);
+  setReg(1.6 + 8.4 * k * Math.cos(t * 9), 1 - 7 * k * Math.cos(t * 7.4));
+  if (t < 2.2) requestAnimationFrame(settle);
+  else drift();
+})(performance.now());
+// 之后版子轻轻浮动，颗粒按 8 帧/秒换
+function drift() { const s = performance.now(); (function f(now) { const t = (now - s) / 1000; setReg(1.6 + Math.sin(t * 0.7) * 0.7, 1 + Math.cos(t * 0.5) * 0.5); requestAnimationFrame(f); })(s); }
+setInterval(() => { $("grain").style.backgroundPosition = `${(Math.random() * 200) | 0}px ${(Math.random() * 200) | 0}px`; }, 125);
+
+// 交互
+const listen = $("listen");
+listen.addEventListener("click", () => {
+  const on = listen.classList.toggle("on");
+  listen.querySelector(".lbl span").textContent = on ? "在听 01" : "听热点";
+  listen.animate([{ transform: "scale(.88)" }, { transform: "none" }], { duration: 240, easing: "steps(3, end)" });
+});
+app.querySelectorAll(".it").forEach((li) => li.addEventListener("click", () => li.classList.toggle("open")));
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => {
+  tabs.forEach((x) => x.classList.toggle("on", x === t));
+  t.querySelector(".pb").animate([{ transform: "scale(1.5) rotate(8deg)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 260, easing: "steps(3, end)" });
+}));
+})();
+</script>
+</body>
+</html>

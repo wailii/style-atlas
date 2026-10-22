@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新闻包装</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@500;700;800&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f2f3f6; --red: #d7141a; --navy: #0b1f3a; --ink: #0d1424; --mute: #6a7386; --line: #dde1e8; --yel: #ffcc00; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Roboto Condensed", "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-weight: 800; font-size: 15px; }
+
+  .bug { flex: none; display: flex; align-items: center; gap: 8px; padding: 4px 14px 10px; }
+  .chan { display: flex; align-items: stretch; height: 34px; font-weight: 900; }
+  .chan b { background: var(--red); color: #fff; padding: 0 10px; display: flex; align-items: center; font-family: "Noto Sans SC"; font-size: 17px; }
+  .chan i { font-style: normal; background: var(--navy); color: #fff; padding: 0 8px; display: flex; align-items: center; font-size: 18px; font-weight: 800; }
+  .live { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; letter-spacing: 1px; color: var(--red); }
+  .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .clock { margin-left: auto; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .listen { height: 34px; padding: 0 12px; background: var(--navy); color: #fff; font-weight: 700; font-family: "Noto Sans SC"; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .listen.on { background: var(--red); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .frame { position: relative; height: 252px; background: #000; overflow: hidden; }
+  .frame .seg { position: absolute; left: 10px; right: 10px; top: 10px; display: flex; gap: 4px; z-index: 4; }
+  .frame .seg i { flex: 1; height: 3px; background: rgba(255,255,255,.35); overflow: hidden; }
+  .frame .seg i b { display: block; height: 100%; background: #fff; transform-origin: left; transform: scaleX(0); }
+  .shot { position: absolute; inset: 0; }
+  .shot img { width: 100%; height: 100%; object-fit: cover; }
+  .wipe { position: absolute; inset: 0; background: var(--red); z-index: 3; transform: translateX(-101%); }
+  .wipe::after { content: ""; position: absolute; top: 0; bottom: 0; right: -40px; width: 40px; background: var(--navy); }
+  .corner { position: absolute; right: 10px; top: 22px; z-index: 4; background: rgba(0,0,0,.55); color: #fff; font-weight: 800; font-size: 11px; padding: 3px 7px; letter-spacing: 1px; }
+  .l3 { position: absolute; left: 0; right: 0; bottom: 14px; z-index: 4; }
+  .l3 .tag { display: inline-flex; background: var(--red); color: #fff; font-family: "Noto Sans SC"; font-weight: 900; font-size: 13px; padding: 4px 10px; }
+  .l3 .plate { background: rgba(255,255,255,.96); margin-right: 22px; padding: 8px 12px 9px; border-left: 6px solid var(--red); }
+  .l3 h2 { font-family: "Noto Sans SC"; font-weight: 900; font-size: 18px; line-height: 1.35; }
+  .l3 .sub { background: var(--navy); color: #fff; display: inline-block; font-family: "Noto Sans SC"; font-size: 12px; font-weight: 500; padding: 4px 10px; margin-right: 22px; }
+
+  .brk { display: flex; align-items: stretch; margin: 12px 14px 0; height: 34px; overflow: hidden; }
+  .brk b { background: var(--yel); color: var(--ink); font-family: "Noto Sans SC"; font-weight: 900; font-size: 14px; padding: 0 10px; display: flex; align-items: center; }
+  .brk span { flex: 1; background: var(--ink); color: #fff; font-family: "Noto Sans SC"; font-weight: 700; font-size: 13.5px; display: flex; align-items: center; padding: 0 10px; white-space: nowrap; overflow: hidden; }
+
+  .rundown { margin: 16px 14px 0; background: #fff; border: 1px solid var(--line); }
+  .rundown h4 { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-bottom: 3px solid var(--red); font-family: "Noto Sans SC"; font-weight: 900; font-size: 14px; }
+  .rundown h4 span { font-family: "Roboto Condensed"; font-size: 12px; color: var(--mute); font-weight: 700; letter-spacing: 1px; }
+  .it { display: grid; grid-template-columns: 52px 1fr 44px; gap: 10px; padding: 11px 12px; border-bottom: 1px solid var(--line); cursor: pointer; position: relative; }
+  .it .t { font-weight: 800; font-size: 15px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  .it h3 { font-family: "Noto Sans SC"; font-weight: 700; font-size: 14.5px; line-height: 1.45; }
+  .it .h { text-align: right; font-weight: 800; font-size: 14px; }
+  .it .more { display: none; margin-top: 6px; font-family: "Noto Sans SC"; font-size: 12.5px; line-height: 1.6; color: var(--mute); }
+  .it.open .more { display: block; }
+  .it.cur { background: #fff3f3; }
+  .it.cur::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--red); }
+  .it.cur .t { color: var(--red); }
+
+  .ticker { flex: none; display: flex; height: 32px; background: var(--navy); color: #fff; overflow: hidden; }
+  .ticker b { flex: none; background: var(--red); padding: 0 10px; display: flex; align-items: center; font-family: "Noto Sans SC"; font-weight: 900; font-size: 13px; position: relative; z-index: 1; }
+  .ticker .track { display: flex; align-items: center; white-space: nowrap; font-family: "Noto Sans SC"; font-weight: 500; font-size: 13px; animation: tick 40s linear infinite; }
+  .ticker .track span { padding: 0 18px; }
+  .ticker .track span::before { content: "■"; color: var(--red); margin-right: 8px; font-size: 9px; vertical-align: 2px; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); background: #fff; padding: 8px 6px 22px; position: relative; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; font-family: "Noto Sans SC"; font-size: 11.5px; font-weight: 700; color: var(--mute); padding-top: 4px; }
+  .tab svg { width: 21px; height: 21px; }
+  .tab.on { color: var(--red); }
+  .bar { position: absolute; top: 0; height: 3px; background: var(--red); transition: left .35s cubic-bezier(.7,0,.2,1); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const top3 = HOT.filter((h) => h.cover).slice(0, 3);
+const slot = (i) => { const d = new Date(Date.now() + (i + 1) * 7 * 60000); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ▮▮▮</span></div>
+  <div class="bug"><div class="chan"><b>AI热点</b><i>24</i></div><span class="live">LIVE</span><span class="clock" id="clock"></span><button class="listen" id="listen">▶ 收听</button></div>
+  <main class="scroll">
+    <section class="frame" id="frame">
+      <div class="seg">${top3.map(() => "<i><b></b></i>").join("")}</div>
+      <div class="corner">直播 · 第 01 条</div>
+      <div class="shot" id="shot"><img alt=""></div>
+      <div class="wipe" id="wipe"></div>
+      <div class="l3" id="l3"></div>
+    </section>
+    <div class="brk" id="brk"><b>突发</b><span>${esc(h1.latest)}</span></div>
+    <section class="rundown"><h4>接下来<span>RUNDOWN</span></h4>
+      ${rest.map((h, i) => `<div class="it ${i ? "" : "cur"}" data-r="${h.rank}"><span class="t">${slot(i)}</span><div><h3>${esc(shortTitle(h))}</h3><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><span class="h">${heatText(h)}</span></div>`).join("")}
+    </section>
+    <div style="height:18px"></div>
+  </main>
+  <div class="ticker"><b>滚动</b><div class="track">${[0, 1].map(() => HOT.map((h) => `<span>${esc(h.latest || h.title)}</span>`).join("")).join("")}</div></div>
+  <nav class="tabs"><i class="bar" id="bar"></i>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+setInterval(() => { const d = new Date(); $("clock").textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }, 250);
+const EASE = "cubic-bezier(.7,0,.2,1)";
+
+// ── 头条轮播：红条扫过去换画面，下三分之一字幕分两段推出来 ──
+let cur = -1, segAnim = null;
+function lower(h) {
+  $("l3").innerHTML = `<div class="tag">头条 · ${pad2(h.rank)}</div><div class="plate"><h2>${esc(shortTitle(h))}</h2></div><div class="sub">热度 ${heatText(h)} · ${h.sources} 家媒体在报</div>`;
+  const [tag, plate, sub] = $("l3").children;
+  tag.animate([{ transform: "translateX(-110%)" }, { transform: "none" }], { duration: 380, easing: EASE, fill: "backwards", delay: 120 });
+  plate.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 520, easing: EASE, fill: "backwards", delay: 260 });
+  plate.querySelector("h2").animate([{ transform: "translateY(110%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 420, easing: EASE, fill: "backwards", delay: 520 });
+  sub.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 420, easing: EASE, fill: "backwards", delay: 700 });
+}
+function next() {
+  cur = (cur + 1) % top3.length;
+  const h = top3[cur], img = $("shot").querySelector("img");
+  $("wipe").animate([{ transform: "translateX(-101%)" }, { transform: "translateX(0)", offset: 0.45 }, { transform: "translateX(0)", offset: 0.55 }, { transform: "translateX(105%)" }], { duration: 760, easing: EASE });
+  setTimeout(() => {
+    img.src = h.cover;
+    img.animate([{ transform: "scale(1)" }, { transform: "scale(1.12)" }], { duration: 5600, easing: "linear", fill: "forwards" });
+    app.querySelector(".corner").textContent = `直播 · 第 ${pad2(h.rank)} 条`;
+    lower(h);
+  }, 360);
+  [...app.querySelectorAll(".seg b")].forEach((b, i) => { b.getAnimations().forEach((a) => a.cancel()); b.style.transform = i < cur ? "scaleX(1)" : "scaleX(0)"; });
+  segAnim = app.querySelectorAll(".seg b")[cur].animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: 5000, easing: "linear", fill: "forwards" });
+}
+(async () => {
+await fontsReady();
+app.querySelector(".chan").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, easing: EASE, fill: "backwards", delay: 100 });
+next(); setInterval(next, 5000);
+// 突发：黄条弹出后闪两下，字从右往左推
+$("brk").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, easing: EASE, fill: "backwards", delay: 1300 });
+$("brk").querySelector("b").animate([{ background: "#ffcc00" }, { background: "#d7141a", color: "#fff" }, { background: "#ffcc00" }], { duration: 500, iterations: 3, delay: 1800 });
+app.querySelectorAll(".it").forEach((it, i) => {
+  it.animate([{ opacity: 0, transform: "translateX(24px)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: EASE, fill: "backwards", delay: 1500 + i * 70 });
+  it.addEventListener("click", () => { app.querySelectorAll(".it").forEach((x) => x.classList.toggle("cur", x === it)); it.classList.toggle("open"); });
+});
+const tabs = [...app.querySelectorAll(".tab")], bar = $("bar");
+const place = (t) => { bar.style.left = t.offsetLeft + 14 + "px"; bar.style.width = t.offsetWidth - 28 + "px"; };
+place(tabs[0]);
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); place(t); }));
+$("listen").addEventListener("click", () => { const on = $("listen").classList.toggle("on"); $("listen").textContent = on ? "■ 收听中" : "▶ 收听"; });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>像素</title>
+<style>
+  :root { --ink: #2b2b45; --panel: #fff7dc; --sky: #a8dcff; --yel: #ffd541; --red: #f25454; --grn: #4cbf4f; --pur: #7b5cf0; --gray: #8d8aa8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--sky); }
+  body { font-family: "PingFang SC", "Noto Sans SC", sans-serif; color: var(--ink); }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  #sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .app > *:not(#sky) { position: relative; z-index: 1; }
+
+  /* 像素窗口：切掉四个角各一格 + 一格实心投影 */
+  .win { filter: drop-shadow(3px 3px 0 var(--ink)); }
+  .win > .in { background: var(--panel); border: 3px solid var(--ink); clip-path: polygon(3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px), 0 3px, 3px 3px); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 24px 0; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 16px 12px; }
+  .brand { display: flex; align-items: flex-end; gap: 6px; }
+  .listen .in { background: var(--yel); padding: 9px 12px 8px; display: flex; align-items: center; gap: 6px; }
+  .listen:active { translate: 3px 3px; filter: none; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 26px 16px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .hero { position: relative; margin-bottom: 18px; }
+  .hero > .in { padding: 0 0 12px; }
+  .banner { display: flex; justify-content: space-between; align-items: center; background: var(--pur); padding: 6px 9px 6px; border-bottom: 3px solid var(--ink); }
+  .shot { margin: 9px 9px 0; border: 3px solid var(--ink); position: relative; }
+  .shot canvas { width: 100%; }
+  .htxt { padding: 10px 12px 0; }
+  .dlg { margin: 10px 9px 0; border: 3px solid var(--ink); background: #fff; padding: 9px 9px 10px; position: relative; min-height: 70px; }
+  .dlg .more { position: absolute; right: 8px; bottom: 5px; animation: blink .5s steps(1) infinite; }
+  @keyframes blink { 50% { visibility: hidden; } }
+  .hp { display: flex; align-items: center; gap: 8px; padding: 10px 12px 0; }
+  .blocks { display: flex; gap: 3px; }
+  .blocks i { width: 9px; height: 12px; background: #e3dcc2; box-shadow: inset 0 -3px 0 rgba(0,0,0,.08); }
+  .blocks i.on { background: var(--red); }
+  .blocks i.on.y { background: var(--yel); }
+  .blocks i.on.g { background: var(--grn); }
+  .party { display: flex; gap: 2px; margin-left: auto; align-items: center; }
+  .spark { position: absolute; pointer-events: none; z-index: 3; }
+
+  ol { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .it { position: relative; cursor: pointer; }
+  .it > .in { display: grid; grid-template-columns: 1fr 72px; gap: 10px; padding: 9px 9px 10px 11px; }
+  .it .row1 { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .lv { background: var(--ink); padding: 3px 5px 3px; }
+  .it .exp { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
+  .it .blocks i { width: 6px; height: 9px; }
+  .it .tn { width: 72px; height: 60px; border: 3px solid var(--ink); background: #fff; display: grid; place-items: center; overflow: hidden; }
+  .it .tn canvas { width: 100%; height: 100%; }
+  .it .tn canvas.icon { width: 48px; height: 48px; }
+  .it .dd { display: none; margin-top: 8px; border-top: 3px dashed #d9cfae; padding-top: 7px; }
+  .it.open .dd { display: block; }
+  .cursor { position: absolute; left: -2px; top: 50%; margin-top: -10px; z-index: 4; animation: nudge .5s steps(1) infinite; pointer-events: none; }
+  @keyframes nudge { 50% { translate: 3px 0; } }
+  .pop { position: absolute; right: 18px; top: -6px; z-index: 5; pointer-events: none; }
+
+  .tabs { flex: none; padding: 0 10px 18px; }
+  .tabs > .in { display: grid; grid-template-columns: repeat(5, 1fr); padding: 7px 4px 6px; background: var(--panel); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 0 4px; position: relative; }
+  .tab.on { background: var(--ink); }
+  .shake { animation: shake .18s steps(2) 1; }
+  @keyframes shake { 0% { translate: 3px 0; } 50% { translate: -3px 0; } 100% { translate: 0 0; } }
+</style>
+</head>
+<body>
+<div class="app" id="app"><canvas id="sky"></canvas></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { pxText, pxIcon, sprite } = Engines;
+const INK = "#2b2b45", PANEL = "#fff7dc", WHITE = "#ffffff", YEL = "#ffd541", RED = "#f25454", PUR = "#7b5cf0", GRAY = "#8d8aa8", GRN = "#4cbf4f";
+const PAL = ["#2b2b45", "#4a4a6a", "#8d8aa8", "#c9c6dc", "#ffffff", "#fff7dc", "#ffd541", "#ff9a3c", "#f25454", "#b03a5a", "#7b5cf0", "#3d6fe0", "#5ab8ff", "#a8dcff", "#4cbf4f", "#2e8a4a"];
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const maxHeat = Math.max(...HOT.map((h) => h.heat));
+
+// ── 文字像素化：小字号画到画布上，按透明度一刀切成 1 位，再整数倍放大 ──
+// 图标：路径画在 16 格上，同样一刀切
+// 精灵图：字符画 → 画布
+const BOT = [[
+  "......kk......",
+  "......yy......",
+  "......kk......",
+  "..kkkkkkkkkk..",
+  ".kwwwwwwwwwwk.",
+  ".kwkkwwwwkkwk.",
+  ".kwkkwwwwkkwk.",
+  ".kwwwwwwwwwwk.",
+  ".kwwwrrrrwwwk.",
+  "..kkkkkkkkkk..",
+  "...kppppppk...",
+  "..kpkppppkpk..",
+  "..kk.kkkk.kk..",
+  "....kk..kk....",
+], [
+  "..............",
+  "......kk......",
+  "......rr......",
+  "..kkkkkkkkkk..",
+  ".kwwwwwwwwwwk.",
+  ".kwwwwwwwwwwk.",
+  ".kwkkwwwwkkwk.",
+  ".kwwwwwwwwwwk.",
+  ".kwwwrrrrwwwk.",
+  "..kkkkkkkkkk..",
+  "...kppppppk...",
+  "..kpkppppkpk..",
+  "..kk.kkkk.kk..",
+  "....kk..kk....",
+]];
+const BOTC = { k: INK, w: WHITE, y: YEL, r: RED, p: PUR };
+const HEAD = (c) => sprite([".kkk.", "kcwck", "kwwwk", ".kkk."], { k: INK, c, w: "#ffe0c2" }, 3);
+const ICONS = [
+  "M4 6 H20 M4 12 H20 M4 18 H14",
+  "M12 3 C16 8 19 11 19 15 C19 19 16 21 12 21 C8 21 5 19 5 15 C5 11 9 10 9 6 C11 8 11 9 12 3 Z",
+  "M6 3 H15 L19 7 V21 H6 Z M9 11 H16 M9 15 H16",
+  "M5 20 V13 M10 20 V6 M15 20 V10 M20 20 V15",
+  "M5 12 A7 7 0 1 0 8 6.5 M4 4 L8 6.5 L5.5 10 M12 8 V12 L15 14",
+];
+const win = (cls, inner = "") => `<div class="win ${cls}"><div class="in">${inner}</div></div>`;
+const blocks = (n, on, cls = "") => `<span class="blocks">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? "on " + cls : ""}"></i>`).join("")}</span>`;
+
+app.insertAdjacentHTML("beforeend", `
+  <div class="sb" id="sb"></div>
+  <header class="top"><div class="brand" id="brand"></div><button class="win listen" id="listen"><div class="in" id="lis"></div></button></header>
+  <main class="scroll" id="scroll">
+    ${win("hero", `<div class="banner" id="ban"></div><div class="shot" id="shot"></div><div class="htxt" id="htxt"></div><div class="hp" id="hp">${blocks(16, Math.round((h1.heat / maxHeat) * 16), "")}<span class="party" id="party"></span></div><div class="dlg" id="dlg"><span class="more" id="more"></span></div>`)}
+    <ol>${rest.map((h, i) => `<li class="it win" data-r="${h.rank}"><div class="in"><div><div class="row1"><span class="lv"></span></div><div class="t"></div><div class="exp">${blocks(12, Math.max(1, Math.round((h.heat / maxHeat) * 12)), h.heat > 300 ? "" : h.heat > 150 ? "y" : "g")}<span class="hv"></span></div><div class="dd"></div></div><div class="tn"></div></div></li>`).join("")}</ol>
+  </main>
+  ${win("tabs", ICONS.map((d, i) => `<button class="tab ${i ? "" : "on"}" data-i="${i}"></button>`).join(""))}`);
+const $ = (id) => document.getElementById(id);
+const put = (el, c) => (el.appendChild(c), c);
+
+// 文字
+put($("sb"), pxText(nowHM(), { size: 12, scale: 2, weight: 700 }));
+put($("sb"), pxText("5G ▮▮▮", { size: 10, scale: 2, weight: 700 }));
+const bot = [sprite(BOT[0], BOTC, 3), sprite(BOT[1], BOTC, 3)];
+const botBox = document.createElement("div"); botBox.style.marginBottom = "3px"; botBox.append(...bot); bot[1].style.display = "none";
+$("brand").append(botBox);
+const brandT = document.createElement("div");
+brandT.append(pxText("AI 热点", { size: 16, scale: 3, weight: 800 }), pxText("10月22日 周四 · 实时", { size: 10, scale: 2, color: "#4a4a6a" }));
+brandT.lastChild.style.marginTop = "4px";
+$("brand").append(brandT);
+const lisPlay = pxIcon("M7 4 L18 12 L7 20 Z", { n: 10, scale: 2, lw: 4 });
+let lisLbl = pxText("听热点", { size: 12, scale: 2, weight: 700 });
+$("lis").append(lisPlay, lisLbl);
+put($("ban"), pxText("★ 头条任务 01", { size: 11, scale: 2, color: WHITE, weight: 700 }));
+put($("ban"), pxText(`热度 ${heatText(h1)}`, { size: 11, scale: 2, color: YEL, weight: 700 }));
+put($("htxt"), pxText(shortTitle(h1), { size: 12, scale: 2, maxW: 160, lineH: 15, weight: 700 }));
+put($("party"), HEAD("#f25454")); put($("party"), HEAD("#3d6fe0")); put($("party"), HEAD("#4cbf4f")); put($("party"), HEAD("#ffd541"));
+put($("party"), pxText(`+${h1.sources - 4}`, { size: 10, scale: 2, weight: 700 }));
+put($("more"), pxText("▼", { size: 8, scale: 2, color: INK }));
+
+const items = [...app.querySelectorAll(".it")];
+items.forEach((li, i) => {
+  const h = rest[i];
+  put(li.querySelector(".lv"), pxText(`LV.${h.rank}`, { size: 10, scale: 2, color: YEL, weight: 700 }));
+  put(li.querySelector(".t"), pxText(shortTitle(h), { size: 12, scale: 1.5, maxW: 176, lineH: 15, weight: 700 }));
+  put(li.querySelector(".hv"), pxText(`${heatText(h)}`, { size: 10, scale: 2, color: "#4a4a6a", weight: 700 }));
+  put(li.querySelector(".dd"), pxText(clip(firstLine(h.summary), 60), { size: 12, scale: 1.5, maxW: 176, lineH: 15, weight: 500, color: "#4a4a6a" }));
+  const tn = li.querySelector(".tn");
+  if (h.cover) loadImage(h.cover).then((img) => tn.appendChild(pixelCanvas(img, 22, 18, PAL, 0.12)));
+  else tn.appendChild(pxIcon(DOODLE[h.rank], { n: 16, scale: 3, vb: 64, lw: 6, color: [PUR, RED, "#3d6fe0", GRN][i % 4] }));
+});
+function tabFace(i, on) {
+  const col = on ? WHITE : INK;
+  return [pxIcon(ICONS[i], { n: 16, scale: 1.5, lw: 1.7, color: col }), pxText(["精选", "热点", "日报", "模型", "重置"][i], { size: 12, scale: 1.5, weight: 500, color: col })];
+}
+app.querySelectorAll(".tab").forEach((t, i) => {
+  t.append(...tabFace(i, !i));
+});
+loadImage(h1.cover).then((img) => { const c = pixelCanvas(img, 108, 56, PAL, 0.1); c.style.width = "100%"; $("shot").appendChild(c); });
+
+// 对话框打字机
+const dlgText = clip(firstLine(h1.summary), 46);
+function typeInto(box, text, scale = 1.5, maxW = 210, speed = 45) {
+  [...box.querySelectorAll("canvas:not(#more canvas)")].forEach((c) => c.parentElement === box && c.remove());
+  let n = 0;
+  const step = () => {
+    n++;
+    const old = box.querySelector(":scope > canvas"); if (old) old.remove();
+    box.prepend(pxText(text.slice(0, n), { size: 12, scale, maxW, lineH: 15, weight: 500 }));
+    if (n < text.length) setTimeout(step, speed);
+  };
+  step();
+}
+
+// ── 天空：低分辨率画布，云按整格往左挪，8 帧/秒 ──
+const sky = $("sky"), SX = 130, SY = 282; sky.width = SX; sky.height = SY;
+const sx = sky.getContext("2d");
+const clouds = Array.from({ length: 6 }, (_, i) => ({ x: (i * 47) % SX, y: 20 + ((i * 53) % 220), w: 14 + (i % 3) * 6, v: 1 + (i % 2) }));
+let skyT = 0;
+function drawSky() {
+  skyT++;
+  const bands = ["#a8dcff", "#b4e2ff", "#c0e8ff", "#cdedff", "#d9f2ff"];
+  bands.forEach((c, i) => { sx.fillStyle = c; sx.fillRect(0, Math.floor((i * SY) / bands.length), SX, Math.ceil(SY / bands.length) + 1); });
+  for (const c of clouds) {
+    if (skyT % 3 === 0) c.x -= c.v * 0.5;
+    if (c.x < -c.w - 8) c.x = SX + 4;
+    const X = Math.round(c.x), Y = c.y;
+    sx.fillStyle = "#ffffff";
+    sx.fillRect(X, Y, c.w, 3); sx.fillRect(X + 3, Y - 2, c.w - 7, 2); sx.fillRect(X + 6, Y - 4, c.w - 13 > 2 ? c.w - 13 : 3, 2);
+    sx.fillStyle = "#e3f3ff"; sx.fillRect(X + 1, Y + 3, c.w - 2, 1);
+  }
+  sx.fillStyle = "#7fd36b"; for (let x = 0; x < SX; x++) { const hgt = 10 + Math.round(Math.sin(x / 9) * 3 + Math.sin(x / 4.3) * 1); sx.fillRect(x, SY - hgt, 1, hgt); }
+  sx.fillStyle = "#4cbf4f"; sx.fillRect(0, SY - 7, SX, 7);
+}
+
+// 头条四周的星星：调色板一格格变暗
+const stars = Array.from({ length: 7 }, (_, i) => ({ el: document.createElement("canvas"), x: rnd(i * 3) , y: rnd(i * 7 + 1), ph: i * 2 }));
+stars.forEach((s) => { s.el.className = "spark"; s.el.width = s.el.height = 5; s.el.style.width = s.el.style.height = "15px"; app.querySelector(".hero").appendChild(s.el); });
+const STAR = ["..a..", "..a..", "aabaa", "..a..", "..a.."];
+function drawStars(t) {
+  const hero = app.querySelector(".hero"), W = hero.offsetWidth, Hh = 170;
+  stars.forEach((s, i) => {
+    const k = (t + s.ph) % 8, x = s.el.getContext("2d");
+    x.clearRect(0, 0, 5, 5);
+    if (k > 5) return;
+    const col = ["#ffffff", "#fff5b0", "#ffd541", "#ff9a3c", "#f25454", "#b03a5a"][k];
+    STAR.forEach((r, yy) => [...r].forEach((ch, xx) => { if (ch !== ".") { x.fillStyle = ch === "b" ? "#ffffff" : col; x.fillRect(xx, yy, 1, 1); } }));
+    if (k === 0) { s.x = rnd(t * 13 + i); s.y = rnd(t * 7 + i * 3); }
+    s.el.style.left = Math.round((12 + s.x * (W - 40)) / 3) * 3 + "px";
+    s.el.style.top = Math.round((44 + s.y * Hh) / 3) * 3 + "px";
+  });
+}
+
+// ── 入场：窗口一格格展开 ──
+const openWin = (el, delay) => el.animate([{ clipPath: "inset(50% 0 50% 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 300, delay, easing: "steps(5, end)", fill: "backwards" });
+openWin(app.querySelector(".top"), 80);
+openWin(app.querySelector(".hero"), 300);
+items.forEach((li, i) => openWin(li, 700 + i * 110));
+openWin(app.querySelector(".tabs"), 200);
+setTimeout(() => typeInto($("dlg"), dlgText), 900);
+
+// 8 帧/秒的总时钟
+let T = 0;
+setInterval(() => {
+  T++;
+  drawSky();
+  drawStars(T);
+  bot[0].style.display = T % 6 < 5 ? "" : "none"; bot[1].style.display = T % 6 < 5 ? "none" : "";
+  botBox.style.translate = `0 ${T % 4 < 2 ? 0 : -3}px`;
+}, 125);
+drawSky();
+
+// 交互：选中的条目旁边出现光标，展开说明，弹一个 +EXP
+const cursor = sprite(["k....", "kk...", "kwk..", "kwwk.", "kwk..", "kk...", "k...."], { k: INK, w: YEL }, 3);
+cursor.classList.add("cursor");
+items.forEach((li) => li.addEventListener("click", () => {
+  const open = li.classList.toggle("open");
+  if (open) { li.appendChild(cursor); li.classList.remove("shake"); void li.offsetWidth; li.classList.add("shake"); }
+  const pop = pxText("+1 EXP", { size: 10, scale: 2, color: PUR, weight: 800 }); pop.classList.add("pop"); li.appendChild(pop);
+  pop.animate([{ translate: "0 0", opacity: 1 }, { translate: "0 -24px", opacity: 0 }], { duration: 700, easing: "steps(6, end)" }).onfinish = () => pop.remove();
+}));
+items[0].click();
+const listen = $("listen");
+listen.addEventListener("click", () => {
+  const on = listen.classList.toggle("on");
+  lisLbl.replaceWith(Object.assign(pxText(on ? "在听 01" : "听热点", { size: 12, scale: 2, weight: 700 })));
+  lisLbl = $("lis").lastChild;
+  $("lis").style.background = on ? "#ff9a3c" : "";
+  if (on) typeInto($("dlg"), "正在朗读：" + dlgText);
+});
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t, i) => t.addEventListener("click", () => {
+  tabs.forEach((x, j) => {
+    const on = x === t; x.classList.toggle("on", on); x.innerHTML = "";
+    x.append(...tabFace(j, on));
+  });
+}));
+</script>
+</body>
+</html>

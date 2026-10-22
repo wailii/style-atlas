@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>City Pop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --sky: #3cb4e6; --sky2: #9ee0f7; --pool: #4fd2cf; --pink: #ff6fa3; --sun: #ffd23f; --palm: #10614f; --ink: #17324d; --white: #fffdf7; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--white); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--white); }
+  .scene { position: absolute; left: 0; right: 0; top: 0; height: 330px; background: linear-gradient(var(--sky) 0 55%, var(--sky2) 100%); overflow: hidden; }
+  .sun { position: absolute; right: 40px; top: 74px; width: 96px; height: 96px; border-radius: 50%; background: var(--sun); --sm: linear-gradient(#000 0 54%, transparent 54% 58%, #000 58% 66%, transparent 66% 69%, #000 69% 76%, transparent 76% 78%, #000 78%); -webkit-mask-image: var(--sm); mask-image: var(--sm); }
+  .cloud { position: absolute; height: 26px; background: #fff; border-radius: 20px; box-shadow: 0 6px 0 rgba(23,50,77,.08); }
+  .cloud::before, .cloud::after { content: ""; position: absolute; background: #fff; border-radius: 50%; }
+  .cloud::before { width: 40px; height: 40px; left: 18px; top: -20px; }
+  .cloud::after { width: 28px; height: 28px; left: 50px; top: -12px; }
+  .palm { position: absolute; bottom: 30px; transform-origin: 50% 100%; }
+  .palm svg { display: block; overflow: visible; }
+  .pool { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; background: var(--pool); }
+  .pool i { position: absolute; height: 3px; border-radius: 3px; background: rgba(255,255,255,.75); }
+  .app > .ui { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: Righteous; font-size: 15px; color: #fff; }
+  .top { flex: none; display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 18px 0; }
+  .logo { font-weight: 900; font-size: 40px; font-style: italic; color: #fff; letter-spacing: -1px; transform: skewX(-8deg); -webkit-text-stroke: 2px var(--pink); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--pink), 8px 8px 0 rgba(23,50,77,.25); }
+  .date { margin-top: 6px; font-family: Righteous, "Noto Sans SC"; font-size: 12.5px; color: #fff; letter-spacing: 1px; text-shadow: 1px 1px 0 rgba(23,50,77,.3); }
+  .listen { margin-top: 6px; background: #fff; color: var(--pink); font-weight: 900; font-size: 14px; padding: 9px 14px; border-radius: 999px; box-shadow: 3px 3px 0 var(--ink); display: flex; align-items: center; gap: 6px; }
+  .listen.on { background: var(--pink); color: #fff; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .eye { position: relative; margin-top: 128px; background: var(--white); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 6px 6px 0 var(--pink); padding: 10px; }
+  .eye .cel { position: relative; height: 170px; border-radius: 10px; overflow: hidden; border: 2.5px solid var(--ink); }
+  .eye canvas { width: 100%; height: 100%; display: block; }
+  .eye .no { position: absolute; left: -12px; top: -18px; background: var(--sun); border: 3px solid var(--ink); border-radius: 12px; font-family: Righteous; font-size: 26px; padding: 2px 10px; transform: rotate(-8deg); box-shadow: 3px 3px 0 var(--ink); z-index: 2; }
+  .eye h2 { margin: 12px 4px 0; font-weight: 900; font-size: 20.5px; line-height: 1.42; }
+  .eye h2 b { color: var(--pink); }
+  .eye p { margin: 8px 4px 2px; font-size: 13.5px; line-height: 1.65; color: #4b6680; font-weight: 500; }
+  .tags { display: flex; gap: 8px; margin: 10px 4px 2px; }
+  .tags span { font-family: Righteous, "Noto Sans SC"; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; border: 2px solid var(--ink); background: var(--pool); }
+  .tags span + span { background: var(--sun); }
+  .spark { position: absolute; pointer-events: none; width: 26px; height: 26px; z-index: 5; }
+
+  ol { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+  .it { position: relative; display: grid; grid-template-columns: 44px 1fr 70px; gap: 10px; align-items: center; background: var(--white); border: 2.5px solid var(--ink); border-radius: 16px; padding: 10px 10px 10px 10px; box-shadow: 4px 4px 0 var(--c); cursor: pointer; transition: transform .15s, box-shadow .15s; }
+  .it:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--c); }
+  .it .n { font-family: Righteous; font-size: 24px; color: var(--c); -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-align: center; }
+  .it h3 { font-weight: 700; font-size: 15px; line-height: 1.45; }
+  .it .m { margin-top: 3px; font-family: Righteous, "Noto Sans SC"; font-size: 12px; color: #4b6680; }
+  .it .more { display: none; margin-top: 6px; font-size: 12.5px; line-height: 1.6; color: #4b6680; }
+  .it.open .more { display: block; }
+  .it .tn { width: 70px; height: 58px; border-radius: 10px; border: 2px solid var(--ink); overflow: hidden; background: var(--c); display: grid; place-items: center; }
+  .it .tn canvas { width: 100%; height: 100%; display: block; }
+  .it .tn svg { width: 36px; height: 36px; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--white); border-top: 3px solid var(--ink); padding: 8px 8px 22px; position: relative; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 700; font-size: 11.5px; padding: 6px 0 4px; border-radius: 14px; position: relative; z-index: 1; }
+  .tab svg { width: 21px; height: 21px; }
+  .pill { position: absolute; top: 8px; height: 50px; border-radius: 14px; background: var(--sun); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); transition: left .38s cubic-bezier(.3,1.5,.5,1); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const CEL = ["#17324d", "#3cb4e6", "#9ee0f7", "#4fd2cf", "#ff6fa3", "#ffb3cf", "#ffd23f", "#fffdf7", "#10614f", "#ff8a3d"];
+const CS = ["#ff6fa3", "#4fd2cf", "#ffd23f", "#3cb4e6", "#ff8a3d"];
+const PALM = (h, flip) => `<svg width="90" height="${h}" viewBox="0 0 90 ${h}" style="transform:scaleX(${flip ? -1 : 1})"><path d="M44 ${h} C46 ${h * 0.6} 40 ${h * 0.35} 48 20" stroke="#10614f" stroke-width="7" fill="none" stroke-linecap="round"/><g fill="#10614f"><path d="M48 20 C30 4 8 10 0 26 C16 16 30 18 48 22 Z"/><path d="M48 20 C66 2 86 8 90 24 C76 14 62 16 48 22 Z"/><path d="M48 20 C40 0 56 -6 64 2 C56 4 52 10 48 20 Z"/><path d="M48 20 C26 22 14 40 14 52 C24 38 36 30 48 24 Z"/><path d="M48 20 C70 24 82 40 80 54 C72 40 60 30 48 24 Z"/></g></svg>`;
+const STAR = `<svg viewBox="0 0 26 26"><path d="M13 0 L15.5 10.5 L26 13 L15.5 15.5 L13 26 L10.5 15.5 L0 13 L10.5 10.5 Z" fill="#fff"/><path d="M13 6 L14 12 L20 13 L14 14 L13 20 L12 14 L6 13 L12 12 Z" fill="#ffd23f"/></svg>`;
+const markPink = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<b>${esc(k)}</b>`) : t; };
+
+app.innerHTML = `
+  <div class="scene" id="scene">
+    <div class="sun"></div>
+    <div class="cloud" style="left:30px;top:150px;width:110px" data-v="6"></div>
+    <div class="cloud" style="left:230px;top:200px;width:80px" data-v="10"></div>
+    <div class="palm" style="left:-18px" id="p1">${PALM(250)}</div>
+    <div class="palm" style="right:-24px" id="p2">${PALM(190, true)}</div>
+    <div class="pool">${[[40, 12, 60], [160, 26, 40], [270, 14, 70], [100, 34, 30]].map(([l, t, w]) => `<i style="left:${l}px;top:${t}px;width:${w}px"></i>`).join("")}</div>
+  </div>
+  <div class="ui">
+    <div class="sb"><span>${nowHM()}</span><span>5G ◥</span></div>
+    <header class="top"><div><div class="logo">AI 热点</div><div class="date">OCT.22 · 周四 · 实时</div></div><button class="listen" id="listen">▶ 听热点</button></header>
+    <main class="scroll">
+      <section class="eye" id="eye"><div class="no">01</div><div class="cel"><canvas id="cel"></canvas></div><h2>${markPink(h1)}</h2><p>${esc(clip(firstLine(h1.summary), 56))}</p><div class="tags"><span>热度 ${heatText(h1)}</span><span>${h1.sources} 家在说</span></div></section>
+      <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}" style="--c:${CS[i % 5]}"><span class="n">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">HEAT ${heatText(h)} · ${h.sources} 家</div><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? "<canvas></canvas>" : `<svg viewBox="0 0 64 64"><path d="${DOODLE[h.rank]}" fill="none" stroke="#17324d" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}</div></li>`).join("")}</ol>
+    </main>
+    <nav class="tabs"><i class="pill" id="pill"></i>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>
+  </div>`;
+
+const $ = (id) => document.getElementById(id);
+// 赛璐璐：封面压成几块平涂色 + 深色描线
+const cel = (img, w, h) => posterCanvas(img, w, h, CEL, { edge: 0.18, edgeInk: "#17324d", soft: 3 });
+(async () => {
+await fontsReady();
+loadImage(h1.cover).then((img) => { const c = $("cel"), r = c.getBoundingClientRect(), p = cel(img, Math.round(r.width * 2), Math.round(r.height * 2)); c.width = p.width; c.height = p.height; c.getContext("2d").drawImage(p, 0, 0); });
+app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (!h.cover) return; loadImage(h.cover).then((img) => { const c = li.querySelector("canvas"), p = cel(img, 140, 116); c.width = 140; c.height = 116; c.getContext("2d").drawImage(p, 0, 0); }); });
+
+// 动画片的手感：12 帧/秒，弹出时先压扁再弹开
+const POP = "steps(4, end)";
+$("scene").animate([{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 500, easing: "cubic-bezier(.2,.8,.2,1)" });
+app.querySelector(".sun").animate([{ transform: "translateY(80px)" }, { transform: "none" }], { duration: 900, delay: 200, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
+app.querySelector(".logo").animate([{ transform: "skewX(-8deg) scale(.2, 1.6)", opacity: 0 }, { transform: "skewX(-20deg) scale(1.25, .8)", opacity: 1, offset: 0.5 }, { transform: "skewX(-8deg)" }], { duration: 420, delay: 350, easing: POP, fill: "backwards" });
+$("eye").animate([{ transform: "translateY(60px) rotate(4deg)", opacity: 0 }, { transform: "translateY(-8px) rotate(-1deg)", opacity: 1, offset: 0.7 }, { transform: "none" }], { duration: 500, delay: 600, easing: "steps(6, end)", fill: "backwards" });
+app.querySelectorAll(".it").forEach((li, i) => {
+  li.animate([{ transform: "translateX(-40px) scale(.9)", opacity: 0 }, { transform: "translateX(6px)", opacity: 1, offset: 0.7 }, { transform: "none" }], { duration: 400, delay: 1000 + i * 90, easing: "steps(5, end)", fill: "backwards" });
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+// 一直在动：云按格平移、椰子树摆、水面高光闪、头图四周的星光一闪一闪
+const clouds = [...app.querySelectorAll(".cloud")]; let f = 0;
+setInterval(() => {
+  f++;
+  clouds.forEach((c) => { const x = parseFloat(c.style.left) - c.dataset.v * 0.25; c.style.left = (x < -140 ? 400 : x) + "px"; });
+  $("p1").style.transform = `rotate(${Math.sin(f / 8) * 1.6}deg)`; $("p2").style.transform = `rotate(${Math.sin(f / 7 + 1) * 1.8}deg)`;
+  app.querySelectorAll(".pool i").forEach((p, i) => (p.style.opacity = (f + i) % 4 < 2 ? 0.85 : 0.35));
+}, 83);
+const eye = $("eye");
+const sparks = [0, 1, 2].map(() => { const s = document.createElement("div"); s.className = "spark"; s.innerHTML = STAR; eye.appendChild(s); return s; });
+function twinkle(s, i) {
+  const W = eye.clientWidth;
+  s.style.left = [W - 40, 20, W - 90][i] + "px"; s.style.top = [10, 120, 150][i] + "px";
+  s.animate([{ transform: "scale(0) rotate(0)" }, { transform: "scale(1.3) rotate(20deg)" }, { transform: "scale(.7) rotate(30deg)" }, { transform: "scale(0) rotate(45deg)" }], { duration: 500, easing: "steps(4, end)" }).onfinish = () => setTimeout(() => twinkle(s, i), 600 + i * 400);
+}
+setTimeout(() => sparks.forEach((s, i) => twinkle(s, i)), 1200);
+
+const listen = $("listen");
+listen.addEventListener("click", () => { const on = listen.classList.toggle("on"); listen.textContent = on ? "■ 在听 01" : "▶ 听热点"; });
+const tabs = [...app.querySelectorAll(".tab")], pill = $("pill");
+const place = (t) => { pill.style.left = t.offsetLeft + 4 + "px"; pill.style.width = t.offsetWidth - 8 + "px"; };
+place(tabs[0]);
+tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); place(t); }));
+})();
+</script>
+</body>
+</html>

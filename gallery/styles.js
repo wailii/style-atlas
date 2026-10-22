@@ -1,0 +1,203 @@
+// 20 种风格：名字、出处、招牌动效、能点的地方、适合做什么
+const LEMO = "https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles";
+const STYLES = [
+  // ── 手作 · 纸与墨 ──
+  {
+    id: "lineart", group: "手作 · 纸与墨", name: "线稿", file: "s-lineart.html",
+    line: "白纸黑线，像一页随手画的笔记。",
+    from: [
+      ["WY（@akokoi1）· 中华五千年线稿动画", "国内传得最广的一条：一句话让 Opus 5.5 做轻松有趣的线稿动画配音乐", "https://x.com/akokoi1/status/2102584165220962502"],
+      ["JohnHeibel/ClaudeAnimationBase · 1.4k★", "p5.js + 笔刷库的手绘动画套件，《P(doom)》MV 那套做法", "https://github.com/JohnHeibel/ClaudeAnimationBase"],
+    ],
+    moves: ["线条一笔笔画出来，画完每 0.14 秒换一版，像逐帧手绘的线在抖", "封面真图做边缘描线，变成钢笔线稿", "荧光笔划重点、手画圈标出当前页"],
+    tap: ["点「听热点」出现手画声波", "点任一条：编号被圈起来，展开摘要"],
+    fit: "读东西、学东西：知识卡片、日报、笔记、讲解视频",
+  },
+  {
+    id: "ink", group: "手作 · 纸与墨", name: "水墨", file: "s-ink.html",
+    line: "宣纸、墨色分层、一方红印。",
+    from: [
+      ["WY（@akokoi1）· 小蝌蚪找妈妈（水墨）", "同一位作者用代码做的水墨动画", "https://x.com/akokoi1/status/2102699703309898026"],
+      ["lemo-opuscar · 中国水墨", "Opus 5.5 风格库里的 ink-wash 规格", `${LEMO}/ink-wash/STYLE.md`],
+    ],
+    moves: ["封面真图分几层墨色，像墨滴落在宣纸上从一点晕开", "字从模糊里洇出来，红印先大后小「盖」下去", "飞白笔触当分隔线，圆相（一笔圆）当播放键"],
+    tap: ["点「听」圆相开始转", "点任一条：左边点一个朱砂点，展开摘要"],
+    fit: "文化、阅读、节气、茶和书法类；纪录片片头",
+  },
+  {
+    id: "collage", group: "手作 · 纸与墨", name: "纸拼贴", file: "s-collage.html",
+    line: "剪报 + 网点照片 + 胶带，Vox 讲解片的样子。",
+    from: [
+      ["Alisa0808/vox-director · 2.4k★", "把一个选题做成 Vox 风纸拼贴讲解片的 skill", "https://github.com/Alisa0808/vox-director"],
+      ["pyang5166/gbro-collage-broll · 1.5k★", "半调纸拼贴 B-roll；同作者还有不用生图模型的 gbro-collage-info", "https://github.com/pyang5166/gbro-collage-broll"],
+    ],
+    moves: ["封面真图转成黑白网点，撕边、留白纸边、贴胶带", "每块纸按 12 帧/秒一顿一顿落到桌上，落定后一直微微抖", "红色马克笔圈出头条编号；标题拆成一条条剪下来的纸条"],
+    tap: ["点「听热点」纸片翻一下，红色音量条跳动", "点任一条：卡片一顿，展开摘要"],
+    fit: "资讯、观点、杂志感强的内容；讲解视频",
+  },
+  {
+    id: "papercut", group: "手作 · 纸与墨", name: "窗花剪纸", file: "s-papercut.html",
+    line: "一张红纸对折几次剪出来的窗花。",
+    from: [
+      ["lemo-opuscar · 红色窗花剪纸", "风格库里的 papercut-red 规格", `${LEMO}/papercut-red/STYLE.md`],
+      ["crawfordxx/paper-cut-video-skill", "中文剪纸风讲解视频（Remotion + 豆包配音）", "https://github.com/crawfordxx/paper-cut-video-skill"],
+      ["AllenAI2014/remotion-guofeng-starter", "国风纸片动画，给一首诗或成语出片", "https://github.com/AllenAI2014/remotion-guofeng-starter"],
+    ],
+    moves: ["窗花是程序剪的：只剪一个扇区，旋转镜像 16 次", "入场像对折的纸一折一折打开；封面从镂空里透出来", "挂着的窗花轻轻摆；文字像剪刀一样一段段剪出来"],
+    tap: ["点「听」小窗花开始转", "点任一条：菱形斗方变金色，展开摘要"],
+    fit: "节日、年货、红包活动、国风品牌",
+  },
+  {
+    id: "popup", group: "手作 · 纸与墨", name: "立体书", file: "s-popup.html",
+    line: "翻开这一页，纸片一层层立起来。",
+    from: [["lemo-opuscar · 纸片立体书", "风格库里的 paper-popup 规格", `${LEMO}/paper-popup/STYLE.md`]],
+    moves: ["头条是一个立体书场景：书页倾斜，封面卡、丝带、树、编号一层层从折缝立起，影子跟着变深", "立好后整页轻轻转，手指划过有视差", "列表卡从桌面翻起，小图再单独立起来；底栏是书签"],
+    tap: ["点「听热点」拉条往外拉", "点任一条：侧边拉签拉出来，展开摘要", "切底栏：书签往上冒"],
+    fit: "儿童、绘本、旅行、礼物和贺卡",
+  },
+  // ── 印刷 · 版画 ──
+  {
+    id: "riso", group: "印刷 · 版画", name: "孔版印刷", file: "s-riso.html",
+    line: "只有蓝和荧光粉两种油墨，叠出来是紫的。",
+    from: [
+      ["YIAN6557/eian-riso-broll · 324★", "Risograph 风信息动画 skill，口播逐字稿直接出竖屏", "https://github.com/YIAN6557/eian-riso-broll"],
+      ["lemo-opuscar · Risograph 孔版印刷", "风格库里的 risograph 规格", `${LEMO}/risograph/STYLE.md`],
+    ],
+    moves: ["进场像印两遍：先过蓝版，再过粉版，粉版对不准、晃几下才套上", "封面真图分成蓝、粉两版网点（不同网角），叠印出原图", "纸张颗粒每秒换 8 次，版子一直轻微浮动"],
+    tap: ["点「听热点」粉色点阵圈往外扩", "点任一条：编号盖一个蓝章", "切底栏：粉块一顿盖上去"],
+    fit: "年轻、潮、活动和社区类",
+  },
+  {
+    id: "ukiyo", group: "印刷 · 版画", name: "浮世绘", file: "s-ukiyo.html",
+    line: "普鲁士蓝的浪、木版平涂、竖排题签。",
+    from: [["lemo-opuscar · 浮世绘", "风格库里的 ukiyoe 规格", `${LEMO}/ukiyoe/STYLE.md`]],
+    moves: ["顶上两层浪一直起伏，浪尖带白沫，浪身是青海波纹", "封面真图压成几块平色 + 黑线，像木版套色", "每块像一版一版压上去，题签和红印「盖」下来"],
+    tap: ["点「听」红印上下浮", "点任一条：竖排编号变红，展开摘要"],
+    fit: "日式、旅行、餐饮、文化品牌",
+  },
+  {
+    id: "print", group: "印刷 · 版画", name: "打印纸", file: "s-print.html",
+    line: "针式打印机的绿杠连续纸，封面打成字符画。",
+    from: [
+      ["lemo-opuscar · ASCII / CRT 终端", "风格库里的 ascii-crt 规格（这里改成了亮色的打印纸）", `${LEMO}/ascii-crt/STYLE.md`],
+      ["ythx-101/live-panel-skill · 789★", "终端风格循环图 / 浅色信息图", "https://github.com/ythx-101/live-panel-skill"],
+    ],
+    moves: ["一行一行打出来，打印头跟着走", "封面真图按亮度换成 ASCII 字符", "大字是点阵的；进度条是 [#####----]"],
+    tap: ["点任一条：摘要接着打在下面", "点「听热点」变成 [■ 在听 01]"],
+    fit: "开发者工具、日志、账单、复古小票",
+  },
+  {
+    id: "swiss", group: "印刷 · 版画", name: "瑞士排版", file: "s-swiss.html",
+    line: "六栏网格、巨大编号、黑白加一点红。",
+    from: [
+      ["lemo-opuscar · 瑞士动态排版", "风格库里的 swiss-motion 规格（作者「改成你自己的风格」就拿它做的例子）", `${LEMO}/swiss-motion/STYLE.md`],
+      ["bangtutorial/bang-motion · 674★", "片头、动态排版的浏览器动态图形 skill", "https://github.com/bangtutorial/bang-motion"],
+    ],
+    moves: ["网格线先画出来，字沿着栏往右滑进来", "编号像计数器一样滚到 01；封面百叶窗一条条翻开", "数字跳到位，红色热度条从左往右长"],
+    tap: ["点「听」外圈一圈字开始转", "点任一条：整行反白，展开摘要"],
+    fit: "数据、金融、设计工作室、官网",
+  },
+  {
+    id: "constructivist", group: "印刷 · 版画", name: "构成主义", file: "s-constructivist.html",
+    line: "红黑斜线、大箭头、圆形照片蒙太奇。",
+    from: [["lemo-opuscar · 构成主义蒙太奇", "风格库里的 kino-montage 规格", `${LEMO}/kino-montage/STYLE.md`]],
+    moves: ["所有东西沿斜线猛冲进来，冲过头一点再停", "放射线从圆心画出去；箭头一伸指向标题", "封面切成黑白两色装进转动的圆里"],
+    tap: ["点喇叭：声波一圈圈出来", "点任一条：整行反黑"],
+    fit: "号召、活动、观点和宣言类内容",
+  },
+  // ── 影像 · 屏幕 ──
+  {
+    id: "news", group: "影像 · 屏幕", name: "新闻包装", file: "s-news.html",
+    line: "台标、LIVE、下三分之一字幕、滚动条。",
+    from: [["lemo-opuscar · 电视新闻包装", "风格库里的 news-package 规格（示例片《The Week in AI》）", `${LEMO}/news-package/STYLE.md`]],
+    moves: ["头条每 5 秒轮播：红条扫过换画面，字幕分两段推出来", "突发黄条闪几下；底部滚动条一直走", "LIVE 点在呼吸，时钟走秒"],
+    tap: ["点「接下来」任一条：变成正在播", "点「收听」变红"],
+    fit: "资讯、赛事、直播、发布会",
+  },
+  {
+    id: "liminal", group: "影像 · 屏幕", name: "后室录像", file: "s-liminal.html",
+    line: "发黄的日光灯房间，透过一台老摄像机看。",
+    from: [["lemo-opuscar · 后室 / 新怪谈", "风格库里的 backrooms（Liminal Found Footage）规格", `${LEMO}/backrooms/STYLE.md`]],
+    moves: ["开机先一屏雪花再「啪」地出画面", "每隔几秒一条亮带滚下来，画面跟着抖；日光灯偶尔闪", "封面真图做录像带画质：糊、红蓝错开、横向雪花；时间码按 30 帧走"],
+    tap: ["点「PLAY」变 REC 闪烁", "点任一条：画面一跳，展开摘要"],
+    fit: "悬疑、游戏、恐怖、怪谈内容；万圣节活动",
+  },
+  {
+    id: "spy", group: "影像 · 屏幕", name: "间谍片头", file: "s-spy.html",
+    line: "60 年代片头：橙色色块、黑条、爵士鼓点。",
+    from: [["lemo-opuscar · 60s 间谍片头", "风格库里的 spy-titles 规格", `${LEMO}/spy-titles/STYLE.md`]],
+    moves: ["黑条从四边扫进来停在构图位置，然后按 0.24 秒一拍硬切出现", "封面切成黑色剪影压在橙色上", "节奏条一直按拍子跳；眩晕螺旋当播放键"],
+    tap: ["点螺旋开始转", "点任一条：标题变橙"],
+    fit: "影视、音乐、活动海报、品牌片头",
+  },
+  {
+    id: "citypop", group: "影像 · 屏幕", name: "City Pop", file: "s-citypop.html",
+    line: "80 年代动画：蓝天、椰子树、泳池、平涂描线。",
+    from: [["lemo-opuscar · 80 年代赛璐璐动画", "风格库里的 cel-anime-80s 规格", `${LEMO}/cel-anime-80s/STYLE.md`]],
+    moves: ["封面真图做赛璐璐：几块平涂色 + 深色描线", "按 12 帧/秒走：标题先压扁再弹开，卡片一顿一顿落位", "云按格平移、椰子树摆、水面高光闪、四角星光一闪一闪"],
+    tap: ["点任一条：卡片按下去，展开摘要", "切底栏：黄色药丸弹过去"],
+    fit: "音乐、度假、潮牌、夏日活动",
+  },
+  // ── 数字 · 三维 ──
+  {
+    id: "morph", group: "数字 · 三维", name: "极简变形", file: "s-morph.html",
+    line: "大字、留白、一个会变形的黑色元素。",
+    from: [
+      ["zero（@twoclipping）· UI 形态变换循环", "一个形状不断变成按钮、播放器、滑块、标签页；弹簧动效、禁用光晕和粒子", "https://x.com/twoclipping/status/2103273003555402193"],
+      ["zero · 高端极简产品片（YouMind 1.4K 收藏）", "一镜一个意思、遮罩出字、一种强调色", "https://youmind.com/video-prompts/high-end-product-video-prompt-11292"],
+      ["Danny Stuart · Remotion App 宣传片", "dramatic cuts + kinetic typography，浅色主题", "https://dannystuart.substack.com/p/claude-code-opus-remotion-agentic-promo-video"],
+    ],
+    moves: ["「听热点」按钮自己变成底部播放条：位置、宽高、圆角都走弹簧，内容换的时候短暂模糊", "大字从遮罩里升起，封面从中间一个点弹开", "底栏黑块两条边各走各的弹簧，切换时被拉长再收回"],
+    tap: ["点播放条右边 × 变回按钮，再点按钮又变回去", "播放 / 暂停图标互相变形", "切换底栏看黑块拉伸"],
+    fit: "工具、播放器、要显得专业的产品",
+  },
+  {
+    id: "glass", group: "数字 · 三维", name: "液态玻璃", file: "s-glass.html",
+    line: "一层会折射的玻璃浮在真图上面。",
+    from: [["lemo-opuscar · 玻璃质感产品", "风格库里的 glass-product 规格", `${LEMO}/glass-product/STYLE.md`]],
+    moves: ["玻璃边缘真的会弯折背后的画面（SVG 位移贴图），不只是毛玻璃", "一块透镜在头图上慢慢漂，经过的地方被放大", "按下去像果冻一样压扁回弹；底栏一滴玻璃在选项之间流过去"],
+    tap: ["按任何玻璃块看回弹", "切底栏看玻璃滴拉长"],
+    fit: "系统级工具、音乐、相机、手机桌面组件",
+  },
+  {
+    id: "iso", group: "数字 · 三维", name: "等距积木", file: "s-iso.html",
+    line: "8 条热点堆成一座热度城市。",
+    from: [
+      ["lemo-opuscar · 等距信息图 / 积木玩具", "风格库里的 iso-infographic 和 brick-toy 规格", `${LEMO}/iso-infographic/STYLE.md`],
+      ["Vib3Coded · 交互式史前岛屿（Three.js）", "微缩世界提示词的写法参考", "https://x.com/vib3coded/status/2102450842070569099"],
+    ],
+    moves: ["封面铺成地面，每条热点一座楼，楼高按热度", "积木一块块往下掉、往上堆；楼顶号码牌轻轻浮", "列表小图是一块方块，封面贴在顶面"],
+    tap: ["点任一条：城市里对应那座楼跳一下", "点「听热点」按钮按下去"],
+    fit: "数据看板、游戏化、教育、城市和地产",
+  },
+  {
+    id: "lidar", group: "数字 · 三维", name: "点云测绘", file: "s-lidar.html",
+    line: "封面变成一团会转的 3D 点云。",
+    from: [["lemo-opuscar · 点云测绘", "风格库「实证影像」分类（10-16 新加）里的 lidar-survey 规格", `${LEMO}/lidar-survey/STYLE.md`]],
+    moves: ["封面按暗度抬成地形，按高度上色，整团来回转", "激光从左往右扫一遍，扫过的地方才出现点", "角标、坐标读数一直在更新"],
+    tap: ["点「听热点」雷达开始扫", "点任一条：框变蓝，展开摘要"],
+    fit: "科研、地图、汽车、硬件、工程类",
+  },
+  {
+    id: "manim", group: "数字 · 三维", name: "数学讲解", file: "s-manim.html",
+    line: "3Blue1Brown 的样子：深底、坐标轴、会变形的曲线。",
+    from: [
+      ["adithya-s-k/manim_skill · 1.2k★", "用 Manim 做 3Blue1Brown 风格动画的 skill", "https://github.com/adithya-s-k/manim_skill"],
+      ["Deedy · 论文动画讲解", "Claude 自选 Manim + Kokoro 配音做的论文讲解", "https://x.com/deedydas/status/2103141339651350646"],
+    ],
+    moves: ["坐标轴一笔画出来，真热度曲线沿着画，黄点带着数值跑", "标题像 Manim 的 Write：先描边再填色", "点列表任一条：曲线 Transform 成那条的曲线，颜色和数字一起过渡"],
+    tap: ["点任一条看曲线变形", "点播放键变暂停"],
+    fit: "教育、数据讲解、研究报告；唯一一个深底",
+  },
+  {
+    id: "pixel", group: "数字 · 三维", name: "像素", file: "s-pixel.html",
+    line: "16-bit 游戏的白天关卡，热点是任务。",
+    from: [
+      ["Majid Manzarpour · 像素巫师", "规格型提示词：低分辨率画布、固定调色板、8–12 帧/秒的像素动画手感", "https://x.com/majidmanzarpour/status/2102476499387383834"],
+      ["lemo-opuscar · 16-bit 像素 RPG", "风格库里的 pixel-rpg 规格", `${LEMO}/pixel-rpg/STYLE.md`],
+    ],
+    moves: ["中文也做成点阵：小字号画上去，再一刀切成纯色像素", "封面真图缩成 16 色抖动像素图", "窗口一格格展开，对话框打字机出字，云、星星、小机器人都按 8 帧/秒走"],
+    tap: ["点任一条：光标跳过去、窗口一晃、弹「+1 EXP」", "点「听热点」对话框重新打字"],
+    fit: "打卡、习惯、游戏化（盯梢岛这类）",
+  },
+];

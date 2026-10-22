@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>后室录像</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --wall: #d8c78a; --wall2: #c9b674; --ink: #2b2416; --osd: #f5f5ef; --vcr: #1b2ec4; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #000; }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; overflow: hidden; background: var(--wall) var(--paper); }
+  .ui { position: relative; height: 100%; display: flex; flex-direction: column; filter: saturate(.85) contrast(1.02); }
+  .ab { text-shadow: -1.2px 0 rgba(255,0,60,.55), 1.2px 0 rgba(0,90,255,.5); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: VT323; font-size: 20px; }
+  .top { flex: none; padding: 30px 18px 6px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .lvl { font-family: VT323; font-size: 22px; letter-spacing: 2px; opacity: .75; }
+  h1 { font-weight: 900; font-size: 36px; letter-spacing: 1px; line-height: 1.05; }
+  .play { font-family: VT323, "Noto Sans SC"; font-size: 22px; padding: 2px 10px; border: 2px solid var(--ink); }
+  .play.on { background: var(--ink); color: var(--wall); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .tape { position: relative; border-radius: 14px / 18px; overflow: hidden; height: 230px; background: #222; box-shadow: 0 0 0 3px rgba(43,36,22,.8), 0 8px 18px rgba(43,36,22,.3); }
+  .tape canvas { width: 100%; height: 100%; display: block; }
+  .tape::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45)); pointer-events: none; }
+  .tape .osd { position: absolute; font-family: VT323; color: var(--osd); font-size: 19px; text-shadow: 2px 2px 0 rgba(0,0,0,.7); z-index: 2; letter-spacing: 1px; }
+  .hero h2 { margin-top: 14px; font-weight: 900; font-size: 21px; line-height: 1.42; }
+  .hero p { margin-top: 8px; font-size: 13.5px; line-height: 1.7; opacity: .8; font-weight: 500; }
+  .hero .m { margin-top: 8px; font-family: VT323, "Noto Sans SC"; font-size: 18px; opacity: .8; }
+
+  .it { display: grid; grid-template-columns: 1fr 86px; gap: 12px; padding: 14px 0; border-bottom: 1px dashed rgba(43,36,22,.4); cursor: pointer; }
+  .it .k { font-family: VT323; font-size: 18px; opacity: .7; letter-spacing: 1px; }
+  .it h3 { font-weight: 700; font-size: 15.5px; line-height: 1.45; }
+  .it .more { display: none; margin-top: 6px; font-size: 13px; line-height: 1.6; opacity: .85; }
+  .it.open .more { display: block; }
+  .it .tn { height: 64px; border-radius: 8px / 10px; overflow: hidden; background: #2a2a2a; box-shadow: 0 0 0 2px rgba(43,36,22,.7); display: grid; place-items: center; color: var(--osd); font-family: VT323; font-size: 18px; }
+  .it .tn canvas { width: 100%; height: 100%; display: block; }
+
+  .tabs { flex: none; background: var(--vcr); color: #fff; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 24px; font-family: VT323, "Noto Sans SC"; }
+  .tab { font-size: 15px; font-weight: 700; padding: 4px 0; letter-spacing: 1px; }
+  .tab.on { background: #fff; color: var(--vcr); }
+
+  /* 录像机叠层：扫描线、噪点、四角暗、屏幕字 */
+  .vhs { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+  .scan { position: absolute; inset: 0; background: repeating-linear-gradient(rgba(0,0,0,.09) 0 1px, transparent 1px 3px); }
+  .noise { position: absolute; inset: 0; background-image: var(--noise); opacity: .22; mix-blend-mode: overlay; }
+  .vig { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 60%, rgba(30,20,0,.35)); }
+  .band { position: absolute; left: 0; right: 0; height: 26px; top: -40px; background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.35) 40%, rgba(120,120,120,.4) 60%, rgba(255,255,255,0)); background-image: var(--noise); mix-blend-mode: screen; opacity: .8; }
+  .osd2 { position: absolute; font-family: VT323; color: var(--osd); font-size: 22px; letter-spacing: 1.5px; text-shadow: 2px 2px 0 rgba(0,0,0,.55), -1px 0 rgba(255,0,60,.6), 1px 0 rgba(0,90,255,.6); }
+  .rec { display: none; color: #ff3b30; }
+  .rec.on { display: inline; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { vhs } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+app.style.setProperty("--paper", `url(${wallpaper()})`);
+function wallpaper() {
+  const c = document.createElement("canvas"); c.width = 60; c.height = 60; const x = c.getContext("2d");
+  x.fillStyle = "rgba(120,100,40,.10)"; for (let i = 0; i < 60; i += 12) x.fillRect(i, 0, 2, 60);
+  x.strokeStyle = "rgba(120,100,40,.08)"; x.beginPath(); for (let y = 6; y < 60; y += 20) { x.moveTo(0, y); for (let i = 0; i <= 60; i += 6) x.lineTo(i, y + (i % 12 ? 3 : 0)); } x.stroke();
+  return c.toDataURL();
+}
+const noises = Array.from({ length: 4 }, () => grainURL(160, 0.9, 128 + Math.random() * 127));
+app.innerHTML = `
+  <div class="ui" id="ui">
+    <div class="sb ab"><span>${nowHM()}</span><span>▮▮▯ 5G</span></div>
+    <header class="top"><div><div class="lvl ab">LEVEL 0 · 第 0 层</div><h1 class="ab">AI 热点</h1></div><button class="play" id="play">▶ PLAY</button></header>
+    <main class="scroll">
+      <section class="hero">
+        <div class="tape"><canvas id="tc"></canvas><span class="osd" style="left:12px;top:10px">TAPE 01</span><span class="osd" style="right:12px;top:10px">SP</span><span class="osd" style="left:12px;bottom:8px">热度 ${heatText(h1)}</span></div>
+        <h2 class="ab">${esc(shortTitle(h1))}</h2>
+        <p>${esc(clip(firstLine(h1.summary), 58))}</p>
+        <div class="m">— ${h1.sources} 个来源录到了这件事</div>
+      </section>
+      <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}"><div><div class="k">TAPE ${pad2(h.rank)} · 23:${pad2(26 + i * 4)}:${pad2((i * 17) % 60)}</div><h3 class="ab">${esc(shortTitle(h))}</h3><div class="more">${esc(clip(firstLine(h.summary), 80))}</div></div><div class="tn">${h.cover ? "<canvas></canvas>" : "NO SIGNAL"}</div></li>`).join("")}</ol>
+    </main>
+    <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${i ? "" : "▶"}${n}</button>`).join("")}</nav>
+  </div>
+  <div class="vhs"><div class="scan"></div><div class="noise" id="noise"></div><div class="vig"></div><div class="band" id="band"></div>
+    <span class="osd2" style="left:22px;top:44px"><span id="mode">▶ PLAY</span> <span class="rec" id="rec">● REC</span></span>
+    <span class="osd2" style="left:22px;bottom:78px">OCT. 22 2026</span>
+    <span class="osd2" style="right:22px;bottom:78px" id="tc2">00:00:00:00</span>
+  </div>`;
+
+const $ = (id) => document.getElementById(id);
+// 录像带画质：糊一点、红蓝错开、偶尔一条横向雪花
+(async () => {
+await fontsReady();
+loadImage(h1.cover).then((img) => { const c = $("tc"), v = vhs(img, Math.round(c.offsetWidth * 1.5), Math.round(c.offsetHeight * 1.5)); c.width = v.width; c.height = v.height; c.getContext("2d").drawImage(v, 0, 0); });
+app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (!h.cover) return; loadImage(h.cover).then((img) => { const c = li.querySelector("canvas"), v = vhs(img, 172, 128); c.width = 172; c.height = 128; c.getContext("2d").drawImage(v, 0, 0); }); });
+
+// 开机：先一屏雪花，再「啪」地出画面
+const ui = $("ui");
+ui.animate([{ filter: "brightness(3) contrast(.4) blur(3px)", transform: "scaleY(.02)" }, { filter: "brightness(1.6) blur(1px)", transform: "scaleY(1.02)", offset: 0.4 }, { filter: "saturate(.85) contrast(1.02)", transform: "none" }], { duration: 700, easing: "steps(7, end)" });
+// 噪点 12 帧/秒换；时间码按 30 帧走
+const noise = $("noise"); let k = 0;
+setInterval(() => { noise.style.setProperty("--noise", `url(${noises[k++ % 4]})`); }, 83);
+$("band").style.setProperty("--noise", `url(${noises[0]})`);
+const t0 = performance.now();
+setInterval(() => { const s = (performance.now() - t0) / 1000, f = Math.floor((s % 1) * 30); $("tc2").textContent = `00:${pad2(Math.floor(s / 60))}:${pad2(Math.floor(s % 60))}:${pad2(f)}`; }, 33);
+// 跟踪不稳：每隔几秒一条亮带滚下来，画面跟着抖一下；日光灯偶尔闪
+function tracking() {
+  $("band").animate([{ top: "-40px" }, { top: "110%" }], { duration: 1400, easing: "linear" });
+  ui.animate([{ transform: "none" }, { transform: "translateX(-3px) skewX(-1.5deg)", offset: 0.3 }, { transform: "translateX(2px)", offset: 0.35 }, { transform: "none", offset: 0.4 }, { transform: "none" }], { duration: 1400, easing: "steps(14, end)" });
+  setTimeout(tracking, 4500 + Math.random() * 4000);
+}
+setTimeout(tracking, 2000);
+(function flicker() { ui.animate([{ opacity: 1 }, { opacity: .82 }, { opacity: 1 }, { opacity: .9 }, { opacity: 1 }], { duration: 260, easing: "steps(4, end)" }); setTimeout(flicker, 3000 + Math.random() * 6000); })();
+
+app.querySelectorAll(".it").forEach((li) => li.addEventListener("click", () => {
+  li.classList.toggle("open");
+  li.animate([{ transform: "translateX(6px)", filter: "blur(1px)" }, { transform: "translateX(-4px)" }, { transform: "none", filter: "none" }], { duration: 240, easing: "steps(3, end)" });
+}));
+const play = $("play");
+play.addEventListener("click", () => { const on = play.classList.toggle("on"); play.textContent = on ? "■ STOP" : "▶ PLAY"; $("rec").classList.toggle("on", on); $("mode").textContent = on ? "" : "▶ PLAY"; });
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t, i) => t.addEventListener("click", () => tabs.forEach((x, j) => { x.classList.toggle("on", x === t); x.textContent = (x === t ? "▶" : "") + TAB_NAMES[j]; })));
+})();
+</script>
+</body>
+</html>

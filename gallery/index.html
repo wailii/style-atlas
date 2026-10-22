@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>风格图鉴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f3f2ef; --card: #ffffff; --ink: #1d1d1f; --mute: #6e6e73; --line: #e3e2de; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.6 "Noto Sans SC", -apple-system, sans-serif; overflow: hidden; }
+  a { color: inherit; }
+  header { height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 15px; font-weight: 700; white-space: nowrap; }
+  header .sub { font-size: 12px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .sp { flex: 1; }
+  .hb { border: 1px solid var(--line); background: var(--card); font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+  .hb.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .body { height: calc(100% - 56px); display: flex; }
+  .side { width: 196px; flex: none; overflow-y: auto; border-right: 1px solid var(--line); padding: 10px 8px 24px; }
+  .side h4 { font-size: 11.5px; font-weight: 500; color: var(--mute); padding: 12px 10px 4px; }
+  .side button { display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left; border: 0; background: none; font: inherit; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+  .side button span { font-size: 11px; color: var(--mute); width: 16px; flex: none; }
+  .side button b { font-weight: 500; font-size: 13.5px; }
+  .side button.on { background: var(--card); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .side button.on b { font-weight: 700; }
+
+  .stage { flex: 1; min-width: 0; height: 100%; }
+  .one { height: 100%; display: flex; align-items: center; justify-content: center; gap: 44px; padding: 16px 24px; }
+  .phone { flex: none; border-radius: 48px; background: #1d1d1f; padding: 10px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.35); }
+  .phone .scr { width: 390px; height: 844px; border-radius: 38px; overflow: hidden; background: #fff; transform-origin: top left; }
+  .phone iframe { width: 390px; height: 844px; border: 0; display: block; }
+  .info { width: 340px; max-height: 100%; overflow-y: auto; }
+  .info .k { font-size: 12px; color: var(--mute); }
+  .info h2 { font-size: 28px; line-height: 1.2; margin: 4px 0 6px; }
+  .info .one-line { font-size: 15px; color: #3a3a3c; }
+  .info h3 { font-size: 12px; color: var(--mute); font-weight: 500; margin: 20px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .info ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .info li { padding-left: 14px; position: relative; }
+  .info li::before { content: ""; position: absolute; left: 2px; top: 10px; width: 4px; height: 4px; border-radius: 50%; background: var(--ink); }
+  .src { display: flex; flex-direction: column; gap: 8px; }
+  .src a { display: block; text-decoration: none; padding: 9px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+  .src a:hover { border-color: #c9c8c3; }
+  .src b { display: block; font-size: 13px; }
+  .src span { display: block; font-size: 12.5px; color: var(--mute); margin-top: 2px; }
+
+  .all { height: 100%; overflow-y: auto; padding: 20px 20px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); gap: 26px 18px; align-content: start; }
+  .all figure { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .all .phone { padding: 6px; border-radius: 30px; width: 207px; height: 434px; }
+  .all .phone .scr { border-radius: 25px; transform: scale(.5); }
+  .all figcaption { font-size: 13px; font-weight: 700; cursor: pointer; }
+  .all figcaption span { font-weight: 400; color: var(--mute); margin-right: 6px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 1180px) { header .sub { display: none; } .info { width: 290px; } .one { gap: 24px; } }
+  @media (max-width: 900px) {
+    .body { flex-direction: column; }
+    .side { width: 100%; height: auto; display: flex; overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: 1px solid var(--line); padding: 6px; }
+    .side h4 { display: none; }
+    .side button { width: auto; flex: none; }
+    .stage { height: auto; flex: 1; min-height: 0; }
+    .one { flex-direction: column; justify-content: flex-start; overflow-y: auto; }
+    .info { width: 100%; max-height: none; overflow: visible; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>风格图鉴 · 20 种</h1>
+  <span class="sub">同一个 AI 热点精选页 · 10 月 22 日晚热榜的真数据和封面 · 每种都照着一个火的 Opus 5.5 视频提示词或 skill</span>
+  <span class="sp"></span>
+  <button class="hb" id="allBtn">全部</button>
+  <button class="hb" id="replay">重播</button>
+</header>
+<div class="body">
+  <nav class="side" id="side"></nav>
+  <div class="stage">
+    <section class="one" id="one">
+      <div class="phone" id="ph"><div class="scr" id="scr"><iframe id="fr" title="样例"></iframe></div></div>
+      <aside class="info" id="info"></aside>
+    </section>
+    <section class="all" id="all" hidden></section>
+  </div>
+</div>
+<script src="styles.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const groups = [...new Set(STYLES.map((s) => s.group))];
+$("side").innerHTML = groups.map((g) => `<h4>${g}</h4>` + STYLES.map((s, i) => (s.group === g ? `<button data-id="${s.id}"><span>${i + 1}</span><b>${s.name}</b></button>` : "")).join("")).join("");
+let cur = null;
+function fit() {
+  if (cur === "all") return;
+  const narrow = innerWidth <= 900, H = narrow ? 700 : innerHeight - 56 - 32, s = Math.min(H / 864, (innerWidth - (narrow ? 32 : 600)) / 410, 1);
+  $("scr").style.transform = `scale(${s})`;
+  $("ph").style.width = 390 * s + 20 + "px"; $("ph").style.height = 844 * s + 20 + "px";
+}
+function show(id) {
+  cur = id;
+  document.querySelectorAll(".side button").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
+  $("allBtn").classList.toggle("on", id === "all");
+  if (id === "all") {
+    $("one").hidden = true; $("all").hidden = false; $("fr").src = "about:blank";
+    $("all").innerHTML = STYLES.map((s, i) => `<figure><div class="phone"><div class="scr"><iframe loading="lazy" src="${s.file}" title="${s.name}"></iframe></div></div><figcaption data-id="${s.id}"><span>${i + 1}</span>${s.name}</figcaption></figure>`).join("");
+    $("all").querySelectorAll("figcaption").forEach((c) => (c.onclick = () => go(c.dataset.id)));
+    return;
+  }
+  const s = STYLES.find((x) => x.id === id), n = STYLES.indexOf(s) + 1;
+  $("all").hidden = true; $("all").innerHTML = ""; $("one").hidden = false;
+  $("fr").src = s.file;
+  $("info").innerHTML = `
+    <div class="k">${n} / ${STYLES.length} · ${s.group}</div>
+    <h2>${s.name}</h2>
+    <div class="one-line">${s.line}</div>
+    <h3>照着哪条视频提示词 / skill</h3>
+    <div class="src">${s.from.map(([t, d, u]) => `<a href="${u}" target="_blank" rel="noopener"><b>${t}</b><span>${d}</span></a>`).join("")}</div>
+    <h3>招牌动效</h3><ul>${s.moves.map((m) => `<li>${m}</li>`).join("")}</ul>
+    <h3>可以点的</h3><ul>${s.tap.map((m) => `<li>${m}</li>`).join("")}</ul>
+    <h3>适合</h3><div>${s.fit}</div>`;
+  fit();
+}
+const go = (id) => { location.hash = id; };
+addEventListener("hashchange", () => show(location.hash.slice(1) || STYLES[0].id));
+$("side").onclick = (e) => { const b = e.target.closest("button"); if (b) go(b.dataset.id); };
+$("allBtn").onclick = () => go("all");
+$("replay").onclick = () => { if (cur === "all") show("all"); else { const f = $("fr"), src = f.src; f.src = "about:blank"; setTimeout(() => (f.src = src), 30); } };
+addEventListener("resize", fit);
+show(location.hash.slice(1) || STYLES[0].id);
+</script>
+</body>
+</html>
