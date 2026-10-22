@@ -69,7 +69,7 @@
 </head>
 <body>
 <header>
-  <h1>风格图鉴 · 20 种</h1>
+  <h1 id="ttl">风格图鉴</h1>
   <span class="sub">同一个 AI 热点精选页 · 10 月 22 日晚热榜的真数据和封面 · 每种都照着一个火的 Opus 5.5 视频提示词或 skill</span>
   <span class="sp"></span>
   <button class="hb" id="allBtn">全部</button>
@@ -89,6 +89,7 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const groups = [...new Set(STYLES.map((s) => s.group))];
+$("ttl").textContent = `风格图鉴 · ${STYLES.length} 种`;
 $("side").innerHTML = groups.map((g) => `<h4>${g}</h4>` + STYLES.map((s, i) => (s.group === g ? `<button data-id="${s.id}"><span>${i + 1}</span><b>${s.name}</b></button>` : "")).join("")).join("");
 let cur = null;
 function fit() {

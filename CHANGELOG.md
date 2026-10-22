@@ -1,5 +1,9 @@
 # 更新记录
 
+## 1.4.1 · 2026-10-23
+
+- 图鉴首页标题的风格数改成从 `styles.js` 读，不再写死
+
 ## 1.4.0 · 2026-10-23
 
 新增 10 种工具类和科普类风格（共 50 种）。工具：便当格、数据密集、AI 原生界面、墨水屏、终端界面；科普：白板讲解、可探索解释、象形统计、显微镜、博物版画。来源：UI/UX Pro Max 风格表、lemo-opuscar 风格库（whiteboard、pictogram-motion、microscope、engraving）、Bret Victor 和 Nicky Case 的可探索解释、Neurath 的 Isotype。
