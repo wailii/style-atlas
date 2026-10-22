@@ -21,7 +21,7 @@ description: 风格图鉴：20 种从 Opus 5.5 爆火的「代码做视频」提
 | `gallery/` | 参考实现：`s-<id>.html` 是同一个「AI 热点」首页按每种风格做的完整页面（390×844，能点）；`v-collage.html` 是视频参考（纸拼贴，12 秒 1080×1920，`seek(t)` 逐帧）；`index.html` 是总览 |
 | `gallery/shots/<id>.png` | 标准截图（动画结束后的样子），还原度对照用；`_contact.png` 是 20 张拼图；`v-collage-<t>.png` 是视频标准帧 |
 | `gallery/common.js` `gallery/engines.js` `gallery/vendor/` | 共用的图片处理、风格引擎、rough.js |
-| `tools/snap.mjs` | 用本机 Chrome 截图（Node ≥ 22，不装包）；`--eval "seek(3)"` 可截视频某一帧 |
+| `tools/snap.mjs` | 用本机 Chrome 截图（Node ≥ 22，不装包）；`--frames "1,4,7"` 抽视频帧；`--video out.mp4` 直接渲染成 MP4（要 ffmpeg） |
 | `tools/check.mjs` | 完整性检查：每种风格的参考页、规格小节、截图、目录项是否齐全 |
 | `CHANGELOG.md` `VERSION` | 版本和更新记录 |
 

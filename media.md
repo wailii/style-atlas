@@ -80,7 +80,7 @@ window.ready = (async () => {
 ### 抽帧和出片
 
 - 抽帧检查：`node tools/snap.mjs --file video.html f.png --w 1080 --h 1920 --scale 1 --wait 3000 --frames "1,4,7,10.5"`
-- 出 MP4：按 `fps` 循环 `seek(i / fps)` 截图再用 ffmpeg 合成；或者用 HyperFrames（先读 `hyperframes` skill）。
+- 出 MP4：`node tools/snap.mjs --file video.html --video out.mp4 --w 1080 --h 1920 --scale 1 --fps 24`（逐帧 seek 截图再用 ffmpeg 合成，需要本机有 ffmpeg；12 秒约半分钟）。要配音、配乐、字幕，再用 HyperFrames（先读 `hyperframes` skill）或 ffmpeg 混音。
 - 声音：规格里「换到别的东西上 · 视频」写了这个风格的声音——配乐和音效要跟画面同一个时代、同一种材质（纸拼贴配纸张摩擦和咔嗒声，间谍片头配爵士鼓刷，后室配日光灯嗡嗡声）。响度 −14 LUFS。
 - 先出分镜再写代码；正式渲染前抽帧检查拥挤、重叠、看不清的地方。想要更细的镜头和声音说明，看规格里链接的 lemo-opuscar 原文。
 

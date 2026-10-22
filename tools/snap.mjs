@@ -9,6 +9,7 @@
 //       --click "选择器"   截图前先点一下（可写多次，按顺序点，每次之后再等 1.2 秒）
 //       --eval "seek(3.5)" 截图前先执行一段 JS（可写多次；出错就不存图、退出码 1）
 //       --frames "1,4,7.5"  视频页：依次 seek(t) 各截一张，存成 out-1.png、out-4.png…（同一个 Chrome，快）
+//       --video out.mp4     视频页：按 --fps（默认 24）逐帧 seek 截图，再用 ffmpeg 合成 MP4；时长取 window.VIDEO.duration 或 --dur
 //
 // 找不到 Chrome 时设环境变量 CHROME=/path/to/chrome。
 import { spawn } from "node:child_process";
@@ -27,8 +28,10 @@ const clicks = []; for (let i; (i = args.indexOf("--click")) >= 0;) { clicks.pus
 const evals = []; for (let i; (i = args.indexOf("--eval")) >= 0;) { evals.push(args[i + 1]); args.splice(i, 2); }
 const framesArg = (() => { const i = args.indexOf("--frames"); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return v.split(",").map(Number); })();
 let failed = false;
+const videoOut = (() => { const i = args.indexOf("--video"); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return resolve(v); })();
 const W = +opt("--w", 390), H = +opt("--h", 844), WAIT = +opt("--wait", 7000), SCALE = +opt("--scale", 2);
 const urlArg = opt("--url", null), fileArg = opt("--file", null);
+const VFPS = +opt("--fps", 24), VDUR = +opt("--dur", 0);
 
 const CHROMES = [process.env.CHROME, "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/Applications/Chromium.app/Contents/MacOS/Chromium", "/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser"].filter(Boolean);
 const chrome = CHROMES.find((p) => existsSync(p));
@@ -52,6 +55,7 @@ async function main() {
   let jobs = [];
   let srv = null;
   if (urlArg) jobs.push({ url: urlArg, out: resolve(args[0] || "shot.png") });
+  else if (fileArg && videoOut) { srv = await serve(dirname(resolve(fileArg))); jobs.push({ url: `http://127.0.0.1:${srv.address().port}/${basename(fileArg)}`, out: videoOut }); }
   else if (fileArg) { srv = await serve(dirname(resolve(fileArg))); jobs.push({ url: `http://127.0.0.1:${srv.address().port}/${basename(fileArg)}`, out: resolve(args[0] || "shot.png") }); }
   else {
     srv = await serve(GAL); mkdirSync(join(GAL, "shots"), { recursive: true });
@@ -94,6 +98,28 @@ async function main() {
     let ok = true;
     for (const ex of evals) ok = ok && (await evalOk(ex));
     if (!ok) { await send("Target.closeTarget", { targetId }); return; }
+    if (videoOut) {
+      const meta = (await send("Runtime.evaluate", { expression: "JSON.stringify(window.VIDEO || null)", returnByValue: true }, s)).result?.result?.value;
+      const dur = VDUR || JSON.parse(meta || "null")?.duration;
+      if (!dur) { console.log("✗ 不知道时长：页面没有 window.VIDEO.duration，加 --dur 秒数"); failed = true; return; }
+      const dir = mkdtempSync(join(tmpdir(), "frames-")), n = Math.round(dur * VFPS);
+      for (let i = 0; i < n; i++) {
+        const r = await send("Runtime.evaluate", { expression: `seek(${(i / VFPS).toFixed(5)})`, awaitPromise: true }, s);
+        if (r.result?.exceptionDetails) { console.log("✗ seek 出错，第", i, "帧"); failed = true; break; }
+        const { result } = await send("Page.captureScreenshot", { format: "jpeg", quality: 92 }, s);
+        writeFileSync(join(dir, `f${String(i).padStart(5, "0")}.jpg`), Buffer.from(result.data, "base64"));
+        if (i % VFPS === 0) process.stdout.write(`\r  第 ${i}/${n} 帧`);
+      }
+      process.stdout.write("\n");
+      await new Promise((ok, bad) => {
+        const ff = spawn("ffmpeg", ["-loglevel", "error", "-y", "-framerate", String(VFPS), "-i", join(dir, "f%05d.jpg"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-movflags", "+faststart", job.out], { stdio: "inherit" });
+        ff.on("error", () => bad(new Error("没找到 ffmpeg")));
+        ff.on("exit", (c) => (c === 0 ? ok() : bad(new Error("ffmpeg 失败"))));
+      });
+      rmSync(dir, { recursive: true, force: true });
+      console.log("✓", job.out);
+      await send("Target.closeTarget", { targetId }); return;
+    }
     if (framesArg) {
       for (const t of framesArg) {
         if (!(await evalOk(`seek(${t})`))) break;
