@@ -1,5 +1,11 @@
 # 更新记录
 
+## 1.4.2 · 2026-10-23
+
+- 新增 `README.md`（配图在 `.github/readme/`）和 `LICENSE`（MIT）
+- 文档里遗留的「20 种 / 20 张」改成 50
+- `gallery/vendor/rough.js` 加上 Rough.js 的许可声明
+
 ## 1.4.1 · 2026-10-23
 
 - 图鉴首页标题的风格数改成从 `styles.js` 读，不再写死

@@ -88,5 +88,5 @@
 
 ## 改引擎
 
-- 改 `engines.js` 会同时影响所有用到它的参考页。改完跑 `node tools/snap.mjs` 重截 20 张，对比 `gallery/shots/` 里的旧图。
+- 改 `engines.js` 会同时影响所有用到它的参考页。改完跑 `node tools/snap.mjs` 重截全部参考页，对比 `gallery/shots/` 里的旧图。
 - 新引擎：先在某个参考页里写好、调好，再搬进 `engines.js` 的对应小节，参考页改成 `const { 新函数 } = Engines;`。

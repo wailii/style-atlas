@@ -1,6 +1,6 @@
 # 数学讲解（manim）
 
-3Blue1Brown 的样子：深底、坐标轴一笔画出、曲线沿着画、字先描边再填色、一条曲线平滑地变成另一条。20 种里唯一的深底。
+3Blue1Brown 的样子：深底、坐标轴一笔画出、曲线沿着画、字先描边再填色、一条曲线平滑地变成另一条。50 种里唯一的深底。
 
 出处：adithya-s-k/manim_skill（1.2k★，用 Manim 做 3Blue1Brown 风格动画的 skill）；Deedy 用 Manim + Kokoro 做的论文讲解（https://x.com/deedydas/status/2103141339651350646）。
 
