@@ -1,5 +1,18 @@
 # 更新记录
 
+## 1.5.0 · 2026-11-02
+
+新增 10 种「电影 · 漫画叙事」风格（共 60 种），全部从同一条视频里来：抖音 @Motdes AI阿峰《fable 5.5 网页设计的未来？》录屏的 The Notturno Experience（意大利开胃酒品牌的 3D 滚动叙事网页）。
+
+- 朱墨剧场（crimson）：视频本身的设计语言。除了参考页，还有完整桌面体验 `gallery/x-crimson.html`（虚构品牌 MEZZANOTTE，8 幕、真 3D + 竖排墨线后期着色器、竖条滴落转场、按住推进、自动播放，`seek(t)` 出 46 秒 1920×1080 视频）和 Dashboard `gallery/d-crimson.html`
+- 从视频里拆出来的 9 种：漫画分镜、黑色漫画、美漫宇宙、红幕剧场、意式招贴、新艺术、三渲二、线网幻视、黑白木刻
+- 引擎：`inkHatch`（竖排墨线）、`dripDraw`（竖条滴落）
+- `gallery/vendor/three.min.js`（three.js r128，MIT）：三渲二和朱墨剧场的 3D 用本地文件
+- 新增 `cinematic.md` 炫酷精选：22 种冲击力最强的风格，按网页 / 设计 / Dashboard / 视频 / App 分好
+- 图鉴首页：风格可以挂「别的媒介」链接；出处没有网址时显示成纯文字
+- 「按气质找」加「电影感、滚动叙事、品牌发布」；默认口味里的深底风格加上黑色漫画、红幕剧场
+- 截图注意：三渲二（WebGL）要单独截 `node tools/snap.mjs celshade`，和别的页面同一批截在无显卡的 SwiftShader 下会卡住
+
 ## 1.4.2 · 2026-10-23
 
 - 新增 `README.md`（配图在 `.github/readme/`）和 `LICENSE`（MIT）

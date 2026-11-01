@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线网幻视</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  @property --w { syntax: "<length>"; inherits: false; initial-value: 0px; }
+  :root { --paper: #f7f5ef; --ink: #0b0b0b; --acc: #0038ff; --mute: #6d6a63; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .x { font-family: "Archivo", sans-serif; font-stretch: 125%; font-weight: 800; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .sb { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font: 700 14px "Archivo"; font-stretch: 125%; }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 14px 28px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  canvas { display: block; }
+
+  /* 头部：字只靠线的错位显出来（潜影），右边是扫描动画按钮 */
+  .top { position: relative; display: grid; grid-template-columns: 1fr 66px; gap: 10px; align-items: end; }
+  .k { display: flex; justify-content: space-between; font: 700 10.5px "Archivo"; font-stretch: 125%; letter-spacing: .12em; padding: 0 2px 6px; }
+  .k i { font-style: normal; color: var(--acc); }
+  #head { width: 100%; height: 96px; }
+  .scan { position: relative; width: 66px; height: 96px; border: 2px solid var(--ink); overflow: hidden; background: var(--paper); }
+  .scan canvas { position: absolute; left: 0; top: 0; width: 62px; height: 70px; }
+  .scan .mask { position: absolute; left: 0; top: 0; width: 200%; height: 70px; background: repeating-linear-gradient(90deg, var(--ink) 0 3.75px, transparent 3.75px 5px); transform: translateX(calc(var(--f, 0) * 1.25px)); }
+  .scan b { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; display: grid; place-items: center; border-top: 2px solid var(--ink); font: 900 12px "Noto Sans SC"; letter-spacing: .3em; padding-left: .3em; }
+  .scan.on b { background: var(--ink); color: var(--paper); }
+
+  /* 主图：真封面压成线网，蓝色同心圆线网慢慢漂，叠出摩尔纹 */
+  .hero { position: relative; margin-top: 12px; height: 262px; border: 2px solid var(--ink); background: var(--paper); cursor: pointer; overflow: hidden; }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #moire { mix-blend-mode: multiply; }
+  .tag { position: absolute; right: 0; top: 0; padding: 4px 8px 5px; background: var(--ink); color: var(--paper); font: 700 10px "Archivo"; font-stretch: 125%; letter-spacing: .14em; }
+  .tag i { font-style: normal; color: #8fa6ff; }
+  .lpi { display: flex; justify-content: space-between; margin-top: 6px; font: 600 10px "Archivo"; font-stretch: 112%; letter-spacing: .1em; color: var(--mute); }
+  h2 { margin-top: 12px; font-weight: 900; font-size: 23px; line-height: 1.32; letter-spacing: -.005em; }
+  h2 em { font-style: normal; color: var(--acc); }
+  .sum { margin-top: 8px; font-size: 13.5px; line-height: 1.7; color: #3a3833; }
+  .stats { display: grid; grid-template-columns: 1.3fr 1fr 1fr; margin-top: 14px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+  .stats > div { padding: 8px 8px 9px; }
+  .stats > div + div { border-left: 1px solid var(--ink); }
+  .stats span { font-size: 11px; font-weight: 700; letter-spacing: .15em; }
+  .stats b { display: block; font: 800 30px/1 "Archivo"; font-stretch: 125%; margin-top: 4px; }
+  .stats canvas { width: 100%; height: 14px; margin-top: 6px; }
+
+  /* 分隔带：莱利式波浪竖线 */
+  .band { height: 30px; margin: 22px -14px 12px; }
+  .band canvas { width: 100%; height: 30px; }
+  .sect { display: flex; justify-content: space-between; font: 700 11px "Archivo"; font-stretch: 125%; letter-spacing: .14em; padding: 0 2px 8px; }
+
+  .row { display: grid; grid-template-columns: 78px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--ink); cursor: pointer; }
+  .row:last-child { border-bottom: 1px solid var(--ink); }
+  .row .th { position: relative; width: 78px; height: 78px; }
+  .row .th canvas { width: 78px; height: 78px; }
+  .row .rk { position: absolute; left: 0; bottom: 0; padding: 1px 4px 0; background: var(--paper); font: 800 13px "Archivo"; font-stretch: 125%; }
+  .row h3 { font-size: 15px; font-weight: 700; line-height: 1.45; }
+  .row .m { display: flex; align-items: center; gap: 8px; margin-top: 6px; font: 700 11px "Archivo"; font-stretch: 115%; letter-spacing: .08em; color: var(--mute); }
+  .row .m canvas { width: 72px; height: 10px; }
+  .row .more { display: none; grid-column: 1 / -1; font-size: 12.5px; line-height: 1.75; color: #3a3833;
+               -webkit-mask: repeating-linear-gradient(90deg, #000 0 var(--w), transparent var(--w) 5px); mask: repeating-linear-gradient(90deg, #000 0 var(--w), transparent var(--w) 5px); }
+  .row.on .more { display: block; animation: lines .7s steps(10, end) forwards; }
+  .row.on h3 { color: var(--acc); }
+  @keyframes lines { from { --w: 0px; } to { --w: 5px; } }
+  .wait .lr { animation-play-state: paused; }
+  .lr { -webkit-mask: repeating-linear-gradient(90deg, #000 0 var(--w), transparent var(--w) 5px); mask: repeating-linear-gradient(90deg, #000 0 var(--w), transparent var(--w) 5px); animation: lines .6s steps(8, end) both; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 0 6px 24px; background: var(--paper); }
+  .tabs canvas { grid-column: 1 / -1; width: calc(100% + 12px); margin: 0 -6px 8px; height: 8px; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--mute); }
+  .tab svg { width: 21px; height: 21px; }
+  .tab::after { content: ""; width: 26px; height: 5px; margin-top: 1px; background: repeating-linear-gradient(90deg, currentColor 0 1.5px, transparent 1.5px 4px); opacity: 0; }
+  .tab.on { color: var(--acc); }
+  .tab.on::after { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const t1 = esc(shortTitle(h1)).replace(esc(KEY[1]), `<em>${esc(KEY[1])}</em>`);
+const maxHeat = Math.max(...HOT.map((h) => h.heat));
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <main class="scroll" id="scroll">
+    <div class="k"><span>LINE SCREEN № 01</span><span>10·22 <i>■</i> 实时</span></div>
+    <header class="top"><canvas id="head"></canvas><button class="scan" id="scan" aria-label="听热点"><canvas id="scanImg"></canvas><span class="mask" id="mask"></span><b>听</b></button></header>
+    <section class="hero" id="hero"><canvas id="pic"></canvas><canvas id="moire"></canvas><span class="tag">LPI <i id="lpi">21</i> · 点按换图</span></section>
+    <div class="lpi"><span>封面 → 线宽 = 暗度</span><span id="cvn">COVER 1/4</span></div>
+    <h2>${t1}</h2>
+    <p class="sum">${esc(clip(firstLine(h1.summary), 58))}</p>
+    <div class="stats"><div><span>热度</span><b>${heatText(h1)}</b><canvas data-v="${h1.heat / maxHeat}"></canvas></div><div><span>来源</span><b>${h1.sources}</b><canvas data-v="${h1.sources / 12}"></canvas></div><div><span>参与</span><b>${h1.people}</b><canvas data-v="${h1.people / 67}"></canvas></div></div>
+    <div class="band"><canvas id="band"></canvas></div>
+    <div class="sect"><span>其余 ${rest.length} 条</span><span>HEAT ↓</span></div>
+    <div id="list">${rest.map((h) => `<div class="row" data-r="${h.rank}"><div class="th"><canvas width="156" height="156"></canvas><span class="rk">${pad2(h.rank)}</span></div><div><h3>${esc(shortTitle(h))}</h3><div class="m"><canvas data-v="${h.heat / maxHeat}"></canvas>${heatText(h)} · ${h.sources} 源</div></div><div class="more">${esc(clip(firstLine(h.summary), 78))}</div></div>`).join("")}</div>
+  </main>
+  <nav class="tabs"><canvas id="tline"></canvas>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+const DPR = 2;
+// 文字先藏着（线宽 0），主图准备好再一条条长出来
+app.querySelectorAll("h2, .sum, .stats, .row h3").forEach((el) => el.classList.add("lr")); app.classList.add("wait");
+// 下一帧：平时走 requestAnimationFrame；rAF 停了（后台标签页、无头截图）就退回 setTimeout
+const nextFrame = (cb) => { let done = false; const go = () => { if (!done) { done = true; cb(performance.now()); } }; requestAnimationFrame(go); setTimeout(go, 1000 / 30); };
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+function sizeCanvas(cv) { const w = cv.clientWidth, h = cv.clientHeight; cv.width = w * DPR; cv.height = h * DPR; const x = cv.getContext("2d"); x.setTransform(DPR, 0, 0, DPR, 0, 0); return [x, w, h]; }
+
+// ───────── 线网：只用平行线画图。线宽 = 暗度，线还会顺着暗度轻轻偏移（浮雕感）+ 整体一点波浪 ─────────
+// src：任意画布（会按 cover 裁到 w×h）；dir "v" 竖线 / "h" 横线
+function stretchedLuma(src, w, h, blur = 0.7) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d", { willReadFrequently: true });
+  x.filter = `blur(${blur}px)`; x.drawImage(coverCanvas(src, w, h), 0, 0);
+  const L = lumaOf(c), s = Float32Array.from(L).sort(), lo = s[Math.floor(s.length * 0.02)], hi = s[Math.floor(s.length * 0.985)];
+  for (let i = 0; i < L.length; i++) L[i] = clamp01((L[i] - lo) / Math.max(0.08, hi - lo));
+  return L;
+}
+function lineScreen(ctx, L, w, h, { pitch = 4.5, dir = "v", minW = 0.35, fill = 0.9, gamma = 1.1, wave = 1.1, relief = 0.35, phase = 0, color = "#0b0b0b" } = {}) {
+  const V = dir === "v", A = V ? w : h, B = V ? h : w, p = new Path2D();
+  const D = (a, b) => { const xi = Math.min(w - 1, Math.max(0, (V ? a : b) | 0)), yi = Math.min(h - 1, Math.max(0, (V ? b : a) | 0)); return Math.pow(1 - L[yi * w + xi], gamma); };
+  for (let a0 = -pitch + phase; a0 < A + pitch; a0 += pitch) {
+    const left = [], right = [];
+    for (let b = -1; b <= B + 1; b += 1) {
+      const d = D(a0, b), wd = minW + d * (pitch * fill - minW);
+      const a = a0 + wave * Math.sin(b * 0.045 + a0 * 0.021) + (d - 0.5) * pitch * relief;
+      left.push(a - wd / 2, b); right.push(a + wd / 2, b);
+    }
+    const pt = (u, v) => (V ? [u, v] : [v, u]);
+    p.moveTo(...pt(left[0], left[1]));
+    for (let i = 2; i < left.length; i += 2) p.lineTo(...pt(left[i], left[i + 1]));
+    for (let i = right.length - 2; i >= 0; i -= 2) p.lineTo(...pt(right[i], right[i + 1]));
+    p.closePath();
+  }
+  ctx.fillStyle = color; ctx.fill(p);
+}
+// 文字遮罩（白底黑字，便于当亮度用）
+function textMask(w, h, draw) { const c = document.createElement("canvas"); c.width = w * DPR; c.height = h * DPR; const x = c.getContext("2d"); x.scale(DPR, DPR); draw(x); return c; }
+function offscreen(w, h) { const c = document.createElement("canvas"); c.width = w * DPR; c.height = h * DPR; const x = c.getContext("2d"); x.scale(DPR, DPR); return [c, x]; }
+
+// 一张完整的线网图：竖线画图，「01」字形里改成横线（只换方向，图照样是那张图）
+function heroFrame(img, w, h) {
+  const L = stretchedLuma(img, w, h);
+  const [vc, vx] = offscreen(w, h), [hc, hx] = offscreen(w, h);
+  vx.fillStyle = "#f7f5ef"; vx.fillRect(0, 0, w, h);
+  lineScreen(vx, L, w, h, { pitch: 4.5, dir: "v", fill: 0.95 });
+  lineScreen(hx, L, w, h, { pitch: 4.5, dir: "h", wave: 0.4, minW: 1.3, fill: 0.95 });
+  const m = textMask(w, h, (x) => { x.font = `800 158px "Archivo"`; x.fontStretch = "expanded"; x.textBaseline = "alphabetic"; x.fillStyle = "#000"; x.fillText("01", 8, h - 10); });
+  // 横线版只留字形里，竖线版在字形里挖掉
+  hx.setTransform(1, 0, 0, 1, 0, 0); hx.globalCompositeOperation = "destination-in"; hx.drawImage(m, 0, 0);
+  vx.setTransform(1, 0, 0, 1, 0, 0); vx.globalCompositeOperation = "destination-out"; vx.drawImage(m, 0, 0);
+  vx.globalCompositeOperation = "source-over"; vx.drawImage(hc, 0, 0);
+  vc.glyph = m; return vc;
+}
+
+// ───────── 滴落溶解：画面拆成竖条，各条往下拉长、错开时间落位 ─────────
+function makeDrip(n, seed) { return [...Array(n)].map((_, i) => ({ d: rnd(seed + i * 1.37) * 0.45, k: 0.6 + rnd(seed + i * 2.11) * 1.6 })); }
+function drawDrip(ctx, F, w, h, p, cols, mode) {
+  ctx.fillStyle = "#f7f5ef"; ctx.fillRect(0, 0, w, h);
+  const cw = w / cols.length, sw = F.width / cols.length;
+  cols.forEach((c, i) => {
+    const q = clamp01((p - c.d) / 0.55), e = 1 - Math.pow(1 - q, 3);
+    if (mode === "in") {
+      // 进：从上往下滴，条带先被拉得很长，再收回原位
+      const front = h * Math.min(1, e * 1.25), stretch = 1 + (1 - e) * 2.4 * c.k;
+      if (front <= 0) return;
+      ctx.save(); ctx.beginPath(); ctx.rect(i * cw, 0, cw + 0.5, front); ctx.clip();
+      ctx.drawImage(F, i * sw, 0, sw, F.height, i * cw, 0, cw + 0.5, h * stretch); ctx.restore();
+      if (e < 1) { ctx.fillStyle = "#0b0b0b"; ctx.beginPath(); ctx.ellipse(i * cw + cw / 2, front, cw * 0.32, cw * 0.55, 0, 0, Math.PI * 2); ctx.fill(); }
+    } else {
+      // 出：每条往下坠、越拉越长，最后掉出画面
+      const dy = e * e * h * (0.9 + c.k * 0.5), stretch = 1 + e * 1.8 * c.k;
+      ctx.drawImage(F, i * sw, 0, sw, F.height, i * cw, dy, cw + 0.5, h * stretch);
+    }
+  });
+}
+
+// ───────── 扫描动画（scanimation）：N 帧交错成一张，黑栅条移一格换一帧 ─────────
+function scanFrames(w, h, N, slit) {
+  const [c, x] = offscreen(w, h), frames = [];
+  for (let f = 0; f < N; f++) {
+    const [fc, fx] = offscreen(w, h);
+    fx.strokeStyle = "#0b0b0b"; fx.lineWidth = 3.2;
+    // 一个圆心往外扩的声波：每帧环的半径往外推一点
+    for (let r = (f / N) * 9; r < 60; r += 9) { fx.beginPath(); fx.arc(w / 2, h / 2, r + 2, 0, Math.PI * 2); fx.stroke(); }
+    fx.fillStyle = "#0038ff"; fx.beginPath(); fx.arc(w / 2, h / 2, 6.5, 0, Math.PI * 2); fx.fill();
+    frames.push(fc);
+  }
+  for (let sx = 0, k = 0; sx < w; sx += slit, k++) { const f = frames[k % N]; x.drawImage(f, sx * DPR, 0, slit * DPR, h * DPR, sx, 0, slit, h); }
+  return c;
+}
+
+// 线宽渐变条：数值多大，线就粗到哪
+function weightBar(cv, v, color = "#0b0b0b") {
+  const [x, w, h] = sizeCanvas(cv); x.fillStyle = color;
+  for (let a = 1, i = 0; a < w; a += 3.2, i++) { const t = a / w, wd = t <= v ? 0.5 + (t / Math.max(v, 0.01)) * 2.1 : 0.45; x.fillRect(a, t <= v ? 0 : h * 0.35, wd, t <= v ? h : h * 0.65); }
+}
+// 波浪竖线带（Riley）
+function waveBand(cv, t, amp = 5) {
+  const [x, w, h] = sizeCanvas(cv); x.fillStyle = "#0b0b0b";
+  for (let a = 0; a < w + 6; a += 4) {
+    x.beginPath();
+    for (let y = 0; y <= h; y += 1) { const s = Math.sin(y / h * Math.PI * 2 + a * 0.035 + t) * amp * Math.sin(y / h * Math.PI), wd = 0.6 + 1.6 * (0.5 + 0.5 * Math.sin(a * 0.035 + t * 0.7)); y ? x.lineTo(a + s - wd / 2, y) : x.moveTo(a + s - wd / 2, y); }
+    for (let y = h; y >= 0; y -= 1) { const s = Math.sin(y / h * Math.PI * 2 + a * 0.035 + t) * amp * Math.sin(y / h * Math.PI), wd = 0.6 + 1.6 * (0.5 + 0.5 * Math.sin(a * 0.035 + t * 0.7)); x.lineTo(a + s + wd / 2, y); }
+    x.fill();
+  }
+}
+
+(async () => {
+  await fontsReady();
+  await Promise.all([document.fonts.load('800 158px "Archivo"', "01"), document.fonts.load('900 80px "Noto Sans SC"', "AI 热点")]).catch(() => {});
+
+  // ── 头部潜影字：字外是竖线，字内换成横线（只换方向），字内横线一直往下滑 ──
+  const head = $("head"), [hx, HW, HH] = sizeCanvas(head);
+  const hm = textMask(HW, HH, (x) => { x.font = `900 84px "Noto Sans SC"`; x.textBaseline = "alphabetic"; x.fillStyle = "#000"; x.fillText("AI 热点", -3, HH - 10); });
+  const [outC, outX] = offscreen(HW, HH);
+  outX.fillStyle = "#0b0b0b";
+  for (let a = 0; a < HW + 5; a += 4.5) for (let y = 0; y < HH; y += 1) { const s = Math.sin(y * 0.06 + a * 0.04) * 1.2, wd = 0.7 + 0.9 * (0.5 + 0.5 * Math.sin(a * 0.02)); outX.fillRect(a + s, y, wd, 1.05); }
+  outX.setTransform(1, 0, 0, 1, 0, 0); outX.globalCompositeOperation = "destination-out"; outX.drawImage(hm, 0, 0);
+  const [inC, inX] = offscreen(HW, HH);
+  function drawHead(t, reveal) {
+    hx.clearRect(0, 0, HW, HH);
+    inX.setTransform(DPR, 0, 0, DPR, 0, 0); inX.globalCompositeOperation = "source-over"; inX.clearRect(0, 0, HW, HH);
+    inX.fillStyle = "#0b0b0b"; const ph = (t * 6) % 3.2;
+    for (let y = -3.2 + ph; y < HH + 3.2; y += 3.2) inX.fillRect(0, y, HW, 2.1);
+    inX.setTransform(1, 0, 0, 1, 0, 0); inX.globalCompositeOperation = "destination-in"; inX.drawImage(hm, 0, 0);
+    hx.save(); if (reveal < 1) { hx.beginPath(); for (let a = 0; a < HW; a += 5) { const r = clamp01(reveal * 1.6 - rnd(a) * 0.6); hx.rect(a, 0, 5, HH * r); } hx.clip(); }
+    hx.drawImage(outC, 0, 0, HW, HH); hx.drawImage(inC, 0, 0, HW, HH); hx.restore();
+  }
+
+  // ── 主图 ──
+  const covers = await Promise.all(HOT.filter((h) => h.cover).map((h) => loadImage(h.cover)));
+  const pic = $("pic"), [px, PW, PH] = sizeCanvas(pic);
+  const frames = [heroFrame(covers[0], PW, PH)];
+  setTimeout(() => covers.slice(1).forEach((im) => frames.push(heroFrame(im, PW, PH))), 2600);
+  $("lpi").textContent = Math.round(96 / 4.5);
+  const cols = makeDrip(Math.round(PW / 9), 3);
+  let cur = 0, trans = { mode: "in", t0: Infinity, dur: 1700, next: 0 };
+  // 摩尔纹层：一组蓝色同心圆（间距和竖线差一点），圆心慢慢漂，和底下的竖线叠出会动的双曲线条纹
+  const moire = $("moire"), [mx, MW, MH] = sizeCanvas(moire);
+  function drawMoire(t) {
+    mx.setTransform(DPR, 0, 0, DPR, 0, 0); mx.globalCompositeOperation = "source-over"; mx.clearRect(0, 0, MW, MH); mx.strokeStyle = "rgba(0,56,255,.7)"; mx.lineWidth = 0.8;
+    const cx = MW * (0.78 + 0.1 * Math.sin(t * 0.25)), cy = MH * (0.22 + 0.08 * Math.cos(t * 0.2)), P = 4.7, off = (t * 4) % P;
+    mx.beginPath(); for (let r = off + 2; r < MW * 1.3; r += P) { mx.moveTo(cx + r, cy); mx.arc(cx, cy, r, 0, Math.PI * 2); } mx.stroke();
+    // 「01」字形里不叠圆，横线保持干净
+    mx.setTransform(1, 0, 0, 1, 0, 0); mx.globalCompositeOperation = "destination-out"; mx.drawImage(frames[cur].glyph, 0, 0);
+  }
+
+  // ── 扫描动画按钮 ──
+  const sImg = $("scanImg"), [sx, SW, SH] = sizeCanvas(sImg);
+  const N = 4, slit = 1.25; sx.drawImage(scanFrames(SW, SH, N, slit), 0, 0, SW, SH);
+  let playing = false, sf = 0;
+
+  // ── 统计条、分隔带、底栏线 ──
+  app.querySelectorAll(".stats canvas").forEach((c) => weightBar(c, +c.dataset.v));
+  const tl = $("tline"); { const [x, w, h] = sizeCanvas(tl); x.fillStyle = "#0b0b0b"; for (let a = 0; a < w; a += 3) x.fillRect(a, 0, 0.4 + 1.8 * Math.abs(Math.sin(a / w * Math.PI)), h); }
+
+  // ── 列表小图：有封面就压线网，没封面就把线条图标当亮度图压线网 ──
+  const rows = [...app.querySelectorAll(".row")];
+  const thumbs = [];
+  const makeThumbs = async () => { for (const [i, h] of rest.entries()) thumbs.push(await (async () => {
+    const cv = rows[i].querySelector(".th canvas"), x = cv.getContext("2d"); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    let src;
+    if (h.cover) src = await loadImage(h.cover);
+    else { src = document.createElement("canvas"); src.width = src.height = 78; const s = src.getContext("2d"); s.fillStyle = "#fff"; s.fillRect(0, 0, 78, 78); s.translate(7, 7); s.strokeStyle = "#000"; s.lineWidth = 7; s.lineCap = s.lineJoin = "round"; s.stroke(new Path2D(DOODLE[h.rank])); }
+    const L = stretchedLuma(src, 78, 78, h.cover ? 0.6 : 1.2), [F, fx] = offscreen(78, 78);
+    fx.fillStyle = "#f7f5ef"; fx.fillRect(0, 0, 78, 78);
+    lineScreen(fx, L, 78, 78, { pitch: 3.2, dir: i % 2 ? "h" : "v", wave: 0.5, relief: 0.25, color: "#0b0b0b" });
+    rows[i].querySelector(".m canvas") && weightBar(rows[i].querySelector(".m canvas"), +rows[i].querySelector(".m canvas").dataset.v);
+    return { x, F, cols: makeDrip(8, 20 + i), t0: performance.now() + i * 120 };
+  })()); };
+  rows.forEach((r, i) => r.addEventListener("click", () => { r.classList.toggle("on"); if (thumbs[i]) thumbs[i].t0 = performance.now(); }));
+
+  const band = $("band");
+  const t0 = performance.now(); trans.t0 = t0 + 200;
+  (function frame(now) {
+    const t = (now - t0) / 1000;
+    drawHead(t, clamp01(t / 0.9));
+    // 主图转场
+    const p = clamp01((now - trans.t0) / trans.dur);
+    if (trans.mode === "in") drawDrip(px, frames[cur], PW, PH, p, cols, "in");
+    else { drawDrip(px, frames[cur], PW, PH, p, cols, "out"); if (p >= 1) { cur = trans.next; trans = { mode: "in", t0: now, dur: 1300, next: cur }; $("cvn").textContent = `COVER ${cur + 1}/${frames.length}`; } }
+    drawMoire(t);
+    waveBand(band, t * 1.4);
+    thumbs.forEach((th) => { const q = clamp01((now - th.t0) / 1100); drawDrip(th.x, th.F, 78, 78, q, th.cols, "in"); });
+    if (playing && Math.floor(t * 12) !== sf) { sf = Math.floor(t * 12); $("mask").style.setProperty("--f", sf % N); }
+    nextFrame(frame);
+  })(t0);
+  setTimeout(makeThumbs, 400);
+
+  // 点主图：当前图往下坠成竖条，换下一张从上面滴下来
+  $("hero").addEventListener("click", () => { if (trans.mode === "out") return; trans = { mode: "out", t0: performance.now(), dur: 900, next: (cur + 1) % frames.length }; if (frames.length < 2) trans = { mode: "in", t0: performance.now(), dur: 1300, next: 0 }; });
+  $("scan").addEventListener("click", () => { playing = $("scan").classList.toggle("on"); });
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((tb) => tb.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === tb))));
+  // 文字进场：用竖线遮罩一条条长出来
+  app.querySelectorAll(".lr").forEach((el, i) => (el.style.animationDelay = `${700 + i * 90}ms`)); app.classList.remove("wait");
+})();
+</script>
+</body>
+</html>

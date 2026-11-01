@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黑白木刻</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #ece4d2; --ink: #17130f; --red: #c62a1e; --lino: #4a3f36; --cut: #b9a58a; --mute: #5d5446; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .app::before { content: ""; position: absolute; inset: 0; background-image: var(--fiber); background-size: 420px; opacity: .7; pointer-events: none; }
+  .app::after { content: ""; position: absolute; inset: 0; background-image: var(--grain); pointer-events: none; mix-blend-mode: multiply; }
+  /* 刻出来的东西：边缘被刀推得不齐（位移），墨里有没吃上墨的白点（镂空） */
+  .cut, .rough { filter: url(#carved); -webkit-mask: var(--speck) 0 0 / 160px; mask: var(--speck) 0 0 / 160px; }
+  .cut2 { filter: url(#carved2); }
+  .sb { position: relative; height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-weight: 900; font-size: 15px; }
+  .scroll { position: relative; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 2px 14px 28px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .top { position: relative; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 2px 10px; }
+  .top .red { position: absolute; left: 92px; top: 10px; width: 118px; height: 60px; background: var(--red); transform: translate(3px, -2px) rotate(-.6deg); }
+  h1 { position: relative; font-weight: 900; font-size: 54px; line-height: 1; letter-spacing: .02em; mix-blend-mode: multiply; }
+  .k { position: relative; font-weight: 700; font-size: 12px; letter-spacing: .32em; margin-top: 8px; color: var(--mute); }
+  .sun { position: relative; width: 64px; height: 64px; flex: none; margin-bottom: 4px; }
+  .sun canvas { width: 64px; height: 64px; }
+  .sun b { position: absolute; inset: 0; display: grid; place-items: center; color: var(--paper); font-weight: 900; font-size: 19px; }
+  .sun.on canvas { animation: turn 1.2s steps(6) infinite; }
+  @keyframes turn { to { transform: rotate(60deg); } }
+
+  /* 主图：一块版、印出来的一张 */
+  .print { position: relative; margin-top: 4px; }
+  .print canvas { display: block; width: 100%; height: 272px; }
+  .steps { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--mute); letter-spacing: .1em; }
+  .steps span { display: flex; gap: 10px; }
+  .steps i { font-style: normal; padding: 1px 6px; border: 1.5px solid currentColor; opacity: .45; }
+  .steps i.on { opacity: 1; background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .steps em { font-style: normal; }
+  .again { font-weight: 900; font-size: 12px; letter-spacing: .14em; padding: 4px 10px; background: var(--red); color: var(--paper); }
+
+  /* 标题：黑版上反刻（字是刻掉的白） */
+  .slab { position: relative; margin: 16px -4px 0; padding: 14px 48px 15px 16px; background: var(--ink); color: var(--paper); }
+  .slab h2 { font-weight: 900; font-size: 21px; line-height: 1.45; letter-spacing: .02em; }
+  .slab h2 em { font-style: normal; color: #f2b8a8; }
+  .slab .rk { position: absolute; right: 10px; top: 10px; width: 32px; height: 32px; display: grid; place-items: center; background: var(--red); color: var(--paper); font-weight: 900; font-size: 19px; transform: rotate(3deg); }
+  .sum { position: relative; margin-top: 12px; font-size: 13.5px; line-height: 1.8; font-weight: 500; }
+  .stats { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border-top: 4px solid var(--ink); border-bottom: 4px solid var(--ink); }
+  .stats div { padding: 7px 10px 8px; }
+  .stats div + div { border-left: 3px solid var(--ink); }
+  .stats span { font-size: 11.5px; font-weight: 700; letter-spacing: .25em; color: var(--mute); }
+  .stats b { display: block; font-size: 30px; font-weight: 900; line-height: 1.1; }
+
+  .sect { position: relative; display: flex; align-items: center; gap: 10px; margin: 24px 0 6px; font-weight: 900; font-size: 14px; letter-spacing: .3em; }
+  .sect::before, .sect::after { content: ""; flex: 1; height: 5px; background: var(--ink); }
+  .row { position: relative; display: grid; grid-template-columns: 76px 1fr; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 2.5px solid var(--ink); cursor: pointer; }
+  .row .th { position: relative; width: 76px; height: 76px; }
+  .row .th canvas { width: 76px; height: 76px; display: block; }
+  .row .seal { position: absolute; left: -4px; top: -4px; width: 24px; height: 24px; display: grid; place-items: center; background: var(--red); color: var(--paper); font-weight: 900; font-size: 12px; }
+  .row h3 { font-size: 15.5px; font-weight: 900; line-height: 1.45; }
+  .row .m { margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--mute); letter-spacing: .06em; }
+  .row .more { display: none; grid-column: 1 / -1; font-size: 13px; line-height: 1.75; padding: 8px 10px; background: var(--ink); color: var(--paper); }
+  .row.on .more { display: block; animation: ink .45s steps(5) both; }
+  .row.on h3 { color: var(--red); }
+  @keyframes ink { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+  .tabs { position: relative; flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 6px 24px; background: var(--paper); }
+  .tabs::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--ink); filter: url(#carved); }
+  .tab { position: relative; z-index: 0; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 13px; font-weight: 700; color: var(--mute); letter-spacing: .1em; }
+  .tab svg { width: 22px; height: 22px; stroke-width: 2.6; }
+  .tab.on { color: var(--paper); }
+  .tab.on::before { content: ""; position: absolute; inset: -4px 12px -2px; background: var(--ink); filter: url(#carved); z-index: -1; }
+  .tab.on::after { content: ""; position: absolute; right: 10px; top: -6px; width: 9px; height: 9px; background: var(--red); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <!-- 大块：边被刀推得不齐（没吃墨的白点用 CSS 遮罩 --speck） -->
+  <filter id="carved" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <!-- 小字：只轻轻推一下边 -->
+  <filter id="carved2" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" seed="4" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.3" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+app.style.setProperty("--fiber", `url(${fiberURL(420, 220, "110,90,60", "255,250,236")})`);
+app.style.setProperty("--grain", `url(${grainURL(180, 0.07, 40)})`);
+// 墨没吃满的白点：不透明底上挖掉稀疏的小点，当遮罩用
+app.style.setProperty("--speck", `url(${(() => { const c = document.createElement("canvas"); c.width = c.height = 160; const x = c.getContext("2d"); x.fillRect(0, 0, 160, 160); x.globalCompositeOperation = "destination-out"; for (let i = 0; i < 70; i++) { const r = Math.random(); x.globalAlpha = 0.6 + Math.random() * 0.4; x.beginPath(); x.arc(Math.random() * 160, Math.random() * 160, 0.4 + r * r * 1.6, 0, 7); x.fill(); } return c.toDataURL(); })()})`);
+const t1 = esc(shortTitle(h1)).replace(esc(KEY[1]), `<em>${esc(KEY[1])}</em>`);
+const CN = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <main class="scroll" id="scroll">
+    <header class="top">
+      <div><span class="red rough"></span><h1 class="cut">AI 热点</h1><div class="k">新兴木刻 · 十月廿二 · 第一版</div></div>
+      <button class="sun" id="sun" aria-label="听热点"><canvas id="sunc" width="128" height="128"></canvas><b class="cut2">听</b></button>
+    </header>
+    <section class="print" id="print"><canvas id="hero"></canvas></section>
+    <div class="steps"><span><i id="s0">刻</i><i id="s1">墨</i><i id="s2">印</i></span><em id="ed">印次 1 / 20</em><button class="again" id="again">再印一张</button></div>
+    <div class="slab cut" id="slab"><h2>${t1}</h2><span class="rk">壹</span></div>
+    <p class="sum">${esc(clip(firstLine(h1.summary), 58))}</p>
+    <div class="stats cut2"><div><span>热度</span><b>${heatText(h1)}</b></div><div><span>来源</span><b>${h1.sources}</b></div><div><span>参与</span><b>${h1.people}</b></div></div>
+    <div class="sect cut">其余七条</div>
+    ${rest.map((h) => `<div class="row" data-r="${h.rank}"><div class="th"><canvas width="152" height="152"></canvas><span class="seal cut">${CN[h.rank]}</span></div><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家来源</div></div><div class="more cut2">${esc(clip(firstLine(h.summary), 78))}</div></div>`).join("")}
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+const S = 2; // 内部分辨率倍数
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+const rng = (seed) => { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
+// 下一帧：平时走 requestAnimationFrame；rAF 停了（后台标签页、无头截图）就退回 setTimeout
+const nextFrame = (cb) => { let done = false; const go = () => { if (!done) { done = true; cb(performance.now()); } }; requestAnimationFrame(go); setTimeout(go, 1000 / 30); };
+function cv(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d", { willReadFrequently: true })]; }
+
+// 低频噪声：小随机图放大（双线性）→ 0..1，用来让刻出来的边不齐
+function noiseField(w, h, cell, R) { const gw = Math.ceil(w / cell) + 2, gh = Math.ceil(h / cell) + 2, [g, gx] = cv(gw, gh), id = gx.createImageData(gw, gh); for (let i = 0; i < gw * gh; i++) { const v = R() * 255; id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; } gx.putImageData(id, 0, 0); const [o, ox] = cv(w, h); ox.imageSmoothingQuality = "high"; ox.drawImage(g, 0, 0, w + cell * 2, h + cell * 2); return lumaOf(o); }
+
+// ───────── 刻版：真图 → 一组 V 形刀痕 + 大块挖空 + 红版 ─────────
+// 暗处整块留黑；中间调沿形体（等亮度线方向）下刀，越亮刀越宽；亮处整片挖掉，边上故意留几道没铲干净的「刀渣」
+function carveJob(src, W, H, { seed = 1, border = 5, spacing = 4.2, wmax = 3.3, corner = null, dark = 0.2, light = 0.84, invert = null } = {}) {
+  const R = rng(seed * 7919);
+  const [b, bx] = cv(W, H); bx.filter = "blur(1.1px)"; bx.drawImage(coverCanvas(src, W, H), 0, 0);
+  const L = lumaOf(b), sorted = Float32Array.from(L).sort(), lo = sorted[Math.floor(L.length * 0.03)], hi = sorted[Math.floor(L.length * 0.97)];
+  for (let i = 0; i < L.length; i++) L[i] = clamp01((L[i] - lo) / Math.max(0.1, hi - lo));
+  // 亮底图反过来刻：底留黑、主体刻白——木刻要黑多白少
+  const med = Float32Array.from(L).sort()[L.length >> 1];
+  if (invert ?? med > 0.62) for (let i = 0; i < L.length; i++) L[i] = 1 - L[i];
+  // 角上留一块黑，刻一个编号
+  if (corner) for (let y = 0; y < corner.s; y++) for (let x = 0; x < corner.s; x++) L[(y + corner.y) * W + x + corner.x] = 0;
+  // 流向：大模糊亮度的梯度转 90°；梯度弱的地方用一个缓慢变化的斜向场
+  const [f, fx] = cv(W, H); fx.filter = "blur(5px)"; fx.drawImage(b, 0, 0); const LB = lumaOf(f);
+  const N = noiseField(W, H, 48, R), N2 = noiseField(W, H, 7, R);
+  const dirAt = (x, y) => {
+    const xi = Math.min(W - 2, Math.max(1, x | 0)), yi = Math.min(H - 2, Math.max(1, y | 0)), i = yi * W + xi;
+    const gx = LB[i + 1] - LB[i - 1], gy = LB[i + W] - LB[i - W], m = Math.min(1, Math.hypot(gx, gy) * 30);
+    const a0 = -0.5 + (N[i] - 0.5) * 0.7, tx = -gy, ty = gx, tl = Math.hypot(tx, ty) || 1;
+    let vx = (tx / tl) * m + Math.cos(a0) * (1 - m), vy = (ty / tl) * m + Math.sin(a0) * (1 - m); const l = Math.hypot(vx, vy) || 1; return [vx / l, vy / l];
+  };
+  const bil = (A, x, y) => { x = Math.min(W - 1.001, Math.max(0, x - 0.5)); y = Math.min(H - 1.001, Math.max(0, y - 0.5)); const xi = x | 0, yi = y | 0, fx_ = x - xi, fy = y - yi, i = yi * W + xi; return (A[i] * (1 - fx_) + A[i + 1] * fx_) * (1 - fy) + (A[i + W] * (1 - fx_) + A[i + W + 1] * fx_) * fy; };
+  const Lat = (x, y) => L[Math.min(H - 1, Math.max(0, y | 0)) * W + Math.min(W - 1, Math.max(0, x | 0))];
+  const inside = (x, y) => x > border && y > border && x < W - border && y < H - border && !(corner && x >= corner.x - 1 && y >= corner.y - 1 && x < corner.x + corner.s + 1 && y < corner.y + corner.s + 1);
+  const strokes = [];
+  for (let gy = border; gy < H - border; gy += spacing) for (let gx = border; gx < W - border; gx += spacing) {
+    const x0 = gx + (R() - 0.5) * spacing, y0 = gy + (R() - 0.5) * spacing; if (!inside(x0, y0)) continue;
+    const l0 = Lat(x0, y0);
+    let wm, len;
+    if (l0 < dark) { if (R() > 0.12) continue; wm = 0.8; len = 9 + R() * 12; }       // 黑里偶尔一道细刀，像版底的刀纹
+    else { wm = 0.7 + clamp01((l0 - dark) / (light - dark)) * wmax; len = 8 + R() * 16; }
+    // 沿流向往两头追
+    const pts = [[x0, y0]];
+    for (const sgn of [1, -1]) {
+      let x = x0, y = y0, [px, py] = dirAt(x, y); px *= sgn; py *= sgn;
+      for (let s = 0; s < len / 2; s++) {
+        let [vx, vy] = dirAt(x, y); if (vx * px + vy * py < 0) { vx = -vx; vy = -vy; }
+        x += vx; y += vy; px = vx; py = vy;
+        if (!inside(x, y) || (l0 >= dark && Lat(x, y) < dark * 0.8)) break;
+        sgn > 0 ? pts.push([x, y]) : pts.unshift([x, y]);
+      }
+    }
+    if (pts.length < 3) continue;
+    strokes.push({ pts, w: wm * (0.85 + R() * 0.3), key: y0 / H * 0.75 + R() * 0.25 + (l0 > light ? -0.08 : 0) });
+  }
+  strokes.sort((a, b) => a.key - b.key);
+  // 亮处整片挖掉：阈值上叠低频噪声 → 边是一刀刀推出来的不齐的边
+  const [wm, wx] = cv(W * S, H * S), id = wx.createImageData(W * S, H * S);
+  for (let y = 0; y < H * S; y++) for (let x = 0; x < W * S; x++) {
+    const xs = x / S, ys = y / S, i = (ys | 0) * W + (xs | 0);
+    if (inside(xs, ys) && bil(L, xs, ys) + (bil(N2, xs, ys) - 0.5) * 0.16 > light + 0.06) id.data[(y * W * S + x) * 4 + 3] = 255;
+  }
+  wx.putImageData(id, 0, 0);
+  if (corner) { wx.save(); wx.scale(S, S); wx.font = `900 ${corner.s * 0.78}px "Noto Serif SC"`; wx.textAlign = "center"; wx.textBaseline = "middle"; wx.fillText(corner.t, corner.x + corner.s / 2, corner.y + corner.s / 2 + 1); wx.restore(); }
+  // 红版：原图里最「有颜色」的那三成，糊开再切，块要粗
+  const [rc, rx] = cv(W, H); rx.filter = "blur(3px)"; rx.drawImage(coverCanvas(src, W, H), 0, 0);
+  const rd = rx.getImageData(0, 0, W, H).data, sat = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) { const r = rd[i * 4], g = rd[i * 4 + 1], bb = rd[i * 4 + 2], mx = Math.max(r, g, bb), mn = Math.min(r, g, bb); sat[i] = mx ? (mx - mn) / mx * (mx / 255) : 0; }
+  const ss = Float32Array.from(sat).sort(), cutS = Math.max(0.3, ss[Math.floor(ss.length * 0.7)]);
+  const [red, redx] = cv(W * S, H * S), rid = redx.createImageData(W * S, H * S);
+  for (let y = 0; y < H * S; y++) for (let x = 0; x < W * S; x++) { const xs = x / S, ys = y / S; if (bil(sat, xs, ys) + (bil(N2, xs, ys) - 0.5) * 0.12 > cutS && inside(xs, ys)) rid.data[(y * W * S + x) * 4 + 3] = 255; }
+  redx.putImageData(rid, 0, 0);
+  return { W, H, strokes, white: wm, red, border };
+}
+// 一刀：两头收尖、中间鼓（V 形刀推进去再挑出来）
+function gouge(ctx, st) {
+  const p = st.pts, n = p.length, Lft = [], Rgt = [];
+  for (let i = 0; i < n; i++) {
+    const a = p[Math.max(0, i - 1)], b = p[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+    const t = i / (n - 1), w = st.w * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.15)), 0.55) / 2;
+    Lft.push([p[i][0] - (dy / l) * w, p[i][1] + (dx / l) * w]); Rgt.push([p[i][0] + (dy / l) * w, p[i][1] - (dx / l) * w]);
+  }
+  ctx.moveTo(Lft[0][0], Lft[0][1]); for (const q of Lft) ctx.lineTo(q[0], q[1]); for (let i = n - 1; i >= 0; i--) ctx.lineTo(Rgt[i][0], Rgt[i][1]); ctx.closePath();
+}
+// 刻出来的部分（白）画成一张遮罩：0..k 之间的刀 + 挖空区
+function carvedMask(job, k, whiteAlpha = 1) {
+  const [c, x] = cv(job.W * S, job.H * S); x.globalAlpha = whiteAlpha; x.drawImage(job.white, 0, 0); x.globalAlpha = 1;
+  x.scale(S, S); x.beginPath(); const n = Math.floor(job.strokes.length * k); for (let i = 0; i < n; i++) gouge(x, job.strokes[i]); x.fill();
+  return c;
+}
+// 墨的质感：吃不满墨的白点（每一张都不一样）
+function inkTexture(w, h, seed) {
+  const R = rng(seed * 104729), [c, x] = cv(w, h);
+  x.fillStyle = "#000";
+  for (let i = 0; i < w * h * 0.0022; i++) { x.globalAlpha = 0.5 + R() * 0.5; x.beginPath(); x.arc(R() * w, R() * h, 0.4 + R() * R() * 1.6, 0, 7); x.fill(); }
+  x.globalAlpha = 1; return c;
+}
+// 印出来的一张：纸 + 红版（错位一点）+ 黑版（镜像回来、带墨质感）
+function pull(job, seed) {
+  const W = job.W * S, H = job.H * S, R = rng(seed);
+  const [out, o] = cv(W, H);
+  o.fillStyle = "#ece4d2"; o.fillRect(0, 0, W, H);
+  // 红版
+  const [rl, rx] = cv(W, H); rx.fillStyle = "#c62a1e"; rx.fillRect(0, 0, W, H); rx.globalCompositeOperation = "destination-in"; rx.drawImage(job.red, 0, 0);
+  rx.globalCompositeOperation = "destination-out"; rx.drawImage(inkTexture(W, H, seed + 5), 0, 0);
+  o.globalCompositeOperation = "multiply"; o.globalAlpha = 0.92; o.drawImage(rl, (2 + R() * 3) * S, (-1 - R() * 3) * S); o.globalAlpha = 1;
+  // 黑版
+  const [kl, kx] = cv(W, H); kx.fillStyle = "#17130f"; kx.fillRect(0, 0, W, H);
+  kx.globalCompositeOperation = "destination-out"; kx.drawImage(carvedMask(job, 1), 0, 0); kx.drawImage(inkTexture(W, H, seed), 0, 0);
+  // 版边：纸上印出来的那块黑，边是不齐的
+  const m = 3 * S; o.save(); o.beginPath();
+  const edge = (x0, y0, x1, y1) => { const n = 40; for (let i = 0; i <= n; i++) { const t = i / n; o.lineTo(x0 + (x1 - x0) * t + (R() - 0.5) * 1.4 * S, y0 + (y1 - y0) * t + (R() - 0.5) * 1.4 * S); } };
+  o.moveTo(m, m); edge(m, m, W - m, m); edge(W - m, m, W - m, H - m); edge(W - m, H - m, m, H - m); edge(m, H - m, m, m); o.clip();
+  o.drawImage(kl, 0, 0); o.restore(); o.globalCompositeOperation = "source-over";
+  return out;
+}
+// 版：镜像的。刻是增量的——每帧只补新下的刀；亮处的大片挖空跟着刀的进度从上往下铲
+function blockAnim(job) {
+  const W = job.W * S, H = job.H * S;
+  const [cut, cx] = cv(W, H); cx.fillStyle = "#b9a58a";
+  const [wc, wx] = cv(W, H); wx.fillStyle = "#b9a58a"; wx.fillRect(0, 0, W, H); wx.globalCompositeOperation = "destination-in"; wx.drawImage(job.white, 0, 0);
+  const [inked, ix] = cv(W, H); ix.fillStyle = "#17130f"; ix.fillRect(0, 0, W, H); ix.globalCompositeOperation = "destination-out"; ix.drawImage(carvedMask(job, 1), 0, 0);
+  let n = 0, wy = 0;
+  const carveTo = (k) => {
+    const m = Math.floor(job.strokes.length * k);
+    if (m > n) { cx.save(); cx.scale(S, S); cx.beginPath(); for (let i = n; i < m; i++) gouge(cx, job.strokes[i]); cx.fill(); cx.restore(); n = m; }
+    const y = Math.floor(clamp01((k - 0.15) / 0.8) * H);
+    if (y > wy) { cx.drawImage(wc, 0, wy, W, y - wy, 0, wy, W, y - wy); wy = y; }
+  };
+  return (ctx, k, ink) => {
+    carveTo(k);
+    ctx.save(); ctx.translate(W, 0); ctx.scale(-1, 1);
+    ctx.fillStyle = "#4a3f36"; ctx.fillRect(0, 0, W, H); ctx.drawImage(cut, 0, 0);
+    if (ink > 0) ctx.drawImage(inked, 0, 0, W, H * ink, 0, 0, W, H * ink);   // 滚过的地方：没刻掉的面都上了一层黑墨
+    ctx.restore();
+  };
+}
+function roller(ctx, W, y) {
+  const g = ctx.createLinearGradient(0, y - 16 * S, 0, y + 16 * S);
+  g.addColorStop(0, "#2a241f"); g.addColorStop(0.35, "#6b625a"); g.addColorStop(0.5, "#17130f"); g.addColorStop(1, "#000");
+  ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(0, y + 14 * S, W, 6 * S);
+  ctx.fillStyle = g; ctx.fillRect(-4, y - 14 * S, W + 8, 28 * S);
+  ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.fillRect(0, y - 7 * S, W, 2 * S);
+}
+// 揭纸：从左上角往右下揭，揭开的地方是印好的一张，揭口有一道卷起来的纸边
+function peel(ctx, job, block, print, p) {
+  const W = job.W * S, H = job.H * S, d = p * (W + H) * 1.05;
+  ctx.drawImage(block, 0, 0);
+  ctx.save(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.min(d, W), 0); if (d > W) ctx.lineTo(W, d - W); ctx.lineTo(Math.max(0, d - H), Math.min(d, H)); ctx.lineTo(0, Math.min(d, H)); ctx.closePath(); ctx.clip();
+  ctx.drawImage(print, 0, 0); ctx.restore();
+  if (p > 0 && p < 1) {
+    const c = 22 * S;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(d, 0); ctx.lineTo(d + c, 0); ctx.lineTo(0, d + c); ctx.lineTo(0, d); ctx.closePath(); ctx.clip();
+    const g = ctx.createLinearGradient(d / 2, d / 2, (d + c) / 2, (d + c) / 2); g.addColorStop(0, "#fffaf0"); g.addColorStop(0.6, "#d8ceb8"); g.addColorStop(1, "rgba(0,0,0,.35)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+}
+
+// 「听」：黑圆版上刻出一圈放射刀痕
+function sunBlock(c) {
+  const x = c.getContext("2d"), R = rng(11), r = 62; x.translate(64, 64);
+  x.fillStyle = "#17130f"; x.beginPath(); for (let a = 0; a < Math.PI * 2; a += 0.12) { const rr = r - R() * 3; x.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } x.fill();
+  x.fillStyle = "#ece4d2";
+  for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2 + R() * 0.08, r0 = 30 + R() * 4, r1 = 54 + R() * 5, w = 2.2 + R() * 2.4; x.beginPath(); x.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); x.lineTo(Math.cos(a + 0.08) * (r0 + r1) / 2 + Math.cos(a + Math.PI / 2) * w, Math.sin(a + 0.08) * (r0 + r1) / 2 + Math.sin(a + Math.PI / 2) * w); x.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); x.closePath(); x.fill(); }
+  x.fillStyle = "#c62a1e"; x.beginPath(); x.arc(2, -1, 25, 0, 7); x.fill();
+}
+
+(async () => {
+  await fontsReady(); await document.fonts.load('900 40px "Noto Serif SC"', "壹一二三四五六七八").catch(() => {});
+  sunBlock($("sunc"));
+  const hero = $("hero"), HW = hero.clientWidth, HH = hero.clientHeight; hero.width = HW * S; hero.height = HH * S; const hx = hero.getContext("2d");
+  const img = await loadImage(h1.cover);
+  const job = carveJob(img, HW, HH, { seed: 3, border: 6, corner: { x: HW - 52, y: HH - 52, s: 44, t: "壹" } });
+  let edition = 1, print = pull(job, edition), start = performance.now(), phase = -1;
+  const setStep = (i) => { if (i === phase) return; phase = i; [0, 1, 2].forEach((j) => $("s" + j).classList.toggle("on", j === i)); };
+  // 时间线：0.15–1.25 刻 / 1.3–1.75 滚墨 / 1.85–2.6 揭纸
+  const [blk, blx] = cv(HW * S, HH * S), drawBlock = blockAnim(job);
+  (function frame(now) {
+    const t = (now - start) / 1000;
+    if (t < 1.3) { setStep(0); drawBlock(hx, clamp01((t - 0.15) / 1.1), 0); }
+    else if (t < 1.85) { setStep(1); const r = clamp01((t - 1.3) / 0.45); drawBlock(hx, 1, r); if (r < 1) roller(hx, HW * S, r * HH * S); }
+    else if (t < 2.65) { setStep(2); if (!blk.done) { drawBlock(blx, 1, 1); blk.done = true; } const p = clamp01((t - 1.85) / 0.75); peel(hx, job, blk, print, 1 - Math.pow(1 - p, 2)); }
+    else { hx.drawImage(print, 0, 0); setStep(-1); return; }
+    nextFrame(frame);
+  })(start);
+  // 再印一张：同一块版，墨和套色每次都有点不一样
+  $("again").addEventListener("click", () => {
+    edition = edition % 20 + 1; $("ed").textContent = `印次 ${edition} / 20`; print = pull(job, edition * 31);
+    const s0 = performance.now(); (function f(now) { const p = clamp01((now - s0) / 700); peel(hx, job, blk, print, 1 - Math.pow(1 - p, 2)); if (p < 1) nextFrame(f); })(s0);
+  });
+  $("print").addEventListener("click", () => $("again").click());
+
+  // 列表小图：每张也是刻出来再印的
+  const rows = [...app.querySelectorAll(".row")];
+  for (const [i, h] of rest.entries()) {
+    let src;
+    if (h.cover) src = await loadImage(h.cover);
+    else { [src] = cv(76, 76); const s = src.getContext("2d"); s.fillStyle = "#000"; s.fillRect(0, 0, 76, 76); s.translate(6, 8); s.strokeStyle = "#fff"; s.lineWidth = 5; s.lineCap = s.lineJoin = "round"; s.stroke(new Path2D(DOODLE[h.rank])); }
+    const j = carveJob(src, 76, 76, { seed: 10 + i, border: 3, spacing: 3.4, wmax: 2.4 });
+    const pr = pull(j, 50 + i), c = rows[i].querySelector(".th canvas"), x = c.getContext("2d");
+    const show = (dur) => { const s0 = performance.now(); (function f(now) { const p = clamp01((now - s0) / dur); x.fillStyle = "#17130f"; x.fillRect(0, 0, 152, 152); x.save(); x.beginPath(); x.rect(0, 0, 152, 152 * (1 - Math.pow(1 - p, 2))); x.clip(); x.drawImage(pr, 0, 0); x.restore(); if (p < 1) nextFrame(f); })(s0); };
+    show(500);
+    rows[i].addEventListener("click", () => { rows[i].classList.toggle("on"); show(450); });
+  }
+  const sun = $("sun"); sun.addEventListener("click", () => sun.classList.toggle("on"));
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((tb) => tb.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === tb))));
+})();
+// 版面进场：像盖下去——先大、一顿、落定
+const press = (el, d) => el.animate([{ opacity: 0, transform: "scale(1.06)" }, { opacity: 1, transform: "scale(.99)", offset: 0.7 }, { opacity: 1, transform: "none" }], { duration: 380, delay: d, easing: "steps(4, end)", fill: "backwards" });
+press($("slab"), 2500); app.querySelectorAll(".sum, .stats, .sect").forEach((el, i) => press(el, 2650 + i * 90));
+app.querySelectorAll(".row").forEach((el, i) => press(el, 2850 + i * 80));
+</script>
+</body>
+</html>

@@ -1,14 +1,14 @@
 # 风格图鉴 · style-atlas
 
-给 AI agent 用的视觉风格库，一共 50 种风格。做 App、网页、视频、海报、PPT 时，跟 Claude Code 或 Codex 说一句「用浮世绘风格」，它会读这种风格的规格，原样抄色值和字体，用现成的代码处理图片，做完截图和标准图对一遍。
+给 AI agent 用的视觉风格库，一共 60 种风格。做 App、网页、视频、海报、PPT 时，跟 Claude Code 或 Codex 说一句「用浮世绘风格」，它会读这种风格的规格，原样抄色值和字体，用现成的代码处理图片，做完截图和标准图对一遍。
 
 让 AI 自己做界面，做出来常常是同一个样子：米白底、白卡片、圆角、一个强调色。这套库把每种风格写成能照着做的规则和代码，换风格时不用靠形容词碰运气。
 
-[在线看 50 种（手机也能打开）](https://wailii.github.io/style-atlas/gallery/) · [安装](#安装) · [风格清单](#风格清单)
+[在线看 60 种（手机也能打开）](https://wailii.github.io/style-atlas/gallery/) · [安装](#安装) · [风格清单](#风格清单)
 
-<img src=".github/readme/all-50.jpg" alt="50 种风格的参考页截图">
+<img src=".github/readme/all-60.jpg" alt="60 种风格的参考页截图">
 
-同一份数据（2026 年 10 月 22 日晚的 AI 热点热榜，8 条新闻和 4 张封面）按 50 种风格各做了一遍。每个参考页都是 390×844 的手机页面，按钮和列表都能点，在线版能看到动效。
+同一份数据（2026 年 10 月 22 日晚的 AI 热点热榜，8 条新闻和 4 张封面）按 60 种风格各做了一遍。每个参考页都是 390×844 的手机页面，按钮和列表都能点，在线版能看到动效。
 
 ## 安装
 
@@ -38,6 +38,7 @@ git clone https://github.com/wailii/style-atlas.git ~/.agents/skills/style-atlas
 - 做一条讲 Transformer 原理的竖屏短视频，先给我三四个风格挑
 - 这个落地页太普通了，换成瑞士排版，头图借孔版印刷的处理
 - 把产品发布会的 PPT 做成装饰艺术风格
+- 做一个像那条 3D 滚动叙事视频一样炫的品牌落地页，再出一版 Dashboard
 
 agent 会按 [SKILL.md](SKILL.md) 里的步骤做：
 
@@ -49,7 +50,7 @@ agent 会按 [SKILL.md](SKILL.md) 里的步骤做：
 
 ## 风格清单
 
-50 种分 7 组。点风格名字可以在线打开它的参考页。
+60 种分 8 组。点风格名字可以在线打开它的参考页。要「炫」「电影感」时先看 [cinematic.md](cinematic.md)：从 60 种里挑出的 22 种，按网页、设计、Dashboard、视频、App 分好。
 
 ### 手作 · 手工艺
 
@@ -150,6 +151,35 @@ agent 会按 [SKILL.md](SKILL.md) 里的步骤做：
 | 49 | [显微镜](https://wailii.github.io/style-atlas/gallery/#microscope) | 圆形视野、染色标本、换物镜失焦再对焦，读数都是算出来的 | 科学、医疗、材料、芯片科普；放大看细节 |
 | 50 | [博物版画](https://wailii.github.io/style-atlas/gallery/#engraving) | 铜版画：色调全靠线，刻完再上一层淡水彩，带编号和局部放大 | 博物馆、自然科普、百科、出版 |
 
+### 电影 · 漫画叙事
+
+<img src=".github/readme/group-8.jpg" alt="电影 · 漫画叙事（一）">
+<img src=".github/readme/group-9.jpg" alt="电影 · 漫画叙事（二）">
+
+这 10 种都来自同一条视频：抖音 @Motdes AI阿峰《fable 5.5 网页设计的未来？》录屏的 *The Notturno Experience*，一个意大利开胃酒品牌的 3D 滚动叙事网页。朱墨剧场是视频本身的设计语言，另外 9 种是从里面拆出来、各自往一个方向走到头的风格。
+
+| # | 风格 | 样子 | 适合做 |
+|---|---|---|---|
+| 51 | [朱墨剧场](https://wailii.github.io/style-atlas/gallery/#crimson) | 朱红、纸白、墨黑，明暗全是竖排墨线；一幕幕滴落转场，关键动作要按住 | 品牌发布、酒饮美妆、滚动叙事落地页、夜场感数据大屏 |
+| 52 | [漫画分镜](https://wailii.github.io/style-atlas/gallery/#manga) | 斜切分格、网点纸、集中线、瞪大的眼睛、压过格线的拟声字 | 剧情感强的发布、榜单、番剧和游戏活动 |
+| 53 | [黑色漫画](https://wailii.github.io/style-atlas/gallery/#noir) | 雨夜、百叶窗影子、纯黑白，只有一种红 | 悬疑、调查、安全事件、深夜栏目 |
+| 54 | [美漫宇宙](https://wailii.github.io/style-atlas/gallery/#comicverse) | 四色网点套不准、粗墨线、一拍二地跳、故障帧 | 游戏、潮牌、音乐体育活动、短视频片头 |
+| 55 | [红幕剧场](https://wailii.github.io/style-atlas/gallery/#stage) | 镀金台口、丝绒大幕拉开、追光落在主角上、戏票撕票根 | 发布会、首映、演出票务、颁奖揭晓 |
+| 56 | [意式招贴](https://wailii.github.io/style-atlas/gallery/#affiche) | 一块平色底，酒瓶从黑里跳出来开瓶，手绘大字带投影 | 酒饮、餐饮、快消新品、复古品牌海报 |
+| 57 | [新艺术](https://wailii.github.io/style-atlas/gallery/#nouveau) | 慕夏：大圆光环、鞭线藤蔓长出来、花边拱框 | 美妆、香水、花艺、茶饮、书封 |
+| 58 | [三渲二](https://wailii.github.io/style-atlas/gallery/#celshade) | 真 3D 渲染成动画：三段硬光、黑墨描边、暗部排线 | 游戏、动画、潮牌、新品主视觉 |
+| 59 | [线网幻视](https://wailii.github.io/style-atlas/gallery/#opart) | 图只用平行线画，两层线叠出摩尔纹，画面碎成竖条往下滴 | 音乐、艺术展、时装、发布会 |
+| 60 | [黑白木刻](https://wailii.github.io/style-atlas/gallery/#linocut) | 白是刀挖出来的，墨有白点，套一块错位的朱红版 | 人文、历史、纪录片、出版、节日海报 |
+
+朱墨剧场除了手机参考页，还有两种媒介的完整参考：
+
+- `gallery/x-crimson.html`：桌面滚动叙事体验（虚构品牌 MEZZANOTTE），8 幕，真 3D 场景经过墨线后期着色器变成竖排线；滚轮、按住、方向键都能推进，也会自动播放。带 `seek(t)`，能直接渲染成 46 秒 1920×1080 视频
+- `gallery/d-crimson.html`：Dashboard。面积图用竖排线填，柱子是红色多立克柱，环形图是圆窗，数字全部来自 `data.js`
+
+```bash
+node tools/snap.mjs --file gallery/x-crimson.html --video mezzanotte.mp4 --w 1920 --h 1080 --scale 1 --fps 30
+```
+
 ## 规格结构
 
 每种风格一份规格 `styles/<id>.md`，小节是固定的：
@@ -230,12 +260,13 @@ node tools/check.mjs
 
 ```
 SKILL.md          agent 读的入口：风格目录、选风格的办法、工作步骤
-styles/<id>.md    50 份风格规格
+styles/<id>.md    60 份风格规格
+cinematic.md      炫酷精选：22 种冲击力最强的风格，按网页 / 设计 / Dashboard / 视频 / App 分好
 media.md          落到 App、网页、视频、动画、海报时怎么改
 mixing.md         混搭规则
 ENGINES.md        图片处理和动效函数的用法
 DATA.md           参考页的数据格式，怎么换成自己的内容
-gallery/          参考页 s-<id>.html、视频参考、共用代码、标准截图 shots/
+gallery/          参考页 s-<id>.html、视频参考 v-collage.html、朱墨剧场体验页 x-crimson.html 和 Dashboard d-crimson.html、共用代码、标准截图 shots/
 tools/            截图工具 snap.mjs、完整性检查 check.mjs
 ```
 

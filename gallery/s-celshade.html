@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三渲二</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7; --ink: #111111;
+    --blue: #2a45ff; --blue2: #1a2a9c;
+    --yel: #ffcf1f; --yel2: #f08a00;
+    --cor: #ff5536; --cor2: #b8233a;
+    --mint: #1fcfa4; --mint2: #0d7f86;
+    --hatch: repeating-linear-gradient(-45deg, var(--ink) 0 1.2px, transparent 1.2px 5px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .num { font-family: "Chakra Petch", sans-serif; font-style: italic; font-weight: 700; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
+  .sb { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font: 700 15px "Chakra Petch"; }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 14px 30px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* 头部：字也是两段光——亮面黄、暗面橙，硬切；黑描边 + 实心黑影 */
+  .top { display: flex; align-items: flex-end; justify-content: space-between; padding: 2px 2px 22px; }
+  .k { font: 700 12px "Chakra Petch"; letter-spacing: .14em; }
+  .k b { background: var(--ink); color: var(--yel); padding: 1px 6px; margin-right: 6px; font-style: italic; }
+  h1 { position: relative; font-weight: 900; font-size: 44px; line-height: 1.05; letter-spacing: .02em; margin-top: 4px;
+       background: linear-gradient(172deg, var(--yel) 0 58%, var(--yel2) 58%); -webkit-background-clip: text; background-clip: text; color: transparent;
+       -webkit-text-stroke: 2.6px var(--ink); paint-order: stroke fill; filter: drop-shadow(3px 3px 0 var(--ink)); }
+  .play { position: relative; width: 62px; height: 62px; border-radius: 50%; border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+          background: radial-gradient(circle at 34% 30%, #fff 0 9%, transparent 9.5%), linear-gradient(135deg, var(--cor) 0 55%, var(--cor2) 55%); display: grid; place-items: center; }
+  .play::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--hatch); -webkit-mask: linear-gradient(135deg, transparent 0 70%, #000 70%); mask: linear-gradient(135deg, transparent 0 70%, #000 70%); }
+  .play svg { width: 26px; height: 26px; position: relative; z-index: 1; }
+  .play .bars { position: absolute; z-index: 1; display: none; gap: 3px; align-items: flex-end; height: 24px; }
+  .play .bars i { width: 5px; background: var(--paper); border: 1.5px solid var(--ink); }
+  .play.on svg { display: none; } .play.on .bars { display: flex; }
+  .play small { position: absolute; bottom: -19px; font: 900 11px "Noto Sans SC"; letter-spacing: .2em; }
+
+  /* 主镜头：一格漫画分镜框，里面是真 3D */
+  .shot { position: relative; height: 344px; border: 3px solid var(--ink); background: var(--blue); overflow: hidden;
+          clip-path: polygon(0 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%); }
+  .shot canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .shot.hit canvas { filter: invert(1) contrast(3) grayscale(1); }
+  .shot .cut { position: absolute; right: -2px; bottom: -2px; width: 37px; height: 37px; background: linear-gradient(-45deg, transparent 0 46%, var(--ink) 46% 54%, transparent 54%); pointer-events: none; }
+  .badge { position: absolute; left: 10px; top: 8px; font-size: 64px; line-height: .9; color: var(--paper); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; filter: drop-shadow(3px 3px 0 var(--ink)); pointer-events: none; }
+  .hud { position: absolute; right: 10px; top: 10px; text-align: right; font: 700 11px "Chakra Petch"; letter-spacing: .1em; color: var(--paper); line-height: 1.6; pointer-events: none; }
+  .hud b { color: var(--yel); }
+  .steps { display: inline-flex; gap: 2px; vertical-align: -1px; margin-left: 4px; }
+  .steps i { width: 9px; height: 9px; border: 1.5px solid var(--paper); }
+  .steps i.on { background: var(--yel); }
+  .key { position: absolute; left: 10px; bottom: 34px; padding: 5px 10px 5px 8px; background: var(--paper); border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); font: 700 12px "Chakra Petch"; letter-spacing: .08em; display: flex; align-items: center; gap: 6px; }
+  .key svg { width: 16px; height: 16px; }
+  .key:active { transform: translate(3px, 3px); box-shadow: none; }
+
+  /* 标题框：漫画旁白框，斜着压在镜头下沿 */
+  .cap { position: relative; margin: -22px 18px 0 -2px; padding: 10px 14px 12px; background: var(--paper); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); transform: rotate(-1.2deg); z-index: 2; }
+  .cap h2 { font-weight: 900; font-size: 21px; line-height: 1.35; }
+  .cap h2 em { font-style: normal; background: linear-gradient(transparent 55%, var(--yel) 55%); }
+  .sum { margin: 14px 4px 0; font-size: 13.5px; line-height: 1.7; color: #333; font-weight: 500; }
+  .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .chip { position: relative; padding: 7px 10px 8px; border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); overflow: hidden; }
+  .chip::after { content: ""; position: absolute; inset: 0; background: var(--hatch); opacity: .9; -webkit-mask: linear-gradient(160deg, transparent 0 68%, #000 68%); mask: linear-gradient(160deg, transparent 0 68%, #000 68%); pointer-events: none; }
+  .chip span { position: relative; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
+  .chip b { position: relative; display: block; font-size: 26px; line-height: 1; margin-top: 2px; }
+  .c1 { background: linear-gradient(160deg, var(--yel) 0 68%, var(--yel2) 68%); }
+  .c2 { background: linear-gradient(160deg, var(--mint) 0 68%, var(--mint2) 68%); }
+  .c3 { background: linear-gradient(160deg, var(--cor) 0 68%, var(--cor2) 68%); color: var(--paper); }
+  .c3 b { -webkit-text-stroke: 0; }
+
+  .sect { display: flex; align-items: center; gap: 8px; margin: 26px 2px 10px; font: 700 12px "Chakra Petch"; letter-spacing: .16em; }
+  .sect::after { content: ""; flex: 1; height: 3px; background: var(--ink); }
+  .row { position: relative; display: grid; grid-template-columns: 70px 1fr; gap: 12px; align-items: center; padding: 8px 10px 8px 8px; margin-bottom: 10px; background: #fff; border: 2.5px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); cursor: pointer; }
+  .row .th { position: relative; width: 70px; height: 70px; border: 2.5px solid var(--ink); overflow: hidden; }
+  .row .th canvas { width: 100%; height: 100%; display: block; }
+  .row .rk { position: absolute; left: -1px; top: -3px; font-size: 22px; color: var(--paper); -webkit-text-stroke: 2.2px var(--ink); paint-order: stroke fill; }
+  .row h3 { font-size: 15px; font-weight: 700; line-height: 1.45; }
+  .row .m { margin-top: 3px; font: 700 12px "Chakra Petch"; letter-spacing: .06em; color: #444; display: flex; align-items: center; gap: 6px; }
+  .row .m i { display: inline-block; height: 8px; border: 1.5px solid var(--ink); background: linear-gradient(90deg, var(--yel) 0 60%, var(--yel2) 60%); }
+  .row .more { display: none; grid-column: 1 / -1; font-size: 12.5px; line-height: 1.7; color: #333; padding: 8px 2px 2px; border-top: 2px dashed var(--ink); }
+  .row.on { background: var(--yel); }
+  .row.on .more { display: block; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 10px 10px 24px; border-top: 3px solid var(--ink); background: var(--paper); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 0 4px; font-size: 12px; font-weight: 700; color: #555; border: 2.5px solid transparent; }
+  .tab svg { width: 21px; height: 21px; }
+  .tab.on { color: var(--ink); border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); background: linear-gradient(150deg, var(--mint) 0 62%, var(--mint2) 62%); }
+  .tab.on svg { stroke-width: 2.6; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="vendor/three.min.js"></script>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const key1 = KEY[1];
+const t1 = esc(shortTitle(h1)).replace(esc(key1), `<em>${esc(key1)}</em>`);
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ▮▮▮</span></div>
+  <main class="scroll" id="scroll">
+    <header class="top">
+      <div><div class="k"><b>EP.01</b>10·22 · 实时热榜</div><h1 id="h1">AI 热点</h1></div>
+      <button class="play" id="play" aria-label="听热点"><svg viewBox="0 0 24 24"><path d="M7 4 L20 12 L7 20 Z" fill="#f6f1e7" stroke="#111" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="bars">${"<i></i>".repeat(4)}</span><small>听</small></button>
+    </header>
+    <section class="shot" id="shot">
+      <canvas id="fx"></canvas><canvas id="gl"></canvas>
+      <div class="badge num">01</div>
+      <div class="hud">CAM <b id="cam">85</b>mm · 12fps<br>LIGHT<span class="steps" id="steps"><i></i><i></i><i></i></span></div>
+      <button class="key" id="key"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4"><circle cx="12" cy="12" r="5"/><path d="M12 7 A5 5 0 0 1 12 17 Z" fill="#111"/><path d="M12 1.5 V4 M12 20 V22.5 M1.5 12 H4 M20 12 H22.5 M4.6 4.6 L6.3 6.3 M17.7 17.7 L19.4 19.4 M4.6 19.4 L6.3 17.7 M17.7 6.3 L19.4 4.6"/></svg>打光 <span id="keyn">1/4</span></button>
+      <span class="cut"></span>
+    </section>
+    <div class="cap" id="cap"><h2>${t1}</h2></div>
+    <p class="sum">${esc(clip(firstLine(h1.summary), 60))}</p>
+    <div class="chips"><div class="chip c1"><span>热度</span><b class="num">${heatText(h1)}</b></div><div class="chip c2"><span>来源</span><b class="num">${h1.sources}</b></div><div class="chip c3"><span>参与</span><b class="num">${h1.people}</b></div></div>
+    <div class="sect">NEXT · 其余 ${rest.length} 条</div>
+    ${rest.map((h) => `<div class="row" data-r="${h.rank}"><div class="th"><canvas width="140" height="140"></canvas><span class="rk num">${pad2(h.rank)}</span></div><div><h3>${esc(shortTitle(h))}</h3><div class="m">HEAT ${heatText(h)} <i style="width:${Math.round(heatText(h) / 455 * 70)}px"></i> SRC ${h.sources}</div></div><div class="more">${esc(clip(firstLine(h.summary), 78))}</div></div>`).join("")}
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+
+// ───────────── 三渲二着色器 ─────────────
+// 光只分三段：亮面（本色）/ 暗面（换色相的暗色）/ 最暗（暗色 + 屏幕空间斜排线，线宽随暗度变粗）；硬高光点 + 硬边缘光
+const TOON_V = `
+  varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vN = normalize(mat3(modelMatrix) * normal);
+    vV = normalize(cameraPosition - wp.xyz);
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }`;
+const TOON_F = `
+  uniform vec3 uBase, uShade, uInk, uL; uniform float uSteps, uPx, uUseMap, uForce; uniform sampler2D uMap;
+  varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+  void main() {
+    vec3 n = normalize(vN); if (!gl_FrontFacing) n = -n;
+    vec3 L = normalize(uL);
+    float d = uForce < 0.0 ? -0.75 : dot(n, L);
+    vec3 base = uBase, shade = uShade;
+    if (uUseMap > 0.5) { vec3 t = texture2D(uMap, vUv).rgb; base = t; shade = t * uShade; }
+    vec3 col;
+    if (uSteps < 0.5) col = uInk;                                  // 第 0 步：剪影
+    else if (uSteps < 1.5) col = d > 0.15 ? base : uInk;           // 第 1 步：亮 / 黑
+    else {
+      col = d > 0.28 ? base : shade;                               // 第 2 步：亮 / 暗（暗面换色相）
+      if (uSteps > 2.5 && d < -0.12) {                             // 第 3 步：最暗处排线
+        float s = 5.0 * uPx, k = mod(gl_FragCoord.x + gl_FragCoord.y, s);
+        float w = mix(0.16, 0.55, clamp((-d - 0.12) / 0.6, 0.0, 1.0)) * s;
+        if (k < w) col = uInk;
+      }
+      if (uSteps > 2.5 && uForce >= 0.0) {
+        vec3 h = normalize(L + vV);
+        if (pow(max(dot(n, h), 0.0), 70.0) > 0.55) col = mix(col, vec3(1.0), 0.9);   // 硬高光
+        if (1.0 - max(dot(n, vV), 0.0) > 0.66 && d > 0.0) col = mix(col, vec3(1.0), 0.4); // 硬边缘光
+      }
+    }
+    gl_FragColor = vec4(col, 1.0);
+  }`;
+// 反面外扩描边：按屏幕像素等宽外推（用平滑后的法线，方块的角不开口）
+const LINE_V = `
+  attribute vec3 snormal; uniform float uW; uniform vec2 uRes;
+  void main() {
+    vec4 c = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec3 nv = normalize(normalMatrix * snormal);
+    vec2 dir = length(nv.xy) > 0.0001 ? normalize(nv.xy) : vec2(0.0);
+    c.xy += dir * uW * c.w * 2.0 / uRes;
+    c.z += 0.0004 * c.w;
+    gl_Position = c;
+  }`;
+const LINE_F = `uniform vec3 uInk; void main() { gl_FragColor = vec4(uInk, 1.0); }`;
+const C = (h) => new THREE.Color(h);
+const INK = C("#111111");
+const LIGHTS = [[-0.55, 0.75, 0.55], [0.75, 0.55, 0.5], [0.1, 0.95, -0.2], [-0.85, 0.2, 0.3]];
+const mats = [], lines = [];
+function toon(base, shade, map) {
+  const m = new THREE.ShaderMaterial({ vertexShader: TOON_V, fragmentShader: TOON_F, side: THREE.DoubleSide, uniforms: {
+    uBase: { value: C(base) }, uShade: { value: map ? new THREE.Color(shade) : C(shade) }, uInk: { value: INK }, uL: { value: new THREE.Vector3(...LIGHTS[0]) },
+    uSteps: { value: 0 }, uPx: { value: 2 }, uUseMap: { value: map ? 1 : 0 }, uMap: { value: map || null }, uForce: { value: 0 } } });
+  mats.push(m); return m;
+}
+function smoothNormals(geo) {
+  const p = geo.attributes.position, n = geo.attributes.normal, acc = new Map(), k = (i) => `${p.getX(i).toFixed(3)},${p.getY(i).toFixed(3)},${p.getZ(i).toFixed(3)}`;
+  for (let i = 0; i < p.count; i++) { const kk = k(i), a = acc.get(kk) || [0, 0, 0]; a[0] += n.getX(i); a[1] += n.getY(i); a[2] += n.getZ(i); acc.set(kk, a); }
+  const out = new Float32Array(p.count * 3);
+  for (let i = 0; i < p.count; i++) { const a = acc.get(k(i)), l = Math.hypot(...a) || 1; out[i * 3] = a[0] / l; out[i * 3 + 1] = a[1] / l; out[i * 3 + 2] = a[2] / l; }
+  geo.setAttribute("snormal", new THREE.BufferAttribute(out, 3));
+  return geo;
+}
+function inked(geo, mat, w = 3) {
+  smoothNormals(geo);
+  const g = new THREE.Group(), body = new THREE.Mesh(geo, mat);
+  const lm = new THREE.ShaderMaterial({ vertexShader: LINE_V, fragmentShader: LINE_F, side: THREE.BackSide, uniforms: { uW: { value: w * 2 }, uRes: { value: new THREE.Vector2(800, 700) }, uInk: { value: INK } } });
+  lm.userData.w = w; lines.push(lm); g.add(body, new THREE.Mesh(geo, lm)); return g;
+}
+// 车床：轮廓点重复一次 = 硬转折（零面积面不参与法线平均）
+const lathe = (pts, seg = 48) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
+const hard = (pts) => pts.flatMap((p, i) => (i && i < pts.length - 1 ? [p, p] : [p]));
+function curve(pts, n = 40) { const c = new THREE.SplineCurve(pts.map(([x, y]) => new THREE.Vector2(x, y))); return c.getPoints(n).map((v) => [Math.max(0.001, v.x), v.y]); }
+const BOTTLE = [[0.001, 0], [0.26, 0], [0.3, 0.06], [0.3, 0.55], [0.24, 0.72], [0.1, 0.86], [0.09, 1.08], [0.11, 1.12], [0.001, 1.13]];
+const VASE = curve([[0.001, 0], [0.2, 0.02], [0.34, 0.25], [0.3, 0.5], [0.14, 0.7], [0.12, 0.82], [0.2, 0.92], [0.001, 0.93]]);
+const PODIUM = hard([[0.001, -0.62], [1.8, -0.62], [1.8, -0.34], [1.56, -0.34], [1.56, 0], [0.001, 0]]);
+
+// 封面：先压成六种平涂色 + 黑勾线，再贴到石碑正面
+const PAL = ["#f6f1e7", "#111111", "#2a45ff", "#ffcf1f", "#ff5536", "#1fcfa4", "#ff8fb8", "#8a5cff"];
+function coverTex(img, w, h) {
+  const c = posterCanvas(img, w, h, PAL, { edge: 0.1, soft: 2 });
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t;
+}
+// 线条图标 → 立体管子
+function doodleGroup(d, base, shade) {
+  const g = new THREE.Group(), segs = d.match(/[MLCZ][^MLCZ]*/g); let path = null, cur = null, start = null; const paths = [];
+  const P = (x, y) => new THREE.Vector3((x - 32) / 22, (32 - y) / 22, 0);
+  for (const s of segs) {
+    const c = s[0], v = s.slice(1).trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    if (c === "M") { path = new THREE.CurvePath(); paths.push(path); cur = start = P(v[0], v[1]); }
+    else if (c === "L") { const p = P(v[0], v[1]); path.add(new THREE.LineCurve3(cur, p)); cur = p; }
+    else if (c === "C") { const p = P(v[4], v[5]); path.add(new THREE.CubicBezierCurve3(cur, P(v[0], v[1]), P(v[2], v[3]), p)); cur = p; }
+    else if (c === "Z") { path.add(new THREE.LineCurve3(cur, start)); cur = start; }
+  }
+  const m = toon(base, shade);
+  for (const p of paths) if (p.curves.length) g.add(inked(new THREE.TubeGeometry(p, Math.max(8, p.curves.length * 14), 0.075, 10, false), m, 2.2));
+  return g;
+}
+
+let hero = null, minis = [], step = 0, keyIdx = 0;
+// 下一帧：平时走 requestAnimationFrame；标签页在后台、rAF 停了（截图工具同时开几页时会这样）就退回 setTimeout
+const nextFrame = (cb) => { let done = false; const go = () => { if (!done) { done = true; cb(performance.now()); } }; requestAnimationFrame(go); setTimeout(go, 1000 / 30); };
+(async () => {
+  await fontsReady();
+  const shot = $("shot"), W = shot.clientWidth, H = shot.clientHeight, DPR = Math.min(2, window.devicePixelRatio || 1);
+  // 背景：漫画集中线，画在 3D 后面
+  const fx = $("fx"); fx.width = W * DPR; fx.height = H * DPR; const fc = fx.getContext("2d"); fc.scale(DPR, DPR);
+  const R = rnd; fc.fillStyle = "#2a45ff"; fc.fillRect(0, 0, W, H);
+  const cx = W * 0.56, cy = H * 0.5;
+  for (let i = 0; i < 120; i++) {
+    const a = (i / 120) * Math.PI * 2 + R(i) * 0.04, r0 = 120 + R(i + 9) * 70, wd = 0.006 + R(i + 3) * 0.018;
+    fc.fillStyle = i % 3 ? "rgba(246,241,231,.22)" : "rgba(17,17,17,.5)";
+    fc.beginPath(); fc.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); fc.lineTo(cx + Math.cos(a - wd) * 600, cy + Math.sin(a - wd) * 600); fc.lineTo(cx + Math.cos(a + wd) * 600, cy + Math.sin(a + wd) * 600); fc.fill();
+  }
+  // 太阳：两段光的大圆
+  fc.save(); fc.beginPath(); fc.arc(cx + 92, cy - 70, 54, 0, Math.PI * 2); fc.clip(); fc.fillStyle = "#ffcf1f"; fc.fillRect(0, 0, W, H); fc.fillStyle = "#f08a00"; fc.beginPath(); fc.arc(cx + 72, cy - 50, 54, 0, Math.PI * 2); fc.rect(0, 0, W, H); fc.fill("evenodd"); fc.restore();
+  fc.lineWidth = 3; fc.strokeStyle = "#111"; fc.beginPath(); fc.arc(cx + 92, cy - 70, 54, 0, Math.PI * 2); fc.stroke();
+
+  const renderer = new THREE.WebGLRenderer({ canvas: $("gl"), antialias: true, alpha: true });
+  renderer.setPixelRatio(DPR); renderer.setSize(W, H, false); renderer.setClearColor(0x000000, 0);
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(26, W / H, 0.1, 100);
+  const stage = new THREE.Group(); scene.add(stage);
+  // 领奖台
+  const pod = inked(lathe(PODIUM, 64), toon("#f6f1e7", "#8f98d6"), 2.6); stage.add(pod);
+  // 石碑：正面是处理过的头条封面
+  const img = await loadImage(h1.cover);
+  const tex = coverTex(img, 640, 360);
+  const side = toon("#ffcf1f", "#f08a00"), face = toon("#ffffff", "#5a64c8", tex), back = toon("#111111", "#111111");
+  const slabGeo = new THREE.BoxGeometry(2.0, 1.125, 0.14);
+  smoothNormals(slabGeo);
+  const slab = new THREE.Group(), sb = new THREE.Mesh(slabGeo, [side, side, side, side, face, back]);
+  const slm = new THREE.ShaderMaterial({ vertexShader: LINE_V, fragmentShader: LINE_F, side: THREE.BackSide, uniforms: { uW: { value: 3.4 * DPR }, uRes: { value: new THREE.Vector2(W * DPR, H * DPR) }, uInk: { value: INK } } });
+  lines.push(slm); slab.add(sb, new THREE.Mesh(slabGeo, slm));
+  slab.position.set(0, 0.92, -0.25); slab.rotation.x = -0.06; stage.add(slab);
+  // 石碑底座
+  const foot = inked(new THREE.BoxGeometry(0.9, 0.22, 0.42), toon("#111111", "#111111"), 2.4); foot.position.set(0, 0.11, -0.25); stage.add(foot);
+  // 三只瓶子：黄 / 薄荷 / 珊瑚
+  const bottles = [["#ffcf1f", "#f08a00", -1.05, 0.55, 1.0], ["#1fcfa4", "#0d7f86", 1.12, 0.45, 0.9], ["#ff5536", "#b8233a", 0.62, 0.95, 0.72]].map(([b, s, x, z, k], i) => {
+    const o = inked(i === 1 ? lathe(VASE, 48) : lathe(hard(BOTTLE), 48), toon(b, s), 2.4); o.position.set(x, 0, z); o.scale.setScalar(k); stage.add(o); return o;
+  });
+  // 绕着石碑转的圆环 + 漂浮碎块
+  const ring = inked(new THREE.TorusGeometry(0.42, 0.09, 20, 64), toon("#ff8fb8", "#c0407a"), 2.4); ring.position.set(-0.95, 1.75, 0.3); stage.add(ring);
+  const shards = [...Array(7)].map((_, i) => {
+    const s = inked(new THREE.IcosahedronGeometry(0.09 + rnd(i) * 0.1, 0).toNonIndexed(), toon(["#f6f1e7", "#ffcf1f", "#1fcfa4"][i % 3], ["#8f98d6", "#f08a00", "#0d7f86"][i % 3]), 2.2);
+    s.position.set(-1.6 + rnd(i + 2) * 3.2, 0.5 + rnd(i + 5) * 1.6, -0.6 + rnd(i + 7) * 1.6); s.userData.sp = 0.6 + rnd(i + 11) * 1.4; stage.add(s); return s;
+  });
+  // 投影：硬边的暗面形状，直接用最暗那一段画
+  const shadowMat = toon("#f6f1e7", "#8f98d6"); shadowMat.uniforms.uForce.value = -1;
+  [[0, -0.25, 1.15, 0.38], ...bottles.map((b) => [b.position.x + 0.12, b.position.z - 0.1, 0.36 * b.scale.x, 0.26 * b.scale.x])].forEach(([x, z, rx, rz]) => {
+    const m = new THREE.Mesh(new THREE.CircleGeometry(1, 40), shadowMat); m.rotation.x = -Math.PI / 2; m.scale.set(rx, rz, 1); m.position.set(x + 0.18, 0.004, z - 0.06); stage.add(m);
+  });
+  hero = { renderer, scene, cam, stage, ring, shards, slab };
+  lines.forEach((l) => { l.uniforms.uRes.value.set(W * DPR, H * DPR); if (l.userData.w) l.uniforms.uW.value = l.userData.w * DPR; });
+
+  // 小图：一个离屏渲染器轮流画七个小场景，拷进各自的画布
+  const mr = new THREE.WebGLRenderer({ antialias: true, alpha: false }); mr.setPixelRatio(1); mr.setSize(140, 140, false);
+  const BG = ["#ffcf1f", "#1fcfa4", "#ff8fb8", "#2a45ff", "#ff5536", "#ffcf1f", "#1fcfa4"];
+  const OBJ = [["#2a45ff", "#1a2a9c"], ["#ffcf1f", "#f08a00"], ["#f6f1e7", "#8f98d6"], ["#ffcf1f", "#f08a00"], ["#f6f1e7", "#8f98d6"], ["#2a45ff", "#1a2a9c"], ["#ff5536", "#b8233a"]];
+  const rows = [...app.querySelectorAll(".row")];
+  for (const [i, h] of rest.entries()) {
+    const sc = new THREE.Scene(); sc.background = C(BG[i]);
+    const cm = new THREE.PerspectiveCamera(30, 1, 0.1, 50); cm.position.set(0, 0.35, 5.1); cm.lookAt(0, 0, 0);
+    let obj;
+    if (h.cover) {
+      const im = await loadImage(h.cover), asp = im.width / im.height, tw = 320, th = Math.round(320 / asp);
+      const g = new THREE.BoxGeometry(2.3, 2.3 / asp, 0.16); smoothNormals(g);
+      const sd = toon(OBJ[i][0], OBJ[i][1]);
+      obj = new THREE.Group(); obj.add(new THREE.Mesh(g, [sd, sd, sd, sd, toon("#ffffff", "#5a64c8", coverTex(im, tw, th)), toon("#111", "#111")]));
+      const lm = new THREE.ShaderMaterial({ vertexShader: LINE_V, fragmentShader: LINE_F, side: THREE.BackSide, uniforms: { uW: { value: 2.6 }, uRes: { value: new THREE.Vector2(140, 140) }, uInk: { value: INK } } });
+      obj.add(new THREE.Mesh(g, lm));
+      if (asp < 1) obj.scale.setScalar(0.72);
+    } else obj = doodleGroup(DOODLE[h.rank], OBJ[i][0], OBJ[i][1]);
+    obj.traverse((o) => { if (o.material && o.material.uniforms && o.material.uniforms.uRes) o.material.uniforms.uRes.value.set(140, 140); if (o.material && o.material.uniforms && o.material.uniforms.uW) o.material.uniforms.uW.value = 2.4; });
+    sc.add(obj);
+    const cv = rows[i].querySelector("canvas"), cx2 = cv.getContext("2d");
+    minis.push({ sc, cm, obj, cx: cx2, spin: 0, ph: i * 0.8 });
+    rows[i].addEventListener("click", () => { rows[i].classList.toggle("on"); minis[i].spin = 1; });
+  }
+  const mr2 = mr;
+
+  // ───────────── 时间线 ─────────────
+  // 镜头每帧平滑推近（一拍一帧）；物体和灯光按 12 帧/秒走（一拍两帧），这是三渲二的手感
+  const t0 = performance.now();
+  const stepAt = [0.45, 0.85, 1.25];
+  let lastTick = -1, shake = 0;
+  function render(now) {
+    const t = (now - t0) / 1000;
+    const k = Math.min(1, t / 2.4), e = 1 - Math.pow(1 - k, 3);
+    const tick = Math.floor(t * 12);
+    // 灯分三下亮起来：剪影 → 黑白 → 两段 → 三段 + 排线
+    const s = t < stepAt[0] ? 0 : t < stepAt[1] ? 1 : t < stepAt[2] ? 2 : 3;
+    if (s !== step) { step = s; $("steps").querySelectorAll("i").forEach((x, j) => x.classList.toggle("on", j < s)); }
+    mats.forEach((m) => { m.uniforms.uSteps.value = s; m.uniforms.uPx.value = DPR; });
+    if (tick !== lastTick) {
+      lastTick = tick; const tt = tick / 12;
+      stage.rotation.y = Math.sin(tt * 0.45) * 0.42 - 0.12;
+      ring.rotation.set(tt * 0.9, tt * 1.3, 0); ring.position.y = 1.75 + Math.sin(tt * 1.6) * 0.08;
+      shards.forEach((p, j) => { p.rotation.set(tt * p.userData.sp, tt * p.userData.sp * 0.7, 0); p.position.y += Math.sin(tt * 2 + j) * 0.004; });
+      // 小图
+      minis.forEach((m, j) => {
+        if (t < 1.2 + j * 0.12) { m.cx.fillStyle = "#111"; m.cx.fillRect(0, 0, 140, 140); return; }
+        m.spin = Math.max(0, m.spin - 1 / 14);
+        m.obj.rotation.y = Math.sin(tt * 0.8 + m.ph) * 0.6 + (1 - m.spin) * 0 + (m.spin > 0 ? (1 - m.spin) * Math.PI * 2 : 0);
+        m.obj.rotation.x = -0.12 + Math.sin(tt * 0.6 + m.ph) * 0.1;
+        m.obj.traverse((o) => { if (o.material && o.material.uniforms && o.material.uniforms.uSteps) { o.material.uniforms.uSteps.value = Math.min(3, Math.floor((t - 1.2 - j * 0.12) / 0.15)); o.material.uniforms.uPx.value = 1; } });
+        mr2.render(m.sc, m.cm); m.cx.drawImage(mr2.domElement, 0, 0);
+      });
+    }
+    const sh = shake > 0 ? (Math.random() - 0.5) * shake : 0; shake *= 0.86; if (shake < 0.002) shake = 0;
+    cam.position.set(0.9 * (1 - e) + 1.25 + sh, 3.2 - 1.85 * e + sh, 11 - 4.6 * e);
+    cam.fov = 34 - 8 * e; cam.updateProjectionMatrix();
+    cam.lookAt(0.05, 0.72, 0);
+    $("cam").textContent = Math.round(50 + 35 * e);
+    renderer.render(scene, cam);
+    nextFrame(render);
+  }
+  nextFrame(render);
+
+  // 打光：换一个主光方向，直接跳过去（不过渡）
+  $("key").addEventListener("click", () => {
+    keyIdx = (keyIdx + 1) % LIGHTS.length; mats.forEach((m) => m.uniforms.uL.value.set(...LIGHTS[keyIdx])); $("keyn").textContent = `${keyIdx + 1}/4`;
+  });
+  // 听：冲击帧（两帧反色）+ 镜头震一下，按钮里的声波条按一拍两帧跳
+  const play = $("play"); let barT = null;
+  play.addEventListener("click", () => {
+    const on = play.classList.toggle("on");
+    shot.classList.add("hit"); setTimeout(() => shot.classList.remove("hit"), 84); shake = 0.22;
+    clearInterval(barT);
+    if (on) barT = setInterval(() => play.querySelectorAll(".bars i").forEach((b, j) => (b.style.height = `${6 + Math.round(Math.abs(Math.sin(performance.now() / 160 + j * 1.7)) * 16)}px`)), 1000 / 12);
+  });
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((tb) => tb.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === tb))));
+})();
+
+// 版面进场：一拍两帧（steps），先压后弹
+const pop = (el, delay, from = "translate(-14px, 10px) scale(.92)") => el.animate([{ opacity: 0, transform: from }, { opacity: 1, transform: "translate(2px,-2px) scale(1.03)", offset: 0.6 }, { opacity: 1, transform: "none" }], { duration: 500, delay, easing: "steps(6, end)", fill: "backwards" });
+pop($("h1"), 150); pop($("play"), 350, "scale(.4) rotate(-30deg)");
+pop($("cap"), 1450, "translateX(-60px) rotate(-1.2deg)");
+app.querySelectorAll(".sum, .chip").forEach((el, i) => pop(el, 1650 + i * 100));
+app.querySelectorAll(".row").forEach((el, i) => pop(el, 1900 + i * 90, "translateX(30px)"));
+</script>
+</body>
+</html>

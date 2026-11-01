@@ -11,7 +11,7 @@
 </script>
 ```
 
-线稿和纸拼贴还要先引入 `vendor/rough.js`（全局 `rough`）。
+线稿和纸拼贴还要先引入 `vendor/rough.js`（全局 `rough`）。三渲二和朱墨剧场的 3D 引入 `vendor/three.min.js`（three.js r128，全局 `THREE`）；墨线后期着色器在 `x-crimson.html` 里。
 
 图片必须同源（本地服务或同域名），否则 canvas 读不了像素。所有处理都在浏览器里做，不需要后端。
 
@@ -71,6 +71,8 @@
 | `wcDeform(poly, depth, spread, rand)` | 多边形递归中点位移（顶点第三个值是该点的乱度） |
 | `watercolorCanvas(img, w, h, { k, passes, blur, paper, seed })` | 真图 → 水彩（k 种主色分区，多遍 multiply，最亮一区留纸） |
 | `stainedGlass(img, w, h, { cell, lead, sat, bright, seed, pale })` → `{ canvas, reveal(k) }` | 真图 → 彩色玻璃（泰森多边形 + 铅条）；`reveal(k)` 按随机顺序点亮到 k（0～1），-1 全暗 |
+| `inkHatch(src, w, h, { base, ink, sp, scale, gamma, gain, lift, edge, seed, wob })` | 真图或明度画布 → 竖排墨线（线粗跟暗度走、亮处断成短划、每列微抖、轮廓补墨点），返回 (w×scale)×(h×scale) 画布；`base` 可以是透明色 | 
+| `dripDraw(ctx, src, p, { dir, sp, scale, seed, fill })` | 竖条滴落：把 src 按列切开画进 ctx；`dir: 1` 退场往下掉走，`dir: -1` 进场从上面落回（p 从 1 走到 0）；`fill` 是空出来的颜色 |
 
 ## 视频用（seek）
 
@@ -80,7 +82,7 @@
 | `dropAt(f, f0, { dur, x, y, r, s, fadeTo })` | 定格落下：从第 f0 帧起 dur 帧一格格落到位，返回 `{ visible, tx, ty, rot, scale, opacity, done }` |
 | `jitterAt(f, i, { every, amp, rot })` | 落定后的微抖：每 every 帧重摆一次，返回 `{ tx, ty, rot }` |
 
-能在 `seek(t)` 里用的：所有「生成一次就不变」的函数——`common.js` 全部图片处理、`tornPoly` / `tear` / `halftoneCutout` / `risoPlate` / `papercut` / `cornerCut` / `cloudFrom` / `renderCloud`（传 yaw 和 reveal）/ `brushPath` / `ensoPath` / `pxText` / `pxIcon` / `sprite` / `vhs` / `isoP` / `isoCube` / `glassFilter`，以及上表三个。
+能在 `seek(t)` 里用的：所有「生成一次就不变」的函数——`inkHatch` / `dripDraw`（p 按 t 算）/ `common.js` 全部图片处理、`tornPoly` / `tear` / `halftoneCutout` / `risoPlate` / `papercut` / `cornerCut` / `cloudFrom` / `renderCloud`（传 yaw 和 reveal）/ `brushPath` / `ensoPath` / `pxText` / `pxIcon` / `sprite` / `vhs` / `isoP` / `isoCube` / `glassFilter`，以及上表三个。
 
 不能直接用的（内部有计时器或 performance.now）：`sketchy`（改成按帧号选三版里的哪一版）、`inkBloom`（把它里面的进度 k 换成按 t 算）、`riso`（异步加载，在 ready 里调）、`makeGlass`（在 ready 里调一次）。
 
