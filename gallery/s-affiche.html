@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>意式招贴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Alfa+Slab+One&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ground: #f2ae1c; --ink: #17110d; --red: #e2361d; --cream: #f8ecd0; --lemon: #ffd92e; --pith: #fbf1cf; --green: #1d7a4b; --blue: #1f4f9c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--ground); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--ground); }
+  /* 石印：油墨颗粒 + 石板斑驳，正片叠底压在最上面 */
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 30; background: var(--stone), var(--grain); mix-blend-mode: multiply; }
+  .lat { font-family: "Shrikhand", cursive; font-weight: 400; }
+  .slab { font-family: "Alfa Slab One", serif; font-weight: 400; letter-spacing: .08em; }
+  /* 手绘大字：朱红字 + 黑色斜向立体投影 + 米色描线 */
+  .paint { color: var(--red); text-shadow: -1.5px -1.5px 0 var(--cream), 1px 1px 0 var(--ink), 2px 2px 0 var(--ink), 3px 3px 0 var(--ink), 4px 4px 0 var(--ink), 5px 5px 0 var(--ink), 6px 6px 0 var(--ink); }
+  .paint.cr { color: var(--cream); text-shadow: 1px 1px 0 var(--red), 2px 2px 0 var(--red), 3px 3px 0 var(--red), 4px 4px 0 var(--red), 5px 5px 0 var(--ink), 6px 6px 0 var(--ink); }
+  .brush { -webkit-mask: linear-gradient(100deg, #000 42%, rgba(0,0,0,.6) 47%, transparent 54%) 100% 0 / 260% 100% no-repeat; mask: linear-gradient(100deg, #000 42%, rgba(0,0,0,.6) 47%, transparent 54%) 100% 0 / 260% 100% no-repeat; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: "Alfa Slab One"; font-size: 14px; letter-spacing: .06em; position: relative; z-index: 3; }
+  .top { position: relative; z-index: 3; flex: none; height: 100px; padding: 0 18px; }
+  .brand { position: absolute; left: 16px; top: -4px; line-height: .9; white-space: nowrap; transform: rotate(-4deg); transform-origin: 0 100%; }
+  .brand .ai { font-family: "Shrikhand"; font-size: 70px; }
+  .brand .cn { font-weight: 900; font-size: 60px; letter-spacing: -.02em; margin-left: 4px; display: inline-block; transform: skewX(-8deg); }
+  .tag { position: absolute; left: 22px; top: 74px; display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .26em; font-weight: 900; }
+  .tag i { width: 26px; height: 3px; background: var(--ink); }
+  /* 皇冠瓶盖按钮 */
+  .cap { position: absolute; right: 14px; top: 0; width: 82px; height: 82px; transform-origin: 50% 50%; }
+  .cap svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(4px 4px 0 var(--ink)); }
+  .cap .lbl { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 24px; color: var(--cream); padding-top: 1px; }
+  .cap small { position: absolute; left: 0; right: 0; bottom: -16px; text-align: center; font-weight: 900; font-size: 10.5px; letter-spacing: .3em; color: var(--ink); }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 0 28px; scrollbar-width: none; position: relative; z-index: 2; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 招贴：米色纸边 + 一整块黑底，瓶子从黑里冲出来 */
+  .poster { position: relative; margin: 14px 14px 0; height: 362px; background: var(--ink); box-shadow: 0 0 0 5px var(--cream), 0 0 0 7.5px var(--ink), 9px 9px 0 7.5px rgba(23,17,13,.9); }
+  .poster svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+  .num { position: absolute; left: 14px; top: 8px; font-family: "Shrikhand"; font-size: 54px; line-height: 1; }
+  .num small { font-size: 26px; vertical-align: 22px; margin-right: 2px; }
+  .heat { position: absolute; left: 16px; top: 82px; width: 74px; height: 74px; border-radius: 50%; background: var(--lemon); border: 3px solid var(--ink); box-shadow: 0 0 0 3px var(--lemon), 0 0 0 5.5px var(--ink); display: grid; place-content: center; text-align: center; transform: rotate(-12deg); }
+  .heat b { display: block; font-family: "Alfa Slab One"; font-weight: 400; font-size: 25px; line-height: 1; }
+  .heat small { font-weight: 900; font-size: 9.5px; letter-spacing: .28em; }
+  .pname { position: absolute; left: 12px; right: 10px; bottom: 10px; font-family: "Shrikhand"; font-size: 44px; line-height: .98; white-space: nowrap; }
+  .pname small { display: block; font-family: "Noto Sans SC"; font-weight: 900; font-size: 12px; letter-spacing: .5em; color: var(--lemon); text-shadow: none; margin: 0 0 6px 4px; }
+
+  .hero { position: relative; padding: 20px 18px 0; }
+  .hero h2 { font-weight: 900; font-size: 25px; line-height: 1.32; letter-spacing: -.01em; }
+  .hero h2 b { color: var(--red); }
+  .hero p { margin-top: 9px; font-weight: 500; font-size: 14px; line-height: 1.7; }
+  .meta { display: flex; gap: 8px; margin-top: 12px; }
+  .meta span { padding: 4px 10px 3px; background: var(--ink); color: var(--cream); font-weight: 700; font-size: 12px; letter-spacing: .08em; }
+  .meta span:first-child { background: var(--red); }
+
+  .sec { display: flex; align-items: flex-end; gap: 10px; margin: 24px 18px 4px; }
+  .sec h4 { font-weight: 900; font-size: 30px; line-height: 1; transform: skewX(-8deg); }
+  .sec i { flex: 1; height: 5px; background: var(--ink); margin-bottom: 6px; }
+  .sec span { font-family: "Shrikhand"; font-size: 17px; }
+  .it { position: relative; margin: 0 18px; padding: 14px 0 14px; display: grid; grid-template-columns: 54px 1fr 64px; gap: 10px; align-items: center; border-bottom: 3px solid var(--ink); cursor: pointer; }
+  .it .rk { font-family: "Shrikhand"; font-size: 40px; line-height: 1; text-align: center; transition: transform .3s; }
+  .it h3 { font-weight: 900; font-size: 16px; line-height: 1.42; }
+  .it h3 b { color: var(--red); }
+  .it .src { margin-top: 3px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; opacity: .78; }
+  .coin { width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--ink); overflow: hidden; display: grid; place-items: center; box-shadow: 4px 4px 0 var(--ink); }
+  .coin canvas { width: 100%; height: 100%; display: block; }
+  .coin svg { width: 40px; height: 40px; }
+  .more { grid-column: 1 / -1; display: none; margin-top: 4px; padding: 12px 14px; background: var(--ink); color: var(--cream); font-size: 13.5px; line-height: 1.75; font-weight: 500; box-shadow: 5px 5px 0 var(--red); }
+  .it.open .more { display: block; }
+  .it.open .rk { transform: rotate(-10deg) scale(1.12); }
+  .it.open .rk.paint { color: var(--cream); }
+
+  .tabs { flex: none; position: relative; z-index: 3; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 6px 24px; background: var(--ink); color: var(--cream); border-top: 5px solid var(--red); }
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: 900; font-size: 12px; letter-spacing: .12em; opacity: .62; }
+  .tab svg { width: 22px; height: 22px; position: relative; z-index: 1; }
+  .tab span { position: relative; z-index: 1; }
+  .tab.on { opacity: 1; color: var(--ink); }
+  .tab.on::before { content: ""; position: absolute; left: 50%; top: -4px; width: 56px; height: 52px; margin-left: -28px; background: var(--lemon); border-radius: 46% 54% 50% 50% / 56% 50% 50% 44%; box-shadow: 3px 3px 0 var(--red); transform: rotate(-5deg); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { springCurve } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const NS = "http://www.w3.org/2000/svg";
+// 石印 6 色：黑、米、朱、铬黄、翠绿、群青
+const LITHO = ["#17110d", "#f8ecd0", "#e2361d", "#f2ae1c", "#1d7a4b", "#1f4f9c"];
+const mark = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<b>${esc(k)}</b>`) : t; };
+
+// ── 石板斑驳：大块软斑 + 细颗粒（套在最上层 multiply） ──
+function stoneURL(size = 360) {
+  const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d");
+  for (let i = 0; i < 70; i++) {
+    const px = Math.random() * size, py = Math.random() * size, r = 10 + Math.random() * 60, g = x.createRadialGradient(px, py, 0, px, py, r);
+    g.addColorStop(0, `rgba(120,70,20,${0.035 + Math.random() * 0.04})`); g.addColorStop(1, "rgba(120,70,20,0)");
+    x.fillStyle = g;
+    for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) { x.save(); x.translate(ox, oy); x.fillRect(px - r, py - r, r * 2, r * 2); x.restore(); }
+  }
+  for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(40,20,10,${Math.random() * 0.18})`; x.fillRect(Math.random() * size, Math.random() * size, 1, 1); }
+  return c.toDataURL();
+}
+app.style.setProperty("--stone", `url(${stoneURL()})`);
+app.style.setProperty("--grain", `url(${grainURL(180, 0.1, 60)})`);
+
+// ── 真图 → 石印剪影：软化、去背（边框中位色）、压成 6 色、主体外描一圈墨线、墨版错 1px ──
+function litho(img, w, h, { back = null, pal = LITHO, cutTol = 46, soft = 3 } = {}) {
+  const src = coverCanvas(coverCanvas(img, Math.round(w / soft), Math.round(h / soft)), w, h);
+  const ctx = src.getContext("2d"), id = ctx.getImageData(0, 0, w, h), d = id.data;
+  // 背景色 = 四边像素的中位色
+  const edge = [];
+  for (let x = 0; x < w; x += 2) edge.push(0 * w + x, (h - 1) * w + x);
+  for (let y = 0; y < h; y += 2) edge.push(y * w, y * w + w - 1);
+  const med = [0, 1, 2].map((k) => { const v = edge.map((i) => d[i * 4 + k]).sort((a, b) => a - b); return v[v.length >> 1]; });
+  const P = pal.map(hex), mask = new Uint8Array(w * h), idx = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+    mask[i] = Math.hypot(r - med[0], g - med[1], b - med[2]) > cutTol ? 1 : 0;
+    // 先拉饱和再取最近色：招贴的颜色要冲
+    const L = 0.3 * r + 0.59 * g + 0.11 * b, R = L + (r - L) * 1.5, G = L + (g - L) * 1.5, B = L + (b - L) * 1.5;
+    let best = 0, bd = 1e9;
+    for (let k = 0; k < P.length; k++) { const dr = R - P[k][0], dg = G - P[k][1], db = B - P[k][2], dd = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11; if (dd < bd) { bd = dd; best = k; } }
+    idx[i] = best;
+  }
+  const out = document.createElement("canvas"); out.width = w; out.height = h;
+  const o = out.getContext("2d"), od = o.createImageData(w, h), B = back && hex(back);
+  const inkRGB = P[0];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, j = i * 4;
+    // 墨线：主体边界（四邻里有背景）
+    const rim = mask[i] && (x < 2 || y < 2 || x > w - 3 || y > h - 3 ? 0 : (!mask[i - 2] || !mask[i + 2] || !mask[i - 2 * w] || !mask[i + 2 * w]));
+    let c = null;
+    if (!mask[i]) c = B; else if (rim) c = inkRGB; else c = P[idx[i]];
+    if (!c) { od.data[j + 3] = 0; continue; }
+    od.data[j] = c[0]; od.data[j + 1] = c[1]; od.data[j + 2] = c[2]; od.data[j + 3] = 255;
+  }
+  o.putImageData(od, 0, 0);
+  // 套印不准：再压一层错开 1px 的淡墨
+  o.globalCompositeOperation = "multiply"; o.globalAlpha = 0.18; o.drawImage(out, 1.2, 1.2); o.globalAlpha = 1; o.globalCompositeOperation = "source-over";
+  return out;
+}
+
+// ── 皇冠瓶盖：21 个齿 ──
+function capPath(r1 = 40, r2 = 34, n = 21) {
+  let d = "";
+  for (let i = 0; i < n * 2; i++) { const a = (i / (n * 2)) * Math.PI * 2, r = i % 2 ? r2 : r1; d += `${i ? "L" : "M"}${(50 + r * Math.cos(a)).toFixed(1)} ${(50 + r * Math.sin(a)).toFixed(1)} `; }
+  return d + "Z";
+}
+
+// ── 柠檬皮螺旋（Campari 那条）：贴在圆柱上的扁带，前半在瓶前、后半在瓶后 ──
+function peel({ R = 78, y0 = -70, turns = 2.7, pitch = 54, hgt = 16, tilt = 20 } = {}) {
+  const front = [], back = [], center = [];
+  let seg = null, side = null;
+  const N = Math.round(turns * 64);
+  for (let k = 0; k <= N; k++) {
+    const th = (k / 64) * Math.PI * 2, t = k / N;
+    const r = R * (1 - 0.12 * t) + (t > 0.82 ? (t - 0.82) * 260 : 0);  // 末尾松开甩出去
+    const x = r * Math.cos(th) - (t > 0.82 ? (t - 0.82) * 120 : 0), y = y0 + (th / (Math.PI * 2)) * pitch + Math.sin(th) * tilt;
+    const s = Math.sin(th) >= 0 ? "f" : "b", hh = hgt * (1 - 0.35 * t);
+    center.push([x, y]);
+    if (s !== side) { if (seg) (side === "f" ? front : back).push(seg); seg = []; side = s; if (center.length > 1) seg.push(center[center.length - 2].concat([hh])); }
+    seg.push([x, y, hh]);
+  }
+  (side === "f" ? front : back).push(seg);
+  const poly = (pts) => { const top = pts.map(([x, y, hh]) => `${x.toFixed(1)} ${(y - hh / 2).toFixed(1)}`), bot = pts.slice().reverse().map(([x, y, hh]) => `${x.toFixed(1)} ${(y + hh / 2).toFixed(1)}`); return `M${top.join(" L")} L${bot.join(" L")} Z`; };
+  return { front: front.map(poly), back: back.map(poly), center: "M" + center.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(" L") };
+}
+const PEEL = peel();
+
+const BOTTLE = "M-12 -142 L-12 -80 C-12 -52 -54 -50 -54 -14 L-54 120 Q-54 134 -40 134 L40 134 Q54 134 54 120 L54 -14 C54 -50 12 -52 12 -80 L12 -142 Z";
+const spray = Array.from({ length: 34 }, (_, i) => {
+  // 抛物线：往右上冲，再往右下落
+  const t = 0.18 + rnd(i + 11) * 0.82, vx = 70 + rnd(i + 3) * 80, vy = 40 + rnd(i + 5) * 50, r = 2.2 + rnd(i + 29) * 7.5 * (1 - t * 0.55);
+  return { x: vx * t * 1.3, y: -vy * t + 95 * t * t, r, c: i % 4 === 0 ? "#ffd92e" : "#f8ecd0" };
+});
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ▮▮▮</span></div>
+  <header class="top">
+    <h1 class="brand"><span class="ai paint brush">AI</span><span class="cn paint brush">热点</span></h1>
+    <div class="tag brush"><i></i>APERITIVO · 10·22 · 实时</div>
+    <button class="cap" id="cap" aria-label="收听"><svg viewBox="0 0 100 100"><path d="${capPath()}" fill="#e2361d" stroke="#17110d" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="50" r="27" fill="none" stroke="#f8ecd0" stroke-width="2.5"/><circle cx="50" cy="50" r="22" fill="#17110d"/></svg><span class="lbl" id="capT">听</span><small>开瓶</small></button>
+  </header>
+  <main class="scroll" id="scroll">
+    <div class="poster" id="poster">
+      <svg viewBox="0 0 362 362" id="pv">
+        <defs>
+          <clipPath id="lab"><rect x="-44" y="12" width="88" height="74" rx="3"/></clipPath>
+          <mask id="pm" maskUnits="userSpaceOnUse" x="-300" y="-300" width="600" height="700"><path id="pmp" d="${PEEL.center}" fill="none" stroke="#fff" stroke-width="44" stroke-linecap="round"/></mask>
+        </defs>
+        <g id="spray" transform="translate(220 40)">${spray.map((s, i) => `<circle class="dr" cx="${s.x.toFixed(1)}" cy="${s.y.toFixed(1)}" r="${s.r.toFixed(1)}" fill="${s.c}" stroke="#17110d" stroke-width="1.5" style="--i:${i}"/>`).join("")}</g>
+        <g id="cork" transform="translate(304 22) rotate(38)"><rect x="-11" y="-17" width="22" height="34" rx="4" fill="#d79a5c" stroke="#17110d" stroke-width="2.5"/><path d="M-6 -9 h3 M2 -3 h4 M-5 5 h3 M1 10 h4" stroke="#7b4b23" stroke-width="2" stroke-linecap="round"/><ellipse cx="0" cy="-17" rx="11" ry="3.2" fill="#e8b47a" stroke="#17110d" stroke-width="2"/></g>
+        <g id="bottleWrap" transform="translate(186 182) scale(.94)"><g id="bottle" transform="rotate(14)">
+          <g mask="url(#pm)">${PEEL.back.map((d) => `<path d="${d}" fill="#fbf1cf" stroke="#17110d" stroke-width="2.4" stroke-linejoin="round"/>`).join("")}</g>
+          <path d="${BOTTLE}" fill="#e2361d" stroke="#17110d" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M-12 -142 L-12 -80 C-12 -60 -30 -56 -42 -44 L42 -44 C30 -56 12 -60 12 -80 L12 -142 Z" fill="#7d1408" opacity=".55"/>
+          <path d="M44 -12 L44 118 Q44 126 36 126 L30 126 L30 -8 Q38 -18 44 -12 Z" fill="#9e1c0c"/>
+          <path d="M-42 -8 L-42 112" stroke="#f8ecd0" stroke-width="7" stroke-linecap="round"/>
+          <path d="M-5 -140 L-5 -104" stroke="#f8ecd0" stroke-width="3.5" stroke-linecap="round" opacity=".8"/>
+          <path d="M-42 -26 L-36 -36" stroke="#f8ecd0" stroke-width="5" stroke-linecap="round"/>
+          <path d="M-15 -150 L15 -150 L15 -98 Q0 -88 -15 -98 Z" fill="#1d7a4b" stroke="#17110d" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M-15 -122 L15 -122" stroke="#ffd92e" stroke-width="3"/>
+          <rect x="-48" y="-2" width="96" height="118" rx="5" fill="#f8ecd0" stroke="#17110d" stroke-width="3"/>
+          <rect x="-48" y="-2" width="96" height="14" fill="#1d7a4b" stroke="#17110d" stroke-width="3"/>
+          <text x="0" y="9.5" text-anchor="middle" font-family="Alfa Slab One" font-size="9" letter-spacing="2" fill="#f8ecd0">BITTER · N°1</text>
+          <image id="labimg" x="-44" y="12" width="88" height="74" clip-path="url(#lab)" preserveAspectRatio="none"/>
+          <rect x="-44" y="12" width="88" height="74" rx="3" fill="none" stroke="#17110d" stroke-width="2"/>
+          <text x="0" y="108" text-anchor="middle" font-family="Shrikhand" font-size="19" fill="#e2361d" stroke="#17110d" stroke-width=".6">AI 热点</text>
+          <g mask="url(#pm)">${PEEL.front.map((d) => `<path d="${d}" fill="#ffd92e" stroke="#17110d" stroke-width="2.4" stroke-linejoin="round"/>`).join("")}</g>
+        </g></g>
+      </svg>
+      <div class="num paint cr" id="num"><small>N°</small>1</div>
+      <div class="heat" id="heat"><b>${heatText(h1)}</b><small>热度</small></div>
+      <div class="pname paint cr brush" id="pname"><small>今 日 头 条</small>${esc(KEY[1] || "")}</div>
+    </div>
+    <section class="hero">
+      <h2 class="brush" id="ht">${mark(h1)}</h2>
+      <p>${esc(clip(firstLine(h1.summary), 30))}</p>
+      <div class="meta"><span>热度 ${heatText(h1)}</span><span>${h1.sources} 家来源</span><span>${h1.people} 人参与</span></div>
+    </section>
+    <div class="sec"><h4 class="brush" id="sech">今日酒单</h4><i></i><span>N°2–8</span></div>
+    ${rest.map((h) => `<div class="it"><span class="rk paint">${h.rank}</span><div><h3>${mark(h)}</h3><div class="src">热度 ${heatText(h)} · ${h.sources} 家</div></div><div class="coin" style="background:${["", "", "#1f4f9c", "#1d7a4b", "#e2361d", "#1d7a4b", "#e2361d", "#1f4f9c", "#17110d"][h.rank]}">${h.cover ? "<canvas></canvas>" : `<svg viewBox="0 0 64 64" fill="none" stroke="#f8ecd0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="${DOODLE[h.rank]}"/></svg>`}</div><div class="more">${esc(clip(firstLine(h.summary), 92))}</div></div>`).join("")}
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const pml = $("pmp").getTotalLength();
+$("pmp").style.strokeDasharray = pml; $("pmp").style.strokeDashoffset = pml;
+
+(async () => {
+  const [img] = await Promise.all([loadImage(h1.cover), fontsReady()]);
+  // 酒标上的真图：去背、压 6 色，背景换成酒标米色
+  $("labimg").setAttribute("href", litho(img, 264, 222, { back: "#f8ecd0" }).toDataURL());
+  app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (!h.cover) return; loadImage(h.cover).then((im) => { const c = li.querySelector("canvas"); c.width = c.height = 128; const p = litho(im, 128, 128, { back: null, soft: 5, cutTol: 60 }); const x = c.getContext("2d"); x.drawImage(p, 0, 0); }); });
+
+  const SP = springCurve(170, 11), SP2 = springCurve(260, 15);
+  const go = (el, kf, o) => el && el.animate(kf, { fill: "backwards", ...o });
+  const paintOn = (el, delay, dur = 650) => go(el, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0" }, { maskPosition: "0% 0", webkitMaskPosition: "0% 0" }], { duration: dur, delay, easing: "cubic-bezier(.55,.1,.35,1)", fill: "both" });
+  // 黑底先压下来（石印第一版：黑）
+  go($("poster"), [{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 520, delay: 100, easing: "cubic-bezier(.7,0,.3,1)" });
+  // 手绘大字一笔刷上去
+  app.querySelectorAll(".brand .brush").forEach((el, i) => paintOn(el, 250 + i * 260, 600));
+  paintOn(app.querySelector(".tag"), 820, 500);
+  go($("cap"), [{ transform: "translateY(-90px) rotate(-200deg)" }, { transform: "none" }], { duration: SP.ms, delay: 500, easing: SP.easing });
+  // 瓶子从黑底下面跃出来，过冲再落定
+  go($("bottleWrap"), [{ transform: "translate(150px,520px) rotate(-38deg) scale(.7)" }, { transform: "translate(186px,182px) rotate(0deg) scale(.94)" }], { duration: SP.ms, delay: 560, easing: SP.easing });
+  // 开瓶：塞子飞出去，泡沫一粒粒溅开
+  go($("cork"), [{ transform: "translate(220px,40px) rotate(0deg) scale(.6)", opacity: 0 }, { transform: "translate(220px,40px) rotate(0deg) scale(.6)", opacity: 1, offset: 0.05 }, { transform: "translate(304px,22px) rotate(398deg) scale(1)", opacity: 1 }], { duration: 700, delay: 1250, easing: "cubic-bezier(.2,.9,.3,1.25)" });
+  app.querySelectorAll(".dr").forEach((c, i) => { const s = spray[i]; go(c, [{ transform: `translate(${-s.x}px,${-s.y}px) scale(0)` }, { transform: "none" }], { duration: 640, delay: 1290 + rnd(i + 7) * 260, easing: "cubic-bezier(.15,.9,.3,1.2)" }); });
+  // 柠檬皮沿螺旋一圈圈缠上去
+  $("pmp").animate([{ strokeDashoffset: pml }, { strokeDashoffset: 0 }], { duration: 1100, delay: 1150, easing: "cubic-bezier(.45,0,.2,1)", fill: "forwards" });
+  go($("num"), [{ transform: "translateX(-90px) rotate(-20deg)" }, { transform: "none" }], { duration: SP2.ms, delay: 950, easing: SP2.easing });
+  go($("heat"), [{ transform: "scale(0) rotate(-200deg)" }, { transform: "rotate(-12deg)" }], { duration: SP.ms, delay: 1550, easing: SP.easing });
+  paintOn($("pname"), 1400, 700);
+  paintOn($("ht"), 1650, 700);
+  paintOn($("sech"), 2050, 500);
+  app.querySelectorAll(".hero p, .meta, .sec").forEach((el, i) => go(el, [{ opacity: 0, transform: "translateY(14px)" }, { opacity: 1, transform: "none" }], { duration: 420, delay: 1900 + i * 110, easing: "cubic-bezier(.2,.8,.2,1)" }));
+  app.querySelectorAll(".it").forEach((el, i) => go(el, [{ opacity: 0, transform: "translateX(-40px) rotate(-3deg)" }, { opacity: 1, transform: "none" }], { duration: SP2.ms, delay: 2150 + i * 90, easing: SP2.easing }));
+  // 常驻：瓶子轻轻晃
+  setTimeout(() => $("bottle").animate([{ transform: "rotate(14deg)" }, { transform: "rotate(10.5deg)" }, { transform: "rotate(14deg)" }], { duration: 3200, iterations: Infinity, easing: "ease-in-out" }), SP.ms + 600);
+
+  // 点瓶盖：盖子弹飞再落回，塞子再开一次
+  const pop = () => {
+    $("cork").animate([{ transform: "translate(220px,40px) rotate(0deg) scale(.6)" }, { transform: "translate(304px,22px) rotate(398deg) scale(1)" }], { duration: 650, easing: "cubic-bezier(.2,.9,.3,1.25)" });
+    app.querySelectorAll(".dr").forEach((c, i) => { const s = spray[i]; c.animate([{ transform: `translate(${-s.x}px,${-s.y}px) scale(0)` }, { transform: "none" }], { duration: 560, delay: rnd(i + 7) * 200, easing: "cubic-bezier(.15,.9,.3,1.2)" }); });
+  };
+  $("cap").addEventListener("click", () => {
+    const on = $("cap").classList.toggle("on");
+    $("cap").animate([{ transform: "none" }, { transform: "translateY(-46px) rotate(260deg)" }, { transform: "rotate(360deg)" }], { duration: 760, easing: "cubic-bezier(.3,.7,.4,1)" });
+    $("capT").textContent = on ? "停" : "听"; $("cap").querySelector("small").textContent = on ? "正在播" : "开瓶";
+    if (on) pop();
+  });
+  app.querySelectorAll(".it").forEach((el) => el.addEventListener("click", () => {
+    const open = el.classList.toggle("open");
+    if (open) el.querySelector(".more").animate([{ transform: "scale(.6) rotate(-4deg)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: SP2.ms, easing: SP2.easing });
+  }));
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => { tabs.forEach((x) => x.classList.toggle("on", x === t)); t.animate([{ transform: "translateY(-10px) scale(1.15)" }, { transform: "none" }], { duration: SP2.ms, easing: SP2.easing }); }));
+})();
+</script>
+</body>
+</html>

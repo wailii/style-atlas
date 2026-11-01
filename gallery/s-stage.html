@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>红幕剧场</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,700;0,6..96,900;1,6..96,700;1,6..96,900&family=Bebas+Neue&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --wall: #2b060b; --velvet: #9a0f1f; --red: #b3142a; --gilt: #c9a144; --gilt-hi: #f5dc93; --gilt-lo: #7a5a1c; --paper: #f3e7cf; --buff: #f1d7a6; --ink: #1c1213; --mute: #6e5a4c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--wall); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--wall) var(--damask); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: overlay; z-index: 40; }
+  .bb { font-family: "Bebas Neue", sans-serif; letter-spacing: .14em; }
+  .gilt { background: linear-gradient(100deg, var(--gilt-lo) 0%, var(--gilt) 25%, var(--gilt-hi) 45%, #fff3c9 52%, var(--gilt-hi) 60%, var(--gilt) 80%, var(--gilt-lo) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  .sb { position: relative; z-index: 3; height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 0; font-family: "Bebas Neue"; font-size: 17px; letter-spacing: .12em; color: var(--gilt-hi); }
+  .top { position: relative; z-index: 3; flex: none; height: 62px; padding: 0 18px; }
+  .top h1 { font-family: "Bodoni Moda", "Noto Serif SC", serif; font-style: italic; font-weight: 900; font-size: 40px; line-height: 1; white-space: nowrap; }
+  .top h1 span { font-family: "Noto Serif SC"; font-style: normal; font-size: 34px; margin-left: 4px; }
+  .top .sub { margin-top: 5px; font-size: 13px; color: rgba(245,220,147,.75); }
+  /* 门票按钮：两侧缺口 + 虚线撕口 */
+  .tk { position: absolute; right: 16px; top: -2px; width: 92px; height: 58px; display: flex; filter: drop-shadow(0 3px 0 rgba(0,0,0,.45)); }
+  .tk > span { position: relative; display: grid; place-items: center; background: var(--buff); -webkit-mask: radial-gradient(circle at 0 50%, transparent 6px, #000 6.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 6px, #000 6.5px) right / 51% 100% no-repeat; mask: radial-gradient(circle at 0 50%, transparent 6px, #000 6.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 6px, #000 6.5px) right / 51% 100% no-repeat; }
+  .tk .main { flex: 1; font-family: "Noto Serif SC"; font-weight: 900; font-size: 22px; color: var(--red); box-shadow: inset 0 0 0 3px var(--buff), inset 0 0 0 4px rgba(179,20,42,.7); }
+  .tk .main small { position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-family: "Bebas Neue"; font-size: 9px; letter-spacing: .3em; color: var(--ink); }
+  .tk .main i { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-style: normal; font-family: "Bebas Neue"; font-size: 9px; letter-spacing: .2em; color: var(--ink); }
+  .tk .stub { width: 26px; border-left: 2px dashed rgba(28,18,19,.45); font-family: "Bebas Neue"; font-size: 11px; letter-spacing: .1em; writing-mode: vertical-rl; color: var(--ink); transition: transform .6s cubic-bezier(.3,1.5,.5,1), opacity .6s; transform-origin: 0 100%; }
+  .tk.on .stub { transform: translate(10px, 6px) rotate(18deg); opacity: .85; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; position: relative; z-index: 2; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 台口：镀金框 + 一圈金珠 */
+  .pro { position: relative; margin: 8px 8px 0; height: 356px; padding: 10px; background: linear-gradient(160deg, var(--gilt-hi), var(--gilt) 30%, var(--gilt-lo) 55%, var(--gilt) 75%, var(--gilt-hi)); border-radius: 4px; box-shadow: 0 0 0 2px #1a0306, 0 12px 26px rgba(0,0,0,.55); }
+  .pro::before { content: ""; position: absolute; inset: 3px; border: 1.5px solid rgba(255,243,201,.85); border-radius: 3px; pointer-events: none; }
+  .pro .beads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .pro canvas { display: block; width: 100%; height: 100%; background: #12030a; box-shadow: 0 0 0 1.5px #1a0306; }
+  .crest { position: absolute; left: 50%; top: -14px; z-index: 2; transform: translateX(-50%); padding: 4px 18px 3px; background: linear-gradient(180deg, var(--gilt-hi), var(--gilt) 60%, var(--gilt-lo)); clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%); font-family: "Bebas Neue"; font-size: 14px; letter-spacing: .3em; color: #3a0a0f; white-space: nowrap; }
+
+  /* 节目单：米色纸 */
+  .prog { position: relative; margin: 14px 12px 0; padding: 16px 18px 8px; background: var(--paper) var(--paperTex); box-shadow: 0 10px 0 -4px rgba(0,0,0,.25); }
+  .prog::before { content: ""; position: absolute; inset: 6px; border: 1px solid rgba(179,20,42,.55); outline: 1px solid rgba(179,20,42,.55); outline-offset: 3px; pointer-events: none; }
+  .act { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; color: var(--red); }
+  .act b { width: 44px; height: 1px; background: var(--red); }
+  .prog h2 { margin-top: 8px; text-align: center; font-family: "Bodoni Moda", "Noto Serif SC", serif; font-weight: 900; font-size: 23px; line-height: 1.38; }
+  .prog h2 em { font-style: italic; color: var(--red); }
+  .cast { margin: 12px 8px 4px; }
+  .cast div { display: flex; align-items: baseline; gap: 6px; font-size: 13px; line-height: 1.65; }
+  .cast div i { flex: 1; border-bottom: 1.5px dotted rgba(28,18,19,.45); transform: translateY(-4px); }
+  .cast b { font-family: "Bodoni Moda"; font-weight: 700; font-size: 15px; }
+  .sec { display: flex; align-items: center; gap: 10px; margin: 18px 18px 10px; color: var(--gilt-hi); }
+  .sec h4 { font-family: "Noto Serif SC"; font-weight: 900; font-size: 20px; letter-spacing: .2em; white-space: nowrap; }
+  .sec i { flex: 1; height: 1px; background: linear-gradient(90deg, var(--gilt), transparent); }
+  .sec span { font-size: 14px; color: rgba(245,220,147,.7); }
+
+  /* 列表：一张张票 */
+  .it { position: relative; margin: 0 12px 10px; display: grid; grid-template-columns: 62px 1fr; cursor: pointer; filter: drop-shadow(0 3px 0 rgba(0,0,0,.4)); }
+  .it .stub, .it .body { background: var(--buff); }
+  .it:nth-of-type(odd) .stub, .it:nth-of-type(odd) .body { background: #f2c7bd; }
+  .it .stub { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 2px dashed rgba(28,18,19,.45); -webkit-mask: radial-gradient(circle at 0 50%, transparent 7px, #000 7.5px); mask: radial-gradient(circle at 0 50%, transparent 7px, #000 7.5px); transition: transform .55s cubic-bezier(.3,1.5,.5,1); transform-origin: 100% 0; }
+  .it .stub small { font-family: "Bebas Neue"; font-size: 10px; letter-spacing: .22em; color: var(--mute); }
+  .it .stub b { font-family: "Bebas Neue"; font-weight: 400; font-size: 34px; line-height: .9; color: var(--red); }
+  .it .body { position: relative; padding: 11px 14px 11px 14px; box-shadow: inset 0 0 0 4px transparent; -webkit-mask: radial-gradient(circle at 100% 50%, transparent 7px, #000 7.5px); mask: radial-gradient(circle at 100% 50%, transparent 7px, #000 7.5px); }
+  .it .body::before { content: ""; position: absolute; inset: 5px 14px 5px 4px; border: 1px solid rgba(179,20,42,.45); pointer-events: none; }
+  .it h3 { font-weight: 700; font-size: 15px; line-height: 1.45; }
+  .it h3 em { font-style: normal; color: var(--red); font-weight: 900; }
+  .it .src { margin-top: 3px; font-size: 11px; color: var(--mute); letter-spacing: .14em; }
+  .more { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(28,18,19,.35); font-size: 13px; line-height: 1.75; color: #3e2f2a; }
+  .it.open .more { display: block; }
+  .it.open .stub { transform: translate(-4px, 4px) rotate(-7deg); }
+  .punch { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; border: 2.5px double var(--ink); color: var(--ink); display: none; place-items: center; font-weight: 900; font-size: 13px; letter-spacing: .1em; transform: rotate(-14deg); opacity: .78; background: rgba(241,215,166,.35); }
+  .it.open .punch { display: grid; }
+
+  .tabs { flex: none; position: relative; z-index: 3; display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 6px 24px; background: #0e0708; border-top: 2px solid var(--gilt); }
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 700; font-size: 12px; letter-spacing: .12em; color: rgba(245,220,147,.45); }
+  .tab svg { width: 21px; height: 21px; position: relative; z-index: 1; }
+  .tab span { position: relative; z-index: 1; }
+  .tab::before { content: ""; position: absolute; left: 50%; top: -14px; width: 70px; height: 70px; margin-left: -35px; background: radial-gradient(ellipse 50% 22% at 50% 92%, rgba(255,236,180,.55), transparent 70%), linear-gradient(180deg, rgba(255,236,180,.0), rgba(255,236,180,.28)); clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%); opacity: 0; transition: opacity .35s; pointer-events: none; }
+  .tab.on { color: var(--gilt-hi); }
+  .tab.on::before { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const ROW = "ABCDEFGHIJ";
+const markRed = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<em>${esc(k)}</em>`) : t; };
+app.style.setProperty("--grain", `url(${grainURL(200, 0.12, 128)})`);
+
+// 墙上的暗花：深酒红上一层更深的菱形花
+function damask() {
+  const c = document.createElement("canvas"); c.width = 60; c.height = 80; const x = c.getContext("2d");
+  x.fillStyle = "rgba(0,0,0,.22)";
+  const leaf = (cx, cy, s) => { x.beginPath(); x.moveTo(cx, cy - 16 * s); x.bezierCurveTo(cx + 10 * s, cy - 6 * s, cx + 10 * s, cy + 6 * s, cx, cy + 16 * s); x.bezierCurveTo(cx - 10 * s, cy + 6 * s, cx - 10 * s, cy - 6 * s, cx, cy - 16 * s); x.fill(); };
+  leaf(30, 40, 1); leaf(0, 0, 0.7); leaf(60, 0, 0.7); leaf(0, 80, 0.7); leaf(60, 80, 0.7);
+  return c.toDataURL();
+}
+app.style.setProperty("--damask", `url(${damask()})`);
+app.style.setProperty("--paperTex", `url(${grainURL(160, 0.06, 90)})`);
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G ▮▮▮</span></div>
+  <header class="top">
+    <h1><span class="gilt">AI</span><span class="gilt">热点大剧院</span></h1>
+    <div class="sub bb">今晚 19:30 · 十月廿二 · 实时上演</div>
+    <button class="tk" id="tk" aria-label="收听"><span class="main"><small>ADMIT ONE</small><b id="tkT">听</b><i>入场收听</i></span><span class="stub">NO.0001</span></button>
+  </header>
+  <main class="scroll" id="scroll">
+    <div class="pro" id="pro">
+      <div class="crest">ACT I · 第一幕</div>
+      <canvas id="cv"></canvas>
+      <svg class="beads" viewBox="0 0 374 356" preserveAspectRatio="none"><rect x="5" y="5" width="364" height="346" rx="3" fill="none" stroke="#fff3c9" stroke-width="2.6" stroke-dasharray="0 6.2" stroke-linecap="round"/></svg>
+    </div>
+    <section class="prog" id="prog">
+      <div class="act bb"><b></b>今晚头条 · TONIGHT<b></b></div>
+      <h2>${markRed(h1).replace(/<em>/g, "<em>")}</h2>
+      <div class="cast">
+        <div><span>热度</span><i></i><b>${heatText(h1)}</b></div>
+        <div><span>来源</span><i></i><b>${h1.sources}</b>家</div>
+        <div><span>参与</span><i></i><b>${h1.people}</b>人</div>
+      </div>
+    </section>
+    <div class="sec"><h4>后续场次</h4><i></i><span class="bb">ROW B — H</span></div>
+    ${rest.map((h) => `<div class="it"><div class="stub"><small>ROW ${ROW[h.rank - 1]}</small><b>${pad2(h.rank)}</b><small>SEAT</small><span class="punch">已检</span></div><div class="body"><h3>${markRed(h)}</h3><div class="src bb">热度 ${heatText(h)} · ${h.sources} 家来源</div><div class="more">${esc(clip(firstLine(h.summary), 88))}</div></div></div>`).join("")}
+    <div style="height:18px"></div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const cv = $("cv"), DPR = 2;
+const W = 354, H = 336;
+cv.width = W * DPR; cv.height = H * DPR;
+const ctx = cv.getContext("2d"); ctx.scale(DPR, DPR);
+const mk = (w = W, h = H) => { const c = document.createElement("canvas"); c.width = w * DPR; c.height = h * DPR; const x = c.getContext("2d"); x.scale(DPR, DPR); return [c, x]; };
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const clamp = (v) => Math.max(0, Math.min(1, v));
+
+// ── 丝绒：一条横向明暗条（褶子宽窄不一），按行拉伸到幕布宽度 ──
+const VEL = [[0, [24, 1, 5]], [0.3, [84, 5, 16]], [0.58, [150, 14, 30]], [0.82, [204, 34, 50]], [0.95, [238, 92, 98]], [1, [250, 140, 136]]];
+function velvet(s) { let k = 1; while (k < VEL.length - 1 && s > VEL[k][0]) k++; const [a, ca] = VEL[k - 1], [b, cb] = VEL[k], t = (s - a) / (b - a); return ca.map((v, j) => Math.round(v + (cb[j] - v) * t)); }
+function foldStrip(folds, seed, n = 720) {
+  const c = document.createElement("canvas"); c.width = n; c.height = 1; const x = c.getContext("2d"), id = x.createImageData(n, 1);
+  // 褶子宽度随机，相位按宽度累加；光从左上来，亮面比暗面宽
+  const ws = Array.from({ length: folds }, (_, i) => 0.6 + rnd(seed + i * 7) * 0.9), tot = ws.reduce((a, b) => a + b, 0);
+  const depth = ws.map((_, i) => 0.7 + rnd(seed + i * 13) * 0.3);
+  let acc = 0; const edges = ws.map((w) => (acc += w / tot));
+  for (let i = 0; i < n; i++) {
+    const u = i / (n - 1); let k = 0; while (k < folds - 1 && u > edges[k]) k++;
+    const u0 = k ? edges[k - 1] : 0, f = (u - u0) / (edges[k] - u0);
+    let s = 0.5 + 0.5 * Math.cos((f - 0.38) * Math.PI * 2); s = Math.pow(s, 1.25) * depth[k] + (1 - depth[k]) * 0.35;
+    const [r, g, b] = velvet(s);
+    id.data[i * 4] = r; id.data[i * 4 + 1] = g; id.data[i * 4 + 2] = b; id.data[i * 4 + 3] = 255;
+  }
+  x.putImageData(id, 0, 0); return c;
+}
+const STRIP_L = foldStrip(13, 3), STRIP_R = foldStrip(13, 41);
+// 绒面：沿竖直方向的细绒毛（每行随机暗点），叠一次
+const [pile, pileX] = mk(W, H);
+for (let i = 0; i < 2600; i++) { pileX.fillStyle = `rgba(0,0,0,${Math.random() * 0.22})`; pileX.fillRect(Math.random() * W, Math.random() * H, 0.6, 2 + Math.random() * 7); }
+
+// 意大利式大幕：内侧下角被拉到外侧上方，褶子朝束带收拢
+const TOP = 30;
+function innerEdge(y, o) {
+  const yT = lerp(H * 0.66, H * 0.58, o), half = W / 2 + 1;
+  const xTop = lerp(half, W * 0.3, o), xT = lerp(half, 30, o), xBot = lerp(half, 44, o);
+  if (y <= yT) { const t = (y - TOP) / (yT - TOP); return lerp(xTop, xT, Math.pow(clamp(t), 0.62)); }
+  return lerp(xT, xBot, Math.pow((y - yT) / (H - yT), 0.8));
+}
+function drawCurtains(x, o) {
+  for (let y = TOP; y < H; y += 0.5) {
+    const xi = innerEdge(y, o);
+    x.drawImage(STRIP_L, 0, 0, 720, 1, 0, y, xi, 0.6);
+    x.drawImage(STRIP_R, 0, 0, 720, 1, W - xi, y, xi, 0.6);
+  }
+  x.save(); x.globalCompositeOperation = "source-atop";
+  // 上暗（帷幔下的阴影）、中亮、下略暗
+  const g = x.createLinearGradient(0, TOP, 0, H);
+  g.addColorStop(0, "rgba(10,0,2,.65)"); g.addColorStop(0.18, "rgba(10,0,2,.08)"); g.addColorStop(0.7, "rgba(10,0,2,0)"); g.addColorStop(1, "rgba(10,0,2,.35)");
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.globalAlpha = 0.9; x.drawImage(pile, 0, 0, W, H); x.globalAlpha = 1;
+  // 内侧边缘一道暗影，幕布有厚度
+  x.globalCompositeOperation = "source-atop";
+  for (let y = TOP; y < H; y += 2) { const xi = innerEdge(y, o); const gl = x.createLinearGradient(xi - 10, 0, xi, 0); gl.addColorStop(0, "rgba(0,0,0,0)"); gl.addColorStop(1, "rgba(0,0,0,.55)"); x.fillStyle = gl; x.fillRect(xi - 10, y, 10, 2); const gr = x.createLinearGradient(W - xi, 0, W - xi + 10, 0); gr.addColorStop(0, "rgba(0,0,0,.55)"); gr.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = gr; x.fillRect(W - xi, y, 10, 2); }
+  x.restore();
+  // 束带：金色绳 + 流苏
+  if (o > 0.35) {
+    const yT = lerp(H * 0.66, H * 0.58, o), a = clamp((o - 0.35) / 0.4);
+    x.save(); x.globalAlpha = a;
+    for (const side of [0, 1]) {
+      const xi = innerEdge(yT, o), cx = side ? W - xi * 0.55 : xi * 0.55;
+      x.strokeStyle = "#e8c66e"; x.lineWidth = 3.2; x.beginPath(); x.moveTo(side ? W : 0, yT - 4); x.quadraticCurveTo(cx, yT + 6, side ? W - xi - 2 : xi + 2, yT - 2); x.stroke();
+      x.strokeStyle = "#7a5a1c"; x.lineWidth = 1; x.stroke();
+      tassel(x, side ? W - xi - 2 : xi + 2, yT - 2, 1);
+    }
+    x.restore();
+  }
+}
+function tassel(x, px, py, s) {
+  const g = x.createLinearGradient(px - 6 * s, 0, px + 6 * s, 0); g.addColorStop(0, "#7a5a1c"); g.addColorStop(0.45, "#f5dc93"); g.addColorStop(1, "#8a6a28");
+  x.fillStyle = g; x.beginPath(); x.arc(px, py + 4 * s, 4 * s, 0, Math.PI * 2); x.fill();
+  x.beginPath(); x.moveTo(px - 3 * s, py + 7 * s); x.lineTo(px - 7 * s, py + 22 * s); x.lineTo(px + 7 * s, py + 22 * s); x.lineTo(px + 3 * s, py + 7 * s); x.closePath(); x.fill();
+  x.strokeStyle = "rgba(90,60,10,.6)"; x.lineWidth = 0.6; for (let k = -6; k <= 6; k += 2) { x.beginPath(); x.moveTo(px + k * 0.45 * s, py + 9 * s); x.lineTo(px + k * s, py + 22 * s); x.stroke(); }
+}
+
+// 帷幔：顶上一条直幔 + 三个垂花（弧形褶）+ 金流苏
+const [val, valX] = mk(W, 70);
+(function drawValance() {
+  const x = valX;
+  for (let y = 0; y < 22; y += 0.5) x.drawImage(STRIP_L, 0, 0, 720, 1, 0, y, W * 1.0, 0.6);
+  const sw = [[-14, 128], [113, 241], [226, 368]];
+  for (const [xa, xb] of sw) {
+    const cxm = (xa + xb) / 2;
+    x.save(); x.beginPath(); x.moveTo(xa, 10); x.quadraticCurveTo(cxm, 74, xb, 10); x.lineTo(xb, 6); x.lineTo(xa, 6); x.closePath(); x.clip();
+    for (let k = 0; k <= 26; k++) {
+      const t = k / 26, sag = 12 + t * 52, s = 0.5 + 0.5 * Math.cos(t * Math.PI * 6.2 - 0.6);
+      const [r, g, b] = velvet(0.12 + s * 0.8 * (1 - t * 0.25));
+      x.strokeStyle = `rgb(${r},${g},${b})`; x.lineWidth = 3.4;
+      x.beginPath(); x.moveTo(xa, 8 + t * 4); x.quadraticCurveTo(cxm, sag + t * 3, xb, 8 + t * 4); x.stroke();
+    }
+    x.restore();
+    // 金边 + 流苏
+    x.strokeStyle = "#e8c66e"; x.lineWidth = 2.4; x.beginPath(); x.moveTo(xa, 10); x.quadraticCurveTo(cxm, 74, xb, 10); x.stroke();
+    for (let t = 0.02; t < 0.98; t += 0.012) {
+      const px = (1 - t) * (1 - t) * xa + 2 * (1 - t) * t * cxm + t * t * xb, py = (1 - t) * (1 - t) * 10 + 2 * (1 - t) * t * 74 + t * t * 10;
+      x.strokeStyle = (t * 83) % 2 < 1 ? "#f5dc93" : "#a8842f"; x.lineWidth = 1.1; x.beginPath(); x.moveTo(px, py + 1); x.lineTo(px, py + 7); x.stroke();
+    }
+  }
+  // 垂花之间挂流苏
+  for (const px of [120, 234]) tassel(x, px, 14, 1.15);
+  x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(0, 21, W, 1.5);
+  const gg = x.createLinearGradient(0, 0, 0, 6); gg.addColorStop(0, "#f5dc93"); gg.addColorStop(1, "#7a5a1c"); x.fillStyle = gg; x.fillRect(0, 0, W, 4);
+})();
+
+// ── 舞台：天幕、人字地板（透视）、真封面立在台上 ──
+const FLOOR = 278;
+let sceneLit, sceneDark;
+function buildScene(img) {
+  const [c, x] = mk();
+  // 天幕：深红黑，竖向暗纹
+  x.fillStyle = "#1a0408"; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < W; i += 3) { x.fillStyle = `rgba(80,10,20,${0.15 + 0.15 * Math.sin(i / 7) ** 2})`; x.fillRect(i, 0, 2, FLOOR); }
+  // 人字地板：屏幕坐标反推到地面坐标，黑白人字纹
+  const fd = x.getImageData(0, FLOOR * DPR, W * DPR, (H - FLOOR) * DPR), fw = W * DPR, fh = (H - FLOOR) * DPR, cx = fw / 2;
+  for (let py = 0; py < fh; py++) {
+    const v = (py + 1) / fh, z = 1 / (0.35 + v * 1.4), sc = 1 / z;   // 越靠前越大
+    for (let px = 0; px < fw; px++) {
+      const X = ((px - cx) / DPR) / sc / 22, Z = z * 4.2;
+      const zig = Math.abs(((X % 2) + 2) % 2 - 1);   // 人字锯齿
+      const band = Math.floor((Z + zig) * 1.6);
+      const on = band % 2 === 0, shade = 0.55 + v * 0.45, i = (py * fw + px) * 4;
+      const val = on ? 236 * shade : 22 * shade;
+      fd.data[i] = val; fd.data[i + 1] = val * 0.97; fd.data[i + 2] = val * 0.92; fd.data[i + 3] = 255;
+    }
+  }
+  x.putImageData(fd, 0, FLOOR * DPR);
+  const fg = x.createLinearGradient(0, FLOOR, 0, FLOOR + 22); fg.addColorStop(0, "rgba(20,2,6,.85)"); fg.addColorStop(1, "rgba(20,2,6,0)"); x.fillStyle = fg; x.fillRect(0, FLOOR, W, 22);
+  // 封面：镀金细框，立在后沿
+  const cw = 250, ch = Math.round(cw * img.height / img.width), cx0 = (W - cw) / 2, cy0 = FLOOR + 2 - ch;
+  x.fillStyle = "rgba(0,0,0,.6)"; x.fillRect(cx0 + 6, FLOOR - 2, cw, 8);
+  const gf = x.createLinearGradient(cx0, cy0, cx0 + cw, cy0 + ch); gf.addColorStop(0, "#f5dc93"); gf.addColorStop(0.4, "#a8842f"); gf.addColorStop(0.7, "#f5dc93"); gf.addColorStop(1, "#7a5a1c");
+  x.fillStyle = gf; x.fillRect(cx0 - 5, cy0 - 5, cw + 10, ch + 10);
+  x.fillStyle = "#1a0306"; x.fillRect(cx0 - 1.5, cy0 - 1.5, cw + 3, ch + 3);
+  // 舞台光：略提对比、偏暖
+  x.save(); x.filter = "contrast(1.15) saturate(1.15) sepia(.28) brightness(.9)"; x.drawImage(img, cx0, cy0, cw, ch); x.restore();
+  // 追光是暖色：整体乘一层琥珀
+  x.save(); x.globalCompositeOperation = "multiply"; x.fillStyle = "#ffe2b0"; x.fillRect(0, 0, W, H); x.restore();
+  sceneLit = c;
+  const [d, dx] = mk();
+  dx.drawImage(c, 0, 0, W, H);
+  dx.globalCompositeOperation = "multiply"; dx.fillStyle = "#2a0c12"; dx.fillRect(0, 0, W, H);
+  dx.globalCompositeOperation = "source-over"; dx.fillStyle = "rgba(10,0,3,.35)"; dx.fillRect(0, 0, W, H);
+  sceneDark = d;
+  return { cx: W / 2, cy: cy0 + ch / 2, cw, ch };
+}
+
+// ── 每帧合成：暗场 → 光圈里的亮场 → 两道光柱 + 浮尘 → 幕布 → 帷幔 → 场灯明暗 ──
+const S = { open: 0, amb: 1, spot: 0, sx: 60, sy: 220, rx: 70, ry: 60, boost: 0 };
+const [lit, litX] = mk(), [drape, drapeX] = mk();
+let drapeKey = "";
+const motes = Array.from({ length: 70 }, (_, i) => ({ b: i % 2, t: rnd(i + 1), s: rnd(i + 50) * 2 - 1, v: 0.02 + rnd(i + 90) * 0.05, r: 0.4 + rnd(i + 7) * 0.9 }));
+function render(now) {
+  ctx.clearRect(0, 0, W, H);
+  if (sceneDark) ctx.drawImage(sceneDark, 0, 0, W, H);
+  const sp = S.spot * (1 + S.boost * 0.15 * Math.sin(now / 90));
+  if (sp > 0.01 && sceneLit) {
+    litX.globalCompositeOperation = "source-over"; litX.clearRect(0, 0, W, H); litX.drawImage(sceneLit, 0, 0, W, H);
+    litX.globalCompositeOperation = "destination-in";
+    // 光圈遮罩 = 立面椭圆 + 地上光池
+    const [mk1, mkx] = mkMask;
+    mkx.clearRect(0, 0, W, H);
+    const ellM = (cx, cy, rx, ry) => { mkx.save(); mkx.translate(cx, cy); mkx.scale(1, ry / rx); const g = mkx.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, "#000"); g.addColorStop(0.62, "#000"); g.addColorStop(0.86, "rgba(0,0,0,.45)"); g.addColorStop(1, "rgba(0,0,0,0)"); mkx.fillStyle = g; mkx.beginPath(); mkx.arc(0, 0, rx, 0, Math.PI * 2); mkx.fill(); mkx.restore(); };
+    ellM(S.sx, S.sy, S.rx, S.ry); ellM(S.sx, FLOOR + 22, S.rx * 1.05, 24);
+    litX.drawImage(mk1, 0, 0, W, H);
+    ctx.save(); ctx.globalAlpha = clamp(sp); ctx.drawImage(lit, 0, 0, W, H); ctx.restore();
+    // 光柱：从左上、右上两盏灯打下来
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    for (const [lx, ly] of [[W * 0.1, -10], [W * 0.9, -10]]) {
+      const dx = S.sx - lx, dy = S.sy - ly, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L, R = S.rx * 0.82;
+      const g = ctx.createLinearGradient(lx, ly, S.sx, S.sy); g.addColorStop(0, `rgba(255,236,190,${0.3 * sp})`); g.addColorStop(0.62, `rgba(255,236,190,${0.1 * sp})`); g.addColorStop(1, "rgba(255,236,190,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(lx - nx * 4, ly - ny * 4); ctx.lineTo(lx + nx * 4, ly + ny * 4); ctx.lineTo(S.sx + nx * R, S.sy + ny * R + 30); ctx.lineTo(S.sx - nx * R, S.sy - ny * R + 30); ctx.closePath(); ctx.fill();
+    }
+    // 浮尘
+    for (const m of motes) {
+      m.t = (m.t + m.v * 0.016) % 1;
+      const [lx, ly] = m.b ? [W * 0.9, -10] : [W * 0.1, -10], px = lerp(lx, S.sx, m.t), py = lerp(ly, S.sy + 30, m.t);
+      const dx = S.sx - lx, dy = S.sy - ly, L = Math.hypot(dx, dy), w = 4 + (S.rx * 0.82 - 4) * m.t;
+      ctx.fillStyle = `rgba(255,240,200,${(0.35 + 0.4 * Math.sin(now / 400 + m.r * 9)) * sp * 0.6})`;
+      ctx.fillRect(px + (-dy / L) * w * m.s * 0.9, py + (dx / L) * w * m.s * 0.9, m.r, m.r);
+    }
+    ctx.restore();
+  }
+  // 幕布只在开合、场灯变化时重画
+  const key = S.open.toFixed(3) + "|" + S.amb.toFixed(3);
+  if (key !== drapeKey) {
+    drapeKey = key; drapeX.clearRect(0, 0, W, H);
+    drawCurtains(drapeX, S.open);
+    drapeX.drawImage(val, 0, 0, W, 70);
+    drapeX.save(); drapeX.globalCompositeOperation = "source-atop"; drapeX.fillStyle = `rgba(8,0,2,${(1 - S.amb) * 0.62})`; drapeX.fillRect(0, 0, W, H); drapeX.restore();
+  }
+  ctx.drawImage(drape, 0, 0, W, H);
+  // 脚灯：台口下沿一道暖光
+  const fg = ctx.createLinearGradient(0, H, 0, H - 40); fg.addColorStop(0, `rgba(255,190,110,${0.28 * (1 - S.amb * 0.6)})`); fg.addColorStop(1, "rgba(255,190,110,0)");
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = fg; ctx.fillRect(0, H - 40, W, 40); ctx.restore();
+}
+const mkMask = mk();
+
+// 关键帧时间线（毫秒）：场灯暗 → 开幕 → 追光扫一遍再停在封面上
+const T0 = performance.now();
+let tl = null;
+function tick(now) {
+  if (tl) {
+    const t = now - tl;
+    S.amb = lerp(1, 0.3, ease(clamp((t - 150) / 650)));
+    S.open = ease(clamp((t - 550) / 1350));
+    const ts = clamp((t - 1050) / 1500);
+    S.spot = clamp((t - 1050) / 120);
+    // 追光：先从左扫到右，再回到中间落定（略过冲）
+    const k = ease(ts), sweep = ts < 0.55 ? lerp(60, W - 70, ease(ts / 0.55)) : lerp(W - 70, SC.cx, 1 - Math.pow(1 - (ts - 0.55) / 0.45, 3) * (1 + 0.0));
+    S.sx = sweep; S.sy = lerp(230, SC.cy, k);
+    S.rx = lerp(62, SC.cw * 0.47, k); S.ry = lerp(56, SC.ch * 0.66, k);
+  }
+  render(now);
+  requestAnimationFrame(tick);
+}
+let SC = { cx: W / 2, cy: 220, cw: 250, ch: 140 };
+
+(async () => {
+  const [img] = await Promise.all([loadImage(h1.cover), fontsReady()]);
+  SC = buildScene(img);
+  tl = performance.now();
+  requestAnimationFrame(tick);
+  const EZ = "cubic-bezier(.2,.8,.2,1)";
+  const go = (el, kf, o) => el && el.animate(kf, { fill: "backwards", easing: EZ, ...o });
+  go(app.querySelector(".top h1"), [{ opacity: 0, letterSpacing: ".2em" }, { opacity: 1, letterSpacing: "0" }], { duration: 900, delay: 100 });
+  go(app.querySelector(".top .sub"), [{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: 400 });
+  go($("tk"), [{ opacity: 0, transform: "translateY(-30px) rotate(-12deg)" }, { opacity: 1, transform: "none" }], { duration: 700, delay: 500, easing: "cubic-bezier(.3,1.5,.5,1)" });
+  go(app.querySelector(".crest"), [{ opacity: 0, transform: "translate(-50%, -10px)" }, { opacity: 1, transform: "translate(-50%, 0)" }], { duration: 700, delay: 300 });
+  // 节目单从台下升上来
+  go($("prog"), [{ opacity: 0, transform: "translateY(60px)" }, { opacity: 1, transform: "none" }], { duration: 900, delay: 1900 });
+  app.querySelectorAll(".sec, .it").forEach((el, i) => go(el, [{ opacity: 0, transform: "translateY(26px) rotate(1.5deg)" }, { opacity: 1, transform: "none" }], { duration: 700, delay: 2150 + i * 90 }));
+
+  // 门票：撕下票根 → 追光闪一下、光柱变亮
+  $("tk").addEventListener("click", () => { const on = $("tk").classList.toggle("on"); $("tkT").textContent = on ? "停" : "听"; $("tk").querySelector("i").textContent = on ? "正在收听" : "入场收听"; S.boost = on ? 1 : 0; });
+  app.querySelectorAll(".it").forEach((el) => el.addEventListener("click", () => {
+    const open = el.classList.toggle("open");
+    if (open) { el.querySelector(".punch").animate([{ transform: "scale(2.2) rotate(-30deg)", opacity: 0 }, { transform: "rotate(-14deg)", opacity: 0.85 }], { duration: 320, easing: "cubic-bezier(.5,0,.7,1.4)" }); el.querySelector(".more").animate([{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: EZ }); }
+  }));
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+// 等图片时先画一帧关着的幕
+render(performance.now());
+</script>
+</body>
+</html>

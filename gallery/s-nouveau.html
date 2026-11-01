@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新艺术</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Smythe&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@500;600;900&display=swap" rel="stylesheet">
+<style>
+  :root { --cream: #f3e8d0; --parch: #e6d3ab; --sage: #a9b594; --sage2: #6b7b5f; --ochre: #c6973f; --rose: #d69e8f; --rose2: #a8605a; --teal: #6f8f8b; --line: #3b2a20; --mute: #7a6650; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--cream); }
+  body { font-family: "Noto Serif SC", serif; color: var(--line); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--cream) var(--grain); }
+  .lat { font-family: "Smythe", serif; }
+  .xw { font-family: "ZCOOL XiaoWei", serif; }
+  /* 整页的装饰边框：双线 + 四角小结 */
+  .frame { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 26px 0; font-family: "Smythe"; font-size: 16px; letter-spacing: .08em; }
+  .top { flex: none; position: relative; height: 86px; padding: 0 22px; }
+  .top h1 { position: absolute; left: 24px; top: 0; font-weight: 400; font-size: 44px; line-height: 1; white-space: nowrap; }
+  .top h1 .lat { font-size: 50px; margin-right: 6px; color: var(--rose2); }
+  .top .whip { position: absolute; left: 14px; top: 50px; width: 230px; height: 26px; overflow: visible; }
+  .top .date { position: absolute; left: 26px; top: 66px; font-size: 10.5px; font-weight: 600; letter-spacing: .32em; color: var(--mute); }
+  .medal { position: absolute; right: 18px; top: -4px; width: 78px; height: 78px; }
+  .medal svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .medal .ring { transform-origin: 50% 50%; transform-box: fill-box; }
+  .medal.on .ring { animation: spin 6s linear infinite; }
+  .medal b { position: absolute; inset: 0; display: grid; place-items: center; font-family: "ZCOOL XiaoWei"; font-weight: 400; font-size: 23px; color: var(--cream); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 0 30px; scrollbar-width: none; position: relative; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .panel { position: relative; margin: 0 auto; width: 340px; height: 393px; }
+  .panel > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .halo-spin { transform-box: view-box; transform-origin: 179px 182px; animation: spin 140s linear infinite; }
+  .halo-spin.fast { animation-duration: 9s; }
+  .hero { padding: 14px 26px 0; text-align: center; }
+  .hero h2 { font-family: "ZCOOL XiaoWei", serif; font-weight: 400; font-size: 25px; line-height: 1.42; }
+  .hero h2 b { font-weight: 400; color: var(--rose2); }
+  .hero .div { display: block; width: 210px; height: 24px; margin: 6px auto 0; overflow: visible; }
+  .hero p { margin-top: 4px; font-size: 13.5px; line-height: 1.8; color: #5a4838; font-weight: 500; }
+  .stats { display: flex; justify-content: center; gap: 18px; margin-top: 10px; font-size: 12px; color: var(--mute); font-weight: 600; letter-spacing: .1em; }
+  .stats b { font-family: "Smythe"; font-weight: 400; font-size: 22px; color: var(--line); margin-left: 4px; letter-spacing: 0; }
+
+  .sec { display: flex; align-items: center; gap: 10px; margin: 22px 22px 4px; }
+  .sec h4, .sec > span { flex: none; white-space: nowrap; }
+  .sec h4 { font-family: "ZCOOL XiaoWei"; font-weight: 400; font-size: 24px; letter-spacing: .12em; }
+  .sec svg { flex: 1; min-width: 0; height: 18px; overflow: visible; }
+  .it { position: relative; margin: 0 20px; padding: 14px 0; display: grid; grid-template-columns: 62px 1fr; gap: 14px; align-items: center; cursor: pointer; }
+  .it + .it { border-top: 1px solid rgba(59,42,32,.28); }
+  .it + .it::before { content: ""; position: absolute; left: 50%; top: -5px; width: 9px; height: 9px; margin-left: -4.5px; background: var(--cream); border: 1.5px solid var(--line); border-radius: 50%; box-shadow: inset 0 0 0 2px var(--cream), inset 0 0 0 5px var(--ochre); }
+  .md { position: relative; width: 62px; height: 62px; }
+  .md .disc { position: absolute; inset: 5px; border-radius: 50%; overflow: hidden; border: 2.2px solid var(--line); box-shadow: 0 0 0 3px var(--rose), 0 0 0 5px var(--line); background: var(--sage); display: grid; place-items: center; transition: box-shadow .5s; }
+  .md canvas { width: 100%; height: 100%; display: block; }
+  .md svg { width: 32px; height: 32px; }
+  .md .n { position: absolute; left: -8px; top: -6px; width: 26px; height: 26px; border-radius: 50%; background: var(--ochre); border: 2px solid var(--line); display: grid; place-items: center; font-family: "Smythe"; font-size: 15px; line-height: 1; padding-top: 2px; z-index: 1; }
+  .it h3 { font-family: "Noto Serif SC"; font-weight: 600; font-size: 15.5px; line-height: 1.5; }
+  .it h3 b { font-weight: 900; color: var(--rose2); }
+  .it .src { margin-top: 3px; font-size: 11.5px; color: var(--mute); letter-spacing: .08em; }
+  .more { grid-column: 1 / -1; display: none; position: relative; padding: 12px 16px 12px 18px; font-size: 13.5px; line-height: 1.8; color: #4b3a2c; background: rgba(169,181,148,.28); border-radius: 0 22px 0 22px; border: 1.5px solid var(--line); }
+  .it.open .more { display: block; }
+  .it.open .md .disc { box-shadow: 0 0 0 3px var(--ochre), 0 0 0 5px var(--line), 0 0 0 9px rgba(214,158,143,.55); }
+
+  .tabs { flex: none; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(5, 1fr); padding: 13px 10px 24px; background: var(--parch); border-top: 2px solid var(--line); }
+  .tabs::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 9px; background: radial-gradient(circle at 50% 100%, var(--parch) 0 6.5px, var(--line) 7px 8.4px, transparent 8.8px) 0 0 / 18px 9px repeat-x; }
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 9px; font-family: "ZCOOL XiaoWei"; font-size: 13.5px; color: var(--mute); }
+  .tab svg { width: 22px; height: 22px; position: relative; z-index: 1; }
+  .tab span { position: relative; z-index: 1; }
+  .tab::before { content: ""; position: absolute; top: -5px; left: 50%; width: 32px; height: 32px; margin-left: -16px; border-radius: 50%; background: var(--rose); border: 1.8px solid var(--line); box-shadow: 0 0 0 2px var(--parch), 0 0 0 3.4px var(--ochre); transform: scale(0); transition: transform .5s cubic-bezier(.3,.7,.3,1); }
+  .tab.on { color: var(--line); }
+  .tab.on svg { color: var(--cream); }
+  .tab.on::before { transform: scale(1); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const C = { cream: "#f3e8d0", parch: "#e6d3ab", sage: "#a9b594", sage2: "#6b7b5f", ochre: "#c6973f", rose: "#d69e8f", rose2: "#a8605a", teal: "#6f8f8b", line: "#3b2a20" };
+// 慕夏调色板：鼠尾草绿、赭黄、灰玫瑰、奶油、灰青，都压低饱和
+const MUCHA = ["#f3e8d0", "#e6d3ab", "#c6973f", "#d69e8f", "#a8605a", "#a9b594", "#6b7b5f", "#6f8f8b", "#4f6a6a"];
+app.style.setProperty("--grain", `url(${grainURL(200, 0.07, 80)})`);
+const mark = (h) => { const k = KEY[h.rank], t = esc(shortTitle(h)); return k && h.title.includes(k) ? t.replace(esc(k), `<b>${esc(k)}</b>`) : t; };
+
+// ── 真图 → 慕夏平涂：软化、压暗饱和、取 9 色、众数滤波去碎块、色块交界描粗黑褐轮廓 ──
+function muchaCanvas(img, w, h, { pal = MUCHA, soft = 3, line = 2.6, ink = "#3b2a20", mode = 2 } = {}) {
+  const src = coverCanvas(coverCanvas(img, Math.round(w / soft), Math.round(h / soft)), w, h);
+  const d = src.getContext("2d").getImageData(0, 0, w, h).data, P = pal.map(hex), N = w * h;
+  let idx = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    let r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+    const L = 0.3 * r + 0.59 * g + 0.11 * b; r = L + (r - L) * 0.7; g = L + (g - L) * 0.7; b = L + (b - L) * 0.7;   // 降饱和
+    let best = 0, bd = 1e9;
+    for (let k = 0; k < P.length; k++) { const dr = r - P[k][0], dg = g - P[k][1], db = b - P[k][2], dd = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11; if (dd < bd) { bd = dd; best = k; } }
+    idx[i] = best;
+  }
+  // 众数滤波：把一两个像素的碎点并进周围色块，色块才像手画的
+  for (let pass = 0; pass < mode; pass++) {
+    const nx = new Uint8Array(N), cnt = new Uint8Array(pal.length);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      cnt.fill(0);
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const yy = Math.min(h - 1, Math.max(0, y + dy)), xx = Math.min(w - 1, Math.max(0, x + dx)); cnt[idx[yy * w + xx]]++; }
+      let bk = idx[y * w + x], bc = 0; for (let k = 0; k < pal.length; k++) if (cnt[k] > bc) { bc = cnt[k]; bk = k; }
+      nx[y * w + x] = bk;
+    }
+    idx = nx;
+  }
+  const out = document.createElement("canvas"); out.width = w; out.height = h;
+  const o = out.getContext("2d"), od = o.createImageData(w, h);
+  const em = document.createElement("canvas"); em.width = w; em.height = h;
+  const e = em.getContext("2d"), ed = e.createImageData(w, h);
+  const lum = P.map(([r, g, b]) => (0.3 * r + 0.59 * g + 0.11 * b) / 255);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, c = P[idx[i]];
+    od.data[i * 4] = c[0]; od.data[i * 4 + 1] = c[1]; od.data[i * 4 + 2] = c[2]; od.data[i * 4 + 3] = 255;
+    const a = x < w - 1 ? idx[i + 1] : idx[i], b = y < h - 1 ? idx[i + w] : idx[i];
+    // 只在明暗差得开的色块之间描线：轮廓粗，里面的过渡不描
+    const dl = Math.max(Math.abs(lum[idx[i]] - lum[a]), Math.abs(lum[idx[i]] - lum[b]));
+    if (dl > 0.1) ed.data[i * 4 + 3] = 255;
+  }
+  o.putImageData(od, 0, 0);
+  e.putImageData(ed, 0, 0);
+  // 加粗：一圈偏移叠印，再轻微模糊做抗锯齿
+  const thick = document.createElement("canvas"); thick.width = w; thick.height = h;
+  const t = thick.getContext("2d");
+  for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; t.drawImage(em, Math.cos(a) * line / 2, Math.sin(a) * line / 2); }
+  t.globalCompositeOperation = "source-in"; t.fillStyle = ink; t.fillRect(0, 0, w, h);
+  o.filter = "blur(.6px)"; o.drawImage(thick, 0, 0); o.filter = "none"; o.drawImage(thick, 0, 0);
+  // 纸色微微透上来：柔一点
+  o.globalCompositeOperation = "multiply"; o.globalAlpha = 0.12; o.fillStyle = "#e6d3ab"; o.fillRect(0, 0, w, h);
+  return out;
+}
+
+// ── 鞭线：S 形长曲线，末端一圈卷须 ──
+function curl(x, y, ang, r0, turns, dir) {
+  let d = "";
+  for (let k = 1; k <= 28; k++) { const t = k / 28, a = ang + dir * t * turns * Math.PI * 2, r = r0 * (1 - t * 0.85); d += ` L${(x + Math.cos(a) * r - Math.cos(ang) * r0).toFixed(1)} ${(y + Math.sin(a) * r - Math.sin(ang) * r0).toFixed(1)}`; }
+  return d;
+}
+// 沿光环外缘爬上去的长须：半径带一点波动，到顶卷起来
+function tendril(cx, cy, R, a0, a1, side) {
+  let d = "", last;
+  for (let k = 0; k <= 60; k++) {
+    const t = k / 60, a = a0 + (a1 - a0) * t, r = R + Math.sin(t * Math.PI * 2.2 + 0.4) * 17 * (1 - t * 0.3) + t * 10;
+    const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; d += `${k ? " L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`; last = [x, y, a];
+  }
+  const [x, y, a] = last;
+  return d + curl(x, y, a + Math.PI, 17, 1.35, side);
+}
+const stem = (x0, y0, x1, y1, sw) => `M${x0} ${y0} C${x0 + sw} ${y0 - (y0 - y1) * 0.45}, ${x1 - sw * 1.2} ${y1 + (y0 - y1) * 0.45}, ${x1} ${y1}`;
+const LEAF = "M0 0 C5 -7 17 -8 26 0 C17 8 5 7 0 0 Z";
+const flower = (big) => { const s = big ? 1.25 : 1; let g = ""; for (let k = 0; k < 8; k++) g += `<ellipse cx="${(9 * s).toFixed(1)}" cy="0" rx="${(6.5 * s).toFixed(1)}" ry="${(3.6 * s).toFixed(1)}" transform="rotate(${k * 45})" fill="${C.rose}" stroke="${C.line}" stroke-width="1.6"/>`; return g + `<circle r="${(5 * s).toFixed(1)}" fill="${C.ochre}" stroke="${C.line}" stroke-width="1.8"/><circle r="${(1.7 * s).toFixed(1)}" fill="${C.line}"/>`; };
+const rosette = () => `<g>${[0, 90, 180, 270].map((a) => `<ellipse cx="3.6" rx="3.4" ry="2" transform="rotate(${a + 45})" fill="${C.rose}" stroke="${C.line}" stroke-width="1.1"/>`).join("")}<circle r="1.8" fill="${C.cream}" stroke="${C.line}" stroke-width="1"/></g>`;
+
+const HX = 179, HY = 182;
+const ARCH = "M3 411 L3 179 A176 176 0 0 1 355 179 L355 411 Z";
+const STEMS = [
+  { d: stem(30, 414, 70, 318, -40), end: "f", big: 0 },
+  { d: stem(96, 414, 118, 336, 40), end: "f", big: 1 },
+  { d: stem(150, 414, 140, 352, -30), end: "c" },
+  { d: stem(208, 414, 220, 352, 30), end: "c" },
+  { d: stem(262, 414, 242, 336, -40), end: "f", big: 1 },
+  { d: stem(328, 414, 290, 318, 40), end: "f", big: 0 },
+];
+const TENDRILS = [tendril(HX, HY, 138, Math.PI * 0.64, Math.PI * 1.2, 1), tendril(HX, HY, 138, Math.PI * 0.36, -Math.PI * 0.2, -1)];
+const segs = Array.from({ length: 32 }, (_, k) => {
+  const a0 = (k / 32) * Math.PI * 2, a1 = ((k + 1) / 32) * Math.PI * 2, r0 = 124, r1 = 142, p = (r, a) => `${(HX + Math.cos(a) * r).toFixed(1)} ${(HY + Math.sin(a) * r).toFixed(1)}`;
+  const am = (a0 + a1) / 2;
+  return `<path d="M${p(r0, a0)} L${p(r1, a0)} A${r1} ${r1} 0 0 1 ${p(r1, a1)} L${p(r0, a1)} A${r0} ${r0} 0 0 0 ${p(r0, a0)} Z" fill="${k % 2 ? C.ochre : C.parch}" stroke="${C.line}" stroke-width="1.4"/><circle cx="${(HX + Math.cos(am) * 133).toFixed(1)}" cy="${(HY + Math.sin(am) * 133).toFixed(1)}" r="${k % 2 ? 3.4 : 2.4}" fill="${k % 2 ? C.cream : C.rose}" stroke="${C.line}" stroke-width="1.1"/>`;
+}).join("");
+const dots = Array.from({ length: 56 }, (_, k) => { const a = (k / 56) * Math.PI * 2; return `<circle cx="${(HX + Math.cos(a) * 151).toFixed(1)}" cy="${(HY + Math.sin(a) * 151).toFixed(1)}" r="2.6" fill="${C.cream}" stroke="${C.line}" stroke-width="1.1"/>`; }).join("");
+const stripes = Array.from({ length: 36 }, (_, k) => `<path d="M${(6 + k * 10).toFixed(0)} 0 V420" stroke="${C.sage2}" stroke-width="${k % 3 ? 0.8 : 2}" opacity="${k % 3 ? 0.25 : 0.35}"/>`).join("");
+// 头部的鞭线和分隔线
+const WHIP = `M4 12 C30 -2 50 26 80 12 S130 2 160 12 S205 20 222 10` + curl(222, 10, Math.PI * 1.2, 7, 1.1, 1);
+const DIVIDER = `M4 12 C40 0 70 24 105 12 C140 0 170 24 206 12`;
+
+app.innerHTML = `
+  <svg class="frame" viewBox="0 0 390 844" preserveAspectRatio="none"><rect x="6" y="6" width="378" height="832" rx="18" fill="none" stroke="${C.line}" stroke-width="1.6"/><rect x="10" y="10" width="370" height="824" rx="15" fill="none" stroke="${C.ochre}" stroke-width="1.2"/></svg>
+  <div class="sb"><span>${nowHM()}</span><span>MMXXVI</span></div>
+  <header class="top">
+    <h1 class="xw" id="tt"><span class="lat">AI</span>热点</h1>
+    <svg class="whip" viewBox="0 0 230 26"><path id="whip" d="${WHIP}" fill="none" stroke="${C.line}" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <div class="date">十月廿二 · 实时 · 第 XLII 期</div>
+    <button class="medal" id="medal" aria-label="收听"><svg viewBox="0 0 80 80"><g class="ring">${Array.from({ length: 12 }, (_, k) => `<ellipse cx="40" cy="7.5" rx="4.6" ry="7" transform="rotate(${k * 30} 40 40)" fill="${k % 2 ? C.ochre : C.sage}" stroke="${C.line}" stroke-width="1.5"/>`).join("")}</g><circle cx="40" cy="40" r="26" fill="${C.rose2}" stroke="${C.line}" stroke-width="2.4"/><circle cx="40" cy="40" r="21.5" fill="none" stroke="${C.cream}" stroke-width="1.2" opacity=".8"/></svg><b id="mt">听</b></button>
+  </header>
+  <main class="scroll" id="scroll">
+    <div class="panel">
+      <svg viewBox="0 0 358 414" id="pv">
+        <defs>
+          <clipPath id="archC"><path d="${ARCH}"/></clipPath>
+          <clipPath id="disc"><circle cx="${HX}" cy="${HY}" r="112"/></clipPath>
+        </defs>
+        <g clip-path="url(#archC)">
+          <rect width="358" height="414" fill="${C.sage}"/>${stripes}
+          <circle cx="${HX}" cy="${HY}" r="168" fill="${C.parch}" opacity=".35"/>
+        </g>
+        <g id="halo">
+          <g class="halo-spin" id="hs">${dots}</g>
+          <circle class="rg" cx="${HX}" cy="${HY}" r="146" fill="${C.ochre}" stroke="${C.line}" stroke-width="2.6"/>
+          <g class="halo-spin" id="hs2" style="animation-direction:reverse">${segs}</g>
+          <circle class="rg" cx="${HX}" cy="${HY}" r="124" fill="${C.rose}" stroke="${C.line}" stroke-width="2.4"/>
+          <circle class="rg" cx="${HX}" cy="${HY}" r="118" fill="none" stroke="${C.cream}" stroke-width="1.4"/>
+          <circle cx="${HX}" cy="${HY}" r="112" fill="${C.cream}"/>
+          <image id="cov" x="${HX - 112}" y="${HY - 112}" width="224" height="224" clip-path="url(#disc)"/>
+          <circle class="rg" cx="${HX}" cy="${HY}" r="112" fill="none" stroke="${C.line}" stroke-width="3.2"/>
+        </g>
+        <g id="vines">
+          ${TENDRILS.map((d) => `<path class="vc" d="${d}" fill="none" stroke="${C.line}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path class="vi" d="${d}" fill="none" stroke="${C.ochre}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
+          ${STEMS.map((s) => `<path class="vc" d="${s.d}" fill="none" stroke="${C.line}" stroke-width="6" stroke-linecap="round"/><path class="vi" d="${s.d}" fill="none" stroke="${C.sage2}" stroke-width="2.6" stroke-linecap="round"/>`).join("")}
+          <g id="leaves"></g>
+        </g>
+        <path id="border" d="${ARCH}" fill="none" stroke="${C.line}" stroke-width="15" stroke-linejoin="round"/>
+        <path id="border2" d="${ARCH}" fill="none" stroke="${C.ochre}" stroke-width="10.5" stroke-linejoin="round"/>
+        <g id="ros"></g>
+        <g id="plaque" transform="translate(179 384)"><path d="M-104 -19 H104 C118 -19 122 -6 130 0 C122 6 118 19 104 19 H-104 C-118 19 -122 6 -130 0 C-122 -6 -118 -19 -104 -19 Z" fill="${C.cream}" stroke="${C.line}" stroke-width="2.4"/><path d="M-100 -14 H100 M-100 14 H100" stroke="${C.ochre}" stroke-width="1.2"/><text x="0" y="6" text-anchor="middle" font-family="Smythe" font-size="20" fill="${C.line}" letter-spacing="1">No. I · ${heatText(h1)} · ${h1.sources} SOURCES</text></g>
+      </svg>
+    </div>
+    <section class="hero">
+      <h2 id="ht">${mark(h1)}</h2>
+      <svg class="div" viewBox="0 0 210 24"><path id="dv" d="${DIVIDER}" fill="none" stroke="${C.line}" stroke-width="2" stroke-linecap="round"/><g transform="translate(105 12)">${rosette()}</g></svg>
+      <p>${esc(clip(firstLine(h1.summary), 29))}</p>
+      <div class="stats"><span>热度<b>${heatText(h1)}</b></span><span>来源<b>${h1.sources}</b></span><span>参与<b>${h1.people}</b></span></div>
+    </section>
+    <div class="sec"><h4>花间要闻</h4><svg viewBox="0 0 200 18" preserveAspectRatio="none"><path d="M0 9 C30 0 50 18 80 9 S140 2 200 9" fill="none" stroke="${C.line}" stroke-width="1.6"/></svg><span class="lat" style="font-size:18px">II–VIII</span></div>
+    ${rest.map((h) => `<div class="it"><div class="md"><span class="n">${h.rank}</span><div class="disc">${h.cover ? "<canvas></canvas>" : `<svg viewBox="0 0 64 64" fill="none" stroke="${C.line}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="${DOODLE[h.rank]}"/></svg>`}</div></div><div><h3>${mark(h)}</h3><div class="src">热度 ${heatText(h)} · ${h.sources} 家来源 · ${h.people} 人</div></div><div class="more">${esc(clip(firstLine(h.summary), 90))}</div></div>`).join("")}
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+// 叶子和花：沿每根藤按长度摆，记下它在第几毫米长出来
+const sprouts = [];
+{
+  const pv = $("pv"), leaves = $("leaves");
+  const inner = [...pv.querySelectorAll(".vi")];
+  inner.forEach((p, vi) => {
+    const L = p.getTotalLength(), isT = vi < 2, s = STEMS[vi - 2];
+    const ts = isT ? [0.18, 0.34, 0.5, 0.66, 0.82] : [0.32, 0.56, 0.78];
+    ts.forEach((t, k) => {
+      const a = p.getPointAtLength(L * t), b = p.getPointAtLength(Math.min(L, L * t + 1));
+      const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI + (k % 2 ? 55 : -55) * (isT ? 1 : 1);
+      const g = document.createElementNS(SVGNS, "g");
+      g.setAttribute("transform", `translate(${a.x.toFixed(1)} ${a.y.toFixed(1)}) rotate(${ang.toFixed(0)})`);
+      g.innerHTML = `<g class="sp"><path d="${LEAF}" fill="${isT ? C.sage : C.sage2}" stroke="${C.line}" stroke-width="1.6"/><path d="M3 0 L21 0" stroke="${C.line}" stroke-width="1" opacity=".7"/></g>`;
+      leaves.appendChild(g); sprouts.push({ el: g.firstChild, vi, t });
+    });
+    if (!isT && s.end === "f") {
+      const e = p.getPointAtLength(L), g = document.createElementNS(SVGNS, "g");
+      g.setAttribute("transform", `translate(${e.x.toFixed(1)} ${e.y.toFixed(1)})`); g.innerHTML = `<g class="sp">${flower(s.big)}</g>`;
+      leaves.appendChild(g); sprouts.push({ el: g.firstChild, vi, t: 1 });
+    } else if (!isT) {
+      const e = p.getPointAtLength(L), g = document.createElementNS(SVGNS, "g");
+      g.setAttribute("transform", `translate(${e.x.toFixed(1)} ${e.y.toFixed(1)})`); g.innerHTML = `<g class="sp"><circle r="6.5" fill="${C.ochre}" stroke="${C.line}" stroke-width="1.8"/><circle r="2.4" fill="${C.cream}" stroke="${C.line}" stroke-width="1"/></g>`;
+      leaves.appendChild(g); sprouts.push({ el: g.firstChild, vi, t: 1 });
+    }
+  });
+  // 边框上的小花：沿拱形均匀排
+  const bd = $("border"), BL = bd.getTotalLength(), ros = $("ros");
+  for (let s = 14; s < BL - 360; s += 27) {
+    const pt = bd.getPointAtLength(s), g = document.createElementNS(SVGNS, "g");
+    g.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`); g.innerHTML = rosette(); ros.appendChild(g);
+  }
+}
+
+(async () => {
+  const [img] = await Promise.all([loadImage(h1.cover), fontsReady()]);
+  $("cov").setAttribute("href", muchaCanvas(img, 448, 448, { line: 3.2 }).toDataURL());
+  app.querySelectorAll(".it").forEach((li, i) => { const h = rest[i]; if (!h.cover) return; loadImage(h.cover).then((im) => { const c = li.querySelector("canvas"); const p = muchaCanvas(im, 120, 120, { soft: 3, line: 2.2 }); c.width = c.height = 120; c.getContext("2d").drawImage(p, 0, 0); }); });
+
+  const SOFT = "cubic-bezier(.35,.05,.25,1)";
+  const go = (el, kf, o) => el && el.animate(kf, { fill: "backwards", easing: SOFT, ...o });
+  const draw = (el, delay, dur) => { const L = el.getTotalLength(); el.style.strokeDasharray = `${L} ${L + 2}`; const a = el.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, delay, easing: SOFT, fill: "backwards" }); a.onfinish = () => (el.style.strokeDasharray = "none"); return a; };
+  // 1. 拱形边框从底下两边描上去
+  draw($("border"), 0, 1500); draw($("border2"), 120, 1500);
+  go($("ros"), [{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: 1300 });
+  go(app.querySelector(".panel svg g[clip-path]"), [{ opacity: 0 }, { opacity: 1 }], { duration: 900, delay: 100 });
+  // 2. 光环一圈圈画出来
+  app.querySelectorAll(".rg").forEach((c, i) => draw(c, 350 + i * 160, 1100));
+  go(app.querySelector("#hs"), [{ opacity: 0 }, { opacity: 1 }], { duration: 900, delay: 900 });
+  go(app.querySelector("#hs2"), [{ opacity: 0, transform: "rotate(-40deg)" }, { opacity: 1, transform: "none" }], { duration: 1400, delay: 500, composite: "add" });
+  app.querySelectorAll("#halo > circle.rg").forEach((c) => go(c, [{ fillOpacity: 0 }, { fillOpacity: 1 }], { duration: 900, delay: 700 }));
+  // 3. 真图在圈里慢慢浮现
+  go($("cov"), [{ opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0)" }], { duration: 1300, delay: 900 });
+  // 4. 藤蔓沿曲线长出来，叶子和花在长到的时候绽开
+  const vdur = 1500, vd0 = 1100;
+  app.querySelectorAll("#vines .vc, #vines .vi").forEach((p, i) => draw(p, vd0 + (i >> 1) * 70, vdur));
+  sprouts.forEach(({ el, vi, t }) => go(el, [{ transform: "scale(0) rotate(-40deg)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 650, delay: vd0 + vi * 70 + vdur * Math.min(1, t * 0.95), easing: "cubic-bezier(.3,1.4,.5,1)" }));
+  go($("plaque"), [{ opacity: 0, transform: "translate(179px,396px)" }, { opacity: 1, transform: "translate(179px,384px)" }], { duration: 900, delay: 2000 });
+  // 5. 文字柔柔浮现
+  draw($("whip"), 500, 1300);
+  go($("tt"), [{ opacity: 0, letterSpacing: ".3em", filter: "blur(4px)" }, { opacity: 1, letterSpacing: "0em", filter: "blur(0)" }], { duration: 1400, delay: 150 });
+  go(app.querySelector(".date"), [{ opacity: 0 }, { opacity: 1 }], { duration: 900, delay: 900 });
+  go($("medal"), [{ opacity: 0, transform: "rotate(-90deg) scale(.6)" }, { opacity: 1, transform: "none" }], { duration: 1300, delay: 600 });
+  go($("ht"), [{ opacity: 0, filter: "blur(5px)" }, { opacity: 1, filter: "blur(0)" }], { duration: 1100, delay: 1900 });
+  draw($("dv"), 2100, 900);
+  app.querySelectorAll(".hero p, .stats, .sec, .it").forEach((el, i) => go(el, [{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 900, delay: 2200 + i * 110 }));
+
+  // 点「听」：花瓣环转起来，光环转快
+  $("medal").addEventListener("click", () => { const on = $("medal").classList.toggle("on"); $("mt").textContent = on ? "停" : "听"; $("hs").classList.toggle("fast", on); $("hs2").classList.toggle("fast", on); });
+  app.querySelectorAll(".it").forEach((el) => el.addEventListener("click", () => {
+    const open = el.classList.toggle("open");
+    if (open) el.querySelector(".more").animate([{ opacity: 0, clipPath: "circle(0% at 0 0)" }, { opacity: 1, clipPath: "circle(150% at 0 0)" }], { duration: 900, easing: SOFT });
+  }));
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>
