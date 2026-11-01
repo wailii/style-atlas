@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>美漫宇宙</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=ZCOOL+QingKe+HuangYou&family=Noto+Sans+SC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fff4dc; --c: #00a3e0; --m: #ec008c; --y: #ffe500; --k: #15110e; --red: #ee2a24; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Noto Sans SC", sans-serif; color: var(--k); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .bg { font-family: "Bangers", "ZCOOL QingKe HuangYou", sans-serif; font-weight: 400; letter-spacing: 1px; }
+  .zk { font-family: "ZCOOL QingKe HuangYou", sans-serif; font-weight: 400; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--paper) var(--dots); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 60; }
+  /* 印版错位：青、品红两版从字后面错出来 */
+  .mis { text-shadow: var(--dx, 2px) var(--dy, 1px) 0 var(--c), calc(var(--dx, 2px) * -1) calc(var(--dy, 1px) * -1) 0 var(--m); }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-size: 18px; position: relative; z-index: 2; }
+  .top { flex: none; position: relative; height: 76px; z-index: 6; }
+  .logo { position: absolute; left: 14px; top: 0; transform: rotate(-4deg); line-height: 1; white-space: nowrap; }
+  .logo b { display: inline-block; font-weight: 400; color: var(--y); -webkit-text-stroke: 7px var(--k); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--k), 5px 5px 0 var(--k), 7px 7px 0 var(--m); }
+  .logo .a { font-family: "Bangers"; font-size: 58px; letter-spacing: 2px; }
+  .logo .h { font-family: "ZCOOL QingKe HuangYou"; font-size: 50px; margin-left: 4px; }
+  .issue { position: absolute; left: 196px; top: 12px; background: var(--k); color: var(--paper); padding: 3px 8px 2px; font-size: 15px; transform: rotate(3deg); }
+  .issue small { display: block; font-size: 11px; letter-spacing: 2px; color: var(--y); }
+  .cta { position: absolute; right: 8px; top: -4px; width: 96px; height: 84px; }
+  .cta svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .cta span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: var(--k); padding-top: 2px; }
+  .cta.on .burst { fill: var(--c); }
+  .blam { position: absolute; right: 70px; top: 52px; font-family: "Bangers"; font-size: 46px; color: var(--y); -webkit-text-stroke: 6px var(--k); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--red); transform: rotate(-12deg); opacity: 0; pointer-events: none; z-index: 9; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; position: relative; z-index: 1; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .hero { position: relative; height: 412px; }
+  #krackle { position: absolute; left: 0; top: -8px; width: 390px; height: 330px; }
+  .cap { position: absolute; z-index: 5; background: var(--y); border: 3px solid var(--k); padding: 4px 10px 3px; font-size: 15px; box-shadow: 4px 4px 0 var(--k); }
+  .cap1 { left: 12px; top: 6px; transform: rotate(-3deg); }
+  .panel { position: absolute; left: 22px; top: 30px; width: 340px; height: 214px; transform: rotate(-2.5deg); border: 4px solid var(--k); box-shadow: 7px 7px 0 var(--k); background: var(--paper); overflow: hidden; z-index: 3; isolation: isolate; cursor: pointer; }
+  .panel canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; mix-blend-mode: multiply; }
+  .panel canvas.ln { mix-blend-mode: normal; }
+  .panel canvas#gl { mix-blend-mode: normal; }
+  .star { position: absolute; right: -2px; top: 4px; width: 104px; height: 104px; z-index: 6; }
+  .star svg { width: 100%; height: 100%; overflow: visible; }
+  .star span { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; line-height: .9; font-size: 34px; color: var(--y); -webkit-text-stroke: 5px var(--k); paint-order: stroke fill; transform: rotate(8deg); }
+  .star span small { display: block; font-size: 17px; }
+  .sfx { position: absolute; left: 6px; top: 176px; z-index: 7; pointer-events: none; font-family: "ZCOOL QingKe HuangYou"; font-size: 76px; line-height: 1; color: var(--y); -webkit-text-stroke: 9px var(--k); paint-order: stroke fill; text-shadow: 5px 5px 0 var(--red), 9px 9px 0 var(--k); transform: rotate(-12deg) skewX(-8deg); letter-spacing: -4px; }
+  .card { position: absolute; left: 14px; right: 16px; top: 262px; z-index: 4; background: #fffdf6; border: 3.5px solid var(--k); box-shadow: 6px 6px 0 var(--k); padding: 12px 14px 12px 16px; transform: rotate(1deg); }
+  .card h2 { font-weight: 900; font-size: 21px; line-height: 1.36; transform: skewX(-6deg); }
+  .card h2 i { font-style: normal; background: var(--y); padding: 0 4px; box-shadow: 2px 2px 0 var(--k); border: 2px solid var(--k); }
+  .card p { margin-top: 8px; font-weight: 700; font-size: 12.5px; line-height: 1.6; padding-right: 74px; }
+  .pow { position: absolute; right: -8px; bottom: -26px; width: 104px; height: 92px; z-index: 6; }
+  .pow svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .pow b { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 400; transform: rotate(-6deg); }
+  .pow b span { font-family: "Bangers"; font-size: 36px; line-height: .9; color: #fff; -webkit-text-stroke: 5px var(--k); paint-order: stroke fill; }
+  .pow b small { font-family: "ZCOOL QingKe HuangYou"; font-size: 14px; color: var(--k); }
+
+  .lh { position: relative; margin: 8px 14px 14px; display: flex; align-items: center; gap: 10px; }
+  .lh b { background: var(--k); color: var(--y); font-size: 20px; padding: 2px 12px 0; transform: skewX(-12deg); }
+  .lh span { font-size: 15px; }
+  ol { list-style: none; padding: 0 14px 30px; display: flex; flex-direction: column; gap: 16px; }
+  .it { position: relative; background: #fffdf6; border: 3px solid var(--k); box-shadow: 5px 5px 0 var(--k); display: grid; grid-template-columns: 1fr 86px; gap: 12px; padding: 14px 12px 12px 14px; cursor: pointer; transform: rotate(var(--r)); }
+  .it .no { position: absolute; left: -8px; top: -12px; background: var(--y); border: 2.5px solid var(--k); font-size: 17px; padding: 1px 7px 0; transform: rotate(-4deg); }
+  .it h3 { font-weight: 900; font-size: 15.5px; line-height: 1.42; margin-top: 4px; }
+  .it .m { margin-top: 6px; font-weight: 900; font-size: 12.5px; display: flex; gap: 10px; transform: skewX(-8deg); transform-origin: left; }
+  .it .m em { font-style: normal; color: var(--m); }
+  .it .th { position: relative; width: 86px; height: 76px; border: 2.5px solid var(--k); overflow: hidden; isolation: isolate; background: var(--paper); align-self: center; }
+  .it .th canvas, .it .th svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; mix-blend-mode: multiply; }
+  .it .more { display: none; grid-column: 1 / -1; position: relative; margin-top: 4px; }
+  .it .more p { background: var(--y); border: 2.5px solid var(--k); padding: 7px 10px; font-weight: 700; font-size: 12.5px; line-height: 1.6; }
+  .it.open .more { display: block; }
+  .it.open { background: #e9f7fd; }
+
+  .tabs { flex: none; position: relative; z-index: 6; background: #fffdf6; border-top: 3.5px solid var(--k); display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 6px 22px; }
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 900; font-size: 11.5px; padding: 3px 0; }
+  .tab svg { width: 24px; height: 24px; position: relative; z-index: 1; }
+  .tab span { position: relative; z-index: 1; }
+  .tab .bst { position: absolute; left: 50%; top: 50%; width: 66px; height: 60px; margin: -32px 0 0 -33px; display: none; }
+  .tab.on .bst { display: block; }
+  .tab .bst { filter: drop-shadow(3px 2px 0 var(--m)); }
+  .tab.on svg:not(.bst) { stroke-width: 2.6; filter: drop-shadow(1.5px 1px 0 var(--c)) drop-shadow(-1.5px -1px 0 var(--m)); }
+  #glitch { position: absolute; inset: 0; z-index: 50; pointer-events: none; display: none; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const $ = (id) => document.getElementById(id);
+const INK = { c: "#00a3e0", m: "#ec008c", y: "#ffe500", k: "#15110e" };
+const FPS = 12, FRAME = 1000 / FPS;   // 一拍二：所有动作 12 帧/秒
+
+const cpuCanvas = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; c.getContext("2d", { willReadFrequently: true }); return c; };
+// ── 真图 → CMYK 四版网点（各自的网角）+ 黑色描边；每版一张画布，可以单独错位 ──
+function cmykPlates(img, w, h, { cell = 5.5, k = 2, edge = 0.2, soft = 2, line = 1.6, gcr = 0.9 } = {}) {
+  // 读像素的画布都开 willReadFrequently（放在内存里），省掉第一次从显卡读回的那一下
+  const small = cpuCanvas(Math.round(w / soft), Math.round(h / soft)), src = cpuCanvas(w, h);
+  { const s2 = Math.max(small.width / img.width, small.height / img.height), dw = img.width * s2, dh = img.height * s2; small.getContext("2d").drawImage(img, (small.width - dw) / 2, (small.height - dh) / 2, dw, dh); }
+  const sx = src.getContext("2d", { willReadFrequently: true }); sx.drawImage(small, 0, 0, w, h);
+  const d = sx.getImageData(0, 0, w, h).data, L = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) L[i] = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
+  const ANG = { c: 15, m: 75, y: 0, k: 45 };
+  const out = {};
+  // 逐像素算：找这个像素属于本版网格的哪个格子，取格心的颜色定点大小，再按到格心的距离给覆盖率（自带抗锯齿，比画几万个圆快十几倍）
+  const W2 = w * k, H2 = h * k;
+  for (const p of ["c", "m", "y", "k"]) {
+    const cv = document.createElement("canvas"); cv.width = W2; cv.height = H2;
+    const cx2 = cv.getContext("2d"), id = cx2.createImageData(W2, H2), o = id.data, ink = hex(INK[p]);
+    const a = (ANG[p] * Math.PI) / 180, ca = Math.cos(a), sa = Math.sin(a);
+    const G = Math.ceil(Math.hypot(w, h) / 2 / cell) + 2, GS = 2 * G + 1, radOf = new Float32Array(GS * GS).fill(-1);
+    for (let Y = 0; Y < H2; Y++) for (let X = 0; X < W2; X++) {
+      const dx = X / k - w / 2, dy = Y / k - h / 2;
+      const u = dx * ca + dy * sa, v = -dx * sa + dy * ca;
+      const iu = Math.round(u / cell), iv = Math.round(v / cell), key = (iu + G) * GS + iv + G;
+      let rad = radOf[key];
+      if (rad < 0) {
+        const uc = iu * cell, vc = iv * cell, px = w / 2 + uc * ca - vc * sa, py = h / 2 + uc * sa + vc * ca;
+        const i = (Math.min(h - 1, Math.max(0, py | 0)) * w + Math.min(w - 1, Math.max(0, px | 0))) * 4;
+        const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, K = (1 - Math.max(r, g, b)) * gcr;
+        const val = p === "k" ? K : Math.max(0, ((1 - (p === "c" ? r : p === "m" ? g : b)) - K) / (1 - K + 1e-6));
+        rad = (cell / 2) * Math.sqrt(Math.min(1, val)) * 1.2 * k;
+        radOf[key] = rad;
+      }
+      if (rad < 0.7) continue;
+      const cov = Math.min(1, Math.max(0, rad - Math.hypot(u - iu * cell, v - iv * cell) * k + 0.5));
+      if (!cov) continue;
+      const q = (Y * W2 + X) * 4; o[q] = ink[0]; o[q + 1] = ink[1]; o[q + 2] = ink[2]; o[q + 3] = cov * 255;
+    }
+    cx2.putImageData(id, 0, 0);
+    out[p] = cv;
+  }
+  // 描边：亮度梯度大的地方画黑线（漫画墨线）
+  const E = new Uint8Array(w * h);
+  for (let y = 1; y < h - 1; y++) for (let x2 = 1; x2 < w - 1; x2++) { const i = y * w + x2, gx = L[i + 1] - L[i - 1], gy = L[i + w] - L[i - w]; if (Math.hypot(gx, gy) > edge) E[i] = 1; }
+  const ln = document.createElement("canvas"); ln.width = W2; ln.height = H2;
+  const lx = ln.getContext("2d"), li = lx.createImageData(W2, H2), ld = li.data, kk = hex(INK.k), hw = line / 2;
+  for (let Y = 0; Y < H2; Y++) for (let X = 0; X < W2; X++) {
+    const x0 = Math.floor(X / k - hw + .5), x1 = Math.floor(X / k + hw - .5), y0 = Math.floor(Y / k - hw + .5), y1 = Math.floor(Y / k + hw - .5);
+    let on = 0; for (let yy = Math.max(0, y0); yy <= Math.min(h - 1, y1) && !on; yy++) for (let xx = Math.max(0, x0); xx <= Math.min(w - 1, x1); xx++) if (E[yy * w + xx]) { on = 1; break; }
+    if (on) { const q = (Y * W2 + X) * 4; ld[q] = kk[0]; ld[q + 1] = kk[1]; ld[q + 2] = kk[2]; ld[q + 3] = 255; }
+  }
+  lx.putImageData(li, 0, 0);
+  out.ln = ln;
+  // 拍平的一张（故障帧用）
+  const flat = document.createElement("canvas"); flat.width = w * k; flat.height = h * k;
+  const fx = flat.getContext("2d"); fx.fillStyle = "#fff4dc"; fx.fillRect(0, 0, flat.width, flat.height);
+  fx.globalCompositeOperation = "multiply"; for (const p of ["y", "m", "c", "k"]) fx.drawImage(out[p], 0, 0);
+  fx.globalCompositeOperation = "source-over"; fx.drawImage(ln, 0, 0);
+  out.flat = flat;
+  return out;
+}
+
+// ── 柯比能量点（Kirby krackle）：一团团黑色能量泡 + 品红网点光晕 ──
+function krackle(cv, { cx, cy, r0 = 120, r1 = 230, seed = 5 } = {}) {
+  let s = seed * 7919; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const W = cv.width = 390 * 2, H = cv.height = 330 * 2, x = cv.getContext("2d"); x.scale(2, 2);
+  // 整团能量装在一个爆炸形里，外沿描黑
+  const shape = new Path2D(burst(cx, cy, 236, 150, 22, seed, .16));
+  x.save(); x.clip(shape);
+  // 光晕：离中心越远网点越小（品红 + 青两层）
+  for (const [col, cell, ang, k0] of [[INK.m, 7, 0.26, 1], [INK.c, 9, 1.3, .7]]) {
+    x.fillStyle = col; x.globalCompositeOperation = "multiply";
+    const ca = Math.cos(ang), sa = Math.sin(ang);
+    for (let v = -400; v < 400; v += cell) for (let u = -400; u < 400; u += cell) {
+      const px = cx + u * ca - v * sa, py = cy + u * sa + v * ca, dd = Math.hypot((px - cx) / 1.25, py - cy);
+      const t = Math.max(0, 1 - Math.max(0, dd - r0 * .5) / (r1 * k0));
+      const rad = (cell / 2) * Math.sqrt(t) * 1.1; if (rad < .4) continue;
+      x.beginPath(); x.arc(px, py, rad, 0, Math.PI * 2); x.fill();
+    }
+  }
+  x.globalCompositeOperation = "source-over"; x.fillStyle = INK.k;
+  // 能量泡：沿放射方向一串一串
+  for (let i = 0; i < 64; i++) {
+    const a = r() * Math.PI * 2, d0 = r0 + r() * (r1 - r0), n = 2 + (r() * 4 | 0);
+    let px = cx + Math.cos(a) * d0 * 1.25, py = cy + Math.sin(a) * d0, big = 3 + r() * 9;
+    for (let j = 0; j < n; j++) {
+      x.beginPath(); x.arc(px, py, big, 0, Math.PI * 2); x.fill();
+      // 白色高光缺口：让泡泡像在冒
+      x.fillStyle = "#fff4dc"; x.beginPath(); x.arc(px - big * .3, py - big * .3, big * .32, 0, Math.PI * 2); x.fill(); x.fillStyle = INK.k;
+      px += Math.cos(a + (r() - .5)) * big * 1.6; py += Math.sin(a + (r() - .5)) * big * 1.6; big *= .55 + r() * .2;
+    }
+  }
+  x.restore(); x.lineWidth = 3.5; x.strokeStyle = INK.k; x.lineJoin = "round"; x.stroke(shape);
+}
+
+// 爆炸框（星形）
+function burst(cx, cy, rx, ry, n, seed, jag = .34) {
+  let s = seed * 131; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const pts = []; for (let i = 0; i < n * 2; i++) { const a = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2, k = i % 2 ? 1 - jag + r() * .08 : 1 + r() * .18; pts.push(`${(cx + Math.cos(a) * rx * k).toFixed(1)},${(cy + Math.sin(a) * ry * k).toFixed(1)}`); }
+  return "M" + pts.join(" L") + " Z";
+}
+// 本地画的网点底纹（青色 Ben-Day 点，很淡）
+const dotTile = (() => { const c = document.createElement("canvas"); c.width = c.height = 16; const x = c.getContext("2d"); x.fillStyle = "rgba(0,163,224,.16)"; [[4, 4], [12, 12]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 2.1, 0, Math.PI * 2); x.fill(); }); return c.toDataURL(); })();
+app.style.setProperty("--dots", `url(${dotTile})`);
+app.style.setProperty("--grain", `url(${grainURL(180, 0.07, 60)})`);
+
+const KEYW = KEY[1];
+app.innerHTML = `
+  <div class="sb bg"><span>${nowHM()}</span><span>5G ▮▮▮</span></div>
+  <header class="top" id="top">
+    <div class="logo" id="logo"><b class="a">AI</b><b class="h">热点</b></div>
+    <div class="issue bg" id="issue">No. 22<small>10·22 · LIVE</small></div>
+    <button class="cta" id="cta"><svg viewBox="0 0 96 84"><path d="${burst(48, 42, 44, 37, 11, 2, .3)}" fill="#15110e" transform="translate(4,4)"/><path class="burst" d="${burst(48, 42, 44, 37, 11, 2, .3)}" fill="#ee2a24" stroke="#15110e" stroke-width="3.5" stroke-linejoin="round"/></svg><span class="zk" style="color:#ffe500;-webkit-text-stroke:5px #15110e;paint-order:stroke fill">听!</span></button>
+    <div class="blam" id="blam">BLAM!</div>
+  </header>
+  <main class="scroll" id="scroll">
+    <section class="hero" id="hero">
+      <canvas id="krackle"></canvas>
+      <div class="cap cap1 bg" id="cap1">与此同时，10 月 22 日……</div>
+      <div class="panel" id="panel"><canvas id="pY"></canvas><canvas id="pM"></canvas><canvas id="pC"></canvas><canvas id="pK"></canvas><canvas id="pL" class="ln"></canvas><canvas id="gl"></canvas></div>
+      <div class="star bg" id="star"><svg viewBox="0 0 104 104"><path d="${burst(52, 52, 50, 50, 14, 7, .28)}" fill="#ee2a24" stroke="#15110e" stroke-width="3.5" stroke-linejoin="round"/></svg><span><small>No.</small><b style="font:900 40px/1 'Noto Sans SC';display:inline-block;transform:skewX(-10deg)">1</b></span></div>
+      <div class="sfx" id="sfx">轰!!</div>
+      <div class="card" id="card"><h2 class="mis" id="ttl">${esc(shortTitle(h1)).replace(esc(KEYW), `<i>${esc(KEYW)}</i>`)}</h2><p>${esc(clip(firstLine(h1.summary), 46))}</p>
+        <div class="pow" id="pow"><svg viewBox="0 0 104 92"><path d="${burst(52, 46, 50, 42, 12, 4, .26)}" fill="#00a3e0" stroke="#15110e" stroke-width="3.5" stroke-linejoin="round"/></svg><b><span id="heat">0</span><small>热度 · ${h1.sources} 家</small></b></div></div>
+    </section>
+    <div class="lh" id="lh"><b class="bg">MORE!</b><span class="zk">本期还有 ${rest.length} 条</span></div>
+    <ol>${rest.map((h, i) => `<li class="it" data-r="${h.rank}" style="--r:${i % 2 ? .7 : -.6}deg"><span class="no bg">#${h.rank}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m"><span>热度 <em>${heatText(h)}</em></span><span>${h.sources} 家 · ${h.people} 人</span></div></div><div class="th">${h.cover ? "<canvas></canvas><canvas></canvas><canvas></canvas>" : `<svg viewBox="0 0 86 76"></svg>`}</div><div class="more"><p>${esc(clip(firstLine(h.summary), 70))}</p></div></li>`).join("")}</ol>
+  </main>
+  <nav class="tabs" id="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}"><svg class="bst" viewBox="0 0 66 60" style="overflow:visible"><path d="${burst(33, 30, 31, 27, 9, i + 3, .26)}" fill="#ffe500" stroke="#15110e" stroke-width="2.5" stroke-linejoin="round"/></svg>${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>
+  <canvas id="glitch"></canvas>`;
+
+// 一拍二的入场：每一帧硬跳，到位前青 / 品红两版错得很开，落定那一下才对准
+const stepIn = (el, d, { x = 0, y = 0, r = 0, s = 1.4, n = 4 } = {}) => {
+  const fr = Array.from({ length: n + 1 }, (_, i) => { const t = 1 - i / n, e = t * t; return { transform: `translate(${(x * e).toFixed(1)}px, ${(y * e).toFixed(1)}px) rotate(${(r * e).toFixed(1)}deg) scale(${(1 + (s - 1) * e).toFixed(3)})`, composite: "add" }; });
+  el.animate(fr, { duration: n * FRAME, delay: d, easing: `steps(${n}, jump-none)`, fill: "backwards" });
+  el.animate([{ visibility: "hidden" }, { visibility: "visible" }], { duration: 1, delay: d, fill: "backwards" });
+};
+const misIn = (el, d, n = 5, from = 14) => {
+  const fr = Array.from({ length: n + 1 }, (_, i) => { const t = 1 - i / n; return { "--dx": `${(2 + from * t).toFixed(1)}px`, "--dy": `${(1 + from * .5 * t).toFixed(1)}px` }; });
+  el.animate(fr, { duration: n * FRAME, delay: d, easing: `steps(${n}, jump-none)`, fill: "backwards" });
+};
+
+(async () => {
+await fontsReady();
+const img = await loadImage(h1.cover);
+const PW = 340, PH = 214;
+// 只取中间 70%，图标够大网点才看得出颜色
+const sw = img.width * 0.7, sh = sw * PH / PW, crop = cpuCanvas(sw, sh);
+crop.getContext("2d").drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, sw, sh);
+const P = cmykPlates(crop, PW, PH, { cell: 5.4, edge: 0.18, gcr: .75 });
+const put = (id, c) => { const el = $(id); el.width = c.width; el.height = c.height; el.getContext("2d").drawImage(c, 0, 0); return el; };
+const plates = { y: put("pY", P.y), m: put("pM", P.m), c: put("pC", P.c), k: put("pK", P.k) }; put("pL", P.ln);
+const gl = $("gl"); gl.width = P.flat.width; gl.height = P.flat.height;
+// 常驻的套印偏差（px）
+const REG = { c: [-2.2, 1.2], m: [2, -1.4], y: [1.2, 2.2], k: [0, 0] };
+const setReg = (j = 0) => { for (const p in plates) { const [dx, dy] = REG[p]; plates[p].style.transform = `translate(${(dx + (p === "k" ? 0 : (Math.random() - .5) * j)).toFixed(2)}px, ${(dy + (p === "k" ? 0 : (Math.random() - .5) * j)).toFixed(2)}px)`; } };
+setReg();
+krackle($("krackle"), { cx: 195, cy: 158, r0: 110, r1: 200 });
+
+app.querySelectorAll(".it").forEach((li, i) => {
+  const h = rest[i];
+  if (h.cover) loadImage(h.cover).then((im) => {
+    const q = cmykPlates(im, 86, 76, { cell: 3.4, edge: .22, line: 1.2 });
+    const cs = li.querySelectorAll(".th canvas"), offs = [[-1.4, .8], [1.4, -.8], [0, 0]];
+    [q.c, q.m].forEach((pl, j) => { cs[j].width = pl.width; cs[j].height = pl.height; cs[j].getContext("2d").drawImage(pl, 0, 0); cs[j].style.transform = `translate(${offs[j][0]}px,${offs[j][1]}px)`; });
+    const kx = cs[2].getContext("2d"); cs[2].width = q.k.width; cs[2].height = q.k.height; kx.drawImage(q.y, 0, 0); kx.globalCompositeOperation = "multiply"; kx.drawImage(q.k, 0, 0); kx.globalCompositeOperation = "source-over"; kx.drawImage(q.ln, 0, 0);
+  });
+  else {
+    // 没封面：一种原色的网点底 + 黑线小图，青 / 品红两版错开
+    const col = [INK.y, INK.c, INK.m, INK.y][i % 4];
+    let dots = ""; for (let y = 0; y < 80; y += 6) for (let x = (y / 6) % 2 ? 3 : 0; x < 90; x += 6) { const t = Math.max(0, 1 - Math.hypot(x - 43, y - 38) / 60); dots += `<circle cx="${x}" cy="${y}" r="${(1 + 2.2 * t).toFixed(2)}"/>`; }
+    li.querySelector(".th svg").innerHTML = `<g fill="${col}">${dots}</g><g transform="translate(12,6) scale(.97)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="${DOODLE[h.rank]}" stroke="${INK.c}" stroke-width="4" transform="translate(-2,1.4)"/><path d="${DOODLE[h.rank]}" stroke="${INK.m}" stroke-width="4" transform="translate(2,-1.4)"/><path d="${DOODLE[h.rank]}" stroke="${INK.k}" stroke-width="3.6"/></g>`;
+  }
+});
+
+// ── 进场（全部 12 帧/秒，一拍二）──
+stepIn($("logo"), 80, { x: -60, r: -14, s: 1.6, n: 4 }); misIn($("logo").querySelector(".a"), 80);
+stepIn($("issue"), 300, { y: -40, s: 1.3, n: 3 });
+stepIn($("cta"), 420, { s: 0.2, r: 40, n: 4 });
+$("krackle").animate([{ transform: "scale(.2)", opacity: 0 }, { transform: "scale(.7)", opacity: 1 }, { transform: "scale(1.06)" }, { transform: "none" }], { duration: 3 * FRAME, delay: 520, easing: "steps(3, jump-none)", fill: "backwards" });
+stepIn($("cap1"), 560, { x: -120, n: 3, s: 1 });
+stepIn($("panel"), 700, { x: 220, y: -40, r: 12, s: 1.2, n: 5 });
+// 四版各自从不同方向飞进来，落定才对准
+const fly = { c: [-90, 30], m: [90, -24], y: [20, 80], k: [0, 0] };
+for (const p in plates) { const [fx, fy] = fly[p], [dx, dy] = REG[p]; plates[p].animate(Array.from({ length: 7 }, (_, i) => { const t = 1 - i / 6; return { transform: `translate(${(dx + fx * t * t).toFixed(1)}px, ${(dy + fy * t * t).toFixed(1)}px)` }; }), { duration: 6 * FRAME, delay: 760, easing: "steps(6, jump-none)", fill: "backwards" }); }
+$("pL").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1, delay: 760 + 6 * FRAME, fill: "backwards" });
+stepIn($("star"), 1500, { s: 2.6, r: -60, n: 4 });
+stepIn($("sfx"), 1350, { s: 3, r: 20, n: 4, x: 40 });
+stepIn($("card"), 1100, { y: 160, r: -6, n: 4, s: 1 });
+misIn($("ttl"), 1100, 6, 16);
+stepIn($("pow"), 1700, { s: .1, r: 90, n: 4 });
+// 数字也一拍二地跳：按经过的时间算到第几格，卡顿也不会停在半路
+setTimeout(() => { const T = heatText(h1), t0 = performance.now(); const t = setInterval(() => { const f = Math.min(8, Math.floor((performance.now() - t0) / FRAME)); $("heat").textContent = Math.round(T * f / 8); if (f >= 8) clearInterval(t); }, FRAME / 2); }, 1700);
+stepIn($("lh"), 1800, { x: -80, n: 3, s: 1 });
+app.querySelectorAll(".it").forEach((li, i) => stepIn(li, 1900 + i * 110, { x: i % 2 ? 120 : -120, r: i % 2 ? 6 : -6, n: 3, s: 1 }));
+app.querySelectorAll(".tab").forEach((t, i) => stepIn(t, 200 + i * 60, { y: 40, n: 2, s: 1 }));
+
+// ── 常驻：网点版每两帧抖一下（boil）；每隔几秒一个故障帧 ──
+setInterval(() => setReg(1.1), FRAME * 2);
+const gx = gl.getContext("2d");
+function glitchPanel() {
+  const Wd = gl.width, Hd = gl.height; let n = 0;
+  const t = setInterval(() => {
+    gx.clearRect(0, 0, Wd, Hd);
+    if (n++ < 2) {
+      let y = 0; while (y < Hd) { const bh = 20 + Math.random() * 90, off = (Math.random() - .5) * 70; gx.drawImage(P.flat, 0, y, Wd, bh, off, y, Wd, bh); if (Math.random() < .35) { gx.globalCompositeOperation = "multiply"; gx.drawImage(Math.random() < .5 ? P.c : P.m, 0, y, Wd, bh, off + 18, y, Wd, bh); gx.globalCompositeOperation = "source-over"; } y += bh; }
+      $("panel").style.translate = `${(Math.random() - .5) * 10}px 0`;
+    } else { clearInterval(t); $("panel").style.translate = ""; }
+  }, FRAME * 2);
+}
+setTimeout(function loop() { glitchPanel(); setTimeout(loop, 3800 + Math.random() * 2400); }, 2600);
+// 标题错位版也一拍二地轻轻晃
+const ttl = $("ttl"); setInterval(() => { ttl.style.setProperty("--dx", (1.5 + Math.random() * 1.2).toFixed(1) + "px"); ttl.style.setProperty("--dy", (.6 + Math.random() * .8).toFixed(1) + "px"); }, FRAME * 2);
+
+// ── 点击 ──
+const cta = $("cta"); cta.addEventListener("click", () => {
+  const on = cta.classList.toggle("on"); cta.querySelector("span").textContent = on ? "停!" : "听!";
+  if (on) { const b = $("blam"); b.animate([{ opacity: 1, transform: "rotate(-12deg) scale(2.4)" }, { opacity: 1, transform: "rotate(-8deg) scale(.9)" }, { opacity: 1, transform: "rotate(-12deg) scale(1)" }, { opacity: 1, transform: "rotate(-12deg) scale(1)", offset: .85 }, { opacity: 0, transform: "rotate(-12deg) scale(1)" }], { duration: 1100, easing: "steps(10, jump-none)" }); }
+});
+$("panel").addEventListener("click", glitchPanel);
+app.querySelectorAll(".it").forEach((li) => li.addEventListener("click", () => {
+  const open = li.classList.toggle("open");
+  if (open) stepIn(li.querySelector(".more"), 0, { s: .3, n: 3, r: -4 });
+  li.animate([{ translate: "4px -4px" }, { translate: "-3px 2px" }, { translate: "0 0" }], { duration: 3 * FRAME, easing: "steps(3, jump-none)" });
+}));
+// 切底栏：整屏一个故障帧（横条错开 + 一版跑偏），爆炸框跳到新的格子
+const tabs = [...app.querySelectorAll(".tab")], gc = $("glitch");
+tabs.forEach((t) => t.addEventListener("click", () => {
+  tabs.forEach((x) => x.classList.toggle("on", x === t));
+  stepIn(t.querySelector(".bst"), 0, { s: .2, r: 50, n: 3 });
+  const sc = $("scroll"); let n = 0;
+  const tick = setInterval(() => { sc.style.transform = n % 2 ? `translate(${(Math.random() - .5) * 14}px, 0)` : `translate(${(Math.random() - .5) * 8}px, ${(Math.random() - .5) * 6}px)`; sc.style.filter = n % 2 ? "none" : "drop-shadow(5px 0 0 #00a3e0) drop-shadow(-5px 0 0 #ec008c)"; if (++n > 3) { clearInterval(tick); sc.style.transform = sc.style.filter = ""; } }, FRAME * 2);
+}));
+})();
+</script>
+</body>
+</html>
