@@ -116,7 +116,8 @@ function show(id) {
     <h2>${s.name}</h2>
     <div class="one-line">${s.line}</div>
     <h3>照着哪条视频提示词 / skill</h3>
-    <div class="src">${s.from.map(([t, d, u]) => `<a href="${u}" target="_blank" rel="noopener"><b>${t}</b><span>${d}</span></a>`).join("")}</div>
+    <div class="src">${s.from.map(([t, d, u]) => (u ? `<a href="${u}" target="_blank" rel="noopener"><b>${t}</b><span>${d}</span></a>` : `<a><b>${t}</b><span>${d}</span></a>`)).join("")}</div>
+    ${s.more ? `<h3>别的媒介</h3><div class="src">${s.more.map(([t, d, f]) => `<a href="${f}" target="_blank" rel="noopener"><b>${t}</b><span>${d}</span></a>`).join("")}</div>` : ""}
     <h3>招牌动效</h3><ul>${s.moves.map((m) => `<li>${m}</li>`).join("")}</ul>
     <h3>可以点的</h3><ul>${s.tap.map((m) => `<li>${m}</li>`).join("")}</ul>
     <h3>适合</h3><div>${s.fit}</div>`;

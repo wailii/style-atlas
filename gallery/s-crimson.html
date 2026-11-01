@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>朱墨剧场</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@500;700&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --crimson: #d50a0f; --wine: #7c0619; --paper: #f2eee8; --ink: #0d0a0a;
+    --cyan: #33b6ea; --lime: #5cd64a; --citron: #f2df1f;
+    --display: "Playfair Display", "Noto Serif SC", serif; --mono: "IBM Plex Mono", ui-monospace, monospace; --serif: "Noto Serif SC", serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--crimson); }
+  body { font-family: var(--serif); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--crimson); }
+  .app::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 40; }
+
+  /* 纸签：白色小矩形 + 极小等宽大写 */
+  .lab { background: var(--paper); box-shadow: 0 1px 0 rgba(0,0,0,.45), 0 6px 14px rgba(0,0,0,.22); font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 24px 0; font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--paper); }
+  .top { flex: none; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .brand { display: flex; align-items: baseline; gap: 8px; padding: 7px 10px 6px; }
+  .brand b { font-family: var(--serif); font-weight: 900; font-size: 15px; letter-spacing: .1em; text-transform: none; }
+  .tag { display: flex; }
+  .tag b { padding: 7px 9px 6px; }
+  .tag i { font-style: normal; padding: 7px 8px 6px; background: var(--ink); color: var(--paper); font-variant-numeric: tabular-nums; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* 首条：红底排线舞台 + 圆窗 + 描边大字 */
+  .hero { position: relative; height: 492px; }
+  .hero > canvas.bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ocu { position: absolute; left: 56px; top: 8px; width: 290px; height: 290px; border-radius: 50%; background: var(--paper); padding: 12px; box-shadow: 0 0 0 3px var(--ink), inset 0 0 0 3px var(--ink), 6px 8px 0 rgba(13,10,10,.55); }
+  .ocu::after { content: ""; position: absolute; inset: 22px; border-radius: 50%; box-shadow: inset 0 0 0 3px var(--ink); pointer-events: none; }
+  .ocu canvas { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: 0 0 0 3px var(--ink); }
+  .col { position: absolute; top: 18px; width: 30px; height: 300px; }
+  .col canvas { width: 100%; height: 100%; display: block; }
+  .no { position: absolute; left: 4px; top: 196px; font-family: var(--display); font-weight: 900; font-size: 150px; line-height: .8; color: var(--paper); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 5px 6px 0 var(--ink); transform: scaleX(.7); transform-origin: left top; letter-spacing: -2px; }
+  .ttl { position: absolute; left: 16px; right: 98px; top: 334px; font-weight: 900; font-size: 22px; line-height: 1.28; color: var(--paper); -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; letter-spacing: .5px; text-wrap: balance; }
+  .ttl .k { color: var(--ink); -webkit-text-stroke: 0; background: var(--paper); padding: 0 5px; box-shadow: 0 0 0 2.5px var(--ink); margin: 0 2px; }
+  .cap { position: absolute; left: 16px; bottom: 14px; max-width: 270px; padding: 8px 10px 7px; }
+  .cap p { font-weight: 500; line-height: 1.55; }
+  .cap p + p { font-family: var(--serif); font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: none; color: var(--wine); margin-top: 3px; }
+  .hold { position: absolute; right: 18px; top: 372px; width: 66px; height: 66px; border-radius: 50%; background: var(--paper); display: grid; place-items: center; box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 10px 24px rgba(0,0,0,.3); touch-action: none; }
+  .hold span { font-family: var(--mono); font-weight: 700; font-size: 8px; line-height: 1.2; letter-spacing: .08em; text-align: center; }
+  .hold svg { position: absolute; inset: -7px; width: 80px; height: 80px; transform: rotate(-90deg); overflow: visible; pointer-events: none; }
+  .hold .pr { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-dasharray: 226; stroke-dashoffset: 226; }
+  .hold:focus-visible { outline: 2px solid var(--cyan); outline-offset: 10px; }
+  .hold .bars { display: none; gap: 3px; align-items: flex-end; height: 18px; }
+  .hold .bars i { width: 4px; background: var(--crimson); }
+  .hold.on span { display: none; } .hold.on .bars { display: flex; }
+  .dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 1px rgba(0,0,0,.5); right: 92px; top: 364px; }
+  .dot.s { width: 4px; height: 4px; right: 86px; top: 356px; }
+
+  /* 列表：一格格漫画分镜，黑色缝 */
+  ol { list-style: none; display: grid; gap: 6px; background: var(--ink); padding: 6px 0; }
+  .it { position: relative; display: grid; grid-template-columns: 58px 1fr 92px; background: var(--paper); cursor: pointer; min-height: 92px; }
+  .it .n { background: var(--crimson); display: grid; place-items: center; border-right: 3px solid var(--ink); }
+  .it .n b { font-family: var(--display); font-weight: 900; font-size: 40px; line-height: 1; color: var(--paper); -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 2px 3px 0 var(--ink); transform: scaleX(.75); }
+  .it .tx { padding: 11px 12px 10px; min-width: 0; }
+  .it h3 { font-weight: 900; font-size: 15px; line-height: 1.38; }
+  .it .m { margin-top: 6px; display: flex; gap: 6px; align-items: center; font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #5a4848; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 5px 1px; color: var(--ink); box-shadow: 0 0 0 1.5px var(--ink); }
+  .chip::before { content: ""; width: 7px; height: 7px; background: var(--c); box-shadow: 0 0 0 1px var(--ink); }
+  .it .more { display: none; margin-top: 8px; font-size: 12.5px; line-height: 1.65; font-weight: 600; color: #2c2424; }
+  .it.open .more { display: block; }
+  .it .th { border-left: 3px solid var(--ink); position: relative; overflow: hidden; background: var(--paper); }
+  .it .th canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .it.open { box-shadow: inset 0 0 0 3px var(--ink); }
+  .it.open .n { background: var(--ink); }
+  .end { padding: 18px 16px 22px; display: flex; justify-content: center; }
+  .end .lab { padding: 7px 10px 6px; }
+
+  .tabs { flex: none; position: relative; background: var(--ink); display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 24px; gap: 6px; }
+  .tab { position: relative; font-weight: 900; font-size: 13.5px; letter-spacing: 2px; padding: 8px 0 7px; color: var(--paper); }
+  .tab small { position: absolute; right: 2px; top: -4px; font-family: var(--mono); font-size: 8px; letter-spacing: 0; color: var(--crimson); opacity: 0; }
+  .tab.on { background: var(--paper); color: var(--ink); box-shadow: 0 2px 0 var(--crimson); }
+  .tab.on small { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { inkHatch, dripDraw } = Engines;
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const C = { crimson: "#d50a0f", wine: "#7c0619", paper: "#f2eee8", ink: "#0d0a0a", cyan: "#33b6ea", lime: "#5cd64a", citron: "#f2df1f" };
+const FLAVOR = { up: ["var(--lime)", "UP"], flat: ["var(--citron)", "FLAT"], down: ["var(--cyan)", "DOWN"] };
+app.style.setProperty("--grain", `url(${grainURL(200, 0.1, 40)})`);
+const mark = (h) => { const t = esc(shortTitle(h)), k = KEY[h.rank]; return k && t.includes(esc(k)) ? t.replace(esc(k), `<span class="k">${esc(k)}</span>`) : t; };
+const chip = (h) => { const [c, w] = FLAVOR[h.trend] || FLAVOR.flat; return `<span class="chip" style="--c:${c}">${w} ${h.trendPct > 0 ? "+" : ""}${h.trendPct}%</span>`; };
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="top">
+    <div class="lab brand" id="brand"><b>AI 热点</b><span>Night edition</span></div>
+    <div class="lab tag" id="tag"><b>Experience</b><i>01 / 08</i></div>
+  </header>
+  <main class="scroll">
+    <section class="hero" id="hero">
+      <canvas class="bg" id="bg"></canvas>
+      <div class="col" id="colL" style="left:14px"><canvas></canvas></div>
+      <div class="col" id="colR" style="right:14px"><canvas></canvas></div>
+      <div class="ocu" id="ocu"><canvas id="cv"></canvas></div>
+      <div class="no" id="no">01</div>
+      <h2 class="ttl" id="ttl">${mark(h1)}</h2>
+      <div class="lab cap" id="cap"><p>Heat ${heatText(h1)} · ${h1.sources} sources · ${h1.people} people</p><p>${esc(clip(firstLine(h1.latest), 30))}</p></div>
+      <i class="dot" id="d1"></i><i class="dot s" id="d2"></i>
+      <button class="hold" id="hold" aria-label="按住收听热点"><svg viewBox="0 0 80 80"><circle class="pr" id="ring" cx="40" cy="40" r="36"/></svg><span>HOLD<br>听热点</span><b class="bars"><i></i><i></i><i></i><i></i></b></button>
+    </section>
+    <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}"><div class="n"><b>${pad2(h.rank)}</b></div><div class="tx"><h3>${esc(shortTitle(h))}</h3><div class="m"><span>Heat ${heatText(h)}</span>${chip(h)}</div><div class="more">${esc(clip(firstLine(h.summary), 78))}</div></div><div class="th"><canvas></canvas></div></li>`).join("")}</ol>
+    <div class="end"><span class="lab">Fine · 剧终</span></div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}<small>0${i + 1}</small></button>`).join("")}</nav>`;
+
+const $ = (id) => document.getElementById(id);
+const fitCanvas = (cv, w, h, s = 2) => { cv.width = w * s; cv.height = h * s; return cv.getContext("2d"); };
+// 让一张已经排好线的画布「竖条滴落」进场
+const dripIn = (cv, src, delay, dur = 900, fill = null) => new Promise((done) => {
+  const ctx = cv.getContext("2d"), t0 = performance.now() + delay;
+  const tick = (now) => { const k = Math.max(0, Math.min(1, (now - t0) / dur)); dripDraw(ctx, src, 1 - (1 - Math.pow(1 - k, 3)), { dir: -1, fill }); if (k < 1) requestAnimationFrame(tick); else done(); };
+  requestAnimationFrame(tick);
+});
+// 明度画布 → 排线（不是照片时：用渐变当作「光」）
+const toneCanvas = (w, h, paint) => { const c = document.createElement("canvas"); c.width = w; c.height = h; paint(c.getContext("2d"), w, h); return c; };
+
+(async () => {
+await fontsReady();
+const S = 2;
+// 舞台底：红色，上暗下亮，排线变成暗酒红竖线
+const bgSrc = toneCanvas(390 * S, 492 * S, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#3a3a3a"); g.addColorStop(.45, "#b8b8b8"); g.addColorStop(.75, "#eeeeee"); g.addColorStop(1, "#d0d0d0"); x.fillStyle = g; x.fillRect(0, 0, w, h); const r = x.createRadialGradient(w / 2, h * .32, 40, w / 2, h * .32, w * .55); r.addColorStop(0, "rgba(255,255,255,.9)"); r.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = r; x.fillRect(0, 0, w, h); });
+const bgInk = inkHatch(bgSrc, 390, 492, { base: C.crimson, ink: "#240205", edge: 0, seed: 2 });
+const bg = $("bg"); fitCanvas(bg, 390, 492, S);
+// 两边的柱子：圆柱明暗 → 排线
+const colSrc = toneCanvas(30 * S, 300 * S, (x, w, h) => { const g = x.createLinearGradient(0, 0, w, 0); g.addColorStop(0, "#5a5a5a"); g.addColorStop(.35, "#ffffff"); g.addColorStop(.7, "#9a9a9a"); g.addColorStop(1, "#303030"); x.fillStyle = g; x.fillRect(0, 0, w, h); x.fillStyle = "#222"; x.fillRect(0, 0, w, 14 * S); x.fillRect(0, h - 12 * S, w, 12 * S); for (let i = 1; i < 5; i++) { x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(w * i / 5 - 1, 14 * S, 2, h - 26 * S); } });
+const colInk = inkHatch(colSrc, 30, 300, { base: C.paper, ink: C.ink, edge: 0, seed: 5 });
+const cols = [$("colL"), $("colR")].map((el) => { const c = el.querySelector("canvas"); fitCanvas(c, 30, 300, S); return c; });
+// 圆窗：真封面 → 纸底黑线
+const img = await loadImage(h1.cover);
+const cv = $("cv"); fitCanvas(cv, 266, 266, S);
+const coverInk = inkHatch(img, 266, 266, { base: C.crimson, ink: "#1a0204", gain: 1.55, gamma: .8, edge: .2, seed: 9 });
+
+// ── 入场 ──
+dripIn(bg, bgInk, 0, 1000, C.ink);
+cols.forEach((c, i) => dripIn(c, colInk, 260 + i * 120, 800));
+$("ocu").animate([{ transform: "scale(.4) rotate(-30deg)", opacity: 0 }, { transform: "scale(1.04)", opacity: 1, offset: .7 }, { transform: "none" }], { duration: 760, delay: 300, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
+dripIn(cv, coverInk, 520, 1100, C.paper);
+$("no").animate([{ transform: "scaleX(.7) translateY(-60px) scale(1.4)", opacity: 0 }, { transform: "scaleX(.7)", opacity: 1 }], { duration: 380, delay: 1050, easing: "cubic-bezier(.7,0,.2,1.3)", fill: "backwards" });
+$("ttl").animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 560, delay: 1250, easing: "cubic-bezier(.7,0,.2,1)", fill: "backwards" });
+for (const [id, d] of [["brand", 120], ["tag", 220], ["cap", 1500]]) $(id).animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 420, delay: d, easing: "cubic-bezier(.7,0,.2,1)", fill: "backwards" });
+$("hold").animate([{ transform: "scale(0)" }, { transform: "scale(1.12)", offset: .7 }, { transform: "none" }], { duration: 520, delay: 1700, easing: "ease-out", fill: "backwards" });
+for (const [id, d] of [["d1", 1900], ["d2", 2000]]) $(id).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1, delay: d, fill: "backwards" });
+
+// 列表：每格的小图（真封面排线 / 没封面就把线稿图标当明度）
+app.querySelectorAll(".it").forEach((li, i) => {
+  const h = rest[i], c = li.querySelector("canvas"); fitCanvas(c, 92, 92, S);
+  li.animate([{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 520, delay: 1300 + i * 110, easing: "steps(8, end)", fill: "backwards" });
+  const make = h.cover ? loadImage(h.cover).then((im) => inkHatch(im, 92, 92, { base: C.paper, ink: C.ink, gain: .95, lift: .05, gamma: 1.3, seed: 20 + i }))
+    : Promise.resolve(inkHatch(toneCanvas(92 * S, 92 * S, (x, w, hh) => { const g = x.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, "#9a9a9a"); g.addColorStop(1, "#e6e6e6"); x.fillStyle = g; x.fillRect(0, 0, w, hh); if (DOODLE[h.rank]) { x.save(); x.translate(w * .14, hh * .14); x.scale(w * .72 / 64, hh * .72 / 64); x.strokeStyle = "#000"; x.lineWidth = 6; x.lineCap = x.lineJoin = "round"; x.stroke(new Path2D(DOODLE[h.rank])); x.restore(); } }), 92, 92, { base: C.paper, ink: C.ink, edge: .3, seed: 30 + i }));
+  make.then((src) => { li._src = src; dripIn(c, src, 1450 + i * 110, 700, C.paper); });
+  li.addEventListener("click", () => { const o = li.classList.toggle("open"); if (o && li._src) dripIn(c, li._src, 0, 600, C.ink); });
+});
+
+// HOLD：按住 1.2 秒把外圈画满，开始「收听」；再点一下停
+const hold = $("hold"), ring = $("ring"); let raf = 0, t0 = 0;
+const setP = (k) => (ring.style.strokeDashoffset = 226 * (1 - k));
+const bars = [...hold.querySelectorAll(".bars i")];
+const play = (on) => { hold.classList.toggle("on", on); bars.forEach((b, i) => b.getAnimations().forEach((a) => a.cancel())); if (on) bars.forEach((b, i) => b.animate([{ height: "4px" }, { height: 6 + (i % 2) * 10 + "px" }, { height: "14px" }, { height: "5px" }], { duration: 520 + i * 90, iterations: Infinity, direction: "alternate", easing: "steps(4)" })); };
+const down = (e) => { e.preventDefault(); if (hold.classList.contains("on")) { play(false); setP(0); return; } t0 = performance.now(); const tick = (now) => { const k = Math.min(1, (now - t0) / 1200); setP(k); if (k < 1) raf = requestAnimationFrame(tick); else play(true); }; raf = requestAnimationFrame(tick); };
+const up = () => { cancelAnimationFrame(raf); if (!hold.classList.contains("on")) { ring.animate([{ strokeDashoffset: ring.style.strokeDashoffset || 226 }, { strokeDashoffset: 226 }], { duration: 300, easing: "ease-out" }); setP(0); } };
+hold.addEventListener("pointerdown", down); hold.addEventListener("pointerup", up); hold.addEventListener("pointerleave", up);
+hold.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); play(!hold.classList.contains("on")); setP(hold.classList.contains("on") ? 1 : 0); } });
+hold.addEventListener("click", (e) => { if (e.detail === 0) return; });
+
+// 底栏
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

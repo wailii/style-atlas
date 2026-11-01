@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>夜场数据台 · 朱墨剧场</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@500;700&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet">
+<style>
+  /* 朱墨剧场 · Dashboard：红底舞台，数据画在纸面板上；面积、柱子都用竖排线填；三种风味色只给三类数据 */
+  :root {
+    --crimson: #d50a0f; --wine: #7c0619; --paper: #f2eee8; --ink: #0d0a0a;
+    --cyan: #33b6ea; --lime: #5cd64a; --citron: #f2df1f; --muted: #5a4848;
+    --display: "Playfair Display", "Noto Serif SC", serif; --mono: "IBM Plex Mono", ui-monospace, monospace; --serif: "Noto Serif SC", serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--crimson); }
+  body { font-family: var(--serif); color: var(--ink); background: var(--crimson); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  body::after { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: var(--grain); mix-blend-mode: multiply; z-index: 40; }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 22px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; }
+  .lab { display: inline-block; background: var(--paper); box-shadow: 0 1px 0 rgba(0,0,0,.45), 0 6px 14px rgba(0,0,0,.2); font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; padding: 7px 10px 6px; }
+  .out { color: var(--paper); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--ink); }
+
+  header { position: relative; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; min-height: 150px; padding: 18px 22px 16px; overflow: hidden; box-shadow: 0 0 0 3px var(--ink); }
+  header > canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  header > * { position: relative; z-index: 1; }
+  h1 { font-family: var(--display); font-weight: 900; font-size: 92px; line-height: .82; letter-spacing: -1px; transform: scaleX(.72); transform-origin: left bottom; white-space: nowrap; }
+  h1 small { display: block; font-family: var(--serif); font-size: 26px; letter-spacing: .3em; -webkit-text-stroke-width: 4px; margin-top: 12px; transform: scaleX(1.38); transform-origin: left; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .meta .lab i { font-style: normal; background: var(--ink); color: var(--paper); padding: 7px 8px 6px; margin: -7px -10px -6px 8px; display: inline-block; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .kpi { position: relative; background: var(--ink); padding: 14px 16px 16px; min-height: 148px; overflow: hidden; box-shadow: 0 0 0 3px var(--ink); }
+  .kpi canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .kpi > :not(canvas) { position: relative; }
+  .kpi .v { font-family: var(--display); font-weight: 900; font-size: 84px; line-height: .9; margin-top: 12px; transform: scaleX(.74); transform-origin: left; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kpi .v small { font-size: 34px; }
+  .kpi .note { position: absolute; right: 12px; bottom: 12px; font-family: var(--serif); font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: none; color: var(--wine); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 64px; } }
+  .panel { background: var(--paper); box-shadow: 0 0 0 3px var(--ink), 7px 8px 0 rgba(13,10,10,.55); padding: 14px 16px 16px; min-width: 0; position: relative; }
+  .panel h2 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-weight: 900; font-size: 18px; letter-spacing: .08em; padding-bottom: 10px; border-bottom: 3px solid var(--ink); margin-bottom: 12px; }
+  .panel h2 span { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .chart { position: relative; width: 100%; }
+  .chart canvas { display: block; width: 100%; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .legend i { display: inline-block; width: 18px; height: 10px; margin-right: 6px; vertical-align: -1px; box-shadow: 0 0 0 1.5px var(--ink); }
+
+  .ring { display: grid; place-items: center; position: relative; }
+  .ring canvas { width: 100%; max-width: 340px; aspect-ratio: 1; }
+  .ring .c { position: absolute; text-align: center; }
+  .ring .c b { display: block; font-family: var(--display); font-weight: 900; font-size: 70px; line-height: .9; transform: scaleX(.75); }
+  .ring .c span { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; font-weight: 700; }
+
+  table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-variant-numeric: tabular-nums; }
+  .tbl { overflow-x: auto; }
+  th { text-align: left; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 0 10px 4px; white-space: nowrap; }
+  td { background: #fbf8f3; padding: 9px 10px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); font-size: 14px; font-weight: 600; vertical-align: middle; }
+  td:first-child { border-left: 2px solid var(--ink); background: var(--crimson); width: 52px; text-align: center; }
+  td:last-child { border-right: 2px solid var(--ink); }
+  td .rk { font-family: var(--display); font-weight: 900; font-size: 28px; line-height: 1; color: var(--paper); -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 2px 2px 0 var(--ink); display: inline-block; transform: scaleX(.78); }
+  td.t { font-weight: 900; min-width: 260px; }
+  td.n { font-family: var(--mono); font-weight: 700; text-align: right; white-space: nowrap; }
+  tr.hot td.t { background: var(--paper); }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px 2px; font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; box-shadow: 0 0 0 1.5px var(--ink); white-space: nowrap; }
+  .chip::before { content: ""; width: 8px; height: 8px; background: var(--c); box-shadow: 0 0 0 1px var(--ink); }
+  td canvas { display: block; width: 120px; height: 30px; }
+  footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  footer .lab p + p { font-family: var(--serif); text-transform: none; font-weight: 600; letter-spacing: .04em; color: var(--wine); margin-top: 3px; font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="engines.js"></script>
+<script>
+const { inkHatch, dripDraw } = Engines;
+const C = { crimson: "#d50a0f", wine: "#7c0619", paper: "#f2eee8", ink: "#0d0a0a", cyan: "#33b6ea", lime: "#5cd64a", citron: "#f2df1f" };
+const FLAVOR = { up: [C.lime, "上升"], flat: [C.citron, "持平"], down: [C.cyan, "回落"] };
+document.body.style.setProperty("--grain", `url(${grainURL(200, 0.09, 40)})`);
+const app = document.getElementById("app");
+const at = new Date(window.HOT_AT || "2026-10-22T14:40:30Z");
+const sum = (k) => HOT.reduce((a, h) => a + h[k], 0);
+const ups = HOT.filter((h) => h.trend === "up").length;
+const fmt = (n) => n.toLocaleString("en-US");
+app.innerHTML = `
+<header id="hdr"><canvas id="hc"></canvas>
+  <h1 class="out">NIGHT DESK<small>AI 热点夜场数据台</small></h1>
+  <div class="meta"><span class="lab">2026·10·22 22:40 UTC+8</span><span class="lab">Hot list<i>TOP ${HOT.length}</i></span><span class="lab">Experience<i>01 / 08</i></span></div>
+</header>
+<section class="kpis">
+  ${[["Total heat", "总热度", Math.round(sum("heat")), "8 条加总"], ["Sources", "来源", sum("sources"), "去重前"], ["People", "参与人数", sum("people"), "讨论者"], ["Rising", "上升条目", ups, `${HOT.length} 条里`]].map(([en, zh, v, note], i) => `
+  <div class="kpi" data-i="${i}"><canvas></canvas><span class="lab">${en} · ${zh}</span><div class="v out" data-v="${v}">0</div><span class="lab note">${note}</span></div>`).join("")}
+</section>
+<section class="grid">
+  <div class="panel"><h2>热度走势<span>Heat · last 24 readings · top 4</span></h2><div class="chart"><canvas id="area"></canvas></div>
+    <div class="legend">${HOT.slice(0, 4).map((h, i) => `<span><i style="background:${i ? ["", C.cyan, C.lime, C.citron][i] : C.ink}"></i>${pad2(h.rank)} ${esc(clip(shortTitle(h), 14))}</span>`).join("")}</div></div>
+  <div class="panel"><h2>趋势构成<span>Up · flat · down</span></h2><div class="ring"><canvas id="ring"></canvas><div class="c"><b class="out">${HOT.length}</b><span>STORIES</span></div></div>
+    <div class="legend">${Object.entries(FLAVOR).map(([k, [c, n]]) => `<span><i style="background:${c}"></i>${n} ${HOT.filter((h) => h.trend === k).length}</span>`).join("")}</div></div>
+</section>
+<section class="panel"><h2>热度柱廊<span>Heat by rank · each column = one story</span></h2><div class="chart"><canvas id="cols"></canvas></div></section>
+<section class="panel"><h2>今夜榜单<span>Ranked · tap a row</span></h2>
+  <div class="tbl"><table><thead><tr><th>#</th><th>标题</th><th>热度</th><th>趋势</th><th>来源</th><th>人数</th><th>曲线</th></tr></thead><tbody>
+  ${HOT.map((h, i) => `<tr class="${i ? "" : "hot"}"><td><span class="rk">${pad2(h.rank)}</span></td><td class="t">${esc(shortTitle(h))}</td><td class="n">${h.heat.toFixed(1)}</td><td><span class="chip" style="--c:${(FLAVOR[h.trend] || FLAVOR.flat)[0]}">${(FLAVOR[h.trend] || FLAVOR.flat)[1]} ${h.trendPct > 0 ? "+" : ""}${h.trendPct}%</span></td><td class="n">${h.sources}</td><td class="n">${h.people}</td><td><canvas></canvas></td></tr>`).join("")}
+  </tbody></table></div></section>
+<footer><span class="lab"><p>Data · AI 热点热榜 2026-10-22 14:40 UTC</p><p>数字均来自 data.js，未做任何推算</p></span><span class="lab">Fine · 剧终</span></footer>`;
+
+const $ = (id) => document.getElementById(id);
+const tone = (w, h, paint) => { const c = document.createElement("canvas"); c.width = w; c.height = h; paint(c.getContext("2d"), w, h); return c; };
+const S = 2;
+const drip = (cv, src, delay, dur = 900, fill = null) => { const ctx = cv.getContext("2d"), t0 = performance.now() + delay; const tick = (now) => { const k = Math.max(0, Math.min(1, (now - t0) / dur)); dripDraw(ctx, src, Math.pow(1 - k, 3), { dir: -1, fill }); if (k < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); };
+
+(async () => {
+await fontsReady();
+// 页头：红色排线舞台
+const hdr = $("hdr"), hc = $("hc"), HW = hdr.clientWidth, HH = hdr.clientHeight;
+hc.width = HW * S; hc.height = HH * S;
+const hInk = inkHatch(tone(HW * S, HH * S, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#2c2c2c"); g.addColorStop(.7, "#d0d0d0"); g.addColorStop(1, "#f0f0f0"); x.fillStyle = g; x.fillRect(0, 0, w, h); }), HW, HH, { base: C.crimson, ink: "#240205", edge: 0 });
+drip(hc, hInk, 0, 1000, C.ink);
+
+// KPI：纸底，下暗上亮的排线 + 计数滚动
+document.querySelectorAll(".kpi").forEach((k, i) => {
+  const cv = k.querySelector("canvas"), w = k.clientWidth, h = k.clientHeight; cv.width = w * S; cv.height = h * S;
+  const src = inkHatch(tone(w * S, h * S, (x, ww, hh) => { const g = x.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, "#ffffff"); g.addColorStop(.55, "#e8e8e8"); g.addColorStop(1, "#7a7a7a"); x.fillStyle = g; x.fillRect(0, 0, ww, hh); }), w, h, { base: i === 3 ? C.crimson : C.paper, ink: i === 3 ? "#240205" : C.ink, edge: 0, seed: 40 + i });
+  drip(cv, src, 200 + i * 120, 800, C.ink);
+  const v = k.querySelector(".v"), to = +v.dataset.v, t0 = performance.now() + 500 + i * 120;
+  const tick = (now) => { const q = Math.max(0, Math.min(1, (now - t0) / 1100)); v.textContent = fmt(Math.round(to * (1 - Math.pow(1 - q, 4)))); if (q < 1) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+});
+
+// 面积图：第 1 条用竖排线填（墨），其余三条是风味色粗线
+{
+  const cv = $("area"), w = cv.clientWidth, h = Math.max(240, Math.round(w * .42)); cv.style.height = h + "px"; cv.width = w * S; cv.height = h * S;
+  const x = cv.getContext("2d"); x.scale(S, S);
+  const pad = { l: 44, r: 14, t: 12, b: 26 }, all = HOT.slice(0, 4).flatMap((s) => s.spark.filter((v) => v != null)), max = Math.ceil(Math.max(...all) / 100) * 100;
+  const X = (i) => pad.l + i / 24 * (w - pad.l - pad.r), Y = (v) => pad.t + (1 - v / max) * (h - pad.t - pad.b);
+  // 网格 + 刻度
+  x.strokeStyle = "rgba(13,10,10,.18)"; x.lineWidth = 1; x.font = "700 9.5px 'IBM Plex Mono'"; x.fillStyle = "#5a4848"; x.textAlign = "right";
+  for (let v = 0; v <= max; v += 100) { x.beginPath(); x.moveTo(pad.l, Y(v)); x.lineTo(w - pad.r, Y(v)); x.stroke(); x.fillText(v, pad.l - 8, Y(v) + 3); }
+  x.textAlign = "center"; ["−24", "−18", "−12", "−6", "NOW"].forEach((t, i) => x.fillText(t, X(i * 6), h - 8));
+  // 第 1 条：先在明度图上画面积（上亮下暗），再排线
+  const s1 = HOT[0].spark, tc = tone(w * S, h * S, (y) => { y.fillStyle = "#fff"; y.fillRect(0, 0, w * S, h * S); y.scale(S, S); const g = y.createLinearGradient(0, pad.t, 0, h - pad.b); g.addColorStop(0, "#c4c4c4"); g.addColorStop(1, "#5a5a5a"); y.fillStyle = g; y.beginPath(); let st = false; s1.forEach((v, i) => { if (v == null) return; if (!st) { y.moveTo(X(i), Y(0)); st = true; } y.lineTo(X(i), Y(v)); }); y.lineTo(X(24), Y(0)); y.closePath(); y.fill(); });
+  const area = inkHatch(tc, w, h, { base: "rgba(0,0,0,0)", ink: C.ink, edge: 0, sp: 3.2, seed: 3 });
+  const tmp = document.createElement("canvas"); tmp.width = w * S; tmp.height = h * S; const tx = tmp.getContext("2d"); tx.drawImage(area, 0, 0); tx.globalCompositeOperation = "destination-in"; tx.drawImage(tc, 0, 0); // 只留面积里的线
+  const base = document.createElement("canvas"); base.width = w * S; base.height = h * S; base.getContext("2d").drawImage(cv, 0, 0);
+  const cols = [null, C.cyan, C.lime, C.citron];
+  const t0 = performance.now() + 500;
+  const frame = (now) => {
+    const k = Math.max(0, Math.min(1, (now - t0) / 1400)), e = 1 - Math.pow(1 - k, 3);
+    x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, w * S, h * S); x.drawImage(base, 0, 0);
+    const lim = pad.l + (w - pad.l - pad.r) * e;
+    x.save(); x.beginPath(); x.rect(0, 0, lim * S, h * S); x.clip(); x.drawImage(tmp, 0, 0); x.restore();
+    x.setTransform(S, 0, 0, S, 0, 0);
+    x.save(); x.beginPath(); x.rect(0, 0, lim, h); x.clip();
+    HOT.slice(0, 4).forEach((s, si) => { x.lineJoin = "round"; x.beginPath(); let st = false; s.spark.forEach((v, i) => { if (v == null) return; st ? x.lineTo(X(i), Y(v)) : x.moveTo(X(i), Y(v)); st = true; }); if (si) { x.strokeStyle = C.ink; x.lineWidth = 6; x.stroke(); x.strokeStyle = cols[si]; x.lineWidth = 3; x.stroke(); } else { x.strokeStyle = C.ink; x.lineWidth = 3; x.stroke(); } });
+    x.restore();
+    if (k >= 1) { const v = s1[24]; x.fillStyle = C.crimson; x.strokeStyle = C.ink; x.lineWidth = 2.5; x.beginPath(); x.arc(X(24), Y(v), 6, 0, 7); x.fill(); x.stroke(); x.font = "700 10px 'IBM Plex Mono'"; x.textAlign = "right"; const t = `#01 ${v}`; const tw = x.measureText(t).width + 14; x.fillStyle = C.paper; x.fillRect(X(24) - tw - 10, Y(v) - 26, tw, 18); x.strokeRect(X(24) - tw - 10, Y(v) - 26, tw, 18); x.fillStyle = C.ink; x.fillText(t, X(24) - 17, Y(v) - 13.5); }
+    if (k < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+// 圆窗环形图：三种风味色 + 粗墨边，中间是纸面圆窗
+{
+  const cv = $("ring"), w = cv.clientWidth; cv.width = cv.height = w * S; const x = cv.getContext("2d"); x.scale(S, S);
+  const cx = w / 2, R = w * .44, r = w * .29, groups = Object.entries(FLAVOR).map(([k, [c]]) => [c, HOT.filter((h) => h.trend === k).length]);
+  const t0 = performance.now() + 700;
+  const frame = (now) => {
+    const k = Math.max(0, Math.min(1, (now - t0) / 1100)), e = 1 - Math.pow(1 - k, 3);
+    x.clearRect(0, 0, w, w);
+    x.fillStyle = C.ink; x.beginPath(); x.arc(cx + 6, cx + 7, R + 4, 0, 7); x.fill();
+    let a = -Math.PI / 2;
+    for (const [c, n] of groups) { const da = n / HOT.length * Math.PI * 2 * e; x.fillStyle = c; x.beginPath(); x.moveTo(cx, cx); x.arc(cx, cx, R, a, a + da); x.closePath(); x.fill(); x.strokeStyle = C.ink; x.lineWidth = 4; x.stroke(); a += da; }
+    x.fillStyle = C.paper; x.strokeStyle = C.ink; x.lineWidth = 4; x.beginPath(); x.arc(cx, cx, r, 0, 7); x.fill(); x.stroke(); x.lineWidth = 2; x.beginPath(); x.arc(cx, cx, r - 9, 0, 7); x.stroke();
+    x.lineWidth = 4; x.beginPath(); x.arc(cx, cx, R, 0, 7); x.stroke();
+    if (k < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+// 柱廊：每条一根红色多立克柱，高度 = 热度；柱身明暗排线
+{
+  const cv = $("cols"), w = cv.clientWidth, h = 300; cv.style.height = h + "px"; cv.width = w * S; cv.height = h * S;
+  const pad = { l: 44, r: 14, t: 18, b: 34 }, max = 500, n = HOT.length, slot = (w - pad.l - pad.r) / n, cw = Math.min(64, slot * .52);
+  const Y = (v) => pad.t + (1 - v / max) * (h - pad.t - pad.b);
+  const toneC = tone(w * S, h * S, (y) => { y.fillStyle = "#f4f4f4"; y.fillRect(0, 0, w * S, h * S); y.scale(S, S);
+    HOT.forEach((hh, i) => { const cx = pad.l + slot * (i + .5), top = Y(hh.heat), bot = h - pad.b; const g = y.createLinearGradient(cx - cw / 2, 0, cx + cw / 2, 0); g.addColorStop(0, "#585858"); g.addColorStop(.32, "#fafafa"); g.addColorStop(.7, "#9a9a9a"); g.addColorStop(1, "#2a2a2a"); y.fillStyle = g; y.fillRect(cx - cw / 2, top + 10, cw, bot - top - 16); y.fillStyle = "#3a3a3a"; y.fillRect(cx - cw * .68, top, cw * 1.36, 10); y.fillRect(cx - cw * .7, bot - 6, cw * 1.4, 6); }); });
+  const colsInk = inkHatch(toneC, w, h, { base: C.paper, ink: C.ink, edge: .4, sp: 3.2, seed: 12 });
+  // 柱身染红：把排线图按柱子形状裁出来叠在红色上
+  const red = document.createElement("canvas"); red.width = w * S; red.height = h * S; const rx = red.getContext("2d");
+  rx.fillStyle = C.paper; rx.fillRect(0, 0, w * S, h * S); rx.scale(S, S);
+  rx.strokeStyle = "rgba(13,10,10,.18)"; rx.lineWidth = 1; rx.font = "700 9.5px 'IBM Plex Mono'"; rx.fillStyle = "#5a4848"; rx.textAlign = "right";
+  for (let v = 0; v <= max; v += 100) { rx.beginPath(); rx.moveTo(pad.l, Y(v)); rx.lineTo(w - pad.r, Y(v)); rx.stroke(); rx.fillText(v, pad.l - 8, Y(v) + 3); }
+  rx.setTransform(1, 0, 0, 1, 0, 0);
+  const mask = document.createElement("canvas"); mask.width = w * S; mask.height = h * S; const mx = mask.getContext("2d"); mx.scale(S, S);
+  HOT.forEach((hh, i) => { const cx = pad.l + slot * (i + .5), top = Y(hh.heat), bot = h - pad.b; mx.fillStyle = "#000"; mx.fillRect(cx - cw / 2, top + 10, cw, bot - top - 16); mx.fillRect(cx - cw * .68, top, cw * 1.36, 10); mx.fillRect(cx - cw * .7, bot - 6, cw * 1.4, 6); });
+  const tinted = document.createElement("canvas"); tinted.width = w * S; tinted.height = h * S; const tx = tinted.getContext("2d");
+  tx.fillStyle = C.crimson; tx.fillRect(0, 0, w * S, h * S); tx.globalCompositeOperation = "multiply"; tx.drawImage(colsInk, 0, 0); tx.globalCompositeOperation = "destination-in"; tx.drawImage(mask, 0, 0);
+  rx.drawImage(tinted, 0, 0);
+  rx.scale(S, S); rx.strokeStyle = C.ink; rx.lineWidth = 2.5;
+  HOT.forEach((hh, i) => { const cx = pad.l + slot * (i + .5), top = Y(hh.heat), bot = h - pad.b; rx.strokeRect(cx - cw / 2, top + 10, cw, bot - top - 16); rx.strokeRect(cx - cw * .68, top, cw * 1.36, 10); rx.strokeRect(cx - cw * .7, bot - 6, cw * 1.4, 6);
+    rx.fillStyle = C.ink; rx.font = "900 20px 'Playfair Display'"; rx.textAlign = "center"; rx.fillText(pad2(hh.rank), cx, h - 10);
+    rx.font = "700 9.5px 'IBM Plex Mono'"; rx.fillText(hh.heat.toFixed(1), cx, top - 6); });
+  rx.lineWidth = 3; rx.beginPath(); rx.moveTo(pad.l - 4, h - pad.b); rx.lineTo(w - pad.r, h - pad.b); rx.stroke();
+  drip(cv, red, 900, 1100, C.paper);
+}
+
+// 表格里的小曲线 + 点行展开（滴落一下）
+document.querySelectorAll("tbody tr").forEach((tr, i) => {
+  const cv = tr.querySelector("canvas"); cv.width = 120 * S; cv.height = 30 * S; const x = cv.getContext("2d"); x.scale(S, S);
+  const pts = sparkPts(HOT[i], 120, 30); if (pts.length) { x.strokeStyle = C.ink; x.lineWidth = 2; x.lineJoin = "round"; x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(a, b) : x.moveTo(a, b))); x.stroke(); const [a, b] = pts[pts.length - 1]; x.fillStyle = C.crimson; x.beginPath(); x.arc(a, b, 3.2, 0, 7); x.fill(); x.stroke(); }
+  tr.animate([{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 480, delay: 1200 + i * 80, easing: "steps(8, end)", fill: "backwards" });
+});
+})();
+</script>
+</body>
+</html>

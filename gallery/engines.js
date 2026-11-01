@@ -450,7 +450,50 @@ function stainedGlass(img, w, h, { cell = 18, lead = 2.6, sat = 1.45, bright = 1
   return { canvas: cv, reveal: draw };
 }
 
+// ── 朱墨竖排线、竖条滴落（朱墨剧场） ──
+// 真图 → 竖排线：线粗跟暗度走，亮处断成短划，每列微微抖；轮廓补墨点。返回 (w×scale)×(h×scale) 的画布
+function inkHatch(src, w, h, { base = "#f2eee8", ink = "#0d0a0a", sp = 3.6, scale = 2, gamma = 1, gain = 1.15, lift = 0, edge = 0.24, seed = 7, wob = 0.6 } = {}) {
+  const W = Math.round(w * scale), H = Math.round(h * scale);
+  const c = src.width === W && src.height === H && src.getContext ? src : coverCanvas(src, W, H), L = lumaOf(c);
+  const out = document.createElement("canvas"); out.width = W; out.height = H;
+  const x = out.getContext("2d"); x.fillStyle = base; x.fillRect(0, 0, W, H); x.fillStyle = ink;
+  const S = sp * scale, cols = Math.ceil(W / S) + 1, step = Math.max(1, Math.round(scale));
+  const hs = (a, b) => { const n = Math.sin(a * 127.1 + b * 311.7 + seed * 74.7) * 43758.5453; return n - Math.floor(n); };
+  const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let ci = 0; ci < cols; ci++) {
+    const seg = 5 + hs(ci, 1) * 16; let run = null;
+    const flush = () => { if (!run) return; x.beginPath(); x.moveTo(run.l[0][0], run.l[0][1]); for (const p of run.l) x.lineTo(p[0], p[1]); for (let i = run.r.length - 1; i >= 0; i--) x.lineTo(run.r[i][0], run.r[i][1]); x.closePath(); x.fill(); run = null; };
+    for (let y = 0; y <= H; y += step) {
+      const yy = y / scale, cx = ci * S + S / 2 + (Math.sin(yy * 0.052 + ci * 2.1) * 0.55 + Math.sin(yy * 0.011 + ci * 0.63) * 0.9) * wob * scale;
+      const xi = Math.min(W - 1, Math.max(0, cx | 0)), yi = Math.min(H - 1, y);
+      const d = Math.max(0, Math.min(1, Math.pow(1 - L[yi * W + xi], gamma) * gain - lift));
+      let wd = ss(0.06, 0.92, d) * 0.98;
+      if (d < 0.4 && hs(ci * 7.7, Math.floor(yy / seg)) > d * 2.3) wd = 0;
+      if (d > 0.9) wd = 1.04;
+      const half = wd * S / 2;
+      if (half > 0.25 * scale) { if (!run) run = { l: [], r: [] }; run.l.push([cx - half, y]); run.r.push([cx + half, y]); } else flush();
+    }
+    flush();
+  }
+  if (edge) for (let y = 1; y < H - 1; y += step) for (let xx = 1; xx < W - 1; xx += step) {
+    const i = y * W + xx, g = Math.abs(L[i + 1] - L[i - 1]) + Math.abs(L[i + W] - L[i - W]);
+    if (g > edge) x.fillRect(xx - scale * 0.6, y - scale * 0.6, scale * 1.2, scale * 1.2);
+  }
+  return out;
+}
+// 竖条滴落：把 src 按列切开画进 ctx。dir=1 退场（每列往下掉走），dir=-1 进场（从上面落回原位，p 从 1 走到 0）
+function dripDraw(ctx, src, p, { dir = 1, sp = 3.6, scale = 2, seed = 3, fill = null } = {}) {
+  const W = ctx.canvas.width, H = ctx.canvas.height, S = Math.max(2, Math.round(sp * scale)), kx = src.width / W;
+  if (fill) { ctx.fillStyle = fill; ctx.fillRect(0, 0, W, H); } else ctx.clearRect(0, 0, W, H);
+  for (let x0 = 0, i = 0; x0 < W; x0 += S, i++) {
+    const n = Math.sin(i * 1.37 * 127.1 + seed * 31.3) * 43758.5453, r = n - Math.floor(n);
+    const off = Math.pow(Math.max(0, Math.min(1, p)), 0.55 + r * 2.6) * 1.06 * H;
+    ctx.drawImage(src, x0 * kx, 0, S * kx, src.height, x0, dir > 0 ? off : -off, S, H);
+  }
+}
+
 return {
+  inkHatch, dripDraw,
   stainedGlass,
   frameAt, dropAt, jitterAt,
   mulberry, wcDeform, wcWash, wcStroke, watercolorCanvas,
