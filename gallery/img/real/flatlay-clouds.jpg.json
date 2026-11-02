@@ -1,0 +1,19 @@
+{
+ "file": "flatlay-clouds.jpg",
+ "caption": "top view of white clouds during daytime",
+ "by": "Luke Pamer",
+ "username": "luke_pamer",
+ "page": "https://unsplash.com/photos/ILnBrcYVXr4",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 5D Mark III",
+  "iso": "100.0",
+  "aperture_value": "16.0",
+  "focal_length": "105.0",
+  "exposure_time": "1/125"
+ },
+ "exif_text": "Canon Canon EOS 5D Mark III 105mm f/16 1/125s ISO 100",
+ "w": 768,
+ "h": 512
+}

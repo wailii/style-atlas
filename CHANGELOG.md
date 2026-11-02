@@ -1,5 +1,15 @@
 # 更新记录
 
+## 1.6.0 · 2026-11-02
+
+新增 10 种「写实 · 影像」风格（共 70 种）：产品棚拍、写实材质、设备实拍、电影剧照、纪实摄影、原相机、时尚大片、生活方式、俯拍平铺、卫星实景。前 60 种都是风格化的画法，这一组补真照片、真材质、真镜头。
+
+- 素材：40 张 Unsplash 照片（经 Hugging Face 镜像 `wtcherr/unsplash_5k`，Unsplash License），每张旁边一个 `.json` 记摄影师、原图页面和真实 EXIF，`gallery/img/real/CREDITS.md` 汇总
+- 3D：`gallery/models/` 6 个 Khronos glTF 示例模型（CC0 / CC-BY 4.0，贴图压到 1024px，59MB → 9MB），`gallery/hdr/` 2 张 Poly Haven HDRI（CC0），`gallery/vendor/` 加 three.js r128 的 GLTFLoader / RGBELoader / RoomEnvironment
+- 新增 `realistic.md` 写实精选：按网页 / 设计 / Dashboard / 视频 / App 怎么用、素材来源、怎么不造假
+- 诚实规则写进 SKILL.md：图库照片标「示意图 · 摄影师」，EXIF 只读真实数据，卫星图没有定位就只用图像坐标
+- 深底风格加上电影剧照、写实材质；WebGL 页面一次只截一个 id
+
 ## 1.5.0 · 2026-11-02
 
 新增 10 种「电影 · 漫画叙事」风格（共 60 种），全部从同一条视频里来：抖音 @Motdes AI阿峰《fable 5.5 网页设计的未来？》录屏的 The Notturno Experience（意大利开胃酒品牌的 3D 滚动叙事网页）。

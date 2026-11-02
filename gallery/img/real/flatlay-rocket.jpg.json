@@ -1,0 +1,19 @@
+{
+ "file": "flatlay-rocket.jpg",
+ "caption": "flying rocket on air at daytime",
+ "by": "SpaceX",
+ "username": "spacex",
+ "page": "https://unsplash.com/photos/t3HVjP4xNsg",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS-1D X Mark II",
+  "iso": "800.0",
+  "aperture_value": "7.1",
+  "focal_length": "300.0",
+  "exposure_time": "1/3200"
+ },
+ "exif_text": "Canon Canon EOS-1D X Mark II 300mm f/7.1 1/3200s ISO 800",
+ "w": 768,
+ "h": 512
+}

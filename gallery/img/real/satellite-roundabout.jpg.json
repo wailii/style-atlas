@@ -1,0 +1,19 @@
+{
+ "file": "satellite-roundabout.jpg",
+ "caption": "aerial photography of city",
+ "by": "Maximillian Conacher",
+ "username": "maxconacher",
+ "page": "https://unsplash.com/photos/6CkxRiF9CO8",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "DJI",
+  "camera_model": "FC220",
+  "iso": "116.0",
+  "aperture_value": "2.2",
+  "focal_length": "4.7",
+  "exposure_time": "1/100"
+ },
+ "exif_text": "DJI FC220 4.7mm f/2.2 1/100s ISO 116",
+ "w": 683,
+ "h": 512
+}

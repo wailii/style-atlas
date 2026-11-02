@@ -1,14 +1,14 @@
 # 风格图鉴 · style-atlas
 
-给 AI agent 用的视觉风格库，一共 60 种风格。做 App、网页、视频、海报、PPT 时，跟 Claude Code 或 Codex 说一句「用浮世绘风格」，它会读这种风格的规格，原样抄色值和字体，用现成的代码处理图片，做完截图和标准图对一遍。
+给 AI agent 用的视觉风格库，一共 70 种风格。做 App、网页、视频、海报、PPT 时，跟 Claude Code 或 Codex 说一句「用浮世绘风格」，它会读这种风格的规格，原样抄色值和字体，用现成的代码处理图片，做完截图和标准图对一遍。
 
 让 AI 自己做界面，做出来常常是同一个样子：米白底、白卡片、圆角、一个强调色。这套库把每种风格写成能照着做的规则和代码，换风格时不用靠形容词碰运气。
 
-[在线看 60 种（手机也能打开）](https://wailii.github.io/style-atlas/gallery/) · [安装](#安装) · [风格清单](#风格清单)
+[在线看 70 种（手机也能打开）](https://wailii.github.io/style-atlas/gallery/) · [安装](#安装) · [风格清单](#风格清单)
 
-<img src=".github/readme/all-60.jpg" alt="60 种风格的参考页截图">
+<img src=".github/readme/all-70.jpg" alt="70 种风格的参考页截图">
 
-同一份数据（2026 年 10 月 22 日晚的 AI 热点热榜，8 条新闻和 4 张封面）按 60 种风格各做了一遍。每个参考页都是 390×844 的手机页面，按钮和列表都能点，在线版能看到动效。
+同一份数据（2026 年 10 月 22 日晚的 AI 热点热榜，8 条新闻和 4 张封面）按 70 种风格各做了一遍。每个参考页都是 390×844 的手机页面，按钮和列表都能点，在线版能看到动效。
 
 ## 安装
 
@@ -39,6 +39,7 @@ git clone https://github.com/wailii/style-atlas.git ~/.agents/skills/style-atlas
 - 这个落地页太普通了，换成瑞士排版，头图借孔版印刷的处理
 - 把产品发布会的 PPT 做成装饰艺术风格
 - 做一个像那条 3D 滚动叙事视频一样炫的品牌落地页，再出一版 Dashboard
+- 新品发布页要写实一点，像苹果官网那样的产品棚拍
 
 agent 会按 [SKILL.md](SKILL.md) 里的步骤做：
 
@@ -50,7 +51,7 @@ agent 会按 [SKILL.md](SKILL.md) 里的步骤做：
 
 ## 风格清单
 
-60 种分 8 组。点风格名字可以在线打开它的参考页。要「炫」「电影感」时先看 [cinematic.md](cinematic.md)：从 60 种里挑出的 22 种，按网页、设计、Dashboard、视频、App 分好。
+70 种分 9 组。点风格名字可以在线打开它的参考页。要「炫」「电影感」时先看 [cinematic.md](cinematic.md)：从 70 种里挑出的 22 种，按网页、设计、Dashboard、视频、App 分好。要真实感时先看 [realistic.md](realistic.md)。
 
 ### 手作 · 手工艺
 
@@ -180,6 +181,26 @@ agent 会按 [SKILL.md](SKILL.md) 里的步骤做：
 node tools/snap.mjs --file gallery/x-crimson.html --video mezzanotte.mp4 --w 1920 --h 1080 --scale 1 --fps 30
 ```
 
+### 写实 · 影像
+
+<img src=".github/readme/group-10.jpg" alt="写实 · 影像（一）">
+<img src=".github/readme/group-11.jpg" alt="写实 · 影像（二）">
+
+前 60 种都是画出来的风格，这一组补的是写实：真照片、真实材质的 3D、真镜头。照片来自 Unsplash（经 Hugging Face 镜像），带真实 EXIF；3D 是 Khronos 的 PBR 示例模型配 Poly Haven HDRI，在浏览器里实时渲染。页面上的图库照片都标「示意图 · 摄影师」，和新闻内容无关。
+
+| # | 风格 | 样子 | 适合做 |
+|---|---|---|---|
+| 61 | [产品棚拍](https://wailii.github.io/style-atlas/gallery/#studio) | 浅灰背景纸、柔光箱、真 3D 产品带贴地阴影、大标题和规格大数字 | 硬件发布、电商详情、品牌官网首屏 |
+| 62 | [写实材质](https://wailii.github.io/style-atlas/gallery/#render) | 拉丝铝铭牌刻字、玻璃透镜折射、HDRI 反射、浅景深 | 高端品牌、腕表珠宝、工业设计 |
+| 63 | [设备实拍](https://wailii.github.io/style-atlas/gallery/#device) | 真照片里的屏幕透视贴上你的界面，带反光和遮挡 | App 宣传、App Store 截图、落地页 |
+| 64 | [电影剧照](https://wailii.github.io/style-atlas/gallery/#filmstill) | 2.39:1、橙青调色、颗粒光晕、烧录字幕 | 品牌短片、影评、播客、长读 |
+| 65 | [纪实摄影](https://wailii.github.io/style-atlas/gallery/#documentary) | 大幅黑白照片、长图说带 EXIF、红笔圈过的底片小样 | 深度报道、年报、公益记录 |
+| 66 | [原相机](https://wailii.github.io/style-atlas/gallery/#rawcam) | 闪光灯直打、前摄小窗、橙色 LED 日期、备忘录配文 | 社媒、日记、活动回顾 |
+| 67 | [时尚大片](https://wailii.github.io/style-atlas/gallery/#campaign) | 满幅硬光人像、超宽字标、9px 小字 | 时尚、美妆、奢侈品 |
+| 68 | [生活方式](https://wailii.github.io/style-atlas/gallery/#lifestyle) | 窗光真照片、胶片暖调、细衬线、宽边距 | 家居、咖啡、订阅、品牌故事 |
+| 69 | [俯拍平铺](https://wailii.github.io/style-atlas/gallery/#flatlay) | 正上方拍桌面，物件按网格摆，真影子 | 电商、开箱、文具数码 |
+| 70 | [卫星实景](https://wailii.github.io/style-atlas/gallery/#satellite) | 真航拍地图，黄框关注区、尺寸线、剖面、网格坐标 | 地理、物流、城市、调查报道 |
+
 ## 规格结构
 
 每种风格一份规格 `styles/<id>.md`，小节是固定的：
@@ -260,7 +281,8 @@ node tools/check.mjs
 
 ```
 SKILL.md          agent 读的入口：风格目录、选风格的办法、工作步骤
-styles/<id>.md    60 份风格规格
+styles/<id>.md    70 份风格规格
+realistic.md      写实精选：10 种写实风格怎么用、素材从哪来、怎么不造假
 cinematic.md      炫酷精选：22 种冲击力最强的风格，按网页 / 设计 / Dashboard / 视频 / App 分好
 media.md          落到 App、网页、视频、动画、海报时怎么改
 mixing.md         混搭规则

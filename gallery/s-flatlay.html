@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>俯拍平铺</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@500;700;900&family=Long+Cang&family=Caveat:wght@500;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --table: #c9c2b7; --ink: #23201c; --mute: rgba(35,32,28,.55); --paper: #f8f6f1; --pen: #24366b; --red: #b5322a;
+    /* 纸的影子：贴桌的一圈接触影 + 往右下的软影（窗光在左上） */
+    --sh: 0 0 0 .5px rgba(70,58,44,.10), .5px 1px 1px rgba(46,36,26,.26), 2px 3px 4px rgba(46,36,26,.13), 7px 11px 20px rgba(46,36,26,.13);
+    --sh-up: 0 0 0 .5px rgba(70,58,44,.08), 4px 6px 6px rgba(46,36,26,.14), 18px 28px 40px rgba(46,36,26,.20);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--table); }
+  body { font-family: "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: left; -webkit-tap-highlight-color: transparent; }
+  .app { position: relative; height: 100vh; overflow: hidden; background: var(--table); }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 桌面：程序生成的灰泥面（已经按窗光算好起伏的明暗） */
+  .content { position: relative; width: 100%; background-color: var(--table); background-size: 360px 360px; }
+  /* 相机这一层：窗光从左上来往右下衰减 + 镜头暗角 + 颗粒，固定在画面上 */
+  .light { position: absolute; inset: 0; pointer-events: none; z-index: 4;
+    background: radial-gradient(130% 90% at 8% 0%, rgba(255,251,242,.16), rgba(255,251,242,0) 60%), radial-gradient(150% 120% at 100% 100%, rgba(52,38,24,.16), rgba(52,38,24,0) 60%), radial-gradient(120% 85% at 50% 48%, rgba(0,0,0,0) 62%, rgba(30,22,14,.20) 100%); }
+  .grain { position: absolute; inset: 0; pointer-events: none; z-index: 4; opacity: .32; mix-blend-mode: overlay; background-size: 180px 180px; }
+
+  .it { position: absolute; display: block; perspective: 1100px; animation: place .8s cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--d, 0s); }
+  @keyframes place { 0% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(1.06); opacity: 0; } 18% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+  .it:focus-visible { outline: 1.5px dashed rgba(35,32,28,.5); outline-offset: 4px; }
+  .hop { position: absolute; inset: 0; transform-style: preserve-3d; }
+  .hop.go { animation: hop .8s cubic-bezier(.45,.05,.3,1); }
+  @keyframes hop { 50% { transform: translate3d(-3px, -5px, 46px); } }
+  .flip { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .8s cubic-bezier(.45,.05,.3,1); }
+  .it.on .flip { transform: rotateX(180deg); }
+  .face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; background-color: var(--pc, var(--paper)); box-shadow: var(--sh); animation: shplace .8s cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--d, 0s); }
+  @keyframes shplace { 0% { box-shadow: var(--sh-up); } 100% { box-shadow: var(--sh); } }
+  .hop.go .face { animation: shhop .8s cubic-bezier(.45,.05,.3,1); }
+  @keyframes shhop { 50% { box-shadow: var(--sh-up); } }
+  .face.back { transform: rotateX(180deg); }
+  /* 纸面受光：左上沿亮一点、右下角微微翘起发暗 */
+  .face::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(126deg, rgba(255,255,255,.32), rgba(255,255,255,0) 26%, rgba(0,0,0,0) 74%, rgba(80,62,44,.07)), radial-gradient(60% 80% at 100% 100%, rgba(80,62,44,.06), rgba(80,62,44,0) 70%); }
+  .grainy { background-image: var(--pgrain); background-size: 160px 160px; }
+
+  /* 标题卡：厚棉卡，凸版字 */
+  .title .face { --pc: #f4f1ea; padding: 13px 14px; box-shadow: 0 0 0 .5px rgba(70,58,44,.12), .6px 1.4px 1px rgba(46,36,26,.3), 3px 4px 5px rgba(46,36,26,.14), 9px 13px 22px rgba(46,36,26,.13); }
+  .title h1 { font: 900 27px/1 "Noto Serif SC"; letter-spacing: .01em; color: #1f1c19; text-shadow: 0 .5px 0 rgba(255,255,255,.6), 0 -.4px 0 rgba(0,0,0,.25); }
+  .title p { margin-top: 9px; font: 500 8.6px "IBM Plex Mono"; letter-spacing: .08em; color: rgba(31,28,25,.6); }
+  .title i { position: absolute; right: 12px; top: 11px; width: 15px; height: 15px; border-radius: 50%; background: var(--red); color: #f7f5f0; font: 600 8.5px/15px "IBM Plex Mono"; text-align: center; font-style: normal; }
+
+  /* 照片（光面冲印）：白边 + 照片本身有一点反光 */
+  .photo { position: absolute; overflow: hidden; background: #222; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.18); }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(.94) contrast(1.02); }
+  .photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(118deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.13) 44%, rgba(255,255,255,0) 58%); }
+  .print .front { --pc: #f8f7f3; }
+  .print .photo { inset: 8px; }
+  .back.photoback { --pc: #f0eee8; padding: 26px 22px; color: var(--pen); font-family: "Long Cang", cursive; }
+  .photoback .wm { position: absolute; inset: -20px; font: 500 7px/26px "IBM Plex Mono"; color: rgba(60,58,54,.13); word-spacing: 30px; transform: rotate(-.6deg); }
+  .photoback b { position: relative; display: block; font: 400 21px/1.2 "Long Cang"; font-weight: 400; }
+  .photoback span { position: relative; display: block; margin-top: 10px; font: 400 16px/1.5 "Long Cang"; }
+  .photoback em { position: absolute; right: 24px; bottom: 16px; font: 500 21px "Caveat"; font-style: normal; }
+
+  /* 索引卡：红头线 + 蓝横线，字印在线上 */
+  .index .face { --pc: #f9f8f4; padding: 0 12px; background-image: var(--pgrain), linear-gradient(rgba(0,0,0,0) 29.5px, rgba(196,64,60,.5) 29.5px, rgba(196,64,60,.5) 30.3px, rgba(0,0,0,0) 30.3px), repeating-linear-gradient(rgba(0,0,0,0) 0 17.5px, rgba(82,128,180,.3) 17.5px 18px); background-size: 160px 160px, 100% 100%, 100% 18px; background-position: 0 0, 0 0, 0 30px; background-repeat: repeat, no-repeat, repeat-y; }
+  .index .hd { height: 30px; display: flex; align-items: center; gap: 10px; padding-top: 3px; font: 500 8.4px "IBM Plex Mono"; color: rgba(38,34,30,.62); white-space: nowrap; }
+  .index .hd b { font-weight: 600; font-size: 9px; color: #26221e; }
+  .index h2 { text-wrap: pretty; font: 900 15.5px/18px "Noto Serif SC"; color: #1d1a17; padding-top: 1px; letter-spacing: -.01em; }
+  .index p { font: 500 10.6px/18px "Noto Serif SC"; color: rgba(29,26,23,.8); }
+  .clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* 列表卡：米白卡纸，打字机式抬头 */
+  .card .face { --pc: #f8f6f1; padding: 0 12px; display: flex; flex-direction: column; }
+  .card .hd { height: 27px; display: flex; align-items: center; gap: 9px; padding-top: 2px; border-bottom: .5px solid rgba(38,34,30,.25); font: 500 8.2px "IBM Plex Mono"; color: rgba(38,34,30,.6); white-space: nowrap; }
+  .card .hd b { font-weight: 600; font-size: 9px; color: #26221e; }
+  .card h3 { text-wrap: pretty; margin-top: 8px; font: 700 13.6px/19px "Noto Serif SC"; color: #1d1a17; -webkit-line-clamp: 2; }
+  .card .ft { margin-top: auto; height: 22px; display: flex; align-items: center; justify-content: space-between; font: 500 8.2px "IBM Plex Mono"; color: rgba(38,34,30,.56); }
+  .card .ft svg { width: 54px; height: 14px; }
+  .card .back, .index .back { padding: 0 12px; }
+  .back .lt { margin-top: 11px; font: 500 11.6px/17px "Noto Serif SC"; color: #1d1a17; }
+  .back .src { position: absolute; left: 12px; right: 12px; bottom: 10px; font: 500 7.8px "IBM Plex Mono"; color: rgba(38,34,30,.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* 拍立得：底边宽，手写标注 */
+  .pol .face { --pc: #f6f5f1; }
+  .pol .photo { left: 7px; right: 7px; top: 7px; aspect-ratio: 1; }
+  .pol .cap { position: absolute; left: 8px; right: 4px; bottom: 6px; overflow: hidden; font: 400 10.5px "Long Cang"; color: var(--pen); white-space: nowrap; }
+  .pol.grid .face { --pc: #f4f6ef; background-image: var(--pgrain), repeating-linear-gradient(90deg, rgba(70,140,120,.26) 0 .5px, rgba(0,0,0,0) .5px 6px), repeating-linear-gradient(rgba(70,140,120,.26) 0 .5px, rgba(0,0,0,0) .5px 6px); background-size: 160px 160px, auto, auto; }
+  .pol.grid svg { position: absolute; left: 8px; top: 16px; width: calc(100% - 16px); height: 52px; overflow: visible; }
+  .pol.grid .cap { bottom: 22px; }
+  .pol.grid .num { position: absolute; left: 8px; bottom: 5px; font: 700 13px "Caveat"; color: var(--pen); }
+
+  .credit .face { --pc: #f3f0e8; padding: 9px 12px; font: 500 7.6px/12px "IBM Plex Mono"; color: rgba(38,34,30,.66); }
+  .credit b { display: block; font-weight: 600; font-size: 8px; color: rgba(38,34,30,.78); margin-bottom: 3px; letter-spacing: .1em; }
+
+  /* 3D 物件：每件单独渲染（PBR + 面光源软影），透明底叠在桌面上 */
+  /* 两层：影子层（只有桌上的软影）+ 物件层；拿起来时物件层往镜头抬、影子层变大变虚往右下走 */
+  .ob .lay { position: absolute; left: calc(var(--pl) * -1px); top: calc(var(--pt) * -1px); width: calc(100% + (var(--pl) + var(--pr)) * 1px); height: calc(100% + (var(--pt) + var(--pb)) * 1px); pointer-events: none; transition: transform .38s cubic-bezier(.3,.7,.3,1), filter .38s, opacity .38s; }
+  .ob canvas.lay { opacity: 0; } .ob canvas.lay.ready { opacity: 1; } .ob.live img.lay { visibility: hidden; }
+  .ob .ly-ob { animation: obdrop .8s cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--d); }
+  .ob .ly-sh { animation: shdrop .8s cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--d); }
+  @keyframes obdrop { 0% { transform: translate(-4px, -7px) scale(1.05); } }
+  @keyframes shdrop { 0% { transform: translate(9px, 13px) scale(1.07); filter: blur(5px); opacity: .5; } }
+  .ob.up .ly-ob { transform: translate(-4px, -7px) scale(1.05); }
+  .ob.up .ly-sh { transform: translate(9px, 13px) scale(1.07); filter: blur(5px); opacity: .55; }
+
+  .sb { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 4px 26px 0; font: 600 15px Inter; color: var(--ink); z-index: 6; pointer-events: none; }
+  .sb i { font-style: normal; font-size: 12px; letter-spacing: .02em; }
+  /* 往下滚了以后，状态栏后面垫一条和底栏一样的磨砂白 */
+  .sb::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgba(247,245,240,.86); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: 0 .5px 0 rgba(35,32,28,.14); opacity: 0; transition: opacity .25s; }
+  .sb.solid::before { opacity: 1; }
+  .dock { position: absolute; left: 0; right: 0; bottom: 0; z-index: 10; height: 82px; padding: 8px 10px 26px; display: grid; grid-template-columns: repeat(5, 1fr); background: rgba(247,245,240,.88); -webkit-backdrop-filter: blur(18px) saturate(1.15); backdrop-filter: blur(18px) saturate(1.15); box-shadow: 0 -.5px 0 rgba(35,32,28,.16); }
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 500 10.5px "Noto Serif SC", serif; letter-spacing: .18em; color: var(--mute); padding-left: .18em; text-align: center; }
+  .tab svg { width: 19px; height: 19px; stroke-width: 1.5; }
+  .tab.on { color: var(--ink); }
+  .tab.on::after { content: ""; position: absolute; bottom: -3px; width: 14px; height: 1.5px; background: var(--ink); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <main class="scroll" id="scroll"><div class="content" id="content"></div></main>
+  <div class="light"></div><div class="grain" id="grain"></div>
+  <div class="sb" id="sb"><span id="clock"></span><i>5G ▮▮▮</i></div>
+  <nav class="dock" id="dock"></nav>
+</div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+// ───────────────────────── 布局（knolling 网格）：单位 = CSS 像素 ─────────────────────────
+const VW = 390, M = 20, IN = VW - M * 2;
+const [h1, ...rest] = HOT;
+const PHOTO = {   // 没有封面的条目配示意照片（Unsplash），标「示意」；有封面的用热榜原封面
+  5: { src: "img/real/flatlay-keyboard.jpg", by: "Nik" },
+  6: { src: "img/real/flatlay-rocket.jpg", by: "SpaceX" },
+  7: { src: "img/real/flatlay-clouds.jpg", by: "Luke Pamer" },
+};
+const L = {
+  title: { x: M, y: 54, w: 196, h: 66 },
+  glasses: { x: 236, y: 60, w: 134, h: 58 },
+  print: { x: M, y: 134, w: IN, h: 206 },
+  note: { x: M, y: 354, w: 228, h: 176 },
+  camera: { x: 262, y: 354, w: 108, h: 82 },
+  watch: { x: 262, y: 450, w: 108, h: 80 },
+  bottle: { x: M, y: 554, w: 140, h: 60 },
+  pencil: { x: 176, y: 562, w: 194, h: 8 },
+  clips: { x: 176, y: 590, w: 156, h: 18 },
+};
+const ROW0 = 634, ROWH = 116;
+rest.forEach((h, i) => { const y = ROW0 + i * ROWH; L["pol" + h.rank] = { x: M, y, w: 86, h: 104 }; L["card" + h.rank] = { x: M + 100, y, w: IN - 100, h: 104 }; });
+L.credit = { x: M, y: ROW0 + rest.length * ROWH + 6, w: IN, h: 76 };
+const CONTENT_H = L.credit.y + L.credit.h + 104;
+
+const $ = (id) => document.getElementById(id);
+const content = $("content"), scroller = $("scroll");
+const trendMark = (h) => (h.trend === "up" ? "↗" : h.trend === "down" ? "↘" : "→");
+const pct = (h) => `${h.trendPct > 0 ? "+" : ""}${h.trendPct}%`;
+const box = (k) => { const b = L[k]; return `left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px`; };
+let order = 0;
+const scat = () => { const i = order++; return `--d:${(0.08 + i * 0.075).toFixed(3)}s;--dx:${((rnd(i * 3 + 1) - .5) * 44).toFixed(1)}px;--dy:${((rnd(i * 3 + 2) - .5) * 30 - 10).toFixed(1)}px;--r:${((rnd(i * 3 + 3) - .5) * 26).toFixed(1)}deg`; };
+const spark = (h, w, hh, stroke, sw) => { const p = sparkPts(h, w, hh); return `<svg viewBox="0 0 ${w} ${hh}"><path d="${p.map(([a, b], i) => (i ? "L" : "M") + a.toFixed(1) + " " + b.toFixed(1)).join("")}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/></svg>`; };
+
+// ───────────────────────── 纸、照片、卡片（DOM，真文字） ─────────────────────────
+const paper = (k, cls, front, back = "", label = "") => `<button class="it ${cls}" data-k="${k}" aria-label="${esc(label)}" style="${box(k)};${scat()}"><div class="hop"><div class="flip"><div class="face front grainy">${front}</div>${back ? `<div class="face back grainy ${back[0]}">${back[1]}</div>` : ""}</div></div></button>`;
+// 3D 物件：先放预渲染的两层图（同一份代码 ?bake 烘出来的，64 次抖光累积），有显卡时再实时重拍
+const PAD = { l: 14, t: 14, r: 52, b: 58 };
+const obj = (k, label) => `<button class="it ob" data-k="${k}" aria-label="${esc(label)}" style="${box(k)};${scat()};--pl:${PAD.l};--pt:${PAD.t};--pr:${PAD.r};--pb:${PAD.b}"><img class="lay ly-sh" src="img/real/flatlay-3d-${k}-shadow.png" alt="" onerror="this.remove()"><img class="lay ly-ob" src="img/real/flatlay-3d-${k}.png" alt="" onerror="this.remove()"><canvas class="lay ly-sh"></canvas><canvas class="lay ly-ob"></canvas></button>`;
+const cardBack = (h) => ["", `<div class="hd" style="height:27px;display:flex;align-items:center;font:500 8.2px 'IBM Plex Mono';color:rgba(38,34,30,.55)">No.${pad2(h.rank)} · 最新</div><div class="lt clamp" style="-webkit-line-clamp:${h.rank === 1 ? 5 : 3}">${esc(h.latest)}</div><div class="src">来源：${esc(h.names.join(" / "))}</div>`];
+
+let html = "";
+html += paper("title", "title", `<h1>AI 热点</h1><p>HOT LIST · 10.22 EVENING</p><i>${HOT.length}</i>`, "", "回到顶部");
+html += obj("glasses", "挪一下墨镜");
+html += paper("print", "print", `<div class="photo"><img src="${h1.cover}" alt="1 号封面"></div>`,
+  ["photoback", `<div class="wm">${"PHOTO PAPER · LUSTRE ".repeat(60)}</div><b>No.1 封面，热榜原图</b><span>${esc(h1.latest)}</span><em>10.22</em>`], "翻看 1 号照片背面");
+html += paper("note", "index", `<div class="hd"><b>No.01</b><span>热度 ${heatText(h1)} ${trendMark(h1)} ${pct(h1)} · ${h1.sources} 家 · ${h1.people} 人</span></div><h2 class="clamp" style="-webkit-line-clamp:3">${esc(shortTitle(h1))}</h2><p class="clamp" id="sum1">${esc(firstLine(h1.summary))}</p>`,
+  cardBack(h1), "翻面看第 1 条最新进展");
+html += obj("camera", "拿起相机") + obj("watch", "看表") + obj("bottle", "挪一下水瓶") + obj("pencil", "挪一下铅笔") + obj("clips", "挪一下回形针");
+rest.forEach((h) => {
+  const ph = PHOTO[h.rank], src = h.cover || (ph && ph.src);
+  html += src
+    ? paper("pol" + h.rank, "pol", `<div class="photo"><img src="${src}" alt="" style="object-position:50% ${h.rank === 4 ? "6%" : "50%"}"></div><div class="cap">${ph ? `示意 · ${esc(ph.by)}` : `No.${h.rank} 封面`}</div>`, "", `翻面看第 ${h.rank} 条`)
+    : paper("pol" + h.rank, "pol grid", `${spark(h, 70, 52, "#24366b", 1.3)}<div class="cap">24h 热度</div><div class="num">${heatText(h)}</div>`, "", `翻面看第 ${h.rank} 条`);
+  html += paper("card" + h.rank, "card", `<div class="hd"><b>No.${pad2(h.rank)}</b><span>热度 ${heatText(h)}  ${trendMark(h)} ${pct(h)}</span></div><h3 class="clamp">${esc(shortTitle(h))}</h3><div class="ft"><span>${h.sources} 家来源 · ${h.people} 人在说</span>${spark(h, 54, 14, "rgba(38,34,30,.7)", .9)}</div>`, cardBack(h), `翻面看第 ${h.rank} 条`);
+});
+html += paper("credit", "credit", `<b>CREDITS</b>照片（示意）：Nik · SpaceX · Luke Pamer / Unsplash；1–4 号为热榜原封面<br>模型：Chronograph Watch、Sunglasses © Eric Chadwick / Khronos，CC-BY 4.0<br>Antique Camera © Maximillan Kamps · Water Bottle © Microsoft，CC0<br>数据：10.22 晚 AI 热点热榜前 8 条 · 拍立得、卡片可翻面`, "", "署名");
+content.innerHTML = html;
+content.style.height = CONTENT_H + "px";
+$("dock").innerHTML = TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}" data-i="${i}">${iconSVG(i)}${n}</button>`).join("");
+$("clock").textContent = nowHM();
+// 摘要行数按卡片剩下的横线数来
+const fitSum = () => { const t = content.querySelector('[data-k="note"] h2'), n = Math.round(t.offsetHeight / 18); $("sum1").style.webkitLineClamp = Math.max(2, 8 - n); };
+fitSum(); document.fonts.ready.then(fitSum); setTimeout(fitSum, 1600);
+
+// ───────────────────────── 桌面、纸纤维、颗粒（程序生成，只算一次） ─────────────────────────
+function tableURL() {
+  const N = 360, hgt = new Float32Array(N * N);
+  const oct = (p, amp, seed) => { const g = new Float32Array(p * p); let s = seed; for (let i = 0; i < p * p; i++) g[i] = ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const fx = x / N * p, fy = y / N * p, ix = fx | 0, iy = fy | 0, tx = fx - ix, ty = fy - iy, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+      const a = g[(iy % p) * p + ix % p], b = g[(iy % p) * p + (ix + 1) % p], c = g[((iy + 1) % p) * p + ix % p], d = g[((iy + 1) % p) * p + (ix + 1) % p];
+      hgt[y * N + x] += amp * ((a * (1 - sx) + b * sx) * (1 - sy) + (c * (1 - sx) + d * sx) * sy); } };
+  oct(3, .5, 11); oct(6, .3, 23); oct(18, .16, 37); oct(45, .1, 51); oct(120, .07, 77); oct(180, .05, 91);
+  const cv = document.createElement("canvas"); cv.width = cv.height = N; const id = cv.getContext("2d").createImageData(N, N);
+  let s = 99; const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const i = y * N + x, v = hgt[i];
+    // 起伏的受光：左上来的光照在斜面上（法线点乘光向）
+    const hx = hgt[y * N + (x + 1) % N] - hgt[y * N + (x + N - 1) % N], hy = hgt[((y + 1) % N) * N + x] - hgt[((y + N - 1) % N) * N + x];
+    const shade = (-hx * .6 - hy * .45) * 150, pit = r() < .003 ? -10 : 0, k = (v - .62) * 30 + shade + pit + (r() - .5) * 4;
+    id.data[i * 4] = 205 + k; id.data[i * 4 + 1] = 199 + k * .98; id.data[i * 4 + 2] = 189 + k * .95; id.data[i * 4 + 3] = 255;
+  }
+  cv.getContext("2d").putImageData(id, 0, 0); return cv.toDataURL("image/jpeg", .92);
+}
+function paperGrainURL() {
+  const N = 160, c = document.createElement("canvas"); c.width = c.height = N; const x = c.getContext("2d"), id = x.createImageData(N, N); let s = 7; const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+  for (let i = 0; i < N * N; i++) { const v = r(); id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v < .5 ? 110 : 255; id.data[i * 4 + 3] = Math.abs(v - .5) * 30; }
+  x.putImageData(id, 0, 0);
+  for (let i = 0; i < 70; i++) { x.strokeStyle = `rgba(130,118,100,${.06 + r() * .07})`; x.lineWidth = .5; const px = r() * N, py = r() * N, a = r() * 6.3, l = 3 + r() * 11; x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + Math.cos(a + .4) * l / 2, py + Math.sin(a + .4) * l / 2, px + Math.cos(a) * l, py + Math.sin(a) * l); x.stroke(); }
+  return c.toDataURL();
+}
+content.style.backgroundImage = `url(${tableURL()})`;
+document.documentElement.style.setProperty("--pgrain", `url(${paperGrainURL()})`);
+$("grain").style.backgroundImage = `url(${grainURL(180, .5, 0)}), url(${grainURL(180, .4, 255)})`;
+
+// ───────────────────────── 动作：翻面、拿起（物件两层错开 = 抬离桌面）、底栏 ─────────────────────────
+function flip(el) { el.classList.toggle("on"); const hop = el.querySelector(".hop"); hop.classList.remove("go"); void hop.offsetWidth; hop.classList.add("go"); }
+function pickUp(el) {
+  if (el.classList.contains("up")) return;
+  el.classList.add("up"); setTimeout(() => el.classList.remove("up"), 430);
+  if (el.dataset.k === "watch" && window.LIVE) LIVE.sweepWatch();
+}
+content.addEventListener("click", (e) => {
+  const el = e.target.closest(".it"); if (!el) return; const k = el.dataset.k;
+  if (k === "title") return scroller.scrollTo({ top: 0, behavior: "smooth" });
+  if (el.classList.contains("ob")) return pickUp(el);
+  if (k.startsWith("pol")) return flip(content.querySelector(`[data-k="card${k.slice(3)}"]`));
+  if (k === "credit") return;
+  flip(el);
+});
+const tabs = [...document.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => {
+  tabs.forEach((x) => x.classList.toggle("on", x === t));
+  const i = +t.dataset.i;
+  if (i === 4) {   // 重置：全部翻回正面，重新摆一遍
+    scroller.scrollTop = 0;
+    content.querySelectorAll(".it").forEach((el) => el.classList.remove("on"));
+    const anims = content.querySelectorAll(".it, .face, .ly-ob, .ly-sh");
+    anims.forEach((el) => (el.style.animation = "none")); void content.offsetWidth; anims.forEach((el) => (el.style.animation = ""));
+  } else if (i === 0) scroller.scrollTo({ top: 0, behavior: "smooth" });
+  else if (i === 1) scroller.scrollTo({ top: L.note.y - 60, behavior: "smooth" });
+  else if (i === 2) scroller.scrollTo({ top: ROW0 - 70, behavior: "smooth" });
+  else if (i === 3) content.querySelectorAll(".ob").forEach((el, j) => setTimeout(() => pickUp(el), j * 120));
+}));
+setInterval(() => { $("clock").textContent = nowHM(); }, 15000);
+const sb = document.querySelector(".sb"); scroller.addEventListener("scroll", () => sb.classList.toggle("solid", scroller.scrollTop > 24), { passive: true });
+
+// ───────────────────────── 3D：每件物件单独「拍」两层（同一个窗光、同一个虚拟机位） ─────────────────────────
+// 有显卡：载入 three.js 实时重拍（表针走到现在）；软件渲染（无头截图）就用预渲染图；?bake 用 64 次累积重新烘图
+const BAKE = /[?&]bake/.test(location.search);
+const SOFT = (() => { try { const g = document.createElement("canvas").getContext("webgl"), e = g.getExtension("WEBGL_debug_renderer_info"); return /swiftshader|llvmpipe|software/i.test(g.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : g.RENDERER)); } catch { return true; } })();
+const loadScript = (src) => new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+if (BAKE || !SOFT) (async () => {
+  for (const f of ["three.min.js", "three-GLTFLoader.js", "three-RoomEnvironment.js"]) await loadScript("vendor/" + f);
+  // 柔影 PCSS：先找遮挡物有多高，再按距离放大采样半径——贴桌处实、远处虚
+  {
+    const PEN = (0.13 * 1490 / 340).toFixed(4), SEARCH = "0.03";
+    const glsl = `
+      #define PCSS_N 20
+      vec2 pd[PCSS_N];
+      void pdInit(vec2 seed) { float a = rand(seed) * PI2, r = 1. / float(PCSS_N); for (int i = 0; i < PCSS_N; i++) { pd[i] = vec2(cos(a), sin(a)) * pow(r, .75); r += 1. / float(PCSS_N); a += PI2 * 7. / float(PCSS_N); } }
+      float pcss(sampler2D sm, vec4 c) {
+        pdInit(c.xy * 913.7 + gl_FragCoord.xy * .013);
+        float zr = c.z, sum = 0., n = 0.;
+        for (int i = 0; i < PCSS_N; i++) { float d = unpackRGBAToDepth(texture2D(sm, c.xy + pd[i] * ${SEARCH})); if (d < zr) { sum += d; n += 1.; } }
+        if (n < .5) return 1.;
+        float rad = clamp((zr - sum / n) * ${PEN}, .0008, ${SEARCH});
+        float lit = 0.;
+        for (int i = 0; i < PCSS_N; i++) { lit += step(zr, unpackRGBAToDepth(texture2D(sm, c.xy + pd[i] * rad))); lit += step(zr, unpackRGBAToDepth(texture2D(sm, c.xy - pd[i].yx * rad))); }
+        return lit / float(2 * PCSS_N);
+      }`;
+    let ch = THREE.ShaderChunk.shadowmap_pars_fragment;
+    ch = ch.replace("float getShadow(", glsl + "\n\tfloat getShadow(");
+    ch = ch.replace("#if defined( SHADOWMAP_TYPE_PCF )", "return pcss( shadowMap, shadowCoord );\n\t\t#if defined( SHADOWMAP_TYPE_PCF )");
+    THREE.ShaderChunk.shadowmap_pars_fragment = ch;
+  }
+  const DPR = BAKE ? 2 : Math.min(2, window.devicePixelRatio || 1), ACC = BAKE ? 64 : 24;
+  const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: true });
+  R.setPixelRatio(1); R.setClearColor(0x000000, 0);
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.05; R.physicallyCorrectLights = true;
+  R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFShadowMap;
+  const scene = new THREE.Scene();
+  scene.environment = new THREE.PMREMGenerator(R).fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+  const sun = new THREE.DirectionalLight(0xfff1df, 4.2);
+  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0008; sun.shadow.normalBias = .02;
+  Object.assign(sun.shadow.camera, { left: -170, right: 170, top: 170, bottom: -170, near: 10, far: 1500 });
+  scene.add(sun, sun.target, new THREE.HemisphereLight(0xeef0f4, 0x9d9284, 0.22));
+  const SUN_DIR = new THREE.Vector3(-0.5, 0.76, -0.42).normalize();
+  // 接影子的桌面：只画影子（暖黑），其余透明，叠到 DOM 桌面上
+  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.ShadowMaterial({ color: 0x24180c, opacity: .62 }));
+  catcher.rotation.x = -Math.PI / 2; catcher.receiveShadow = true; scene.add(catcher);
+  // 虚拟机位：整张首屏（390×844）是从桌面上方约 1.2 倍画宽、40° 视角往下拍的，每件只截自己那一块
+  const FOV = 40, CAMD = 422 / Math.tan((FOV / 2) * Math.PI / 180);
+  const cam = new THREE.PerspectiveCamera(FOV, VW / 844, 50, CAMD + 100); cam.up.set(0, 0, -1); cam.position.set(VW / 2, CAMD, 422); cam.lookAt(VW / 2, 0, 422); cam.updateMatrixWorld();
+
+  const qCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), qScene = new THREE.Scene();
+  const VS = "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }";
+  const blendM = new THREE.ShaderMaterial({ uniforms: { tA: { value: null }, tF: { value: null }, w: { value: 1 } }, vertexShader: VS, depthTest: false, depthWrite: false, blending: THREE.NoBlending,
+    fragmentShader: "uniform sampler2D tA, tF; uniform float w; varying vec2 vUv; void main(){ gl_FragColor = mix(texture2D(tA, vUv), texture2D(tF, vUv), w); }" });
+  const copyM = new THREE.ShaderMaterial({ uniforms: { tA: { value: null } }, vertexShader: VS, depthTest: false, depthWrite: false, blending: THREE.NoBlending,
+    fragmentShader: "uniform sampler2D tA; varying vec2 vUv; void main(){ gl_FragColor = texture2D(tA, vUv); }" });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), blendM); qScene.add(quad);
+  const RT = {}, rt = (k, w, h, o) => RT[k + w + "x" + h] || (RT[k + w + "x" + h] = new THREE.WebGLRenderTarget(w, h, o));
+
+  const OB = {};
+  // 拍一件：每个样本先拍「只有影子」（物件不写颜色、不挡桌面），再拍「只有物件」（桌面不画）
+  function shoot(k, { lift = 0, n = ACC, layers = ["sh", "ob"] } = {}) {
+    const it = OB[k]; if (!it) return; const b = L[k];
+    const rx = b.x - PAD.l, ry = b.y - PAD.t, rw = b.w + PAD.l + PAD.r, rh = b.h + PAD.t + PAD.b, W = Math.round(rw * DPR), H = Math.round(rh * DPR);
+    for (const o of Object.values(OB)) o.g.visible = o === it;
+    it.g.position.set(it.base.x, lift, it.base.z);
+    R.setSize(W, H, false);
+    const tF = rt("f", W, H); tF.texture.encoding = THREE.sRGBEncoding;
+    const acc = {}; for (const l of layers) acc[l] = [rt(l + "a", W, H, { type: THREE.HalfFloatType }), rt(l + "b", W, H, { type: THREE.HalfFloatType })];
+    const c = new THREE.Vector3(b.x + b.w / 2, 0, b.y + b.h / 2), ux = new THREE.Vector3(1, 0, 0).cross(SUN_DIR).normalize(), uy = SUN_DIR.clone().cross(ux).normalize();
+    for (let i = 0; i < n; i++) {
+      // 光源在柔光箱圆盘里取样（黄金角螺旋，约 16°），机位做亚像素抖动 → 面光源软影 + 抗锯齿
+      const a = i * 2.39996, rr = n > 1 ? Math.sqrt((i + .5) / n) * .14 : 0;
+      const d = SUN_DIR.clone().addScaledVector(ux, Math.cos(a) * rr).addScaledVector(uy, Math.sin(a) * rr).normalize();
+      sun.target.position.copy(c); sun.position.copy(c).addScaledVector(d, 700); sun.target.updateMatrixWorld();
+      const jx = n > 1 ? (rnd(i * 7 + 1) - .5) / DPR : 0, jy = n > 1 ? (rnd(i * 7 + 2) - .5) / DPR : 0;
+      cam.setViewOffset(VW, 844, rx + jx, ry + jy, rw, rh);
+      for (const l of layers) {
+        const shOnly = l === "sh"; catcher.visible = shOnly;
+        for (const m of it.mats) { m.colorWrite = !shOnly; m.depthWrite = !shOnly && !m.transparent; }
+        R.setRenderTarget(tF); R.clear(); R.render(scene, cam);
+        const A = acc[l]; blendM.uniforms.tA.value = A[0].texture; blendM.uniforms.tF.value = tF.texture; blendM.uniforms.w.value = 1 / (i + 1);
+        quad.material = blendM; R.setRenderTarget(A[1]); R.render(qScene, qCam); A.reverse();
+      }
+    }
+    for (const m of it.mats) { m.colorWrite = true; m.depthWrite = !m.transparent; }
+    const out = {};
+    for (const l of layers) {
+      copyM.uniforms.tA.value = acc[l][0].texture; quad.material = copyM; R.setRenderTarget(null); R.clear(); R.render(qScene, qCam);
+      const cv = it.el.querySelector(`canvas.ly-${l}`); cv.width = W; cv.height = H;
+      cv.getContext("2d").drawImage(R.domElement, 0, 0); cv.classList.add("ready");
+      if (BAKE) out[l] = cv.toDataURL("image/png");
+    }
+    if (!BAKE) it.el.classList.add("live");
+    return out;
+  }
+
+  // 按「拍出来的大小」缩放：高的东西离镜头近会显大，所以投影后再量一次、对准格子
+  const v = new THREE.Vector3();
+  function fit(k, g) {
+    const b = L[k]; cam.clearViewOffset();
+    for (let pass = 0; pass < 3; pass++) {
+      g.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(g); let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (let i = 0; i < 8; i++) { v.set(i & 1 ? bx.max.x : bx.min.x, i & 2 ? bx.max.y : bx.min.y, i & 4 ? bx.max.z : bx.min.z).project(cam); const px = (v.x + 1) / 2 * VW, py = (1 - v.y) / 2 * 844; x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py); }
+      const s = Math.min(b.w / (x1 - x0), b.h / (y1 - y0)); g.scale.multiplyScalar(s);
+      g.updateMatrixWorld(true); const bx2 = new THREE.Box3().setFromObject(g); let cx = 0, cy = 0;
+      x0 = 1e9; x1 = -1e9; y0 = 1e9; y1 = -1e9;
+      for (let i = 0; i < 8; i++) { v.set(i & 1 ? bx2.max.x : bx2.min.x, i & 2 ? bx2.max.y : bx2.min.y, i & 4 ? bx2.max.z : bx2.min.z).project(cam); const px = (v.x + 1) / 2 * VW, py = (1 - v.y) / 2 * 844; x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py); }
+      g.position.x += (b.x + b.w / 2) - (x0 + x1) / 2; g.position.z += (b.y + b.h / 2) - (y0 + y1) / 2;
+    }
+  }
+  function register(k, g) {
+    const b = L[k], outer = new THREE.Group(); outer.add(g); scene.add(outer);
+    g.position.set(b.x + b.w / 2, g.position.y, b.y + b.h / 2); fit(k, g);
+    const mats = []; g.traverse((m) => { if (m.isMesh) { m.castShadow = !m.material.transparent; m.receiveShadow = true; mats.push(m.material); } });
+    OB[k] = { g: outer, base: { x: 0, z: 0 }, el: content.querySelector(`[data-k="${k}"]`), mats };
+  }
+  // 模型：读进来 → 摆正（镜片、表盘朝上，瓶子躺倒），底贴桌面
+  const loader = new THREE.GLTFLoader();
+  const model = (k, file, rot, { spin = 0, prep, squash = 1 } = {}) => new Promise((ok) => loader.load("models/" + file, (gl) => {
+    const o = gl.scene; prep && prep(o);
+    o.rotation.set(...rot); const wrap = new THREE.Group(); wrap.add(o); wrap.rotation.y = spin; wrap.updateMatrixWorld(true);
+    const bx = new THREE.Box3().setFromObject(wrap), s = bx.getSize(new THREE.Vector3()), sc = L[k].w / s.x;
+    // squash：表带圈、皮腔这种竖着很高的部分压扁一点（俯拍几乎看不出来），影子长度才像平放的东西
+    const inner = new THREE.Group(); inner.add(wrap); wrap.scale.set(sc, sc * squash, sc); wrap.position.set(-(bx.min.x + s.x / 2) * sc, -bx.min.y * sc * squash + .05, -(bx.min.z + s.z / 2) * sc);
+    // 缩放只能乘在 inner 上，底面要一直贴着 y=0：把 inner 的原点放在底面中心
+    register(k, inner); OB[k].root = o; ok();
+  }, undefined, () => ok()));
+  // 程序道具：铅笔（六棱漆杆 + 削好的木头 + 铅芯 + 铜箍 + 橡皮）、三枚回形针
+  function pencil() {
+    const g = new THREE.Group(), r = 3.6, len = L.pencil.w;
+    const paint = new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .62, envMapIntensity: .45 }), wood = new THREE.MeshStandardMaterial({ color: 0xd4ae84, roughness: .82 });
+    const lead = new THREE.MeshStandardMaterial({ color: 0x2b2b2d, roughness: .35, metalness: .5 }), brass = new THREE.MeshStandardMaterial({ color: 0xc8a660, roughness: .3, metalness: 1 }), rub = new THREE.MeshStandardMaterial({ color: 0xd38c82, roughness: .9 });
+    const add = (geo, m, x, tipRight) => { const me = new THREE.Mesh(geo, m); me.rotation.z = tipRight ? -Math.PI / 2 : Math.PI / 2; me.position.set(x, r * .87, 0); g.add(me); return me; };
+    const body = len - 18 - 16;
+    add(new THREE.CylinderGeometry(r, r, body, 6), paint, -len / 2 + 16 + body / 2).rotation.x = Math.PI / 6;
+    add(new THREE.CylinderGeometry(.85, r * .9, 15, 24), wood, len / 2 - 18 + 7.5, true);
+    add(new THREE.CylinderGeometry(.05, .85, 3, 16), lead, len / 2 - 1.5, true);
+    add(new THREE.CylinderGeometry(r * 1.03, r * 1.03, 9, 28), brass, -len / 2 + 16 - 4.5);
+    add(new THREE.CylinderGeometry(r * .97, r * .97, 7, 28), rub, -len / 2 + 3.5);
+    register("pencil", g);
+  }
+  function clips() {
+    const steel = new THREE.MeshStandardMaterial({ color: 0xd6d8da, roughness: .2, metalness: 1 });
+    const shape = [], arc = (cx, cy, r, a0, a1) => { for (let i = 0; i <= 14; i++) { const a = a0 + (a1 - a0) * i / 14; shape.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } };
+    // 外 U（右弯）→ 左弯 → 中线 → 右小弯 → 内线收尾
+    shape.push([-13, 4]); arc(11, 0, 4, Math.PI / 2, -Math.PI / 2); arc(-10, -.75, 3.25, -Math.PI / 2, -Math.PI * 1.5); arc(8, .5, 2, Math.PI / 2, -Math.PI / 2); shape.push([-6, -1.5]);
+    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(shape.map(([x, z]) => new THREE.Vector3(x, 0, z)), false, "catmullrom", .1), 320, .5, 8, false); geo.scale(1.5, 1, 1.5);
+    const g = new THREE.Group();
+    for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(geo, steel); m.position.set(-62 + i * 62, .75, 0); g.add(m); }
+    register("clips", g);
+  }
+  function setWatch(f = 1) {
+    const it = OB.watch; if (!it || !it.root) return; const d = new Date();
+    const a = { "Hand Hours": ((d.getHours() % 12) + d.getMinutes() / 60) / 12, "Hand Minutes": (d.getMinutes() + d.getSeconds() / 60) / 60, "Hand Seconds": d.getSeconds() / 60 };
+    for (const [n, val] of Object.entries(a)) { const h = it.root.getObjectByName(n); if (!h) continue; h.userData.r0 ??= h.rotation.z; h.rotation.z = h.userData.r0 - (val - (1 - f) * 2) * Math.PI * 2; }
+  }
+
+  pencil(); clips();
+  const dark = () => new THREE.MeshPhysicalMaterial({ color: 0x07080a, metalness: .1, roughness: .05, clearcoat: .6, clearcoatRoughness: .05, envMapIntensity: .55 });
+  await Promise.all([
+    model("camera", "AntiqueCamera.glb", [-Math.PI / 2, 0, 0], { spin: Math.PI / 2, squash: .6, prep: (o) => { const t = o.getObjectByName("tripod"); t && t.parent.remove(t); } }),
+    model("watch", "ChronographWatch.glb", [-Math.PI / 2, 0, 0], { spin: Math.PI / 2, squash: .42, prep: (o) => o.traverse((m) => {
+      if (m.isMesh && m.material && m.material.name === "Glass Face") m.material = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .04, transparent: true, opacity: .12, clearcoat: 1, depthWrite: false, envMapIntensity: 1.6 });
+    }) }),
+    model("glasses", "SunglassesKhronos.glb", [-Math.PI / 2, 0, 0], { prep: (o) => {
+      // 镜片换成深色镀膜玻璃（r128 不支持透射）；镜腿绕铰链折起来，平放时镜片朝上、压在折好的镜腿上
+      o.traverse((m) => { if (!m.isMesh) return; const n = m.material.name; if (/lens/.test(n)) m.material = dark(); if (n === "nose_pads") m.material = new THREE.MeshStandardMaterial({ color: 0xcfd3d6, roughness: .25, transparent: true, opacity: .7 }); });
+      o.updateMatrixWorld(true);
+      for (const [side, ang] of [["Right", -1.43], ["Left", 1.5]]) {
+        const t = o.getObjectByName("Temple" + side), e = o.getObjectByName("Earhook" + side); if (!t) continue;
+        const piv = new THREE.Group(); piv.position.copy(t.position); o.add(piv); piv.updateMatrixWorld(true); piv.attach(t); e && piv.attach(e); piv.rotation.y = ang;
+      }
+    } }),
+    model("bottle", "WaterBottle.glb", [0, 0, Math.PI / 2]),
+  ]);
+  setWatch();
+  const out = {};
+  for (const k of ["glasses", "camera", "watch", "bottle", "pencil", "clips"]) { out[k] = shoot(k); await new Promise((r) => setTimeout(r, 0)); }
+  if (BAKE) window.__bake = out;
+  // 实时：点表的时候表针转一圈走到现在
+  window.LIVE = { sweepWatch: async () => { const t0 = performance.now(); for (;;) { const p = Math.min(1, (performance.now() - t0) / 900); setWatch(.5 + p * .5); shoot("watch", { n: p < 1 ? 1 : ACC, layers: ["ob"] }); if (p >= 1) break; await new Promise((r) => requestAnimationFrame(r)); } } };
+})();
+</script>
+</body>
+</html>

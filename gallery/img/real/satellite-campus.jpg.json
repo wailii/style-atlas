@@ -1,0 +1,19 @@
+{
+ "file": "satellite-campus.jpg",
+ "caption": "aerial view of gray house",
+ "by": "Victor",
+ "username": "victor_g",
+ "page": "https://unsplash.com/photos/88b2KmI_Bbk",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "DJI",
+  "camera_model": "FC2103",
+  "iso": "100.0",
+  "aperture_value": "2.8",
+  "focal_length": "4.5",
+  "exposure_time": "1/640"
+ },
+ "exif_text": "DJI FC2103 4.5mm f/2.8 1/640s ISO 100",
+ "w": 684,
+ "h": 512
+}
