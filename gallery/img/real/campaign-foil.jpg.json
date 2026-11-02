@@ -1,0 +1,19 @@
+{
+ "file": "campaign-foil.jpg",
+ "caption": "woman's face",
+ "by": "Cole Keister",
+ "username": "coleito",
+ "page": "https://unsplash.com/photos/D6zQt8NfIq4",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 6D",
+  "iso": "100.0",
+  "aperture_value": "2.0",
+  "focal_length": "35.0",
+  "exposure_time": "1/4000"
+ },
+ "exif_text": "Canon Canon EOS 6D 35mm f/2 1/4000s ISO 100",
+ "w": 512,
+ "h": 683
+}

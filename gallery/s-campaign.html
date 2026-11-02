@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时尚大片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  /* 时尚大片：白、黑、照片。没有第三种颜色。字极小，图极大，网格是 6 栏 16px 边距 8px 栏距 */
+  :root { --paper: #ffffff; --ink: #000000; --mute: #8c8c8c; --hair: #000000; --m: 16px; --g: 8px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: inherit; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* 极小大写：所有说明文字都是这一种 */
+  .t { font: 500 9px/1.45 Inter, "Noto Sans SC", sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+  .mute { color: var(--mute); }
+  .cut { visibility: hidden; }
+  .cut.in { visibility: visible; }
+
+  /* 首屏：满幅大片 */
+  .hero { position: relative; height: 560px; background: #000; color: #fff; overflow: hidden; cursor: pointer; }
+  .ph { position: relative; overflow: hidden; background: #000; }
+  .ph canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; visibility: hidden; }
+  .ph .fl { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .hero .ph { position: absolute; inset: 0; }
+  .sb { position: absolute; z-index: 3; top: 0; left: 0; right: 0; height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 8px 28px 0; font: 600 13.5px Inter; color: #fff; }
+  .mark { position: absolute; z-index: 3; top: 54px; left: 0; right: 0; text-align: center; font-family: Archivo, "Noto Sans SC", sans-serif; font-weight: 800; font-stretch: 125%; font-size: 40px; line-height: 1; letter-spacing: .2em; padding-left: .2em; color: #fff; }
+  .mark i { font-style: normal; font-family: "Noto Sans SC", sans-serif; font-weight: 900; letter-spacing: .32em; }
+  .hbar { position: absolute; z-index: 3; top: 108px; left: var(--m); right: var(--m); display: flex; justify-content: space-between; color: #fff; }
+  .hbar button { padding: 6px 0; }
+  .hbar .on { text-decoration: underline; text-underline-offset: 4px; }
+  .cred { position: absolute; z-index: 3; left: var(--m); right: var(--m); bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; color: #fff; }
+  .cred div:last-child { text-align: right; }
+
+  /* 头条文字：6 栏网格，编号占第 1 栏 */
+  .lede { display: grid; grid-template-columns: repeat(6, 1fr); column-gap: var(--g); padding: 16px var(--m) 30px; }
+  .lede .no { grid-column: 1 / 2; padding-top: 3px; }
+  .lede .tx { grid-column: 2 / 7; }
+  .lede h1 { font: 500 15px/1.5 "Noto Sans SC", sans-serif; letter-spacing: .02em; }
+  .lede .meta { margin-top: 8px; display: flex; gap: 14px; }
+  .lede .more { display: none; margin-top: 10px; font: 400 12px/1.75 "Noto Sans SC", sans-serif; color: #333; }
+  .lede.open .more { display: block; }
+  .lnk { display: inline-block; margin-top: 12px; border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
+
+  /* 其余：两张一排 / 满幅一张 / 文字索引 */
+  .sec { display: flex; justify-content: space-between; padding: 0 var(--m) 10px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--g); padding: 0 var(--m); margin-bottom: 44px; }
+  .look { cursor: pointer; }
+  .pair .ph { aspect-ratio: 3 / 4; }
+  .full { margin-bottom: 44px; }
+  .full .ph { aspect-ratio: 4 / 3; }
+  .full .cap { padding-left: var(--m); padding-right: var(--m); }
+  .cap { padding-top: 8px; }
+  .cap .t { display: flex; justify-content: space-between; }
+  .cap h3 { margin-top: 4px; font: 500 11.5px/1.5 "Noto Sans SC", sans-serif; letter-spacing: .02em; }
+  .idx { margin: 0 var(--m); border-top: 1px solid var(--hair); }
+  .row { display: grid; grid-template-columns: repeat(6, 1fr); column-gap: var(--g); padding: 12px 0 13px; border-bottom: 1px solid var(--hair); cursor: pointer; }
+  .row .t:first-child { grid-column: 1 / 2; padding-top: 2px; }
+  .row h3 { grid-column: 2 / 6; font: 500 11.5px/1.5 "Noto Sans SC", sans-serif; }
+  .row .h { grid-column: 6 / 7; text-align: right; padding-top: 2px; }
+  .foot { padding: 34px var(--m) 40px; color: var(--mute); }
+  .foot p + p { margin-top: 8px; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 14px var(--m) 30px; background: #fff; }
+  .tab { font: 500 11px "Noto Sans SC", sans-serif; letter-spacing: .24em; color: var(--mute); text-align: center; padding-left: .24em; }
+  .tab.on { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; }
+
+  /* 点开一张：黑底满屏，再闪一次 */
+  .lb { position: absolute; inset: 0; z-index: 10; background: #000; color: #fff; display: none; }
+  .lb.on { display: block; }
+  .lb .ph { position: absolute; inset: 0; }
+  .lb.white { background: #fff; color: #000; }
+  .lb .top { position: absolute; z-index: 2; top: 52px; left: var(--m); right: var(--m); display: flex; justify-content: space-between; }
+  .lb .top button { padding: 6px 0; }
+  .lb .txt { position: absolute; z-index: 2; left: var(--m); right: var(--m); bottom: 34px; }
+  .lb h2 { margin-top: 8px; font: 500 17px/1.5 "Noto Sans SC", sans-serif; letter-spacing: .02em; }
+  .lb p { margin-top: 8px; font: 400 11.5px/1.7 "Noto Sans SC", sans-serif; opacity: .86; }
+  .lb .nums { margin-top: 12px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .lb.white .txt { top: 300px; bottom: auto; }
+  .lb.white h2 { font-size: 22px; }
+  .blk { position: absolute; inset: 0; z-index: 30; background: #000; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+// 每条配一张示意图（真图 + 摄影师 + EXIF 来自 img/real/*.json）；没有图的两条进文字索引
+const PICS = {
+  1: { f: "campaign-foil", fx: .5, fy: .5, cx: .5, cy: .44 },
+  2: { f: "campaign-fur", fx: .5, fy: .5, cx: .5, cy: .38 },
+  3: { f: "campaign-mirror", fx: .5, fy: .5, cx: .32, cy: .3 },
+  4: { f: "campaign-shadow", fx: .5, fy: .5, cx: .45, cy: .45, bw: true },
+  5: { f: "campaign-couple", fx: .5, fy: .5, cx: .5, cy: .4, bw: true },
+  6: { f: "campaign-sun", fx: .62, fy: .3, cx: .62, cy: .3, contrast: 1.08, fall: 1.6 },
+};
+const app = document.getElementById("app"), $ = (id) => document.getElementById(id);
+const byRank = Object.fromEntries(HOT.map((h) => [h.rank, h]));
+const h1 = byRank[1];
+const fmtExif = (e) => {
+  if (!e || !e.camera_model) return "";
+  const p = [e.camera_model.replace(/^(Canon|NIKON CORPORATION|Apple)\s*/i, "")];
+  if (e.focal_length) p.push(`${+e.focal_length}mm`);
+  if (e.aperture_value) p.push(`f/${+e.aperture_value}`);
+  if (e.exposure_time) p.push(`${e.exposure_time}s`);
+  if (e.iso) p.push(`ISO ${+e.iso}`);
+  return p.join(" · ");
+};
+const trendTxt = (h) => `${h.trendPct > 0 ? "+" : ""}${h.trendPct}%`;
+const cell = (cls = "") => `<div class="ph ${cls}"><canvas></canvas><div class="fl"></div></div>`;
+const lookCap = (h) => `<div class="cap"><div class="t"><span>LOOK ${pad2(h.rank)}</span><span>${heatText(h)}</span></div><h3>${esc(shortTitle(h))}</h3></div>`;
+
+app.innerHTML = `
+  <main class="scroll" id="scroll">
+    <section class="hero" id="hero" data-r="1">
+      ${cell()}
+      <div class="sb cut"><span>${nowHM()}</span><span>5G</span></div>
+      <div class="mark cut" id="mark">AI <i>热点</i></div>
+      <div class="hbar"><span class="t cut">2026.10.22</span><button class="t cut" id="play">轮播</button></div>
+      <div class="cred"><div class="t cut" id="cl">LOOK 01 / 08<br>示意图</div><div class="t cut" id="cr"></div></div>
+    </section>
+    <article class="lede" id="lede">
+      <span class="t no cut" id="lno">01</span>
+      <div class="tx">
+        <h1 class="cut" id="lh">${esc(shortTitle(h1))}</h1>
+        <div class="meta t mute cut" id="lm"></div>
+        <p class="more" id="lmore"></p>
+        <button class="t lnk cut" id="lk">查看全文</button>
+      </div>
+    </article>
+    <div class="sec t cut"><span>其余 ${HOT.length - 1} 条</span><span class="mute">热度</span></div>
+    <div class="pair">${[2, 3].map((r) => `<div class="look" data-r="${r}">${cell()}${lookCap(byRank[r])}</div>`).join("")}</div>
+    <div class="look full" data-r="4">${cell()}${lookCap(byRank[4])}</div>
+    <div class="pair">${[5, 6].map((r) => `<div class="look" data-r="${r}">${cell()}${lookCap(byRank[r])}</div>`).join("")}</div>
+    <div class="idx">${HOT.filter((h) => !PICS[h.rank]).map((h) => `<div class="row" data-r="${h.rank}"><span class="t">${pad2(h.rank)}</span><h3>${esc(shortTitle(h))}</h3><span class="t h">${heatText(h)}</span></div>`).join("")}</div>
+    <div class="foot t" id="foot"></div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>
+  <div class="lb" id="lb">${cell()}<div class="top t"><span id="lbn"></span><button id="lbx">关闭</button></div><div class="txt" id="lbt"></div></div>
+  <div class="blk" id="blk"></div>`;
+
+// 按焦点裁切（object-position 的 canvas 版）
+function focusCover(img, w, h, fx = .5, fy = .5) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const s = Math.max(w / img.width, h / img.height), dw = img.width * s, dh = img.height * s;
+  c.getContext("2d").drawImage(img, (w - dw) * fx, (h - dh) * fy, dw, dh);
+  return c;
+}
+// 硬闪光调色：闪光灯按平方反比衰减（主体亮、背景沉下去）+ S 曲线压黑 + 细颗粒
+function strobeGrade(img, w, h, { fx = .5, fy = .5, cx = .5, cy = .42, fall = 1.25, contrast = 1.2, sat = .9, bw = false, seed = 7 } = {}) {
+  const c = focusCover(img, w, h, fx, fy), ctx = c.getContext("2d"), id = ctx.getImageData(0, 0, w, h), d = id.data;
+  const R = Math.hypot(w, h) / 2;
+  let st = seed >>> 0; const rand = () => ((st = (st * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const S = (v) => { let t = (v - .5) * contrast + .5; t = t < 0 ? 0 : t > 1 ? 1 : t; return t * t * (3 - 2 * t) * .45 + t * .55; };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4;
+    let r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const l = .299 * r + .587 * g + .114 * b;
+    if (bw) { r = g = b = l; } else { r = l + (r - l) * sat; g = l + (g - l) * sat; b = l + (b - l) * sat; }
+    const dx = (x - cx * w) / R, dy = (y - cy * h) / R, k = 1.14 / (1 + fall * (dx * dx + dy * dy));
+    const n = (rand() + rand() - 1) * .045;
+    d[i] = Math.max(0, Math.min(255, (S(r * k) + n) * 255));
+    d[i + 1] = Math.max(0, Math.min(255, (S(g * k) + n) * 255));
+    d[i + 2] = Math.max(0, Math.min(255, (S(b * k) + n) * 255));
+  }
+  ctx.putImageData(id, 0, 0);
+  return c;
+}
+
+const IMG = {}, META = {};
+async function paint(ph, rank) {
+  const p = PICS[rank], cv = ph.querySelector("canvas"), r = ph.getBoundingClientRect();
+  const w = Math.round(r.width * 2), h = Math.round(r.height * 2);
+  const g = strobeGrade(IMG[p.f], w, h, { ...p, seed: rank * 31 });
+  cv.width = w; cv.height = h; cv.getContext("2d").drawImage(g, 0, 0);
+}
+// 闪一下：白场 → 画面过曝 → 落回正常；画面之前是黑的（硬切，不淡入）
+function strobe(ph, delay = 0) {
+  setTimeout(() => {
+    const cv = ph.querySelector("canvas"), fl = ph.querySelector(".fl");
+    cv.style.visibility = "visible";
+    fl.animate([{ opacity: 1 }, { opacity: 1, offset: .14 }, { opacity: 0 }], { duration: 300, easing: "cubic-bezier(.1,.6,.3,1)" });
+    cv.animate([{ filter: "brightness(2.4) contrast(.62)" }, { filter: "brightness(1) contrast(1)" }], { duration: 760, easing: "cubic-bezier(.05,.7,.2,1)" });
+  }, delay);
+}
+const cutIn = (els, t0, step) => els.forEach((el, i) => setTimeout(() => el.classList.add("in"), t0 + i * step));
+
+function setLede(rank) {
+  const h = byRank[rank], p = PICS[rank], m = META[p.f] || {};
+  $("lno").textContent = pad2(rank);
+  $("lh").textContent = shortTitle(h);
+  $("lm").innerHTML = `<span>热度 ${heatText(h)}</span><span>${h.sources} 家来源</span><span>${trendTxt(h)}</span>`;
+  $("lmore").textContent = clip(firstLine(h.summary), 150);
+  $("cl").innerHTML = `LOOK ${pad2(rank)} / ${pad2(HOT.length)}<br>示意图 · ${esc(m.by || "")} / UNSPLASH`;
+  const ex = fmtExif(m.exif).split(" · ");
+  $("cr").innerHTML = ex.length > 2 ? `${esc(ex.slice(0, 2).join(" · "))}<br>${esc(ex.slice(2).join(" · "))}` : esc(ex.join(" · "));
+  $("hero").dataset.r = rank;
+}
+
+(async () => {
+  await fontsReady();
+  const files = [...new Set(Object.values(PICS).map((p) => p.f))];
+  await Promise.all(files.map(async (f) => {
+    IMG[f] = await loadImage(`img/real/${f}.jpg`);
+    try { META[f] = await (await fetch(`img/real/${f}.jpg.json`)).json(); } catch { META[f] = {}; }
+  }));
+  setLede(1);
+  $("foot").innerHTML = `<p>图片均为示意图，与新闻事件无关，来自 Unsplash（Unsplash License）</p><p>${files.map((f) => esc(META[f].by || "")).join(" · ")}</p><p>数据：AI 热点 · 2026.10.22</p>`;
+  const looks = [...app.querySelectorAll(".look")];
+  await paint($("hero").querySelector(".ph"), 1);
+  for (const el of looks) await paint(el.querySelector(".ph"), +el.dataset.r);
+
+  // 开场：黑场 → 一闪出大片 → 字一行行硬切出来 → 下面几张逐张补闪
+  $("blk").animate([{ opacity: 1 }, { opacity: 1 }], { duration: 380 }).onfinish = () => $("blk").remove();
+  setTimeout(() => $("blk") && $("blk").remove(), 400);
+  strobe($("hero").querySelector(".ph"), 380);
+  cutIn([...$("hero").querySelectorAll(".cut")], 700, 90);
+  cutIn([...$("lede").querySelectorAll(".cut"), app.querySelector(".sec")], 1150, 80);
+  looks.forEach((el, i) => strobe(el.querySelector(".ph"), 1500 + i * 360));
+
+  // 点头条：展开摘要；轮播：每 2.6 秒闪到下一张
+  const toggleLede = () => { const o = $("lede").classList.toggle("open"); $("lk").textContent = o ? "收起" : "查看全文"; };
+  $("lk").addEventListener("click", toggleLede);
+  let timer = null, cur = 1;
+  $("play").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (timer) { clearInterval(timer); timer = null; $("play").classList.remove("on"); $("play").textContent = "轮播"; return; }
+    $("play").classList.add("on"); $("play").textContent = "轮播中";
+    const step = async () => { cur = cur % 6 + 1; const ph = $("hero").querySelector(".ph"); await paint(ph, cur); setLede(cur); ph.querySelector("canvas").style.visibility = "hidden"; strobe(ph, 0); };
+    step(); timer = setInterval(step, 2600);
+  });
+
+  // 点一张：黑底满屏 + 再闪一次；文字索引里的条目是白底纯字
+  const open = async (rank) => {
+    const h = byRank[rank], p = PICS[rank], lb = $("lb"), ph = lb.querySelector(".ph");
+    lb.classList.toggle("white", !p);
+    $("lbn").textContent = `LOOK ${pad2(rank)} / ${pad2(HOT.length)}`;
+    const m = p ? META[p.f] || {} : null;
+    $("lbt").innerHTML = `<div class="t">${p ? `示意图 · ${esc(m.by || "")} / UNSPLASH` : "无图 · 文字稿"}</div><h2>${esc(shortTitle(h))}</h2><p>${esc(clip(firstLine(h.summary), 110))}</p><div class="nums t"><span>热度 ${heatText(h)}</span><span>${h.sources} 家来源</span><span>${h.people} 人参与</span><span>${trendTxt(h)}</span></div>${p && m.exif ? `<div class="t" style="margin-top:10px;opacity:.7">${esc(fmtExif(m.exif))}</div>` : ""}`;
+    lb.classList.add("on");
+    ph.style.display = p ? "" : "none";
+    if (p) { await paint(ph, rank); ph.querySelector("canvas").style.visibility = "hidden"; strobe(ph, 0); }
+  };
+  $("hero").addEventListener("click", () => open(+$("hero").dataset.r));
+  app.querySelectorAll(".look, .row").forEach((el) => el.addEventListener("click", () => open(+el.dataset.r)));
+  $("lbx").addEventListener("click", () => $("lb").classList.remove("on"));
+  $("lb").addEventListener("click", (e) => { if (e.target === $("lb")) $("lb").classList.remove("on"); });
+
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t, i) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.classList.toggle("on", x === t));
+    if (i === 4) { $("scroll").scrollTop = 0; $("lb").classList.remove("on"); strobe($("hero").querySelector(".ph"), 0); looks.forEach((el, k) => strobe(el.querySelector(".ph"), 400 + k * 300)); }
+  }));
+})();
+</script>
+</body>
+</html>

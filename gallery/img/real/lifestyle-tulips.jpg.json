@@ -1,0 +1,19 @@
+{
+ "file": "lifestyle-tulips.jpg",
+ "caption": "yellow and white flowers in clear glass vase",
+ "by": "Patrick Langwallner",
+ "username": "patresinger",
+ "page": "https://unsplash.com/photos/6aqMVsVjbGk",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 5D Mark IV",
+  "iso": "100.0",
+  "aperture_value": "2.8",
+  "focal_length": "120.0",
+  "exposure_time": "1/1600"
+ },
+ "exif_text": "Canon Canon EOS 5D Mark IV 120mm f/2.8 1/1600s ISO 100",
+ "w": 512,
+ "h": 768
+}

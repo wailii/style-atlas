@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>生活方式</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* 生活方式：暖白纸、窗边自然光、胶片暖调、细衬线、宽边距。慢。 */
+  :root { --paper: #f4f0e8; --ink: #2b2621; --mute: #8b8275; --hair: #d9d1c4; --m: 28px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Cormorant Garamond", "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .cn { font-family: "Noto Serif SC", serif; }
+  .it { font-family: "Cormorant Garamond", "Noto Serif SC", serif; font-style: italic; font-weight: 400; font-synthesis: none; }  /* 中文不做假斜体 */
+  .sc { font-family: "Cormorant Garamond", "Noto Serif SC", serif; font-weight: 500; font-size: 11.5px; letter-spacing: .26em; text-transform: uppercase; }
+  .rv { opacity: 0; transform: translateY(10px); transition: opacity 1.4s cubic-bezier(.25,.1,.25,1), transform 1.6s cubic-bezier(.25,.1,.25,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  .sb { height: 40px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 26px 0; font: 500 15px "Cormorant Garamond", serif; letter-spacing: .04em; font-variant-numeric: lining-nums; }
+  .mast { flex: none; padding: 6px var(--m) 0; }
+  .mast .row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .mast h1 { font-family: "Noto Serif SC", serif; font-weight: 300; font-size: 19px; letter-spacing: .5em; padding-left: .5em; }
+  .mast .l { justify-self: start; } .mast .r { justify-self: end; }
+  .listen { font-size: 15px; padding: 6px 0; }
+  .listen.on { color: var(--ink); }
+  .mast .date { text-align: center; font-size: 15px; color: var(--mute); padding: 5px 0 12px; }
+  .hair { height: 1px; background: var(--hair); transform-origin: center; }
+  .prog { height: 1px; background: var(--ink); width: 0; margin-top: -1px; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 26px var(--m) 40px; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .ph { position: relative; overflow: hidden; background: #e7e1d6; }
+  .ph canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; }
+  .hero { cursor: pointer; }
+  .hero .ph { height: 268px; }
+  .credit { margin-top: 9px; font-size: 14px; color: var(--mute); display: flex; justify-content: space-between; }
+  .hero .eb { margin-top: 26px; text-align: center; color: var(--mute); }
+  .hero h2 { text-wrap: balance; margin-top: 12px; text-align: center; font-family: "Noto Serif SC", serif; font-weight: 400; font-size: 21px; line-height: 1.6; letter-spacing: .04em; }
+  .hero .dek { margin-top: 12px; text-align: center; font-family: "Noto Serif SC", serif; font-weight: 300; font-size: 13.5px; line-height: 1.85; color: #5e564c; }
+  .hero .meta { margin-top: 12px; text-align: center; font-size: 17px; color: var(--mute); }
+  .more { overflow: hidden; max-height: 0; transition: max-height 1.2s cubic-bezier(.25,.1,.25,1); font-family: "Noto Serif SC", serif; font-weight: 300; font-size: 13px; line-height: 1.95; color: #4a433b; }
+  .open .more { max-height: 320px; }
+  .hero .more p { padding-top: 14px; text-indent: 2em; }
+  .orn { margin: 36px auto 30px; width: 36px; height: 1px; background: var(--ink); opacity: .5; }
+
+  .sec { display: flex; justify-content: space-between; align-items: baseline; color: var(--mute); padding-bottom: 6px; }
+  .item { display: grid; grid-template-columns: 104px 1fr; gap: 20px; padding: 22px 0; border-top: 1px solid var(--hair); cursor: pointer; }
+  .item.np { grid-template-columns: 40px 1fr; }
+  .item .ph { width: 104px; height: 128px; }
+  .num { font-size: 26px; line-height: 1; font-weight: 300; color: var(--mute); }
+  .item h3 { font-family: "Noto Serif SC", serif; font-weight: 400; font-size: 15px; line-height: 1.7; letter-spacing: .02em; }
+  .item .sm { margin-top: 6px; font-size: 15.5px; color: var(--mute); }
+  .item .more p { padding-top: 10px; font-size: 12.5px; }
+  .inter { margin: 10px calc(var(--m) * -1) 0; padding: 34px 0 30px; border-top: 1px solid var(--hair); cursor: pointer; }
+  .inter .ph { height: 232px; }
+  .inter .credit { padding: 0 var(--m); }
+  .inter .body { padding: 22px calc(var(--m) + 14px) 0; text-align: center; }
+  .inter .num { font-size: 30px; }
+  .inter h3 { text-wrap: balance; margin-top: 10px; font-family: "Noto Serif SC", serif; font-weight: 400; font-size: 17px; line-height: 1.7; }
+  .inter .sm { margin-top: 8px; font-size: 15.5px; color: var(--mute); }
+  .foot { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--hair); font-size: 14.5px; line-height: 1.7; color: var(--mute); text-align: center; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 13px 14px 28px; border-top: 1px solid var(--hair); background: var(--paper); }
+  .tab { position: relative; font-family: "Noto Serif SC", serif; font-weight: 400; font-size: 12.5px; letter-spacing: .14em; padding-left: .14em; color: var(--mute); transition: color .8s ease; }
+  .tab::after { content: ""; position: absolute; left: 50%; bottom: -9px; width: 3px; height: 3px; margin-left: -1.5px; border-radius: 50%; background: var(--ink); opacity: 0; transition: opacity .8s ease; }
+  .tab.on { color: var(--ink); }
+  .tab.on::after { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+// 每条配一张示意图（摄影师来自 img/real/*.json）；第 5 条放成整幅「插页」，7、8 两条只有字
+const PICS = {
+  1: { f: "lifestyle-mug", fx: .5, fy: .5 },
+  2: { f: "lifestyle-table", fx: .42, fy: .5 },
+  3: { f: "lifestyle-tulips", fx: .5, fy: .58 },
+  4: { f: "lifestyle-plant", fx: .62, fy: .5 },
+  5: { f: "lifestyle-window", fx: .6, fy: .5, bloom: .04 },
+  6: { f: "lifestyle-book", fx: .55, fy: .5 },
+};
+const app = document.getElementById("app"), $ = (id) => document.getElementById(id);
+const byRank = Object.fromEntries(HOT.map((h) => [h.rank, h]));
+const h1 = byRank[1];
+const credit = (f) => `<span class="it">示意图 · 摄影 <span data-by="${f}"></span> / Unsplash</span>`;
+const rowHTML = (h) => {
+  const p = PICS[h.rank];
+  return `<div class="item rv ${p ? "" : "np"}" data-r="${h.rank}">
+    ${p ? `<div class="ph" data-f="${p.f}"><canvas></canvas></div>` : `<span class="num it">${pad2(h.rank)}</span>`}
+    <div>${p ? `<div class="num it" style="font-size:17px;margin-bottom:6px">N° ${pad2(h.rank)}</div>` : ""}
+      <h3>${esc(shortTitle(h))}</h3>
+      <div class="sm it">热度 ${heatText(h)} · ${h.sources} 家来源</div>
+      <div class="more"><p>${esc(clip(firstLine(h.summary), 120))}</p>${p ? `<p class="it" style="font-size:12.5px;color:var(--mute);padding-top:6px">${credit(p.f)}</p>` : ""}</div>
+    </div></div>`;
+};
+const h5 = byRank[5];
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><span>5G</span></div>
+  <header class="mast">
+    <div class="row"><span class="l sc" style="color:var(--mute)">Journal</span><h1 id="mh">AI 热点</h1><button class="r listen it" id="listen">朗读</button></div>
+    <div class="date it" id="md">Thursday, 22 October 2026</div>
+    <div class="hair" id="mr"></div><div class="prog" id="prog"></div>
+  </header>
+  <main class="scroll" id="scroll">
+    <article class="hero" id="hero">
+      <div class="ph" data-f="${PICS[1].f}" id="hp"><canvas></canvas></div>
+      <div class="credit rv">${credit(PICS[1].f)}<span class="it" data-exif="${PICS[1].f}"></span></div>
+      <div class="eb sc rv">N° 01 · 今日头条</div>
+      <h2 class="rv">${esc(shortTitle(h1))}</h2>
+      <p class="dek rv">${esc(h1.latest)}</p>
+      <div class="meta it rv">热度 ${heatText(h1)} · ${h1.sources} 家来源 · ${h1.people} 人参与</div>
+      <div class="more"><p>${esc(clip(firstLine(h1.summary), 150))}</p></div>
+    </article>
+    <div class="orn rv"></div>
+    <div class="sec rv"><span class="sc">其余七则</span><span class="it" style="font-size:14px">按热度</span></div>
+    ${[2, 3, 4].map((r) => rowHTML(byRank[r])).join("")}
+    <section class="inter rv" data-r="5">
+      <div class="ph" data-f="${PICS[5].f}"><canvas></canvas></div>
+      <div class="credit">${credit(PICS[5].f)}</div>
+      <div class="body"><div class="num it">N° 05</div><h3>${esc(shortTitle(h5))}</h3><div class="sm it">热度 ${heatText(h5)} · ${h5.sources} 家来源</div><div class="more"><p style="padding-top:12px">${esc(clip(firstLine(h5.summary), 120))}</p></div></div>
+    </section>
+    ${[6, 7, 8].map((r) => rowHTML(byRank[r])).join("")}
+    <div class="foot it rv">图片均为示意图，与新闻事件无关<br>摄影 <span id="fby"></span><br>来自 Unsplash · 数据：AI 热点，2026 年 10 月 22 日</div>
+  </main>
+  <nav class="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${n}</button>`).join("")}</nav>`;
+
+function focusCover(img, w, h, fx = .5, fy = .5) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const s = Math.max(w / img.width, h / img.height), dw = img.width * s, dh = img.height * s;
+  c.getContext("2d").drawImage(img, (w - dw) * fx, (h - dh) * fy, dw, dh);
+  return c;
+}
+// 胶片暖调：降饱和、压反差、黑位抬起（哑光）、高光偏暖、暗部微绿；再叠一层柔光晕和细颗粒
+function filmTone(img, w, h, { fx = .5, fy = .5, sat = .78, fade = .075, warm = 1, grain = .05, bloom = .1, seed = 3 } = {}) {
+  const c = focusCover(img, w, h, fx, fy), ctx = c.getContext("2d"), id = ctx.getImageData(0, 0, w, h), d = id.data;
+  let st = seed >>> 0; const rand = () => ((st = (st * 1664525 + 1013904223) >>> 0) / 4294967296);
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const l = .299 * r + .587 * g + .114 * b;
+    r = l + (r - l) * sat; g = l + (g - l) * sat; b = l + (b - l) * sat;
+    const soft = (v) => .5 + (v - .5) * .9;
+    r = soft(r); g = soft(g); b = soft(b);
+    r = fade + r * (1 - fade - .025); g = fade + g * (1 - fade - .03); b = fade * .9 + b * (1 - fade - .05);
+    r += .035 * warm * l; g += .012 * warm * l - .006 * (1 - l); b -= .03 * warm * l;
+    g += .01 * (1 - l);
+    const n = (rand() + rand() - 1) * grain * (1.1 - l * .6);
+    d[i] = Math.max(0, Math.min(255, (r + n) * 255)); d[i + 1] = Math.max(0, Math.min(255, (g + n) * 255)); d[i + 2] = Math.max(0, Math.min(255, (b + n) * 255));
+  }
+  ctx.putImageData(id, 0, 0);
+  if (bloom) { // 窗光在镜头里的柔光：模糊的自身用 screen 叠一点
+    const t = document.createElement("canvas"); t.width = w; t.height = h; const tx = t.getContext("2d");
+    tx.filter = `blur(${Math.round(w / 40)}px) brightness(1.05)`; tx.drawImage(c, 0, 0);
+    ctx.globalAlpha = bloom; ctx.globalCompositeOperation = "screen"; ctx.drawImage(t, 0, 0);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+  }
+  return c;
+}
+
+const IMG = {}, META = {};
+function paint(ph, k) {
+  const p = Object.values(PICS).find((x) => x.f === ph.dataset.f), cv = ph.querySelector("canvas"), r = ph.getBoundingClientRect();
+  const w = Math.round(r.width * 2), h = Math.round(r.height * 2);
+  cv.width = w; cv.height = h; cv.getContext("2d").drawImage(filmTone(IMG[p.f], w, h, { ...p, seed: k * 17 + 5 }), 0, 0);
+}
+// 显影：从发白、发灰、微虚慢慢变清楚（2.6 秒）
+const develop = (ph, delay = 0) => ph.querySelector("canvas").animate(
+  [{ opacity: 0, filter: "brightness(1.22) saturate(.35) blur(5px)" }, { opacity: 1, offset: .35 }, { opacity: 1, filter: "brightness(1) saturate(1) blur(0)" }],
+  { duration: 2600, delay, easing: "cubic-bezier(.25,.1,.25,1)", fill: "both" });
+const fmtExif = (e) => {
+  if (!e || !e.camera_model || !e.focal_length) return "";
+  return [e.camera_model.replace(/^(Canon|NIKON CORPORATION|Apple)\s*/i, ""), `${+e.focal_length}mm`, e.aperture_value && `f/${+e.aperture_value}`].filter(Boolean).join(" · ");
+};
+
+(async () => {
+  await fontsReady();
+  const files = Object.values(PICS).map((p) => p.f);
+  await Promise.all(files.map(async (f) => {
+    IMG[f] = await loadImage(`img/real/${f}.jpg`);
+    try { META[f] = await (await fetch(`img/real/${f}.jpg.json`)).json(); } catch { META[f] = {}; }
+  }));
+  const nm = (f) => (META[f].by || "").replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "").replace(/\s+/g, " ").trim();
+  app.querySelectorAll("[data-by]").forEach((el) => (el.textContent = nm(el.dataset.by)));
+  app.querySelectorAll("[data-exif]").forEach((el) => (el.textContent = fmtExif(META[el.dataset.exif].exif)));
+  $("fby").textContent = files.map(nm).join("、");
+  const phs = [...app.querySelectorAll(".ph")];
+  phs.forEach((ph, k) => paint(ph, k));
+
+  const EASE = "cubic-bezier(.25,.1,.25,1)";
+  $("mh").animate([{ letterSpacing: ".9em", opacity: 0 }, { letterSpacing: ".5em", opacity: 1 }], { duration: 2400, delay: 100, easing: EASE, fill: "backwards" });
+  $("md").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1800, delay: 500, easing: EASE, fill: "backwards" });
+  $("mr").animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: 2000, delay: 300, easing: EASE, fill: "backwards" });
+  develop($("hp"), 400);
+  $("hp").querySelector("canvas").animate([{ transform: "scale(1.06)" }, { transform: "scale(1)" }], { duration: 9000, delay: 400, easing: "cubic-bezier(.2,.4,.3,1)", fill: "both" });
+
+  // 慢慢浮上来：滚到哪儿、哪儿浮现；照片跟着显影
+  const scroll = $("scroll"); let seen = 0;
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    const d = Math.max(0, 1000 - performance.now()) + (seen++ % 6) * 170, el = e.target;
+    setTimeout(() => { el.classList.add("in"); el.querySelectorAll(".ph").forEach((ph) => develop(ph, 150)); }, d);
+    io.unobserve(el);
+  }), { root: scroll, threshold: .1 });
+  app.querySelectorAll(".rv").forEach((el) => io.observe(el));
+
+  // 点：展开摘要（慢慢拉开）；朗读：报头下的细线慢慢走
+  $("hero").addEventListener("click", () => $("hero").classList.toggle("open"));
+  app.querySelectorAll(".item, .inter").forEach((el) => el.addEventListener("click", () => el.classList.toggle("open")));
+  let pa = null;
+  $("listen").addEventListener("click", () => {
+    const on = $("listen").classList.toggle("on");
+    $("listen").textContent = on ? "朗读中 · N° 01" : "朗读";
+    if (pa) pa.cancel();
+    pa = on ? $("prog").animate([{ width: "0%" }, { width: "100%" }], { duration: 60000, easing: "linear", fill: "forwards" }) : null;
+  });
+  const tabs = [...app.querySelectorAll(".tab")];
+  tabs.forEach((t, i) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.classList.toggle("on", x === t));
+    if (i === 4) { scroll.scrollTo({ top: 0, behavior: "smooth" }); develop($("hp"), 300); }
+  }));
+})();
+</script>
+</body>
+</html>

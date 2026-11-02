@@ -1,0 +1,19 @@
+{
+ "file": "campaign-couple.jpg",
+ "caption": "grayscale photo of man and woman holding hands",
+ "by": "Amy Humphries",
+ "username": "amyjoyhumphries",
+ "page": "https://unsplash.com/photos/fr1RS1sUPe4",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 6D Mark II",
+  "iso": "125.0",
+  "aperture_value": "2.8",
+  "focal_length": "50.0",
+  "exposure_time": "1/100"
+ },
+ "exif_text": "Canon Canon EOS 6D Mark II 50mm f/2.8 1/100s ISO 125",
+ "w": 768,
+ "h": 512
+}
