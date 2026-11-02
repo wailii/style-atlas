@@ -1,0 +1,19 @@
+{
+ "file": "documentary-children.jpg",
+ "caption": "three kids standing beside concrete building",
+ "by": "Madalena Veloso",
+ "username": "madveloso",
+ "page": "https://unsplash.com/photos/zeNeAUwoJvs",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "NIKON CORPORATION",
+  "camera_model": "NIKON D5200",
+  "iso": "110.0",
+  "aperture_value": "8.0",
+  "focal_length": "30.0",
+  "exposure_time": "1/250"
+ },
+ "exif_text": "NIKON CORPORATION NIKON D5200 30mm f/8 1/250s ISO 110",
+ "w": 766,
+ "h": 512
+}

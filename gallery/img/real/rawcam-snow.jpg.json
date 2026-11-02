@@ -1,0 +1,19 @@
+{
+ "file": "rawcam-snow.jpg",
+ "caption": "family of three playing during winter",
+ "by": "Aurelia Borzin",
+ "username": "aurelia1984",
+ "page": "https://unsplash.com/photos/SU9ew9mJoSU",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 6D",
+  "iso": "3200.0",
+  "aperture_value": "1.4",
+  "focal_length": "50.0",
+  "exposure_time": "1/40"
+ },
+ "exif_text": "Canon Canon EOS 6D 50mm f/1.4 1/40s ISO 3200",
+ "w": 768,
+ "h": 512
+}

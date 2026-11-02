@@ -1,0 +1,19 @@
+{
+ "file": "rawcam-coffee.jpg",
+ "caption": "two glasses of coffee on brown table",
+ "by": "Toa Heftiba",
+ "username": "heftiba",
+ "page": "https://unsplash.com/photos/mtuYqjDzaXM",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "SONY",
+  "camera_model": "ILCE-6300",
+  "iso": "1250.0",
+  "aperture_value": "3.2",
+  "focal_length": "14.0",
+  "exposure_time": "1/160"
+ },
+ "exif_text": "SONY ILCE-6300 14mm f/3.2 1/160s ISO 1250",
+ "w": 512,
+ "h": 768
+}

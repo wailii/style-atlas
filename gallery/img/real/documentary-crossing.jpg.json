@@ -1,0 +1,19 @@
+{
+ "file": "documentary-crossing.jpg",
+ "caption": "man crossing road",
+ "by": "Mak",
+ "username": "mak_jp",
+ "page": "https://unsplash.com/photos/QwsCqHTim98",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "FUJIFILM",
+  "camera_model": "X100F",
+  "iso": "400.0",
+  "aperture_value": "5.6",
+  "focal_length": "23.0",
+  "exposure_time": "1/500"
+ },
+ "exif_text": "FUJIFILM X100F 23mm f/5.6 1/500s ISO 400",
+ "w": 512,
+ "h": 768
+}

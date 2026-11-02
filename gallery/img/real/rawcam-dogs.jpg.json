@@ -1,0 +1,19 @@
+{
+ "file": "rawcam-dogs.jpg",
+ "caption": "three short-coated brown and black dogs",
+ "by": "Spencer Davis",
+ "username": "spencerdavis",
+ "page": "https://unsplash.com/photos/wvnSt-oYIB4",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS-1D X Mark II",
+  "iso": "250.0",
+  "aperture_value": "2.8",
+  "focal_length": "70.0",
+  "exposure_time": "1/200"
+ },
+ "exif_text": "Canon Canon EOS-1D X Mark II 70mm f/2.8 1/200s ISO 250",
+ "w": 768,
+ "h": 512
+}

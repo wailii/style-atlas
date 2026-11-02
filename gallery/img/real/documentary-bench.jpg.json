@@ -1,0 +1,19 @@
+{
+ "file": "documentary-bench.jpg",
+ "caption": "grayscale photography of old man sitting on chair near road surrounded with trees",
+ "by": "Waqas Saeed",
+ "username": "waqart",
+ "page": "https://unsplash.com/photos/352QM42iN7A",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 80D",
+  "iso": "640.0",
+  "aperture_value": "1.8",
+  "focal_length": "35.0",
+  "exposure_time": "1/2000"
+ },
+ "exif_text": "Canon Canon EOS 80D 35mm f/1.8 1/2000s ISO 640",
+ "w": 768,
+ "h": 512
+}

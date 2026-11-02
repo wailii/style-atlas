@@ -1,0 +1,19 @@
+{
+ "file": "documentary-shadow.jpg",
+ "caption": "photography of man wearing coat",
+ "by": "Redd F",
+ "username": "raddfilms",
+ "page": "https://unsplash.com/photos/y692nLSXiaU",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "NIKON CORPORATION",
+  "camera_model": "NIKON D7100",
+  "iso": "100.0",
+  "aperture_value": "1.8",
+  "focal_length": "50.0",
+  "exposure_time": "1/1600"
+ },
+ "exif_text": "NIKON CORPORATION NIKON D7100 50mm f/1.8 1/1600s ISO 100",
+ "w": 768,
+ "h": 512
+}

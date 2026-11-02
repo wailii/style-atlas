@@ -1,0 +1,19 @@
+{
+ "file": "rawcam-dog.jpg",
+ "caption": "lack and white dog with black and yellow woof shirt on floor",
+ "by": "Erik Mclean",
+ "username": "introspectivedsgn",
+ "page": "https://unsplash.com/photos/-MTyujylR6I",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 6D",
+  "iso": "6400.0",
+  "aperture_value": "2.0",
+  "focal_length": "35.0",
+  "exposure_time": "1/250"
+ },
+ "exif_text": "Canon Canon EOS 6D 35mm f/2 1/250s ISO 6400",
+ "w": 512,
+ "h": 768
+}

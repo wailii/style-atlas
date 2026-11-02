@@ -1,0 +1,19 @@
+{
+ "file": "rawcam-cheers.jpg",
+ "caption": "three person holding mugs while cheers",
+ "by": "Nathan Dumlao",
+ "username": "nate_dumlao",
+ "page": "https://unsplash.com/photos/ozVQrfENFOs",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS 5D Mark IV",
+  "iso": "400.0",
+  "aperture_value": "2.8",
+  "focal_length": "24.0",
+  "exposure_time": "1/500"
+ },
+ "exif_text": "Canon Canon EOS 5D Mark IV 24mm f/2.8 1/500s ISO 400",
+ "w": 512,
+ "h": 768
+}

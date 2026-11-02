@@ -1,0 +1,19 @@
+{
+ "file": "documentary-pavement.jpg",
+ "caption": "man wearing suit standing near gray post during daytime",
+ "by": "Anna Schroeder",
+ "username": "annatherphoto",
+ "page": "https://unsplash.com/photos/_Yv4x4E9Iec",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS REBEL T3i",
+  "iso": "100.0",
+  "aperture_value": "5.6",
+  "focal_length": "250.0",
+  "exposure_time": "1/250"
+ },
+ "exif_text": "Canon Canon EOS REBEL T3i 250mm f/5.6 1/250s ISO 100",
+ "w": 768,
+ "h": 512
+}

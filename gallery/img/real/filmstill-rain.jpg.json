@@ -1,0 +1,19 @@
+{
+ "file": "filmstill-rain.jpg",
+ "caption": "two persons riding on motorcycles during rain",
+ "by": "Suhyeon Choi",
+ "username": "by_syeoni",
+ "page": "https://unsplash.com/photos/cBUt6EeWf3I",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "NIKON CORPORATION",
+  "camera_model": "NIKON D810",
+  "iso": "640.0",
+  "aperture_value": "3.2",
+  "focal_length": "66.0",
+  "exposure_time": "1/500"
+ },
+ "exif_text": "NIKON CORPORATION NIKON D810 66mm f/3.2 1/500s ISO 640",
+ "w": 767,
+ "h": 512
+}

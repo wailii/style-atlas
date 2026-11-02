@@ -1,0 +1,19 @@
+{
+ "file": "filmstill-lighter.jpg",
+ "caption": "person holding black lighter",
+ "by": "Christian Allard",
+ "username": "christianallard",
+ "page": "https://unsplash.com/photos/0gmYLADpIzA",
+ "license": "Unsplash License",
+ "exif": {
+  "camera_make": "Canon",
+  "camera_model": "Canon EOS DIGITAL REBEL XTi",
+  "iso": "400.0",
+  "aperture_value": "1.8",
+  "focal_length": "50.0",
+  "exposure_time": "1/60"
+ },
+ "exif_text": "Canon Canon EOS DIGITAL REBEL XTi 50mm f/1.8 1/60s ISO 400",
+ "w": 768,
+ "h": 512
+}

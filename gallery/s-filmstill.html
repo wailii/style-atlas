@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>电影剧照</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --black: #050505; --bar: #000; --paper: #e9e4da; --dim: #8d877d; --rule: #26231f; --amber: #e2a052; --sub: #f3efe4;
+    --mono: "IBM Plex Mono", monospace; --serif: "Noto Serif SC", serif; --sans: "Noto Sans SC", sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--black); }
+  body { font-family: var(--sans); color: var(--paper); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--black); }
+  .sb { flex: none; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 4px 26px 0; font: 600 15px/1 -apple-system, "Inter", var(--sans); color: #f2f2f2; }
+  .sb i { font-style: normal; letter-spacing: 1px; font-size: 12px; }
+  header { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 12px; }
+  .brand b { display: block; font: 700 19px/1 var(--serif); letter-spacing: .22em; }
+  .brand small { display: block; margin-top: 7px; font: 400 9.5px/1 var(--mono); letter-spacing: .22em; color: var(--dim); text-transform: uppercase; }
+  .ctl { display: flex; gap: 8px; }
+  .ctl button { height: 30px; min-width: 30px; padding: 0 9px; border: 1px solid #3a3631; border-radius: 3px; font: 500 10.5px/1 var(--mono); letter-spacing: .08em; color: var(--paper); display: flex; align-items: center; gap: 6px; }
+  .ctl button.off { color: #5d5851; border-color: #24211e; text-decoration: line-through; }
+  .ctl #play i { width: 0; height: 0; border-left: 7px solid var(--paper); border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+  .ctl #play.on i { width: 7px; height: 9px; border: 0; border-left: 2.5px solid var(--paper); border-right: 2.5px solid var(--paper); }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* 画面：2.39:1，黑边是页面本身；字幕烧在画面里 */
+  .slate { display: flex; justify-content: space-between; padding: 0 16px 7px; font: 400 9.5px/1 var(--mono); letter-spacing: .14em; color: var(--dim); text-transform: uppercase; }
+  .slate b { font-weight: 500; color: var(--paper); }
+  .slate .rec::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #c8321f; margin-right: 6px; vertical-align: 1px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .frame { position: relative; width: 100%; aspect-ratio: 2.39 / 1; overflow: hidden; background: #000; }
+  .frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .frame .grain { position: absolute; inset: 0; mix-blend-mode: overlay; opacity: .22; pointer-events: none; background-size: 256px 256px; }
+  .sub span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-wrap: balance; }
+  .sub { position: absolute; left: 4%; right: 4%; bottom: 7.5%; text-align: center; font: 500 13px/1.42 var(--sans); color: var(--sub); letter-spacing: .02em;
+    text-shadow: 0 0 1px #000, 0 0 2px #000, 0 1px 2px rgba(0,0,0,.9), 0 0 8px rgba(0,0,0,.55); pointer-events: none; }
+  .hero .sub { font-size: 14px; }
+  .hidesubs .sub { visibility: hidden; }
+  .cap { display: flex; flex-direction: column; gap: 1px; padding: 8px 16px 0; font: 400 9.5px/1.5 var(--mono); color: var(--dim); letter-spacing: .04em; }
+  .cap .lens { color: #b9b2a6; }
+  .hero-tx { padding: 16px 16px 18px; border-bottom: 1px solid var(--rule); }
+  .hero-tx h1 { font: 700 21px/1.42 var(--serif); letter-spacing: .01em; }
+  .hero-tx p { margin-top: 8px; font: 400 13px/1.7 var(--sans); color: #a8a296; }
+  .stats { margin-top: 12px; display: flex; gap: 16px; font: 400 10px/1 var(--mono); letter-spacing: .1em; color: var(--dim); text-transform: uppercase; }
+  .stats b { color: var(--paper); font-weight: 500; font-size: 12px; margin-left: 5px; letter-spacing: .02em; }
+
+  ol { list-style: none; padding: 6px 0 28px; }
+  .it { padding: 18px 16px 18px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+  .it .frame { border-radius: 1px; }
+  .it .card { background: #000; box-shadow: inset 0 0 0 1px #1d1b19; }
+  .it .card .sub { bottom: 50%; transform: translateY(50%); font-size: 13.5px; color: #e9e4da; }
+  .it .cap { padding: 7px 0 0; }
+  .it .row { margin-top: 10px; display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: baseline; }
+  .it .n { font: 500 11px/1 var(--mono); color: var(--amber); letter-spacing: .06em; }
+  .it h3 { font: 700 15.5px/1.48 var(--serif); }
+  .it .m { margin-top: 5px; font: 400 9.5px/1.5 var(--mono); color: var(--dim); letter-spacing: .06em; }
+  .it .more { display: none; margin-top: 8px; font: 400 12.5px/1.72 var(--sans); color: #a8a296; }
+  .it.open .more { display: block; }
+  .it.open .n::after { content: " ▾"; }
+  .end { padding: 6px 0 36px; text-align: center; font: 400 9.5px/1.8 var(--mono); letter-spacing: .3em; color: #4c4842; }
+
+  nav { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 8px 26px; border-top: 1px solid var(--rule); background: #030303; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #5f5a53; }
+  .tab svg { width: 19px; height: 19px; }
+  .tab span { font: 500 10.5px/1 var(--sans); letter-spacing: .12em; }
+  .tab.on { color: var(--paper); }
+  .tab.on span::after { content: ""; display: block; height: 1px; margin-top: 4px; background: var(--amber); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+// ── 每条配一张示意图（真图 + 摄影师 + EXIF 都来自 img/real/*.json）；第 7、8 条没有图 → 黑场字幕卡 ──
+const PH = { 1: ["filmstill-rain", [.5, .45]], 2: ["filmstill-plane", [.42, .5]], 3: ["filmstill-lighter", [.55, .48]], 4: ["filmstill-window", [.7, .2], .84], 5: ["filmstill-road", [.5, .62], .88], 6: ["filmstill-desert", [.62, .66], .8] };
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const FPS = 24;
+const tc = (f) => [Math.floor(f / (FPS * 3600)), Math.floor(f / (FPS * 60)) % 60, Math.floor(f / FPS) % 60, f % FPS].map(pad2).join(":");
+const fmtExif = (e) => {
+  if (!e || !e.camera_model) return "EXIF 未记录";
+  const num = (v) => parseFloat(String(v).match(/[\d.]+/)?.[0] || 0);
+  const model = e.camera_model.startsWith(e.camera_make || "§") || /^(Canon|NIKON|SONY|FUJIFILM)/i.test(e.camera_model) ? e.camera_model : `${e.camera_make || ""} ${e.camera_model}`;
+  return [model.replace(/^NIKON CORPORATION /, "").replace(/^Canon Canon/, "Canon"), e.focal_length && `${num(e.focal_length)}mm`, e.aperture_value && `f/${num(e.aperture_value)}`, e.exposure_time && `${e.exposure_time.replace(/s+$/, "")}s`, e.iso && `ISO ${num(e.iso)}`].filter(Boolean).join(" · ");
+};
+// 字幕：最多两行，每行按宽度断
+const subLines = (text) => `<span>${esc(text.replace(/\s+/g, " "))}</span>`; // 两行以内，CSS 均衡断行
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><i>5G ▮▮▮</i></div>
+  <header>
+    <div class="brand"><b>AI 热点</b><small>Stills · 10.22 · Reel 1</small></div>
+    <div class="ctl"><button id="cc" aria-label="字幕开关">CC</button><button id="play" class="on" aria-label="放映 / 暂停"><i></i><span id="pl">放映中</span></button></div>
+  </header>
+  <main class="scroll" id="scroll">
+    <section class="hero">
+      <div class="slate"><span class="rec">01 / ${pad2(HOT.length)} · 2.39 : 1</span><span>TC <b id="tc">00:00:00:00</b></span></div>
+      <div class="frame" id="hf"><canvas id="hc"></canvas><div class="grain"></div><div class="sub" id="hs"></div></div>
+      <div class="cap"><span id="hcr">示意图</span><span class="lens" id="hlens"></span></div>
+      <div class="hero-tx">
+        <h1>${esc(shortTitle(h1))}</h1>
+        <p>${esc(clip(firstLine(h1.summary), 70))}</p>
+        <div class="stats"><span>热度<b>${heatText(h1)}</b></span><span>来源<b>${h1.sources}</b></span><span>参与<b>${h1.people}</b></span></div>
+      </div>
+    </section>
+    <ol>${rest.map((h) => `<li class="it" data-r="${h.rank}">
+      <div class="frame ${PH[h.rank] ? "" : "card"}"><canvas></canvas>${PH[h.rank] ? `<div class="grain"></div>` : ""}<div class="sub"></div></div>
+      ${PH[h.rank] ? `<div class="cap"><span class="cr"></span><span class="lens"></span></div>` : ""}
+      <div class="row"><span class="n">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3>
+      <div class="m">热度 ${heatText(h)} · ${h.sources} 来源 · ${h.people} 人${PH[h.rank] ? "" : " · 黑场字幕卡 · 无配图"}</div>
+      <div class="more">${esc(clip(firstLine(h.summary), 96))}</div></div></div></li>`).join("")}</ol>
+    <div class="end">— END OF REEL 1 —</div>
+  </main>
+  <nav>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+
+// ── 调色：S 曲线 + 橙青挤压（色度投影到橙—青轴，垂直分量压掉）+ 分离色调 + 抬黑压高光 + 暗角 ──
+const ORANGE = (() => { const o = [1, .56, .26], l = .2126 * o[0] + .7152 * o[1] + .0722 * o[2], v = o.map((x) => x - l), n = Math.hypot(...v); return v.map((x) => x / n); })();
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+function grade(img, W, H, focus = [.5, .5], ev = 1, push = 1) {
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d");
+  const s = Math.max(W / img.width, H / img.height), dw = img.width * s, dh = img.height * s;
+  const ox = Math.min(0, Math.max(W - dw, W / 2 - dw * focus[0])), oy = Math.min(0, Math.max(H - dh, H / 2 - dh * focus[1]));
+  x.drawImage(img, ox, oy, dw, dh);
+  const id = x.getImageData(0, 0, W, H), d = id.data;
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+    let r = d[i] / 255 * ev, g = d[i + 1] / 255 * ev, b = d[i + 2] / 255 * ev;
+    const L = .2126 * r + .7152 * g + .0722 * b;
+    // 对比：亮度走一条 S 曲线
+    const Lc = Math.pow(L + (smooth(0, 1, L) - L) * .8 * push, 1.12);
+    let cr = r - L, cg = g - L, cb = b - L;
+    const pr = cr * ORANGE[0] + cg * ORANGE[1] + cb * ORANGE[2];
+    const keep = .3, boost = 1.32;
+    cr = ORANGE[0] * pr * boost + (cr - ORANGE[0] * pr) * keep;
+    cg = ORANGE[1] * pr * boost + (cg - ORANGE[1] * pr) * keep;
+    cb = ORANGE[2] * pr * boost + (cb - ORANGE[2] * pr) * keep;
+    // 分离色调：暗部推青，亮部推橙
+    const t = smooth(.04, .7, Lc), tone0 = (t - .42) * .36 * push, tone = tone0 > 0 ? tone0 * .5 : tone0;
+    r = Lc + cr + ORANGE[0] * tone; g = Lc + cg + ORANGE[1] * tone; b = Lc + cb + ORANGE[2] * tone;
+    // 胶片的黑不是死黑、高光柔肩
+    const lift = (v, k) => { v = k + v * .95; return v > .8 ? .8 + (1 - Math.exp(-(v - .8) * 4)) * .18 : v; };
+    d[i] = lift(r, .012) * 255; d[i + 1] = lift(g, .03) * 255; d[i + 2] = lift(b, .036) * 255;
+  }
+  x.putImageData(id, 0, 0);
+  // 光晕（halation）：高光过红膜后在乳剂里散开，边缘一圈橙红
+  const hi = document.createElement("canvas"); hi.width = W; hi.height = H;
+  const hx = hi.getContext("2d"), hd = x.getImageData(0, 0, W, H), od = hx.createImageData(W, H);
+  for (let i = 0; i < hd.data.length; i += 4) {
+    const L = (.2126 * hd.data[i] + .7152 * hd.data[i + 1] + .0722 * hd.data[i + 2]) / 255, v = Math.pow(Math.max(0, (L - .74) / .26), 2);
+    od.data[i] = 255 * v; od.data[i + 1] = 92 * v; od.data[i + 2] = 40 * v; od.data[i + 3] = 255;
+  }
+  hx.putImageData(od, 0, 0);
+  const k = W / 780;
+  x.globalCompositeOperation = "screen";
+  x.filter = `blur(${4 * k}px)`; x.globalAlpha = 1; x.drawImage(hi, 0, 0);
+  x.filter = `blur(${22 * k}px)`; x.globalAlpha = .3; x.drawImage(hi, 0, 0);
+  x.filter = `blur(${10 * k}px)`; x.globalAlpha = .55; x.drawImage(hi, 0, 0);
+  x.filter = "none"; x.globalAlpha = 1;
+  // 暗角
+  x.globalCompositeOperation = "multiply";
+  const vg = x.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, W * .62);
+  vg.addColorStop(0, "#fff"); vg.addColorStop(.6, "#d9d6d2"); vg.addColorStop(1, "#7a7570");
+  x.fillStyle = vg; x.fillRect(0, 0, W, H);
+  // 烘进去的一层颗粒：中间调最多，团状（半分辨率噪点放大）
+  x.globalCompositeOperation = "overlay";
+  x.globalAlpha = .4; x.filter = `blur(${.4 * k}px)`; x.drawImage(grainTile(Math.ceil(W / 1.5), Math.ceil(H / 1.5), .2), 0, 0, W, H); x.filter = "none"; x.globalAlpha = 1;
+  x.globalCompositeOperation = "source-over";
+  return c;
+}
+// 灰底高斯噪点（overlay 叠加：128 = 不变）
+function grainTile(w, h, amt) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d"), id = x.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) {
+    const n = (Math.random() + Math.random() + Math.random() - 1.5) * 2 * amt; // 近似高斯
+    const v = 128 + n * 128; id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255;
+  }
+  x.putImageData(id, 0, 0);
+  return c;
+}
+const grainURLs = Array.from({ length: 3 }, () => { const t = grainTile(256, 256, .45), c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); x.filter = "blur(.45px)"; x.drawImage(t, 0, 0); return c.toDataURL(); });
+
+const who = (m) => String(m.by || m.username || "").split(" | ")[0].replace(/^@/, "");
+const loadMeta = (name) => fetch(`img/real/${name}.jpg.json`).then((r) => r.json()).catch(() => ({}));
+const S = 2;
+
+(async () => {
+await fontsReady();
+let playing = true, frame0 = performance.now(), frozen = 0;
+// 颗粒每 1/24 秒换一次位置（像放映时每格不一样）
+const grains = [...app.querySelectorAll(".grain")];
+grains.forEach((g, i) => (g.style.backgroundImage = `url(${grainURLs[i % 3]})`));
+const shake = () => { if (playing) grains.forEach((g) => (g.style.backgroundPosition = `${(Math.random() * 256) | 0}px ${(Math.random() * 256) | 0}px`)); };
+setInterval(shake, 1000 / FPS);
+// 时码：从打开页面起按 24 格/秒走（不是编的数）
+const tcEl = $("tc");
+const tick = () => { const f = playing ? Math.floor((performance.now() - frame0) / 1000 * FPS) + frozen : frozen; tcEl.textContent = tc(f); };
+setInterval(tick, 1000 / FPS);
+
+// 头图
+const hf = $("hf"), hc = $("hc"), W = 390, H = Math.round(390 / 2.39);
+const [img1, m1] = await Promise.all([loadImage(`img/real/${PH[1][0]}.jpg`), loadMeta(PH[1][0])]);
+hc.width = W * S; hc.height = H * S;
+hc.getContext("2d").drawImage(grade(img1, W * S, H * S, PH[1][1]), 0, 0);
+$("hcr").textContent = `示意图 · 摄影 ${who(m1)} / Unsplash`;
+$("hlens").textContent = fmtExif(m1.exif);
+const heroSub = subLines(h1.latest, 14, W * .84);
+// 入场：先黑，画面从黑里淡出来，遮幅从 16:9 收到 2.39:1，再硬切出字幕
+hf.animate([{ clipPath: "inset(0 0 0 0)", height: `${Math.round(390 * 9 / 16)}px` }, { height: `${H}px` }], { duration: 1100, delay: 500, easing: "cubic-bezier(.6,0,.2,1)", fill: "backwards" });
+hc.animate([{ opacity: 0, filter: "brightness(.2)" }, { opacity: 1, filter: "brightness(1)" }], { duration: 1600, easing: "ease-out", fill: "backwards" });
+const push = hc.animate([{ transform: "scale(1)" }, { transform: "scale(1.08) translateX(-1.5%)" }], { duration: 24000, easing: "linear", fill: "forwards", iterations: Infinity, direction: "alternate" });
+setTimeout(() => ($("hs").innerHTML = heroSub), 1750);
+for (const el of [app.querySelector(".hero-tx"), app.querySelector(".cap")]) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, delay: 1500, easing: "ease-out", fill: "backwards" });
+
+// 列表剧照
+const items = [...app.querySelectorAll(".it")];
+items.forEach(async (li, i) => {
+  const h = rest[i], cv = li.querySelector("canvas"), sub = li.querySelector(".sub"), w = 358, hh = Math.round(358 / 2.39);
+  cv.width = w * S; cv.height = hh * S;
+  li._subs = [subLines(h.latest, 13, w * .86), subLines(firstLine(h.summary).split(/[。；]/)[0] + "。", 13, w * .86)];
+  const p = PH[h.rank];
+  li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, delay: 1900 + i * 160, easing: "ease-out", fill: "backwards" });
+  if (p) {
+    const [im, m] = await Promise.all([loadImage(`img/real/${p[0]}.jpg`), loadMeta(p[0])]);
+    cv.getContext("2d").drawImage(grade(im, w * S, hh * S, p[1], p[2] || 1), 0, 0);
+    li.querySelector(".cr").textContent = `示意图 · 摄影 ${who(m)} / Unsplash`; li.querySelector(".lens").textContent = fmtExif(m.exif);
+  }
+  setTimeout(() => (sub.innerHTML = li._subs[0]), 2300 + i * 160);
+  li.addEventListener("click", () => { const o = li.classList.toggle("open"); sub.innerHTML = li._subs[o ? 1 : 0]; });
+});
+
+// 控件：字幕开关、放映 / 暂停（时码、颗粒、推镜一起停）
+$("cc").addEventListener("click", () => { const off = app.classList.toggle("hidesubs"); $("cc").classList.toggle("off", off); });
+$("play").addEventListener("click", () => {
+  if (playing) { frozen += Math.floor((performance.now() - frame0) / 1000 * FPS); push.pause(); } else { frame0 = performance.now(); push.play(); }
+  playing = !playing; $("play").classList.toggle("on", playing); $("pl").textContent = playing ? "放映中" : "已暂停";
+});
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

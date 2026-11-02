@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>纪实摄影</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;900&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fbfaf7; --ink: #111; --grey: #5f5d58; --mute: #8b8882; --hair: #dedbd4; --pencil: #d1261a;
+    --serif: "Noto Serif SC", serif; --sans: "Inter", "Noto Sans SC", sans-serif; --mono: "IBM Plex Mono", monospace; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .sb { flex: none; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 4px 26px 0; font: 600 15px/1 var(--sans); }
+  .sb i { font-style: normal; font-size: 12px; letter-spacing: 1px; }
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* 刊头：粗细双线 */
+  .mast { margin: 0 16px; padding: 4px 0 8px; display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2.5px solid var(--ink); }
+  .mast b { font: 900 23px/1 var(--serif); letter-spacing: .04em; }
+  .mast span { font: 500 10px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--grey); }
+  .mast span em { font-style: normal; font-family: "Noto Sans SC"; letter-spacing: .08em; }
+  .rule2 { margin: 2px 16px 0; border-top: 1px solid var(--ink); }
+  .kick { display: flex; justify-content: space-between; padding: 9px 16px 9px; font: 600 9.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; }
+  .kick em { font-style: normal; color: var(--grey); font-weight: 500; }
+
+  .photo { position: relative; width: 100%; background: #e9e7e2; }
+  .photo canvas { display: block; width: 100%; height: 100%; }
+  .hero-ph { height: 248px; }
+  .capt { padding: 8px 16px 0; font: 400 11.5px/1.6 "Noto Sans SC", sans-serif; color: var(--grey); }
+  .capt b { color: var(--ink); font-weight: 700; }
+  .credit { padding: 3px 16px 0; display: flex; flex-direction: column; gap: 1px; font: 500 8.5px/1.5 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+  .credit .ex { font: 400 9px/1.5 var(--mono); letter-spacing: 0; text-transform: none; }
+
+  /* 小样：相纸上两条底片，红色油性笔圈选 */
+  .sheet { position: relative; margin: 14px 16px 0; }
+  .sheet .lab { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; font: 600 9.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; }
+  .sheet .lab em { font: 400 10.5px/1 "Noto Sans SC"; letter-spacing: .04em; text-transform: none; color: var(--grey); font-style: normal; }
+  .sheet .wrap { position: relative; }
+  .sheet canvas { display: block; width: 100%; }
+  .sheet #pen { position: absolute; inset: 0; height: 100%; pointer-events: none; }
+  .sheet .hit { position: absolute; cursor: pointer; }
+
+  .story { padding: 16px 16px 18px; border-bottom: 1px solid var(--ink); }
+  .story .k { font: 600 9.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--grey); }
+  .story h1 { margin-top: 9px; font: 900 25px/1.36 var(--serif); letter-spacing: -.005em; }
+  .story p { margin-top: 10px; font: 400 14px/1.82 var(--serif); color: #2a2926; }
+  .story .by { margin-top: 12px; display: flex; gap: 14px; font: 500 10px/1 var(--sans); letter-spacing: .08em; color: var(--grey); }
+  .story .by b { color: var(--ink); font-weight: 700; }
+
+  ol { list-style: none; padding: 0 16px; }
+  .it { display: grid; grid-template-columns: 36px 1fr; gap: 6px; padding: 15px 0 15px; border-bottom: 1px solid var(--hair); cursor: pointer; }
+  .it .n { font: 600 17px/1.3 var(--serif); color: var(--ink); }
+  .it h3 { font: 600 16px/1.5 var(--serif); }
+  .it .m { margin-top: 5px; font: 500 10.5px/1.4 var(--sans); color: var(--mute); letter-spacing: .02em; }
+  .it .more { display: none; margin-top: 8px; font: 400 13px/1.78 var(--serif); color: #33312d; }
+  .it.open .more { display: block; }
+  .it.open h3 { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  .insert { margin: 4px -16px 6px; padding-bottom: 14px; border-bottom: 1px solid var(--hair); list-style: none; }
+  .insert .photo { height: 252px; }
+  .insert .capt, .insert .credit { padding-left: 16px; padding-right: 16px; }
+  .end { padding: 22px 16px 34px; font: 400 11px/1.7 "Noto Sans SC"; color: var(--mute); }
+
+  nav { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); padding: 9px 8px 26px; background: var(--paper); border-top: 1px solid var(--ink); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9c9992; }
+  .tab svg { width: 19px; height: 19px; }
+  .tab span { font: 600 11px/1 var(--serif); letter-spacing: .1em; padding-bottom: 3px; border-bottom: 1.5px solid transparent; }
+  .tab.on { color: var(--ink); }
+  .tab.on span { border-color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+// ── 一卷底片：六张真图（img/real/*.json 带摄影师和 EXIF）。说明照着照片本身写，不冒充新闻现场 ──
+const ROLL = [
+  { f: "documentary-pavement", d: "从高处俯拍：一名穿西装的男子站在灰色路桩旁，树影铺满石板路。", fo: [.62, .5] },
+  { f: "documentary-shadow", d: "一名穿大衣的男子站在柏油路上，影子拖在身前。", fo: [.45, .5] },
+  { f: "documentary-crossing", d: "一名男子穿过一条空荡的马路。", fo: [.5, .55] },
+  { f: "documentary-bench", d: "一位老人坐在林荫路边的椅子上。", fo: [.4, .5] },
+  { f: "documentary-children", d: "三个孩子站在一栋水泥房子旁。", fo: [.4, .6] },
+  { f: "documentary-shore", d: "日落时分，两个孩子走在海滩上。", fo: [.5, .6] },
+];
+const INSERT = 4; // 列表中间插一张整幅照片（第 5 帧）
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const at = new Date(window.HOT.at || Date.now());
+const fmtExif = (e) => {
+  if (!e || !e.camera_model) return "EXIF 未记录";
+  const num = (v) => parseFloat(String(v).match(/[\d.]+/)?.[0] || 0);
+  const model = String(e.camera_model).replace(/^Canon Canon/, "Canon").replace(/^NIKON CORPORATION /, "");
+  const mk = /^(Canon|NIKON|SONY|FUJIFILM|OLYMPUS|E-)/i.test(model) ? (/^E-/.test(model) ? "Olympus " : "") : `${String(e.camera_make || "").replace(/ CORPORATION| IMAGING CORP\./g, "")} `;
+  return [mk + model, e.focal_length && `${num(e.focal_length)}mm`, e.aperture_value && `f/${num(e.aperture_value)}`, e.exposure_time && `${String(e.exposure_time).replace(/s+$/, "")}s`, e.iso && `ISO ${num(e.iso)}`].filter(Boolean).join(" · ");
+};
+const who = (m) => String(m.by || m.username || "").split(" | ")[0].replace(/^@/, "");
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><i>5G ▮▮▮</i></div>
+  <main class="scroll" id="scroll">
+    <div class="mast"><b>AI 热点</b><span><em>纪实</em> · ${at.getMonth() + 1}.${at.getDate()} · Thu</span></div>
+    <div class="rule2"></div>
+    <div class="kick"><span>Photo Essay · 图片报道</span><em>01 / ${pad2(HOT.length)}</em></div>
+    <figure>
+      <div class="photo hero-ph" id="hp"><canvas id="hc"></canvas></div>
+      <figcaption><p class="capt" id="hcap"></p><div class="credit"><span id="hby"></span><span class="ex" id="hex"></span></div></figcaption>
+    </figure>
+    <section class="sheet" id="sheet">
+      <div class="lab"><span>Contact Sheet · 小样</span><em id="pick">点一帧换图</em></div>
+      <div class="wrap" id="sw"><canvas id="sc"></canvas><canvas id="pen"></canvas></div>
+    </section>
+    <article class="story">
+      <div class="k">头条 · 热度 ${heatText(h1)}</div>
+      <h1>${esc(shortTitle(h1))}</h1>
+      <p>${esc(clip(firstLine(h1.summary), 128))}</p>
+      <div class="by"><span>来源 <b>${h1.sources}</b> 家</span><span>参与 <b>${h1.people}</b> 人</span><span>${esc(h1.names.slice(0, 2).join("、"))} 等</span></div>
+    </article>
+    <ol id="list">${rest.map((h, i) => `${i === INSERT - 1 ? `<li class="insert"><figure><div class="photo" id="ip"><canvas id="ic"></canvas></div><figcaption><p class="capt" id="icap"></p><div class="credit"><span id="iby"></span><span class="ex" id="iex"></span></div></figcaption></figure></li>` : ""}
+      <li class="it" data-r="${h.rank}"><span class="n">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3>
+      <div class="m">${h.sources} 个来源 · ${h.people} 人参与 · 热度 ${heatText(h)}</div>
+      <div class="more">${esc(clip(firstLine(h.summary), 110))}</div></div></li>`).join("")}</ol>
+    <p class="end">本页照片均为示意图，来自 Unsplash，与新闻事件无关；说明文字描述照片本身，相机参数取自原图 EXIF。</p>
+  </main>
+  <nav>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>`;
+const $ = (id) => document.getElementById(id);
+
+// ── 黑白：通道混合（偏红滤镜）→ 局部反差 → 胶片曲线 → 压暗四角 → 银盐颗粒（中间调最重） ──
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+function coverAt(img, W, H, fo = [.5, .5], rot = 0) {
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const iw = rot ? img.height : img.width, ih = rot ? img.width : img.height;
+  const s = Math.max(W / iw, H / ih), dw = iw * s, dh = ih * s;
+  const ox = Math.min(0, Math.max(W - dw, W / 2 - dw * fo[0])), oy = Math.min(0, Math.max(H - dh, H / 2 - dh * fo[1]));
+  if (rot) { x.translate(ox + dw / 2, oy + dh / 2); x.rotate(rot); x.drawImage(img, -dh / 2, -dw / 2, dh, dw); }
+  else x.drawImage(img, ox, oy, dw, dh);
+  return c;
+}
+function tri(img, W, H, { fo, rot = 0, grain = 1, burn = 1 } = {}) {
+  const c = coverAt(img, W, H, fo, rot), x = c.getContext("2d"), id = x.getImageData(0, 0, W, H), d = id.data;
+  const Y = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) Y[i] = (d[i * 4] * .42 + d[i * 4 + 1] * .48 + d[i * 4 + 2] * .1) / 255;
+  // 自动曝光：把 2% / 98% 分位拉到 .03 / .97
+  const hist = new Uint32Array(256); for (const v of Y) hist[Math.min(255, v * 255 | 0)]++;
+  let acc = 0, lo = 0, hi = 255; for (let k = 0; k < 256; k++) { acc += hist[k]; if (acc < W * H * .02) lo = k; if (acc < W * H * .985) hi = k; }
+  lo /= 255; hi /= 255;
+  // 局部反差：和大半径模糊相减
+  const yc = document.createElement("canvas"); yc.width = W; yc.height = H; const yx = yc.getContext("2d"), yd = yx.createImageData(W, H);
+  for (let i = 0; i < W * H; i++) { const v = Y[i] * 255; yd.data[i * 4] = yd.data[i * 4 + 1] = yd.data[i * 4 + 2] = v; yd.data[i * 4 + 3] = 255; }
+  yx.putImageData(yd, 0, 0);
+  const bc = document.createElement("canvas"); bc.width = W; bc.height = H; const bx = bc.getContext("2d");
+  bx.filter = `blur(${Math.max(2, W / 50)}px)`; bx.drawImage(yc, 0, 0); const B = bx.getImageData(0, 0, W, H).data;
+  // 颗粒：低分辨率高斯噪点放大一点 → 团状
+  const gw = Math.ceil(W / 1.25), gh = Math.ceil(H / 1.25), G = new Float32Array(gw * gh);
+  for (let i = 0; i < gw * gh; i++) G[i] = (Math.random() + Math.random() + Math.random() + Math.random() - 2) * .87;
+  const cx = W / 2, cy = H / 2, R = Math.hypot(cx, cy);
+  for (let y = 0, i = 0; y < H; y++) for (let xx = 0; xx < W; xx++, i++) {
+    let v = (Y[i] - lo) / Math.max(.2, hi - lo);
+    v += (v - ((B[i * 4] / 255 - lo) / Math.max(.2, hi - lo))) * .45;
+    v = Math.min(1.1, Math.max(-.05, v));
+    // 胶片曲线：趾部压黑、肩部柔
+    v = smooth(-.02, 1.04, v); v = Math.pow(v, 1.08);
+    const r = Math.hypot(xx - cx, y - cy) / R; v *= 1 - burn * .32 * Math.pow(r, 2.4);
+    const amp = (.035 + .075 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * v - 1, 2)))) * grain;
+    v += G[Math.min(gh - 1, (y / 1.25) | 0) * gw + Math.min(gw - 1, (xx / 1.25) | 0)] * amp;
+    const o = Math.max(0, Math.min(1, .018 + v * .965)) * 255;
+    d[i * 4] = o; d[i * 4 + 1] = o * .995; d[i * 4 + 2] = o * .985;
+  }
+  x.putImageData(id, 0, 0);
+  return c;
+}
+
+// ── 红色油性笔：手画的圈（四边微弯、角是圆的、收笔过头）、蜡质笔触一点点戳出来，按进度画 ──
+const R0 = (s) => { let t = s >>> 0; return () => ((t = (t * 1664525 + 1013904223) >>> 0) / 4294967296); };
+function pencilPath(kind, f, seed) {
+  const r = R0(seed), j = (a) => (r() - .5) * a, pts = [];
+  const { x, y, w, h } = f, m = 2.5;
+  const seg = (a, b, bow, n, lift) => { for (let s = 0; s <= n; s++) { const t = s / n, nx = -(b[1] - a[1]), ny = b[0] - a[0], L = Math.hypot(nx, ny) || 1, k = Math.sin(t * Math.PI) * bow; pts.push([a[0] + (b[0] - a[0]) * t + nx / L * k + j(.5), a[1] + (b[1] - a[1]) * t + ny / L * k + j(.5), lift && s === 0]); } };
+  if (kind === "box") {
+    const c = [[x - m + j(3), y - m + 2 + j(2)], [x + w + m + j(3), y - m + j(2)], [x + w + m - 1 + j(2), y + h + m + j(3)], [x - m + 1 + j(2), y + h + m - 1 + j(2)], [x - m + 4 + j(2), y - m - 3 + j(2)], [x + 18 + j(4), y - m - 4 + j(2)]];
+    for (let k = 0; k < c.length - 1; k++) seg(c[k], c[k + 1], (k % 2 ? 1 : -1) * (1.2 + r() * 1.6), 22, false);
+  } else if (kind === "tick") {
+    const ax = x + w - 22, ay = y + 8;
+    seg([ax, ay], [ax + 6, ay + 8], .4, 8, true); seg([ax + 6, ay + 8], [ax + 19, ay - 9], -.8, 14, false);
+  } else if (kind === "x") {
+    seg([x + w * .24, y + h * .2], [x + w * .76, y + h * .82], 1.5, 18, true);
+    seg([x + w * .74, y + h * .18], [x + w * .26, y + h * .8], -1.2, 18, true);
+  }
+  return pts;
+}
+function drawPencil(ctx, pts, k, seed, S) {
+  const r = R0(seed + 7), n = Math.max(2, Math.floor(pts.length * k));
+  ctx.save(); ctx.scale(S, S);
+  for (let i = 1; i < n; i++) {
+    if (pts[i][2]) continue;
+    const a = pts[i - 1], b = pts[i], len = Math.hypot(b[0] - a[0], b[1] - a[1]), st = Math.max(1, Math.ceil(len / .45));
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    for (let q = 0; q < st; q++) {
+      const t = q / st, px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t;
+      // 蜡在光面相纸上：一道道细丝，偶尔断开露出底下的图
+      const wax = r(), al = wax < .07 ? .08 : .42 + r() * .4;
+      ctx.fillStyle = `rgba(${204 + (r() * 22 | 0)},${28 + (r() * 18 | 0)},${20 + (r() * 12 | 0)},${al})`;
+      ctx.beginPath(); ctx.ellipse(px + (r() - .5) * .6, py + (r() - .5) * .6, .8 + r() * .5, 1.55 + r() * .35, ang + Math.PI / 2 + (r() - .5) * .3, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+const tickAnim = (fn, dur) => new Promise((ok) => { const t0 = performance.now(); const step = () => { const k = Math.min(1, (performance.now() - t0) / dur); fn(k); if (k < 1) (document.hidden ? setTimeout : requestAnimationFrame)(step); else ok(); }; step(); setTimeout(() => fn(1), dur + 200); });
+
+const S = 2;
+const loadMeta = (name) => fetch(`img/real/${name}.jpg.json`).then((r) => r.json()).catch(() => ({}));
+
+(async () => {
+await fontsReady();
+const imgs = await Promise.all(ROLL.map((p) => Promise.all([loadImage(`img/real/${p.f}.jpg`), loadMeta(p.f)])));
+
+// 头图
+const hc = $("hc"), HW = 390, HH = 248;
+hc.width = HW * S; hc.height = HH * S;
+const cache = {};
+const heroOf = (k) => cache[k] || (cache[k] = tri(imgs[k][0], HW * S, HH * S, { fo: ROLL[k].fo, grain: 1.1 }));
+const setHero = (k) => {
+  hc.getContext("2d").drawImage(heroOf(k), 0, 0);
+  const m = imgs[k][1];
+  $("hcap").innerHTML = `<b>示意图</b>　${esc(ROLL[k].d)}　<span style="color:var(--mute)">（第 ${k + 1} 帧）</span>`;
+  $("hby").textContent = `摄影 ${who(m)} / Unsplash`;
+  $("hex").textContent = fmtExif(m.exif);
+};
+setHero(0);
+// 显影：先是一张白纸，暗部先出来，再到满反差
+hc.animate([{ filter: "brightness(2.6) contrast(.25)", opacity: .6 }, { filter: "brightness(1.5) contrast(.7)", opacity: 1, offset: .45 }, { filter: "none", opacity: 1 }], { duration: 2400, easing: "cubic-bezier(.3,.1,.3,1)", fill: "backwards" });
+
+// 小样：相纸 + 两条 35mm 底片（片边齿孔、片号），竖拍的帧横躺在片格里
+const sw = $("sw"), sc = $("sc"), pen = $("pen"), SW = 358;
+const fw = 106, fh = Math.round(fw / 1.5), gap = 3, rb = 16, padX = (SW - (fw * 3 + gap * 2)) / 2, stripH = fh + rb * 2, top0 = 8, sGap = 10;
+const SH = top0 * 2 + stripH * 2 + sGap;
+sc.width = SW * S; sc.height = SH * S; pen.width = SW * S; pen.height = SH * S;
+sw.style.height = SH + "px";
+const sx = sc.getContext("2d"); sx.scale(S, S);
+sx.fillStyle = "#f4f2ec"; sx.fillRect(0, 0, SW, SH);
+const frames = [];
+for (let s = 0; s < 2; s++) {
+  const y0 = top0 + s * (stripH + sGap), x0 = padX - 10, w0 = fw * 3 + gap * 2 + 20;
+  sx.fillStyle = "#0d0d0c"; sx.fillRect(x0, y0, w0, stripH);
+  
+  // 齿孔：透光处在相纸上是浅灰
+  for (let hx = x0 + 4; hx < x0 + w0 - 6; hx += 7.6) for (const hy of [y0 + 2.2, y0 + stripH - 6.8]) {
+    sx.fillStyle = "#cfccc4"; sx.beginPath(); sx.roundRect ? sx.roundRect(hx, hy, 4.2, 4.6, 1) : sx.rect(hx, hy, 4.2, 4.6); sx.fill();
+  }
+  for (let k = 0; k < 3; k++) {
+    const idx = s * 3 + k, fx = padX + k * (fw + gap), fy = y0 + rb;
+    const im = imgs[idx][0], portrait = im.height > im.width;
+    sx.drawImage(tri(im, fw * S, fh * S, { fo: ROLL[idx].fo, rot: portrait ? -Math.PI / 2 : 0, grain: .8, burn: .6 }), fx, fy, fw, fh);
+    frames.push({ x: fx, y: fy, w: fw, h: fh });
+    // 片边字：帧号 + 半帧号
+    sx.fillStyle = "#a9a59a"; sx.font = "500 5.5px 'IBM Plex Mono'";
+    sx.fillText(`${idx + 1}`, fx + 3, fy + fh + 7.4); sx.fillText(`▸${idx + 1}A`, fx + fw / 2 + 4, fy + fh + 7.4);
+    // 点选区域
+    const hit = document.createElement("button"); hit.className = "hit"; hit.dataset.k = idx; hit.setAttribute("aria-label", `第 ${idx + 1} 帧`);
+    Object.assign(hit.style, { left: fx + "px", top: fy + "px", width: fw + "px", height: fh + "px" }); sw.appendChild(hit);
+  }
+}
+// 相纸微微不平：一层很淡的径向明暗
+const pg = sx.createRadialGradient(SW * .3, SH * .2, 10, SW / 2, SH / 2, SW * .8); pg.addColorStop(0, "rgba(255,255,255,.06)"); pg.addColorStop(1, "rgba(0,0,0,.05)"); sx.fillStyle = pg; sx.fillRect(0, 0, SW, SH);
+
+const px = pen.getContext("2d");
+let chosen = 0;
+const marks = (k, anim) => {
+  const box = pencilPath("box", frames[k], 11 + k), tick = pencilPath("tick", frames[k], 3), xs = pencilPath("x", frames[1], 5);
+  const draw = (kb, kt) => { px.clearRect(0, 0, pen.width, pen.height); if (k !== 1) drawPencil(px, xs, 1, 5, S); drawPencil(px, box, kb, 11 + k, S); if (kt > 0) drawPencil(px, tick, kt, 3, S); };
+  if (!anim) return draw(1, 1);
+  return tickAnim((t) => draw(Math.min(1, t * 1.35), Math.max(0, (t - .72) / .28)), 900);
+};
+px.clearRect(0, 0, pen.width, pen.height);
+setTimeout(() => marks(0, true), 1500);
+sw.querySelectorAll(".hit").forEach((b) => b.addEventListener("click", () => {
+  const k = +b.dataset.k; if (k === chosen) return; chosen = k;
+  marks(k, true); setHero(k);
+  hc.animate([{ filter: "brightness(2.2) contrast(.35)" }, { filter: "none" }], { duration: 1200, easing: "cubic-bezier(.3,.1,.3,1)" });
+  $("pick").textContent = `选用第 ${k + 1} 帧`;
+}));
+
+// 列表中间的整幅照片
+const ic = $("ic"), iw = 390, ih = 252; ic.width = iw * S; ic.height = ih * S;
+ic.getContext("2d").drawImage(tri(imgs[INSERT][0], iw * S, ih * S, { fo: ROLL[INSERT].fo, grain: 1.1 }), 0, 0);
+$("icap").innerHTML = `<b>示意图</b>　${esc(ROLL[INSERT].d)}　<span style="color:var(--mute)">（第 ${INSERT + 1} 帧，与上下新闻无关）</span>`;
+$("iby").textContent = `摄影 ${who(imgs[INSERT][1])} / Unsplash`; $("iex").textContent = fmtExif(imgs[INSERT][1].exif);
+
+// 文字慢慢浮现；列表逐条
+for (const [el, d] of [[app.querySelector(".mast"), 0], [app.querySelector(".kick"), 150], [app.querySelector("figcaption"), 900], [$("sheet"), 1100], [app.querySelector(".story"), 1300]])
+  el.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 800, delay: d, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" });
+app.querySelectorAll(".it").forEach((li, i) => {
+  li.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 700, delay: 1500 + i * 90, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" });
+  li.addEventListener("click", () => li.classList.toggle("open"));
+});
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>

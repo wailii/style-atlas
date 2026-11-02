@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>原相机</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f2f2f7; --card: #fff; --ink: #000; --sec: #8e8e93; --sep: #e3e3e8; --notes: #e0a000; --led: #ff8a1f;
+    --sans: -apple-system, "Inter", "Noto Sans SC", sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; overflow: hidden; }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 44px 0 96px; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .sb { position: absolute; top: 0; left: 0; right: 0; z-index: 20; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 4px 26px 0; font: 600 15px/1 var(--sans); background: var(--bg); }
+  .sb i { font-style: normal; font-size: 12px; letter-spacing: 1px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; padding: 6px 16px 10px; }
+  header h1 { font: 800 32px/1.05 var(--sans); letter-spacing: -.02em; }
+  header p { margin-top: 4px; font: 500 13px/1.2 var(--sans); color: var(--sec); }
+  .cam { width: 40px; height: 40px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .cam svg { width: 22px; height: 22px; }
+
+  /* 双摄：后摄大图 + 前摄小图（可互换），右下角橙色 LED 日期 */
+  .post { position: relative; margin: 0 12px; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; background: #111; }
+  .post canvas { position: absolute; display: block; }
+  .post #main { inset: 0; width: 100%; height: 100%; }
+  .post #stamp { inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .front { position: absolute; left: 12px; top: 12px; width: 104px; height: 139px; border-radius: 13px; overflow: hidden; border: 2px solid #000; box-shadow: 0 0 0 1px rgba(255,255,255,.12); cursor: pointer; z-index: 2; background: #222; }
+  .front canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .who { padding: 7px 18px 0; font: 400 11px/1.45 var(--sans); color: var(--sec); }
+  .who b { font-weight: 600; color: #48484a; }
+
+  /* 备忘录：白卡、顶上灰色日期、黄色返回、正文系统字 */
+  .note { margin: 12px 12px 0; background: var(--card); border-radius: 14px; padding: 10px 16px 14px; }
+  .note .bar { display: flex; justify-content: space-between; align-items: center; font: 500 15px/1 var(--sans); color: var(--notes); }
+  .note .bar span:first-child::before { content: "‹"; font-size: 24px; line-height: 0; margin-right: 4px; vertical-align: -2px; }
+  .note .when { margin: 10px 0 8px; text-align: center; font: 500 11.5px/1 var(--sans); color: var(--sec); }
+  .note h2 { font: 700 21px/1.32 var(--sans); letter-spacing: -.01em; }
+  .note .body { margin-top: 6px; font: 400 15.5px/1.55 var(--sans); }
+  .note .body .c { display: inline-block; width: 2px; height: 1.1em; background: var(--notes); vertical-align: -3px; margin-left: 1px; animation: caret 1s steps(1) infinite; }
+  @keyframes caret { 50% { opacity: 0; } }
+  .note .nums { margin-top: 6px; font: 400 15.5px/1.55 var(--sans); color: #3a3a3c; }
+
+  .list { margin: 12px 12px 0; background: var(--card); border-radius: 14px; padding: 12px 0 4px; }
+  .list .hd { padding: 0 16px 6px; font: 700 17px/1.3 var(--sans); }
+  .row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: start; padding: 9px 14px 9px 14px; position: relative; cursor: pointer; }
+  .row + .row::before { content: ""; position: absolute; left: 56px; right: 0; top: 0; border-top: .5px solid var(--sep); }
+  .ck { width: 23px; height: 23px; border-radius: 50%; border: 1.6px solid #c7c7cc; margin-top: 1px; display: grid; place-items: center; transition: background .2s, border-color .2s; }
+  .ck svg { width: 13px; height: 13px; opacity: 0; transform: scale(.4); transition: all .25s cubic-bezier(.3,1.6,.5,1); }
+  .row.done .ck { background: var(--notes); border-color: var(--notes); }
+  .row.done .ck svg { opacity: 1; transform: none; }
+  .row.done h3 { color: var(--sec); }
+  .row h3 { font: 400 15.5px/1.42 var(--sans); }
+  .row .m { margin-top: 2px; font: 400 12.5px/1.3 var(--sans); color: var(--sec); }
+  .row .more { display: none; margin-top: 6px; font: 400 14px/1.55 var(--sans); color: #3a3a3c; }
+  .row.open .more { display: block; }
+  .row .th { width: 62px; height: 62px; border-radius: 8px; overflow: hidden; background: #ddd; }
+  .row .th canvas { width: 100%; height: 100%; display: block; }
+  .foot { padding: 14px 16px 24px; text-align: center; font: 400 11.5px/1.6 var(--sans); color: var(--sec); }
+
+  nav { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 6px 28px; background: rgba(249,249,249,.86); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); border-top: .5px solid rgba(0,0,0,.18); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #999; font: 500 10px/1 var(--sans); }
+  .tab svg { width: 24px; height: 24px; }
+  .tab.on { color: var(--notes); }
+  .flash { position: absolute; inset: 0; z-index: 30; background: #fff; pointer-events: none; opacity: 0; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+// 后摄 / 前摄 / 列表小图：真图 + 摄影师 + EXIF 来自 img/real/*.json。图都是示意，不是新闻现场
+const BACK = { f: "rawcam-dog", fo: [.5, .5], flash: [.5, .4, .5], tilt: -2.4 };
+const FRONT = { f: "rawcam-selfie", fo: [.47, .4] };
+const THUMB = { 2: { f: "rawcam-snow", fo: [.46, .55], flash: [.45, .6, .6] }, 3: { f: "rawcam-cheers", fo: [.5, .5], flash: [.5, .5, .6] }, 4: { f: "rawcam-dogs", fo: [.55, .5], flash: [.5, .5, .6] }, 5: { f: "rawcam-coffee", fo: [.5, .5], flash: [.5, .5, .6] } };
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+// 热榜时间按北京时间显示
+const at = (() => { const d = new Date(new Date(window.HOT.at || Date.now()).getTime() + 8 * 3600e3); return { getFullYear: () => d.getUTCFullYear(), getMonth: () => d.getUTCMonth(), getDate: () => d.getUTCDate(), getDay: () => d.getUTCDay(), getHours: () => d.getUTCHours(), getMinutes: () => d.getUTCMinutes() }; })();
+const WK = "日一二三四五六";
+const fmtExif = (e) => {
+  if (!e || !e.camera_model) return "EXIF 未记录";
+  const num = (v) => parseFloat(String(v).match(/[\d.]+/)?.[0] || 0);
+  return [String(e.camera_model).replace(/^Canon Canon/, "Canon").replace(/^NIKON CORPORATION /, ""), e.focal_length && `${num(e.focal_length)}mm`, e.aperture_value && `f/${num(e.aperture_value)}`, e.exposure_time && `${String(e.exposure_time).replace(/s+$/, "")}s`, e.iso && `ISO ${num(e.iso)}`].filter(Boolean).join(" · ");
+};
+const who = (m) => String(m.by || m.username || "").split(" | ")[0].replace(/^@/, "");
+const check = `<svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 L6.6 11.4 L12.5 4.8"/></svg>`;
+
+app.innerHTML = `
+  <div class="sb"><span>${nowHM()}</span><i>5G ▮▮▮</i></div>
+  <main class="scroll" id="scroll">
+    <header><div><h1>AI 热点</h1><p>${at.getMonth() + 1}月${at.getDate()}日 周${WK[at.getDay()]} · ${HOT.length} 条</p></div>
+      <button class="cam" id="cam" aria-label="再拍一张"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8.5 C3 7.4 3.9 6.5 5 6.5 H7.4 L8.9 4.5 H15.1 L16.6 6.5 H19 C20.1 6.5 21 7.4 21 8.5 V17.5 C21 18.6 20.1 19.5 19 19.5 H5 C3.9 19.5 3 18.6 3 17.5 Z"/><circle cx="12" cy="13" r="3.6"/></svg></button></header>
+    <section class="post" id="post">
+      <canvas id="main"></canvas><canvas id="stamp"></canvas>
+      <button class="front" id="front" aria-label="前后摄互换"><canvas id="fc"></canvas></button>
+    </section>
+    <p class="who" id="who"></p>
+    <section class="note" id="note">
+      <div class="bar"><span>备忘录</span><span>完成</span></div>
+      <div class="when">${at.getFullYear()}年${at.getMonth() + 1}月${at.getDate()}日 ${pad2(at.getHours())}:${pad2(at.getMinutes())}</div>
+      <h2>${esc(shortTitle(h1))}</h2>
+      <div class="body" id="typed"></div>
+      <div class="nums">热度 ${heatText(h1)} · ${h1.sources} 个来源 · ${h1.people} 人在聊</div>
+    </section>
+    <section class="list" id="list">
+      <div class="hd">还在刷的 ${rest.length} 条</div>
+      ${rest.map((h) => `<div class="row" data-r="${h.rank}"><button class="ck" aria-label="标记已读">${check}</button><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 个来源${THUMB[h.rank] ? ` · <span class="cr"></span>` : ""}</div><div class="more">${esc(clip(firstLine(h.summary), 90))}</div></div>${THUMB[h.rank] ? `<div class="th"><canvas></canvas></div>` : "<i></i>"}</div>`).join("")}
+    </section>
+    <p class="foot">照片都是示意图（Unsplash），左下角写着摄影师和原图 EXIF；<br>右下角的橙色日期是热榜日期，不是拍摄日期。</p>
+  </main>
+  <nav>${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}${n}</button>`).join("")}</nav>
+  <div class="flash" id="flash"></div>`;
+const $ = (id) => document.getElementById(id);
+
+// ── 闪光灯直打：线性空间里按到闪光灯中心的距离做平方反比衰减；被摄体偏冷、白、高光爆掉，背景掉进暖色的黑里 ──
+const lin = new Float32Array(256).map((_, i) => Math.pow(i / 255, 2.2));
+function coverTilt(img, W, H, fo = [.5, .5], tilt = 0, mirror = false) {
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const a = Math.abs(tilt) * Math.PI / 180, grow = Math.cos(a) + Math.sin(a) * Math.max(W / H, H / W);
+  const s = Math.max(W / img.width, H / img.height) * grow, dw = img.width * s, dh = img.height * s;
+  x.translate(W / 2, H / 2); x.rotate(tilt * Math.PI / 180); if (mirror) x.scale(-1, 1);
+  const ox = Math.min(-W / 2 * grow + 0, Math.max(W / 2 * grow - dw, -dw * fo[0])), oy = Math.min(-H / 2 * grow, Math.max(H / 2 * grow - dh, -dh * fo[1]));
+  x.drawImage(img, ox, oy, dw, dh);
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  return c;
+}
+function flashRaw(img, W, H, { fo, flash = [.5, .5, .6], tilt = 0, power = 1 } = {}) {
+  const c = coverTilt(img, W, H, fo, tilt), x = c.getContext("2d"), id = x.getImageData(0, 0, W, H), d = id.data;
+  const [fx, fy, fr] = flash, R = Math.hypot(W, H) * fr * .5;
+  for (let y = 0, i = 0; y < H; y++) for (let xx = 0; xx < W; xx++, i += 4) {
+    let r = lin[d[i]], g = lin[d[i + 1]], b = lin[d[i + 2]];
+    const dd = Math.hypot(xx - fx * W, y - fy * H) / R, f = Math.exp(-dd * dd * 1.1);
+    // 环境光欠曝 + 闪光补上
+    const gain = (.09 + 3.2 * f) * power;
+    // 白平衡：闪光处中性偏冷，远处是暖色室内光
+    const wr = 1 + (1 - f) * .14 - f * .05, wb = 1 - (1 - f) * .2 + f * .06;
+    r *= gain * wr; g *= gain; b *= gain * wb;
+    // 手机色调映射：高光一下就到顶
+    const tm = (v) => Math.min(1, v * (1 + v / 1.6) / (1 + v)); // 斜率 1 起步，过 1.6 就顶到白
+    r = tm(r); g = tm(g); b = tm(b);
+    // 手机的饱和度
+    const L = .2126 * r + .7152 * g + .0722 * b, sat = 1.16;
+    r = L + (r - L) * sat; g = L + (g - L) * sat; b = L + (b - L) * sat;
+    d[i] = Math.pow(Math.max(0, r), 1 / 2.2) * 255; d[i + 1] = Math.pow(Math.max(0, g), 1 / 2.2) * 255; d[i + 2] = Math.pow(Math.max(0, b), 1 / 2.2) * 255;
+  }
+  x.putImageData(id, 0, 0);
+  sharpenNoise(c, .7, .05);
+  return c;
+}
+// 手机味：小半径过度锐化（白边）+ 暗部彩色噪点
+function sharpenNoise(c, amt, noise) {
+  const W = c.width, H = c.height, x = c.getContext("2d");
+  const b = document.createElement("canvas"); b.width = W; b.height = H; const bx = b.getContext("2d");
+  bx.filter = `blur(${Math.max(1, W / 500)}px)`; bx.drawImage(c, 0, 0);
+  const id = x.getImageData(0, 0, W, H), d = id.data, B = bx.getImageData(0, 0, W, H).data;
+  for (let i = 0; i < d.length; i += 4) {
+    const L = (d[i] + d[i + 1] + d[i + 2]) / 765, k = noise * 255 * Math.pow(1 - L, 2), n = (Math.random() - .5) * k * .8;
+    for (let ch = 0; ch < 3; ch++) d[i + ch] = d[i + ch] + (d[i + ch] - B[i + ch]) * amt + n + (Math.random() - .5) * k;
+  }
+  x.putImageData(id, 0, 0);
+}
+// 前摄：镜像、广角近距、磨皮（和模糊版混一半）、偏暖提亮、不锐
+function frontCam(img, W, H, fo) {
+  const c = coverTilt(img, W, H, fo, 1.2, true), x = c.getContext("2d");
+  x.globalAlpha = .45; x.filter = `blur(${W / 90}px) brightness(1.08)`; x.drawImage(c, 0, 0); x.filter = "none"; x.globalAlpha = 1;
+  x.globalCompositeOperation = "soft-light"; x.fillStyle = "rgba(255,190,140,.35)"; x.fillRect(0, 0, W, H); x.globalCompositeOperation = "source-over";
+  sharpenNoise(c, .15, .035);
+  return c;
+}
+
+// ── 橙色 LED 日期：七段数码管、略斜、核心发黄、外圈红橙光晕，叠加到画面上 ──
+const SEG = { 0: "abcdef", 1: "bc", 2: "abged", 3: "abgcd", 4: "fgbc", 5: "afgcd", 6: "afgedc", 7: "abc", 8: "abcdefg", 9: "abcdfg" };
+function stamp(ctx, text, rx, by, h) {
+  const w = h * .5, t = h * .15, sk = .12, gapX = h * .3;
+  const pathOf = (ch, ox) => {
+    const P = new Path2D(), seg = SEG[ch] || "", hh = h / 2;
+    const S = { a: [0, 0, w, 0], g: [0, hh, w, hh], d: [0, h, w, h], f: [0, 0, 0, hh], b: [w, 0, w, hh], e: [0, hh, 0, h], c: [w, hh, w, h] };
+    for (const s of seg) { const [x1, y1, x2, y2] = S[s], m = t * .7; const hor = y1 === y2;
+      const ax = hor ? x1 + m : x1, ay = hor ? y1 : y1 + m, bx = hor ? x2 - m : x2, byy = hor ? y2 : y2 - m;
+      P.moveTo(ox + ax - (ay - h) * sk, by - h + ay); P.lineTo(ox + bx - (byy - h) * sk, by - h + byy); }
+    return P;
+  };
+  let width = 0; for (const ch of text) width += ch === " " ? gapX : ch === "'" ? h * .22 : w + h * .2;
+  let ox = rx - width; const paths = [];
+  for (const ch of text) { if (ch === " ") { ox += gapX; continue; } if (ch === "'") { const P = new Path2D(); P.moveTo(ox + h * .1, by - h); P.lineTo(ox + h * .02, by - h * .72); paths.push(P); ox += h * .22; continue; } paths.push(pathOf(ch, ox)); ox += w + h * .2; }
+  ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const pass = (col, lw, blur, a) => { ctx.filter = blur ? `blur(${blur}px)` : "none"; ctx.globalAlpha = a; ctx.strokeStyle = col; ctx.lineWidth = lw; for (const P of paths) ctx.stroke(P); };
+  pass("#ff3d00", t * 3.2, h * .35, .55); pass("#ff7a12", t * 1.6, h * .08, .9); pass("#ffc46b", t * .9, 0, 1); pass("#fff1c9", t * .35, 0, .7);
+  ctx.restore();
+}
+
+const S = 2;
+const loadMeta = (name) => fetch(`img/real/${name}.jpg.json`).then((r) => r.json()).catch(() => ({}));
+
+(async () => {
+await fontsReady();
+const typed = $("typed"), msg = h1.latest;
+let n = 0; const type = () => { n++; typed.innerHTML = esc(msg.slice(0, n)) + `<span class="c"></span>`; if (n < msg.length) setTimeout(type, 38); };
+setTimeout(type, 1300);
+const post = $("post"), PW = post.clientWidth, PH = post.clientHeight;
+const [[bImg, bM], [fImg, fM]] = await Promise.all([BACK, FRONT].map((p) => Promise.all([loadImage(`img/real/${p.f}.jpg`), loadMeta(p.f)])));
+// 每张都按两种尺寸各处理一份（点小图会前后互换）
+const BS = 1.5; // 原图只有 512～768 宽，大图按 1.5 倍处理就够
+const big = [flashRaw(bImg, Math.round(PW * BS), Math.round(PH * BS), BACK), frontCam(fImg, Math.round(PW * BS), Math.round(PH * BS), FRONT.fo)];
+const small = [flashRaw(bImg, 104 * S, 139 * S, BACK), frontCam(fImg, 104 * S, 139 * S, FRONT.fo)];
+const metas = [bM, fM];
+const mc = $("main"), fc = $("fc"), sc = $("stamp");
+mc.width = PW * S; mc.height = PH * S; fc.width = 104 * S; fc.height = 139 * S; sc.width = PW * S; sc.height = PH * S;
+let swap = 0;
+const paint = () => {
+  mc.getContext("2d").drawImage(big[swap], 0, 0, mc.width, mc.height); fc.getContext("2d").drawImage(small[1 - swap], 0, 0);
+  const [a, b] = metas; // 标签跟着相机走，不跟位置走
+  $("who").innerHTML = `示意图 · 后摄 <b>${esc(who(a))}</b> · ${esc(fmtExif(a.exif))}<br>前摄 <b>${esc(who(b))}</b> · ${esc(fmtExif(b.exif))} · Unsplash`;
+};
+paint();
+const sx = sc.getContext("2d"); sx.scale(S, S);
+stamp(sx, `'${String(at.getFullYear()).slice(2)} ${at.getMonth() + 1} ${at.getDate()}`, PW - 22, PH - 22, 16);
+
+// ── 入场：取景 → 闪一下 → 照片落定，小图弹出，日期亮起，备忘录打字 ──
+const flash = (d = 0) => $("flash").animate([{ opacity: 0 }, { opacity: .95, offset: .15 }, { opacity: 0 }], { duration: 520, delay: d, easing: "ease-out" });
+const shoot = (d = 0) => {
+  flash(d);
+  mc.animate([{ transform: "scale(1.12)", filter: "brightness(1.9) saturate(.4)" }, { transform: "none", filter: "none" }], { duration: 650, delay: d + 60, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
+  $("front").animate([{ transform: "scale(0)", opacity: 0 }, { transform: "scale(1.06)", opacity: 1, offset: .7 }, { transform: "none" }], { duration: 520, delay: d + 520, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "backwards" });
+  sc.animate([{ opacity: 0 }, { opacity: .6, offset: .3 }, { opacity: .2, offset: .45 }, { opacity: 1 }], { duration: 500, delay: d + 820, fill: "backwards" });
+};
+shoot(250);
+
+$("note").animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 500, delay: 1000, easing: "ease-out", fill: "backwards" });
+$("list").animate([{ opacity: 0, transform: "translateY(14px)" }, { opacity: 1, transform: "none" }], { duration: 500, delay: 1300, easing: "ease-out", fill: "backwards" });
+
+// 列表小图
+app.querySelectorAll(".row").forEach(async (row) => {
+  const r = +row.dataset.r, t = THUMB[r];
+  row.querySelector(".ck").addEventListener("click", (e) => { e.stopPropagation(); row.classList.toggle("done"); });
+  row.addEventListener("click", () => row.classList.toggle("open"));
+  if (!t) return;
+  const [im, m] = await Promise.all([loadImage(`img/real/${t.f}.jpg`), loadMeta(t.f)]);
+  const cv = row.querySelector("canvas"); cv.width = cv.height = 62 * S;
+  cv.getContext("2d").drawImage(flashRaw(im, 62 * S, 62 * S, { ...t, power: .9 }), 0, 0);
+  row.querySelector(".cr").textContent = `示意图 · ${who(m)}`;
+});
+
+// 互动：点小图前后摄互换；相机按钮再闪一次
+$("front").addEventListener("click", () => { swap = 1 - swap; paint(); $("front").animate([{ transform: "scale(.9)" }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.3,1.6,.5,1)" }); mc.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 250 }); });
+$("cam").addEventListener("click", () => shoot(0));
+const tabs = [...app.querySelectorAll(".tab")];
+tabs.forEach((t) => t.addEventListener("click", () => tabs.forEach((x) => x.classList.toggle("on", x === t))));
+})();
+</script>
+</body>
+</html>
