@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设备实拍</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #111214; --mute: #6b6d72; --faint: #9a9ca1; --line: #e6e6e8; --bg: #ffffff; --accent: #e8452c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; overflow: hidden; }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 47px 0 100px; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .sb { position: absolute; left: 0; right: 0; top: 0; height: 47px; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 4px 30px 0 34px; font: 600 16px Inter; background: rgba(255,255,255,.94); }
+  .sb .ic { display: flex; gap: 6px; align-items: center; } .sb svg { display: block; }
+
+  .top { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 18px 12px; }
+  .top h1 { font: 800 30px/1 Inter, "Noto Sans SC"; letter-spacing: -.03em; }
+  .top .k { font: 500 11px Inter, "Noto Sans SC"; color: var(--mute); text-align: right; line-height: 1.45; }
+  .top .k b { color: var(--accent); font-weight: 600; }
+
+  /* 实拍：一张真照片，平板屏幕上的画面是本页用透视变换（单应矩阵）实时贴上去的 */
+  .shot { position: relative; height: 430px; overflow: hidden; background: #d9d6d1; cursor: pointer; }
+  .shot canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .tag { position: absolute; left: 12px; top: 12px; z-index: 2; font: 600 10px Inter, "Noto Sans SC"; letter-spacing: .04em; color: #fff; background: rgba(17,18,20,.62); padding: 5px 8px 4px; border-radius: 4px; }
+  .cap { padding: 10px 18px 0; font: 400 11px/1.6 Inter, "Noto Sans SC"; color: var(--mute); }
+  .cap b { font-weight: 600; color: var(--ink); }
+  .cap span { font-family: Inter; font-variant-numeric: tabular-nums; color: var(--faint); }
+
+  .lst { padding: 18px 10px 0; }
+  .lst h2 { display: flex; justify-content: space-between; align-items: baseline; padding: 0 8px 6px; font: 700 17px Inter, "Noto Sans SC"; }
+  .lst h2 small { font: 500 11px Inter, "Noto Sans SC"; color: var(--faint); }
+  .row { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 11px 8px; border-radius: 12px; cursor: pointer; transition: background .25s; position: relative; }
+  .row + .row::before { content: ""; position: absolute; left: 48px; right: 8px; top: 0; border-top: 1px solid var(--line); }
+  .row.on { background: #f3f3f4; } .row.on::before, .row.on + .row::before { border-color: transparent; }
+  .row .n { font: 700 15px Inter; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .row.on .n { color: var(--accent); }
+  .row h3 { font: 600 14.5px/1.4 Inter, "Noto Sans SC"; }
+  .row .m { margin-top: 2px; font: 400 11.5px Inter, "Noto Sans SC"; color: var(--mute); }
+  .row .eye { font: 600 10px Inter, "Noto Sans SC"; color: var(--accent); opacity: 0; transition: opacity .25s; white-space: nowrap; }
+  .row.on .eye { opacity: 1; }
+  .foot { padding: 18px 18px 10px; font: 400 10.5px/1.7 Inter, "Noto Sans SC"; color: var(--faint); }
+
+  .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 83px; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); padding: 7px 8px 0; background: rgba(250,250,251,.97); border-top: .5px solid rgba(0,0,0,.14); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font: 500 10px Inter, "Noto Sans SC"; color: #8e8e93; height: 46px; }
+  .tab svg { width: 24px; height: 24px; stroke-width: 1.8; }
+  .tab.on { color: var(--ink); }
+  .home { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #111; z-index: 21; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+const app = document.getElementById("app");
+const $ = (id) => document.getElementById(id);
+const PHOTO = { src: "img/real/device-tablet.jpg",
+  // 照片里平板显示区的四个角（原图像素，左上、右上、右下、左下），按屏幕边缘逐行找亮暗分界后拟合直线求交点
+  quad: [[187.7, 138.0], [384.4, 162.6], [350.2, 319.0], [153.8, 283.3]],
+  crop: [80, 66, 368, 400] };   // 页面里取原图的哪一块（x, y, w, h）
+const sig = `<svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg>`;
+const bat = `<svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2"/><path d="M25 4.5v4a2 2 0 0 0 0-4Z" opacity=".45"/></svg>`;
+
+app.innerHTML = `
+  <main class="scroll" id="scroll">
+    <header class="top"><h1>AI 热点</h1><div class="k"><b>● 实拍预览</b><br>${(HOT_AT()).replace(/-/g, ".")} · 平板版</div></header>
+    <section class="shot" id="shot"><canvas id="ph"></canvas><span class="tag">示意图 · 屏幕为实时合成</span></section>
+    <p class="cap" id="cap"></p>
+    <section class="lst"><h2>热榜 8 条<small>点一条，平板上就换成它</small></h2>
+      ${HOT.map((h, i) => `<div class="row ${i ? "" : "on"}" data-i="${i}"><span class="n">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 ${heatText(h)} · ${h.sources} 家来源 · ${h.people} 人参与</div></div><span class="eye">屏幕上</span></div>`).join("")}
+    </section>
+    <p class="foot">平板屏幕里的画面不是照片原有内容：页面把「AI 热点」的平板版界面画在画布上，按照片里屏幕四个角算出单应矩阵，逐像素透视贴到屏幕位置，再按原屏幕的白点和明暗调色、叠一层反光和颗粒，挡在屏幕前的棕榈叶从原图里抠出来保留。照片只用来演示，与新闻无关。</p>
+  </main>
+  <div class="sb"><span>${nowHM()}</span><span class="ic">${sig}${bat}</span></div>
+  <nav class="tabs" id="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>
+  <i class="home"></i>`;
+function HOT_AT() { return ((window.HOT && window.HOT.at) || "").slice(0, 10); }
+
+const nextFrame = (cb) => { let done = false; const go = () => { if (!done) { done = true; cb(performance.now()); } }; requestAnimationFrame(go); setTimeout(go, 1000 / 30); };
+const ease = (t) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+
+// ── 平板界面：横屏 1432×1000（iPad Pro 11 寸显示区比例 1.43），白底，左边头条大卡、右边热榜 ──
+const SW = 1432, SH = 1000;
+const imgs = {};
+function rr(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+function wrap(x, text, maxW, maxL) { const ls = splitLines(text, x.font, maxW); if (ls.length > maxL) { ls.length = maxL; ls[maxL - 1] = clip(ls[maxL - 1] + "…", ls[maxL - 1].length); } return ls; }
+function drawScreen(sel, tab) {
+  const c = document.createElement("canvas"); c.width = SW; c.height = SH; const x = c.getContext("2d");
+  x.fillStyle = "#fbfbfc"; x.fillRect(0, 0, SW, SH);
+  // iPadOS 状态栏
+  x.fillStyle = "#111"; x.font = "600 22px Inter"; x.fillText(nowHM(), 40, 38); x.textAlign = "right"; x.fillText("100%", SW - 70, 38);
+  x.fillRect(SW - 62, 22, 34, 18); x.textAlign = "left";
+  // 顶部居中的标签栏（iPadOS 18 的浮动标签）
+  const tw = 116, tx0 = SW / 2 - (tw * 5) / 2; rr(x, tx0 - 6, 62, tw * 5 + 12, 58, 29); x.fillStyle = "#ececef"; x.fill();
+  TAB_NAMES.forEach((n, i) => { if (i === tab) { rr(x, tx0 + i * tw, 68, tw, 46, 23); x.fillStyle = "#fff"; x.fill(); } x.fillStyle = i === tab ? "#111" : "#6b6d72"; x.font = `${i === tab ? 700 : 500} 22px "Noto Sans SC"`; x.textAlign = "center"; x.fillText(n, tx0 + i * tw + tw / 2, 99); });
+  x.textAlign = "left";
+  // 大标题
+  x.fillStyle = "#111"; x.font = '800 64px Inter, "Noto Sans SC"'; x.fillText("AI 热点", 56, 210);
+  x.fillStyle = "#8a8c91"; x.font = '500 22px Inter, "Noto Sans SC"'; x.fillText(`${HOT_AT().replace(/-/g, ".")} · 实时热榜`, 60, 248);
+  // 左：头条大卡
+  const h = HOT[sel], L = 56, T = 282, CW = 780;
+  rr(x, L, T, CW, 420, 26); x.save(); x.clip();
+  if (h.cover && imgs[h.cover]) { const im = imgs[h.cover]; const s = Math.max(CW / im.width, 420 / im.height); x.drawImage(im, L + (CW - im.width * s) / 2, T + (420 - im.height * s) / 2, im.width * s, im.height * s); }
+  else { x.fillStyle = "#eef0f3"; x.fillRect(L, T, CW, 420); x.save(); x.translate(L + CW / 2 - 96, T + 210 - 96); x.scale(3, 3); x.strokeStyle = "#1d1f24"; x.lineWidth = 2.6; x.lineCap = x.lineJoin = "round"; x.stroke(new Path2D(DOODLE[h.rank] || "")); x.restore(); }
+  x.restore();
+  rr(x, L + 20, T + 20, 150, 44, 22); x.fillStyle = "rgba(17,18,20,.78)"; x.fill(); x.fillStyle = "#fff"; x.font = '700 22px Inter, "Noto Sans SC"'; x.fillText(`No.${pad2(h.rank)}`, L + 42, T + 50);
+  x.fillStyle = "#111"; x.font = '800 44px Inter, "Noto Sans SC"';
+  wrap(x, shortTitle(h), CW, 2).forEach((l, i) => x.fillText(l, L, T + 486 + i * 56));
+  x.fillStyle = "#55575c"; x.font = '400 25px Inter, "Noto Sans SC"';
+  wrap(x, firstLine(h.summary), CW, 3).forEach((l, i) => x.fillText(l, L, T + 612 + i * 38));
+  // 右：热榜
+  const R = 896, RW = SW - R - 56;
+  x.fillStyle = "#111"; x.font = '800 30px Inter, "Noto Sans SC"'; x.fillText("热榜", R, 312);
+  x.fillStyle = "#e8452c"; x.font = '600 20px Inter, "Noto Sans SC"'; x.textAlign = "right"; x.fillText("● 实时", SW - 56, 310); x.textAlign = "left";
+  let y = 350;
+  HOT.forEach((it, i) => {
+    if (i === sel || y > SH - 60) return;
+    x.fillStyle = "#e6e6e8"; x.fillRect(R, y - 6, RW, 2);
+    x.fillStyle = "#a0a2a7"; x.font = "700 26px Inter"; x.fillText(pad2(it.rank), R, y + 38);
+    x.fillStyle = "#111"; x.font = '700 25px Inter, "Noto Sans SC"';
+    const ls = wrap(x, shortTitle(it), RW - 66 - (it.cover ? 96 : 0), 2); ls.forEach((l, j) => x.fillText(l, R + 56, y + 36 + j * 34));
+    x.fillStyle = "#8a8c91"; x.font = '400 19px Inter, "Noto Sans SC"'; x.fillText(`热度 ${heatText(it)} · ${it.sources} 家来源`, R + 56, y + 36 + ls.length * 34 + 4);
+    if (it.cover && imgs[it.cover]) { const im = imgs[it.cover]; x.save(); rr(x, SW - 56 - 84, y + 8, 84, 84, 14); x.clip(); const s = Math.max(84 / im.width, 84 / im.height); x.drawImage(im, SW - 56 - 84 + (84 - im.width * s) / 2, y + 8 + (84 - im.height * s) / 2, im.width * s, im.height * s); x.restore(); }
+    y += Math.max(108, 36 + ls.length * 34 + 40);
+  });
+  return c;
+}
+
+// ── 单应矩阵：把屏幕四个角（照片坐标）映射回界面画布的 0..1；解 8 元线性方程 ──
+function homography(src, dst) {   // 求 H 使 dst ≈ H·src
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = src[i], [u, v] = dst[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+  }
+  for (let c = 0; c < 8; c++) {   // 高斯消元
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c]; }
+  }
+  const h = b.map((v, i) => v / A[i][i]); h.push(1); return h;
+}
+
+(async () => {
+  await fontsReady();
+  const photo = await loadImage(PHOTO.src);
+  const meta = await fetch(PHOTO.src + ".json").then((r) => r.json()).catch(() => null);
+  await Promise.all(HOT.filter((h) => h.cover).map((h) => loadImage(h.cover).then((im) => (imgs[h.cover] = im)).catch(() => {})));
+  if (meta) $("cap").innerHTML = `<b>示意图</b>　平板电脑放在树桩凳上，屏幕上是这一页的平板版界面（合成）。摄影 ${esc(meta.by)} / Unsplash<br><span>${esc(meta.exif_text)}</span>`;
+
+  const cv = $("ph"), shot = $("shot"), W = shot.clientWidth, H = shot.clientHeight, DPR = Math.min(2, window.devicePixelRatio || 1);
+  const CW = Math.round(W * DPR), CH = Math.round(H * DPR); cv.width = CW; cv.height = CH;
+  const ctx = cv.getContext("2d");
+  // 原图按 cover 方式取 crop 区域铺满
+  const [cx0, cy0, cw, ch] = PHOTO.crop, s = Math.max(CW / cw, CH / ch), ox = (CW - cw * s) / 2, oy = (CH - ch * s) / 2;
+  const P = (x, y) => [(x - cx0) * s + ox, (y - cy0) * s + oy];
+  const base = document.createElement("canvas"); base.width = CW; base.height = CH; const bx = base.getContext("2d");
+  bx.imageSmoothingQuality = "high"; bx.drawImage(photo, cx0 - ox / s, cy0 - oy / s, CW / s, CH / s, 0, 0, CW, CH);
+  const baseData = bx.getImageData(0, 0, CW, CH).data;
+  const Q = PHOTO.quad.map(([x, y]) => P(x, y));
+  const Hm = homography(Q, [[0, 0], [1, 0], [1, 1], [0, 1]]);
+  const minX = Math.max(0, Math.floor(Math.min(...Q.map((q) => q[0]))) - 2), maxX = Math.min(CW, Math.ceil(Math.max(...Q.map((q) => q[0]))) + 2);
+  const minY = Math.max(0, Math.floor(Math.min(...Q.map((q) => q[1]))) - 2), maxY = Math.min(CH, Math.ceil(Math.max(...Q.map((q) => q[1]))) + 2);
+  const BW = maxX - minX, BH = maxY - minY;
+  // 每个像素预先算好：屏幕坐标 (u,v)、是否在屏幕里（圆角 + 边缘抗锯齿）、前面叶子的遮挡、原屏幕白点
+  const U = new Float32Array(BW * BH), V = new Float32Array(BW * BH), A = new Float32Array(BW * BH), LEAF = new Float32Array(BW * BH);
+  const wpx = Math.hypot(Q[1][0] - Q[0][0], Q[1][1] - Q[0][1]), hpx = Math.hypot(Q[3][0] - Q[0][0], Q[3][1] - Q[0][1]);
+  const RAD = 0.032;   // 显示区圆角（相对宽度）
+  let wr = 0, wg = 0, wb = 0, wn = 0;
+  for (let j = 0; j < BH; j++) for (let i = 0; i < BW; i++) {
+    const X = minX + i + 0.5, Y = minY + j + 0.5, d = Hm[6] * X + Hm[7] * Y + 1, u = (Hm[0] * X + Hm[1] * Y + Hm[2]) / d, v = (Hm[3] * X + Hm[4] * Y + Hm[5]) / d, k = j * BW + i;
+    U[k] = u; V[k] = v;
+    // 到四条边的像素距离 → 抗锯齿；四角按圆角裁
+    let e = Math.min(u * wpx, (1 - u) * wpx, v * hpx, (1 - v) * hpx);
+    const cxr = Math.min(u, 1 - u) * wpx, cyr = Math.min(v, 1 - v) * hpx, R = RAD * wpx;
+    if (cxr < R && cyr < R) e = Math.min(e, R - Math.hypot(R - cxr, R - cyr));
+    A[k] = Math.max(0, Math.min(1, e + 0.5));
+    const pi = ((minY + j) * CW + minX + i) * 4, r = baseData[pi], g = baseData[pi + 1], b = baseData[pi + 2];
+    // 棕榈叶：绿色明显高于红、蓝 → 是叶子，保留原图
+    LEAF[k] = A[k] > 0 && v < 0.5 && u > 0.18 ? Math.max(0, Math.min(1, (g - Math.max(r, b) - 5) / 14)) : 0;
+    if (A[k] >= 1 && r > 205 && g > 205 && b > 205) { wr += r; wg += g; wb += b; wn++; }
+  }
+  // 叶子遮罩往外扩一像素再模糊，边缘不留白边
+  const L2 = new Float32Array(LEAF.length);
+  for (let j = 1; j < BH - 1; j++) for (let i = 1; i < BW - 1; i++) { let m = 0, sum = 0; for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const q = LEAF[(j + dj) * BW + i + di]; m = Math.max(m, q); sum += q; } L2[j * BW + i] = Math.min(1, m * 0.6 + (sum / 9) * 0.7); }
+  const white = wn ? [wr / wn / 255, wg / wn / 255, wb / wn / 255] : [0.9, 0.9, 0.91];
+
+  let cur = null, nxt = null, mixT = 1, power = 0;
+  const srcData = (c) => { const t = document.createElement("canvas"); t.width = 716; t.height = 500; const tx = t.getContext("2d"); tx.filter = "blur(0.7px)"; tx.drawImage(c, 0, 0, 716, 500); return tx.getImageData(0, 0, 716, 500).data; };
+  const out = ctx.createImageData(BW, BH);
+  const seedNoise = new Float32Array(BW * BH).map((_, k) => (rnd(k * 1.37 + 3) - 0.5) * 7);
+  function sample(D, u, v, o) {   // 双线性取样
+    const x = Math.min(714.999, Math.max(0, u * 716 - 0.5)), y = Math.min(498.999, Math.max(0, v * 500 - 0.5)), x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0;
+    const i00 = (y0 * 716 + x0) * 4, i10 = i00 + 4, i01 = i00 + 716 * 4, i11 = i01 + 4;
+    for (let c = 0; c < 3; c++) o[c] = (D[i00 + c] * (1 - fx) + D[i10 + c] * fx) * (1 - fy) + (D[i01 + c] * (1 - fx) + D[i11 + c] * fx) * fy;
+  }
+  const s1 = [0, 0, 0], s2 = [0, 0, 0];
+  function compose() {
+    ctx.drawImage(base, 0, 0);
+    const o = out.data;
+    for (let j = 0; j < BH; j++) for (let i = 0; i < BW; i++) {
+      const k = j * BW + i, a = A[k], pi = ((minY + j) * CW + minX + i) * 4, q = k * 4;
+      const r0 = baseData[pi], g0 = baseData[pi + 1], b0 = baseData[pi + 2];
+      if (a <= 0) { o[q] = r0; o[q + 1] = g0; o[q + 2] = b0; o[q + 3] = 0; continue; }
+      const u = U[k], v = V[k];
+      sample(cur, u, v, s1); if (mixT < 1) { sample(nxt, u, v, s2); for (let c = 0; c < 3; c++) s1[c] += (s2[c] - s1[c]) * mixT; }
+      // 屏幕自己发光：亮度 = 原屏幕白点 × 背光；右上更亮一点（照片里窗光从那边来）、边缘略暗
+      const lit = power * (0.94 + 0.06 * (u - v)) * (1 - 0.05 * Math.pow(Math.abs(u - 0.5) * 2, 3));
+      // 玻璃反光：一条很宽的斜向亮带 + 整体一层很淡的环境反射
+      const band = Math.exp(-Math.pow((u * 0.8 + v * 1.1 - 0.62) / 0.16, 2)) * 0.09 + 0.03;
+      for (let c = 0; c < 3; c++) {
+        let val = (s1[c] / 255) * white[c] * lit;
+        val = 1 - (1 - val) * (1 - band * (c === 2 ? 1.04 : 1));          // 屏幕混合
+        val = val * 255 + seedNoise[k];
+        const leaf = L2[k], orig = c === 0 ? r0 : c === 1 ? g0 : b0;
+        const sv = val * (1 - leaf) + orig * leaf;
+        o[q + c] = orig + (sv - orig) * a;
+      }
+      o[q + 3] = 255;
+    }
+    // 只覆盖屏幕区域里 a>0 的像素：先画到临时画布再按 alpha 合上去
+    tmpx.putImageData(out, 0, 0); ctx.drawImage(tmp, minX, minY);
+  }
+  const tmp = document.createElement("canvas"); tmp.width = BW; tmp.height = BH; const tmpx = tmp.getContext("2d");
+
+  const state = { sel: 0, tab: 0 };
+  cur = srcData(drawScreen(0, 0));
+  // 入场：照片先出来，屏幕从熄着（原图的黑屏 = 背光 0）亮起来
+  power = 0; compose();
+  cv.animate([{ opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0)" }], { duration: 700, easing: "ease-out" });
+  document.querySelectorAll(".row, .cap, .lst h2").forEach((el, i) => el.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 600, delay: 300 + i * 60, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" }));
+  const T0 = performance.now() + 500;
+  (function wake(now) { const p = Math.min(1, Math.max(0, (now - T0) / 900)); power = p < 0.12 ? p / 0.12 * 0.35 : 0.35 + 0.65 * ease((p - 0.12) / 0.88); compose(); if (p < 1) nextFrame(wake); })(performance.now());
+
+  // 换内容：新界面在屏幕上淡入（像 App 里切页）
+  function show(sel, tab) {
+    state.sel = sel; state.tab = tab; nxt = srcData(drawScreen(sel, tab)); mixT = 0; const t0 = performance.now();
+    (function go(now) { mixT = ease((now - t0) / 380); compose(); if (mixT < 1) nextFrame(go); else { cur = nxt; mixT = 1; } })(t0);
+  }
+  document.querySelectorAll(".row").forEach((row) => row.addEventListener("click", () => {
+    document.querySelectorAll(".row").forEach((x) => x.classList.toggle("on", x === row));
+    show(+row.dataset.i, state.tab); $("scroll").scrollTo({ top: 0, behavior: "smooth" });
+  }));
+  // 点照片：熄屏 / 亮屏
+  shot.addEventListener("click", () => {
+    const from = power, to = power > 0.5 ? 0 : 1, t0 = performance.now();
+    (function go(now) { const p = ease((now - t0) / 450); power = from + (to - from) * p; compose(); if (p < 1) nextFrame(go); })(t0);
+  });
+  const tabs = [...document.querySelectorAll(".tab")];
+  tabs.forEach((t, i) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.classList.toggle("on", x === t));
+    if (i === 4) { document.querySelectorAll(".row").forEach((x, j) => x.classList.toggle("on", j === 0)); show(0, 0); tabs.forEach((x, j) => x.classList.toggle("on", j === 0)); $("scroll").scrollTo({ top: 0, behavior: "smooth" }); }
+    else show(state.sel, i);
+  }));
+})();
+</script>
+</body>
+</html>

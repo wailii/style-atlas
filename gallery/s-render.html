@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写实材质</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #121113; --panel: #1b1a1c; --ink: #f2efe9; --mute: rgba(242,239,233,.56); --faint: rgba(242,239,233,.34); --line: rgba(242,239,233,.1); --amber: #f0b27a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+  .app { position: relative; height: 100vh; overflow: hidden; }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: 100px; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* 头图：一整块实时渲染的微距画面（拉丝铝板 + 刻字 + 玻璃透镜 + 景深） */
+  .hero { position: relative; height: 560px; overflow: hidden; background: #2a2420; cursor: crosshair; }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .sb { position: absolute; left: 0; right: 0; top: 0; height: 47px; z-index: 25; transition: background .3s; display: flex; align-items: center; justify-content: space-between; padding: 4px 30px 0 34px; font: 600 16px Inter; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+  .sb.solid { background: rgba(18,17,19,.94); }
+  .sb svg { display: block; fill: #fff; } .sb .ic { display: flex; gap: 6px; align-items: center; }
+  .head { position: absolute; left: 20px; right: 20px; top: 52px; z-index: 5; display: flex; justify-content: space-between; align-items: baseline; color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,.4); }
+  .head b { font: 600 22px Inter, "Noto Sans SC"; letter-spacing: -.02em; }
+  .head span { font: 500 10.5px "JetBrains Mono"; letter-spacing: .06em; opacity: .85; }
+  .focus { position: absolute; z-index: 4; width: 64px; height: 64px; margin: -32px 0 0 -32px; pointer-events: none; opacity: 0; }
+  .focus::before, .focus::after { content: ""; position: absolute; inset: 0; border: 1px solid rgba(255,214,120,.95); }
+  .focus::after { inset: 26px; border: 0; background: linear-gradient(rgba(255,214,120,.95), rgba(255,214,120,.95)) center/1px 100% no-repeat, linear-gradient(rgba(255,214,120,.95), rgba(255,214,120,.95)) center/100% 1px no-repeat; }
+  .lens { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 40px 16px 14px; display: flex; align-items: flex-end; justify-content: space-between; background: linear-gradient(rgba(18,17,19,0), rgba(18,17,19,.55)); }
+  .lens .rd { font: 500 10px/1.6 "JetBrains Mono"; color: rgba(255,255,255,.82); letter-spacing: .02em; }
+  .lens .rd b { color: #fff; font-weight: 700; }
+  .ap { display: flex; background: rgba(12,11,12,.62); border-radius: 10px; padding: 3px; box-shadow: inset 0 0 0 .5px rgba(255,255,255,.18); }
+  .ap button { font: 500 11px "JetBrains Mono"; color: rgba(255,255,255,.7); padding: 6px 9px; border-radius: 7px; }
+  .ap button.on { background: rgba(255,255,255,.92); color: #111; }
+
+  .meta { padding: 18px 20px 6px; }
+  .meta .k { font: 500 10.5px "JetBrains Mono"; color: var(--amber); letter-spacing: .08em; }
+  .meta h1 { margin-top: 8px; font: 700 22px/1.35 Inter, "Noto Sans SC"; letter-spacing: -.01em; }
+  .meta p { margin-top: 8px; font: 400 13.5px/1.6 Inter, "Noto Sans SC"; color: var(--mute); }
+  .stats { display: flex; gap: 22px; padding: 12px 20px 4px; }
+  .stats div { font: 400 11px Inter, "Noto Sans SC"; color: var(--faint); }
+  .stats b { display: block; font: 600 22px Inter; color: var(--ink); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+
+  .lib { padding: 22px 12px 0; }
+  .lib h2 { display: flex; justify-content: space-between; align-items: baseline; padding: 0 8px 10px; font: 600 15px Inter, "Noto Sans SC"; }
+  .lib h2 span { font: 500 10px "JetBrains Mono"; color: var(--faint); letter-spacing: .06em; }
+  .row { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; padding: 10px 8px; border-radius: 14px; cursor: pointer; transition: background .25s; }
+  .row + .row { margin-top: 2px; }
+  .row.on { background: var(--panel); box-shadow: inset 0 0 0 .5px rgba(255,255,255,.08); }
+  .row canvas { width: 64px; height: 64px; display: block; border-radius: 12px; background: #1e1c1d; }
+  .row .t { font: 600 14.5px/1.4 Inter, "Noto Sans SC"; }
+  .row .m { margin-top: 4px; display: flex; gap: 10px; font: 400 11.5px Inter, "Noto Sans SC"; color: var(--mute); }
+  .row .m i { font: 500 10px "JetBrains Mono"; font-style: normal; color: var(--amber); letter-spacing: .04em; }
+  .foot { padding: 22px 20px 10px; font: 400 10.5px/1.7 Inter, "Noto Sans SC"; color: var(--faint); }
+
+  .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 83px; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); padding: 7px 8px 0;
+    background: rgba(22,21,23,.96); border-top: .5px solid rgba(255,255,255,.1); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font: 500 10px Inter, "Noto Sans SC"; color: rgba(242,239,233,.45); height: 46px; }
+  .tab svg { width: 24px; height: 24px; stroke-width: 1.7; }
+  .tab.on { color: var(--amber); }
+  .home { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: rgba(255,255,255,.85); z-index: 21; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/three-GLTFLoader.js"></script>
+<script src="vendor/three-RGBELoader.js"></script>
+<script>
+const app = document.getElementById("app");
+const $ = (id) => document.getElementById(id);
+// 八种表面：头图那块板子换哪种，列表里的材质球就是哪种（参数是真实物理材质的常用值）
+const MATS = [
+  { n: "拉丝铝", en: "BRUSHED ALUMINIUM", c: "#c9ccd1", metal: 1, rough: 0.34, brush: 1 },
+  { n: "抛光金", en: "POLISHED GOLD", c: "#ffc35c", metal: 1, rough: 0.12, brush: 0.15 },
+  { n: "玫瑰铜", en: "ROSE COPPER", c: "#f0a184", metal: 1, rough: 0.26, brush: 0.6 },
+  { n: "红色车漆", en: "CLEARCOAT RED", c: "#8e0d12", metal: 0.2, rough: 0.42, cc: 1, brush: 0 },
+  { n: "黑色阳极", en: "BLACK ANODIZED", c: "#2a2a2e", metal: 1, rough: 0.38, brush: 0.8 },
+  { n: "白瓷", en: "GLOSS CERAMIC", c: "#eeeae2", metal: 0, rough: 0.5, cc: 1, brush: 0 },
+  { n: "喷砂钛", en: "BEAD-BLASTED Ti", c: "#a29c94", metal: 1, rough: 0.55, brush: 0 },
+  { n: "钢琴黑", en: "PIANO BLACK", c: "#0b0b0d", metal: 0, rough: 0.3, cc: 1, brush: 0 },
+];
+const sig = `<svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg>`;
+const bat = `<svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="20" height="9" rx="2"/><path d="M25 4.5v4a2 2 0 0 0 0-4Z" opacity=".5"/></svg>`;
+
+app.innerHTML = `
+  <main class="scroll" id="scroll">
+    <section class="hero" id="hero">
+      <canvas id="gl"></canvas>
+      <i class="focus" id="fx"></i>
+      <div class="head"><b>AI 热点</b><span>MATERIAL STUDY · <em id="no" style="font-style:normal">01</em>/08</span></div>
+      <div class="lens"><div class="rd mono" id="rd"></div><div class="ap" id="ap"><button data-f="1.4" class="on">f/1.4</button><button data-f="2.8">f/2.8</button><button data-f="8">f/8</button></div></div>
+    </section>
+    <section class="meta" id="meta"></section>
+    <div class="stats" id="stats"></div>
+    <section class="lib"><h2>材质库 · 8 条<span>TAP = 换板子</span></h2>
+      ${HOT.map((h, i) => `<div class="row ${i ? "" : "on"}" data-i="${i}"><canvas width="128" height="128"></canvas><div><div class="t">${esc(shortTitle(h))}</div><div class="m"><i>${MATS[i].en}</i><span>热度 ${heatText(h)} · ${h.sources} 家</span></div></div></div>`).join("")}
+    </section>
+    <p class="foot">示意渲染：画面是 three.js 实时算出来的 PBR 场景，不是新闻图片。环境光 HDRI venice_sunset_1k（Poly Haven，CC0）；墨镜模型 SunglassesKhronos（Eric Chadwick / Khronos，CC-BY 4.0）。点画面任意处重新对焦，光圈只改景深。</p>
+  </main>
+  <div class="sb"><span>${nowHM()}</span><span class="ic">${sig}${bat}</span></div>
+  <nav class="tabs" id="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>
+  <i class="home"></i>`;
+
+function showMeta(i) {
+  const h = HOT[i];
+  $("meta").innerHTML = `<div class="k">No.${pad2(h.rank)} · ${MATS[i].n} ${MATS[i].en}</div><h1>${esc(shortTitle(h))}</h1><p>${esc(clip(firstLine(h.summary), 64))}</p>`;
+  $("stats").innerHTML = `<div><b>${heatText(h)}</b>热度</div><div><b>${h.sources}</b>家来源</div><div><b>${h.people}</b>人参与</div><div><b>${h.trendPct > 0 ? "+" : ""}${h.trendPct}%</b>热度变化</div>`;
+  $("no").textContent = pad2(h.rank);
+}
+showMeta(0);
+
+const nextFrame = (cb) => { let done = false; const go = () => { if (!done) { done = true; cb(performance.now()); } }; requestAnimationFrame(go); setTimeout(go, 1000 / 30); };
+const ease = (t) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+
+// ── 板面贴图：拉丝纹（横向细划痕）+ 激光刻字。颜色、粗糙度、凹凸三张图同一套画法 ──
+const HOT_DATE = (window.HOT && window.HOT.at || "").slice(0, 10).replace(/-/g, ".");
+function plateMaps(h, brush) {
+  const W = 1280, H = 876, Z = W / 2048;
+  const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+  const col = mk(), rou = mk(), bmp = mk();
+  const cx = col.getContext("2d"), rx = rou.getContext("2d"), bx = bmp.getContext("2d");
+  cx.fillStyle = "#fff"; cx.fillRect(0, 0, W, H);
+  rx.fillStyle = "rgb(150,150,150)"; rx.fillRect(0, 0, W, H);
+  bx.fillStyle = "rgb(128,128,128)"; bx.fillRect(0, 0, W, H);
+  // 拉丝：几千条横向长短不一的细划痕，亮暗随机（直接写像素，比画几千条路径快得多）
+  seeded(7, () => {
+    const F = new Float32Array(W * H);
+    for (let i = 0; i < 26000 * brush; i++) {
+      const y = (Math.random() * H) | 0, x0 = (Math.random() * W) | 0, l = ((80 + Math.random() * 900) * Z) | 0, v = (Math.random() < 0.5 ? -1 : 1) * (0.02 + Math.random() * 0.05);
+      for (let x = x0, e = Math.min(W, x0 + l); x < e; x++) F[y * W + x] += v;
+    }
+    const ri = rx.getImageData(0, 0, W, H), bi = bx.getImageData(0, 0, W, H);
+    for (let i = 0; i < W * H; i++) { const f = F[i]; ri.data[i * 4] = ri.data[i * 4 + 1] = ri.data[i * 4 + 2] = 150 + f * 220; bi.data[i * 4] = bi.data[i * 4 + 1] = bi.data[i * 4 + 2] = 128 + f * 160; }
+    rx.putImageData(ri, 0, 0); bx.putImageData(bi, 0, 0);
+  });
+  // 刻字：名字（关键词）大字 + 一行编号热度；刻进去的地方更粗糙、更暗、往下凹
+  const name = KEY[h.rank] || shortTitle(h).slice(0, 8);
+  const fs = Math.min(300, Math.floor(1700 / Math.max(4, [...name].reduce((a, ch) => a + (/[\x00-\xff]/.test(ch) ? 0.58 : 1), 0))));
+  const lines = [[`No.${pad2(h.rank)} — 热度 ${heatText(h)} · ${h.sources} 家来源 · ${h.people} 人参与`, `500 ${58 * Z}px "JetBrains Mono", "Noto Sans SC"`, 330 * Z], [name, `700 ${fs * Z}px Inter, "Noto Sans SC"`, (330 + 40 + fs * 0.92) * Z], [clip(shortTitle(h).replace(name, "").replace(/\s+/g, " ").trim(), 22), `500 ${72 * Z}px Inter, "Noto Sans SC"`, (330 + 40 + fs * 0.92 + 120) * Z], [clip(h.latest, 30), `400 ${50 * Z}px Inter, "Noto Sans SC"`, (330 + 40 + fs * 0.92 + 120 + 300) * Z], [`AI 热点 · ${HOT_DATE}`, `500 ${42 * Z}px "JetBrains Mono", "Noto Sans SC"`, (H / Z - 200) * Z]];
+  for (const [t, f, y] of lines) {
+    for (const [ctx, fill] of [[cx, "rgba(70,70,74,.62)"], [rx, "rgb(225,225,225)"], [bx, "rgb(30,30,30)"]]) { ctx.font = f; ctx.textBaseline = "alphabetic"; ctx.fillStyle = fill; ctx.fillText(t, 220 * Z, y); }
+  }
+  // 刻线框
+  for (const [ctx, st] of [[cx, "rgba(70,70,74,.55)"], [rx, "rgb(225,225,225)"], [bx, "rgb(40,40,40)"]]) { ctx.strokeStyle = st; ctx.lineWidth = 4; ctx.strokeRect(110 * Z, 150 * Z, W - 220 * Z, H - 300 * Z); }
+  const T = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.encoding = THREE.sRGBEncoding; return t; };
+  return { map: T(col, true), roughnessMap: T(rou), bumpMap: T(bmp) };
+}
+
+// ── 玻璃透镜：先渲染不透明场景，复制一份，再画玻璃——玻璃采样这份复制品，按法线偏移（折射）+ 色散 + 菲涅尔反射 HDRI ──
+const GLASS_V = `varying vec3 vWP; varying vec3 vN; varying vec3 vVN;
+void main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vWP = wp.xyz; vN = normalize(mat3(modelMatrix) * normal); vVN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * viewMatrix * wp; }`;
+const GLASS_F = `uniform sampler2D tScene; uniform sampler2D tEnv; uniform vec2 res; uniform float envI; uniform vec3 sunDir;
+varying vec3 vWP; varying vec3 vN; varying vec3 vVN;
+vec3 rgbe(vec4 t){ return t.rgb * exp2(t.a * 255.0 - 128.0); }
+vec2 equi(vec3 d){ return vec2(atan(d.z, d.x) * 0.15915494 + 0.5, asin(clamp(d.y, -1.0, 1.0)) * 0.31830988 + 0.5); }
+void main(){
+  vec3 V = normalize(cameraPosition - vWP); vec3 N = normalize(vN); vec3 vn = normalize(vVN);
+  if (!gl_FrontFacing) { N = -N; vn = -vn; }
+  float c = clamp(dot(N, V), 0.0, 1.0);
+  float F = 0.04 + 0.96 * pow(1.0 - c, 5.0);
+  vec2 uv = gl_FragCoord.xy / res;
+  vec3 dv = (viewMatrix * vec4(N - vec3(0.0, 1.0, 0.0), 0.0)).xyz;
+  vec2 o = -dv.xy * 0.045 - vn.xy * 0.006;
+  vec3 refr = vec3(texture2D(tScene, uv + o * 1.0).r, texture2D(tScene, uv + o * 1.012).g, texture2D(tScene, uv + o * 1.024).b);
+  refr *= vec3(0.93, 0.985, 0.975) * mix(0.35, 1.0, smoothstep(0.08, 0.5, c));
+  vec3 R = reflect(-V, N);
+  vec3 env = rgbe(texture2D(tEnv, equi(R))) * envI;
+  float sp = pow(max(dot(R, sunDir), 0.0), 900.0) * 60.0;
+  gl_FragColor = vec4(mix(refr, env, F) + sp, 1.0);
+}`;
+
+// ── 景深 + 色调：按深度算弥散圆，在圆里按黄金角取样；最后 ACES + sRGB + 一点暗角 ──
+const POST_V = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
+const POST_COMMON = `#include <packing>
+uniform sampler2D tDepth; uniform float cNear; uniform float cFar; uniform float focus; uniform float aper; uniform float maxR;
+float dist(vec2 uv){ return -perspectiveDepthToViewZ(texture2D(tDepth, uv).x, cNear, cFar); }
+float coc(float z){ return clamp(aper * abs(1.0 / focus - 1.0 / z), 0.0, maxR); }
+varying vec2 vUv;`;
+// 1/3：缩到半分辨率，alpha 里存距离
+const DOWN_F = POST_COMMON + `
+uniform sampler2D tColor;
+void main(){ gl_FragColor = vec4(texture2D(tColor, vUv).rgb, dist(vUv)); }`;
+// 2/3：半分辨率里按黄金角在弥散圆里取 28 个样，近处的糊可以盖到远处，远处的不往清楚的东西上渗
+const GATHER_F = POST_COMMON + `
+uniform sampler2D tHalf; uniform vec2 hres;
+void main(){
+  vec4 c0 = texture2D(tHalf, vUv); float zc = c0.a, cc = coc(zc) * 0.5;
+  vec3 col = c0.rgb; float tot = 1.0;
+  float R = max(cc, 1.0);
+  for (int i = 0; i < 28; i++) {
+    float r = R * sqrt((float(i) + 0.5) / 28.0), a = float(i) * 2.39996323;
+    vec4 s = texture2D(tHalf, vUv + vec2(cos(a), sin(a)) * r / hres);
+    float sc = coc(s.a) * 0.5;
+    if (s.a > zc) sc = min(sc, cc * 2.0);
+    float m = smoothstep(r - 0.5, r + 0.5, sc);
+    col += mix(col / tot, s.rgb, m); tot += 1.0;
+  }
+  gl_FragColor = vec4(col / tot, cc);
+}`;
+// 3/3：全分辨率合成：清楚的地方用原图，糊的地方用半分辨率结果；ACES + sRGB + 暗角
+const POST_F = POST_COMMON + `
+uniform sampler2D tColor; uniform sampler2D tBlur; uniform float expo; uniform vec2 res;
+vec3 aces(vec3 x){ x *= 0.6; return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+void main(){
+  float cc = coc(dist(vUv));
+  vec3 sharp = texture2D(tColor, vUv).rgb; vec3 bl = texture2D(tBlur, vUv).rgb;
+  // 小号 FXAA：沿亮度梯度方向的垂直方向混一点邻居，压住细金属框的锯齿
+  vec2 px = 1.0 / res; float lc = dot(sharp, vec3(.3,.59,.11));
+  vec3 n = texture2D(tColor, vUv + vec2(0., px.y)).rgb, so = texture2D(tColor, vUv - vec2(0., px.y)).rgb, e = texture2D(tColor, vUv + vec2(px.x, 0.)).rgb, w = texture2D(tColor, vUv - vec2(px.x, 0.)).rgb;
+  float ln = dot(n, vec3(.3,.59,.11)), ls = dot(so, vec3(.3,.59,.11)), le = dot(e, vec3(.3,.59,.11)), lw = dot(w, vec3(.3,.59,.11));
+  float range = max(max(max(ln, ls), max(le, lw)), lc) - min(min(min(ln, ls), min(le, lw)), lc);
+  vec2 dir = vec2(-((ln) - (ls)), (le) - (lw)); dir /= (abs(dir.x) + abs(dir.y) + 1e-4);
+  vec3 aa = 0.5 * (texture2D(tColor, vUv + dir * px * 0.75).rgb + texture2D(tColor, vUv - dir * px * 0.75).rgb);
+  sharp = mix(sharp, aa, smoothstep(0.04, 0.25, range / (lc + 0.25)));
+  vec3 col = mix(sharp, bl, smoothstep(0.6, 2.2, cc));
+  col = pow(aces(col * expo), vec3(1.0 / 2.2));
+  vec2 q = vUv - 0.5; col *= 1.0 - dot(q, q) * 0.6;
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+// 素材和字体一起加载，不排队
+const LOADS = Promise.all([
+  new Promise((ok, bad) => new THREE.RGBELoader().setDataType(THREE.UnsignedByteType).load("hdr/venice_sunset_1k.hdr", ok, null, bad)),
+  new Promise((ok) => new THREE.GLTFLoader().load("models/SunglassesKhronos.glb", ok, null, () => ok(null))),
+]);
+(async () => {
+  await fontsReady();
+  $("meta").animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 800, delay: 200, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" });
+  $("stats").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 800, delay: 400, fill: "backwards" });
+  document.querySelectorAll(".row").forEach((r, i) => r.animate([{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duration: 700, delay: 500 + i * 70, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" }));
+
+  const hero = $("hero"), W = hero.clientWidth, H = hero.clientHeight, DPR = Math.min(1.5, window.devicePixelRatio || 1), RW = Math.round(W * DPR), RH = Math.round(H * DPR);
+  const r = new THREE.WebGLRenderer({ canvas: $("gl"), antialias: false, preserveDrawingBuffer: true });
+  r.setPixelRatio(DPR); r.setSize(W, H, false);
+  r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.NoToneMapping; r.physicallyCorrectLights = true;
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.shadowMap.autoUpdate = false;
+  const pm = new THREE.PMREMGenerator(r);
+  const [hdr, glasses] = await LOADS;
+  hdr.mapping = THREE.EquirectangularReflectionMapping;
+  const scene = new THREE.Scene();
+  scene.environment = pm.fromEquirectangular(hdr).texture;   // 背景不画：镜头朝下，画面里全是桌面
+
+  // 找 HDRI 里的太阳：最亮的那个像素 → 方向。整套布景转过去逆光拍（影子朝镜头，边缘有暖色高光）
+  const sunDir = (() => {
+    const { data, width: w, height: hh } = hdr.image; let best = -1, bi = 0;
+    for (let i = 0; i < w * hh; i++) { const v = (data[i * 4] + data[i * 4 + 1] + data[i * 4 + 2]) * Math.pow(2, data[i * 4 + 3] - 128); if (v > best) { best = v; bi = i; } }
+    const u = ((bi % w) + 0.5) / w, v = 1 - (Math.floor(bi / w) + 0.5) / hh, el = (v - 0.5) * Math.PI, az = (u - 0.5) * 2 * Math.PI;
+    return new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
+  })();
+  const world = new THREE.Group(); scene.add(world);
+  world.rotation.y = Math.atan2(-sunDir.x, -sunDir.z) + 0.42;   // 太阳在画面左后方
+  // 铭牌：50×34 cm 的金属板，上表面拉丝 + 激光刻字，四边倒角
+  const PW = 0.38, PD = 0.26;
+  const sideMat = new THREE.MeshStandardMaterial({ color: 0xc9ccd1, metalness: 1, roughness: 0.2 });
+  const topStd = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 1, bumpScale: 0.0008, envMapIntensity: 0.8 });
+  const topPhy = new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 1, roughness: 1, bumpScale: 0.0012, clearcoat: 1, clearcoatRoughness: 0.04 });
+  let topMat = topStd;   // 有清漆层的面（车漆、白瓷、钢琴黑）才换成 Physical，省一次着色器编译
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(PW, 0.012, PD), [sideMat, sideMat, topStd, sideMat, sideMat, sideMat]); plate.position.y = 0.006; plate.receiveShadow = true; plate.castShadow = true; world.add(plate);
+  // 胡桃木桌面：程序画的木纹（颜色 + 粗糙度），远处、近处都被景深化开
+  // 胡桃木：按像素算年轮纹（颜色 + 粗糙度），和铭牌同一组贴图，共用一个着色器
+  const wood = (() => {
+    const N = 1024, c = document.createElement("canvas"), rc = document.createElement("canvas"); c.width = c.height = rc.width = rc.height = N;
+    const ci = c.getContext("2d").createImageData(N, N), ri = rc.getContext("2d").createImageData(N, N);
+    const ph = Array.from({ length: 6 }, (_, i) => rnd(i + 11) * 6.28);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      // 直纹为主：沿 x 方向的细纹，纹距随位置变，偶尔一条深色导管纹
+      const warp = Math.sin(x * 0.004 + ph[0]) * 14 + Math.sin(x * 0.013 + ph[1]) * 4 + Math.sin(x * 0.041 + y * 0.01 + ph[2]) * 1.2;
+      const w = (y + warp) * (0.62 + 0.18 * Math.sin(y * 0.006 + ph[3]));
+      const fine = 0.5 + 0.5 * Math.sin(w), band = Math.pow(0.5 + 0.5 * Math.sin(w * 0.13 + ph[4]), 4);
+      const pore = rnd(Math.floor(x / 3) * 7.1 + Math.floor(y) * 13.3) > 0.985 ? 0.35 : 0;
+      const k = fine * 0.22 + band * 0.42 + pore + rnd(x * 1.7 + y * 3.3) * 0.08, i = (y * N + x) * 4;
+      ci.data[i] = 74 - k * 46; ci.data[i + 1] = 48 - k * 31; ci.data[i + 2] = 30 - k * 20; ci.data[i + 3] = 255;
+      ri.data[i] = ri.data[i + 1] = ri.data[i + 2] = 110 + k * 110; ri.data[i + 3] = 255;
+    }
+    c.getContext("2d").putImageData(ci, 0, 0); rc.getContext("2d").putImageData(ri, 0, 0);
+    const cm = new THREE.CanvasTexture(c); cm.encoding = THREE.sRGBEncoding; const rm = new THREE.CanvasTexture(rc);
+    return { map: cm, roughnessMap: rm, bumpMap: rm };
+  })();
+  const table = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.8, metalness: 0, bumpScale: 0.0005 }, wood))); table.rotation.x = -Math.PI / 2; table.receiveShadow = true; world.add(table);
+
+  const mats = new Map();
+  function setPlate(i) {
+    const M = MATS[i], h = HOT[i];
+    if (!mats.has(i)) mats.set(i, plateMaps(h, M.brush || 0.02));
+    const mp = mats.get(i);
+    topMat = M.cc ? topPhy : topStd; plate.material[2] = topMat;
+    Object.assign(topMat, mp); topMat.color.set(M.c); topMat.metalness = M.metal; topMat.roughness = Math.min(1, M.rough * 1.55); topMat.needsUpdate = true;
+    sideMat.color.set(M.c); sideMat.metalness = M.metal; sideMat.roughness = M.rough * 0.7;
+  }
+  setPlate(0);
+
+  // 红色车漆球、金球：清漆层和金属的对照（放在铭牌后面，落在景深里）
+  const ball = (c, x, z, rad, o) => { const m = new THREE.Mesh(new THREE.SphereGeometry(rad, 64, 48), new (o.clearcoat ? THREE.MeshPhysicalMaterial : THREE.MeshStandardMaterial)(Object.assign({ color: c }, o))); m.position.set(x, rad, z); m.castShadow = true; world.add(m); return m; };
+  ball(0x8e0d12, -0.15, -0.2, 0.036, { metalness: 0, roughness: 0.16 });
+  ball(0xffc35c, -0.075, -0.25, 0.022, { metalness: 1, roughness: 0.1 });
+  if (glasses) {
+    const g = glasses.scene, b = new THREE.Box3().setFromObject(g), s = b.getSize(new THREE.Vector3()), k = 0.24 / s.x;
+    g.scale.setScalar(k); g.rotation.set(0, -0.45, 0); const holder = new THREE.Group(); holder.add(g);
+    const b2 = new THREE.Box3().setFromObject(holder), c2 = b2.getCenter(new THREE.Vector3());
+    g.position.set(-c2.x, -b2.min.y, -c2.z); holder.position.set(0.1, 0, -0.36); world.add(holder);
+    const white = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); white.needsUpdate = true;
+    g.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; const m = o.material; if (m.map && !m.roughnessMap) { m.roughnessMap = white; m.bumpMap = white; } if (/lens/.test(m.name)) { m.transmission = 0; m.transparent = true; m.opacity = 0.85; m.roughness = 0.02; m.envMapIntensity = 1.4; } });
+  }
+  // 玻璃透镜：平凸透镜（底平、侧壁直、顶部球冠），压在刻字上
+  const LR = 0.05, prof = [[0, 0], [LR - 0.003, 0], [LR, 0.003], [LR, 0.01]];
+  for (let i = 1; i <= 40; i++) { const t = (i / 40) * Math.PI / 2; prof.push([Math.cos(t) * LR, 0.01 + Math.sin(t) * 0.02]); }
+  const lensGeo = new THREE.LatheGeometry(prof.map(([x, y]) => new THREE.Vector2(Math.max(0.0001, x), y)), 128);
+  const glassMat = new THREE.ShaderMaterial({ vertexShader: GLASS_V, fragmentShader: GLASS_F, side: THREE.DoubleSide,
+    uniforms: { tScene: { value: null }, tEnv: { value: hdr }, res: { value: new THREE.Vector2(RW, RH) }, envI: { value: 1.0 }, sunDir: { value: sunDir } } });
+  const lens = new THREE.Mesh(lensGeo, glassMat); lens.position.set(0.085, 0.012, -0.006); lens.layers.set(1); world.add(lens);
+  // 透镜落在板上的影子：底边一圈压暗，中间透光
+  const lshadow = new THREE.Mesh(new THREE.RingGeometry(LR * 0.86, LR * 1.08, 64), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false }));
+  lshadow.rotation.x = -Math.PI / 2; lshadow.position.set(0.085, 0.0125, -0.006); world.add(lshadow);
+
+  // 太阳：方向就是 HDRI 里落日的方向，暖色，投软阴影
+  const sun = new THREE.DirectionalLight(0xffc28a, 4.2); sun.position.copy(sunDir).multiplyScalar(3); sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -0.6, right: 0.6, top: 0.6, bottom: -0.6, near: 0.5, far: 6 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.001;
+  scene.add(sun);
+
+  const cam = new THREE.PerspectiveCamera(34, W / H, 0.05, 40);
+  const st = { focus: 0.9, fTarget: 0.9, fstop: 1.4, expo: 1, ang: 0 };
+  const rtA = new THREE.WebGLRenderTarget(RW, RH, { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+  rtA.depthTexture = new THREE.DepthTexture(RW, RH); rtA.depthTexture.type = THREE.UnsignedIntType;
+  const rtC = new THREE.WebGLRenderTarget(RW, RH, { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false });
+  glassMat.uniforms.tScene.value = rtC.texture;
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
+  const qScene = new THREE.Scene(); qScene.add(quad); const qCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const copyMat = new THREE.ShaderMaterial({ vertexShader: POST_V, fragmentShader: "uniform sampler2D t; varying vec2 vUv; void main(){ gl_FragColor = texture2D(t, vUv); }", uniforms: { t: { value: rtA.texture } }, depthTest: false, depthWrite: false });
+  const HW = Math.round(RW / 2), HH = Math.round(RH / 2), hf = { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false };
+  const rtH = new THREE.WebGLRenderTarget(HW, HH, hf), rtB = new THREE.WebGLRenderTarget(HW, HH, hf);
+  const U = { tDepth: { value: rtA.depthTexture }, cNear: { value: cam.near }, cFar: { value: cam.far }, focus: { value: 1 }, aper: { value: 16 }, maxR: { value: 30 } };
+  const pm2 = (fs, extra) => new THREE.ShaderMaterial({ vertexShader: POST_V, fragmentShader: fs, depthTest: false, depthWrite: false, uniforms: Object.assign({}, U, extra) });
+  const down = pm2(DOWN_F, { tColor: { value: rtA.texture } });
+  const gather = pm2(GATHER_F, { tHalf: { value: rtH.texture }, hres: { value: new THREE.Vector2(HW, HH) } });
+  const post = pm2(POST_F, { tColor: { value: rtA.texture }, tBlur: { value: rtB.texture }, expo: { value: 1 }, res: { value: new THREE.Vector2(RW, RH) } });
+
+  function place() { const a = st.ang, D = 0.6; cam.position.set(Math.sin(a) * D, 0.68, Math.cos(a) * D + 0.02).applyAxisAngle(new THREE.Vector3(0, 1, 0), world.rotation.y); cam.lookAt(new THREE.Vector3(0, 0, -0.11).applyAxisAngle(new THREE.Vector3(0, 1, 0), world.rotation.y)); }
+  let sceneDirty = true; const gl = r.getContext(), px = new Uint8Array(4);
+  function drawScene() {
+    place();
+    // 1. 不透明场景 → rtA（线性 HDR + 深度）
+    cam.layers.set(0); r.setRenderTarget(rtA); r.autoClear = true; r.render(scene, cam);
+    // 2. 复制一份给玻璃采样
+    quad.material = copyMat; r.setRenderTarget(rtC); r.render(qScene, qCam);
+    // 3. 玻璃画回 rtA（深度测试照旧）
+    cam.layers.set(1); r.autoClear = false; r.setRenderTarget(rtA); r.render(scene, cam); r.autoClear = true; cam.layers.set(0);
+    sceneDirty = false;
+  }
+  function draw() {
+    if (sceneDirty) drawScene();
+    // 4. 景深 + 色调 → 屏幕（对焦、光圈、曝光只重算这一步）
+    U.focus.value = st.focus; U.aper.value = 36 / st.fstop * DPR / 2; U.maxR.value = 30 * DPR / 2; post.uniforms.expo.value = st.expo;
+    quad.material = down; r.setRenderTarget(rtH); r.render(qScene, qCam);
+    quad.material = gather; r.setRenderTarget(rtB); r.render(qScene, qCam);
+    quad.material = post; r.setRenderTarget(null); r.render(qScene, qCam);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);   // 等 GPU 画完再走下一帧，免得软件渲染时帧越堆越多
+    $("rd").innerHTML = `<b>${Math.round(cam.getFocalLength())}mm</b> · <b>f/${st.fstop}</b> · 对焦 <b>${st.focus.toFixed(2)} m</b><br>HDRI venice_sunset · ACES · 实时 PBR`;
+  }
+  r.shadowMap.needsUpdate = true;
+  drawScene(); st.expo = 0.05; st.focus = 2.4; draw();
+
+  // ── 入场：从虚焦、暗处慢慢「拉焦」到刻字上，同时曝光拉起来——像摄影师在取景器里对焦 ──
+  const T0 = performance.now(), DUR = 1200;
+  (function loop(now) {
+    const t = Math.min(1, (now - T0) / DUR), e = ease(t);
+    st.expo = 0.05 + 0.95 * ease(t * 1.3); st.focus = 2.4 + (st.fTarget - 2.4) * e; draw();
+    if (t < 1) nextFrame(loop); else balls(); 
+  })(T0);
+
+  // ── 材质球：同一个小场景，每种材质渲一张，拷到列表里 ──
+  async function balls() {
+    const bs = new THREE.Scene(); bs.environment = scene.environment; bs.background = new THREE.Color(0x1e1c1d);
+    const sp = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48)); sp.position.y = 1; sp.castShadow = true; bs.add(sp);
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.ShadowMaterial({ opacity: 0.6 })); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; bs.add(fl);
+    const bl = new THREE.DirectionalLight(0xffffff, 1.2); bl.position.set(-2, 6, 3); bl.castShadow = true; bl.shadow.mapSize.set(256, 256); bs.add(bl);
+    const bc = new THREE.PerspectiveCamera(26, 1, 0.1, 50); bc.position.set(0, 2.0, 5.0); bc.lookAt(0, 0.92, 0);
+    const rt = new THREE.WebGLRenderTarget(128, 128); rt.texture.encoding = THREE.sRGBEncoding;
+    const buf = new Uint8Array(128 * 128 * 4), rows = [...document.querySelectorAll(".row canvas")], brushed = mats.get(0).roughnessMap;
+    r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1; r.shadowMap.autoUpdate = true;
+    for (let i = 0; i < MATS.length; i++) {
+      const M = MATS[i];
+      sp.material = new THREE.MeshPhysicalMaterial({ color: M.c, metalness: M.metal, roughness: M.rough, clearcoat: M.cc ? 1 : 0, clearcoatRoughness: 0.04, roughnessMap: M.brush ? brushed : null });
+      r.setRenderTarget(rt); r.render(bs, bc); r.readRenderTargetPixels(rt, 0, 0, 128, 128, buf);
+      const ctx = rows[i].getContext("2d"), im = ctx.createImageData(128, 128);
+      for (let y = 0; y < 128; y++) im.data.set(buf.subarray((127 - y) * 512, (128 - y) * 512), y * 512);
+      ctx.putImageData(im, 0, 0);
+      await new Promise((ok) => setTimeout(ok, 0));
+    }
+    r.setRenderTarget(null); r.toneMapping = THREE.NoToneMapping; r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true;
+  }
+
+
+  // ── 交互 ──
+  // 点画面：射线找到点中的东西，按它离镜头的距离重新对焦（对焦框闪一下）
+  const ray = new THREE.Raycaster(); ray.layers.enableAll();
+  hero.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+    const b = hero.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
+    ray.setFromCamera({ x: (x / W) * 2 - 1, y: -(y / H) * 2 + 1 }, cam);
+    const hit = ray.intersectObjects(scene.children, true)[0];
+    const d = hit ? hit.point.clone().applyMatrix4(cam.matrixWorldInverse).z * -1 : 6;
+    const fx = $("fx"); fx.style.left = x + "px"; fx.style.top = y + "px";
+    fx.animate([{ opacity: 1, transform: "scale(1.4)" }, { opacity: 1, transform: "scale(1)", offset: .3 }, { opacity: 0, transform: "scale(1)" }], { duration: 1200, easing: "ease-out" });
+    const f0 = st.focus, t0 = performance.now();
+    (function go(now) { const p = ease((now - t0) / 500); st.focus = f0 + (d - f0) * p; draw(); if (p < 1) nextFrame(go); })(t0);
+  });
+  // 光圈：只改景深
+  document.querySelectorAll(".ap button").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".ap button").forEach((x) => x.classList.toggle("on", x === b)); st.fstop = +b.dataset.f; draw();
+  }));
+  // 点一条：板子换成这一条的材质，刻上这一条的名字；镜头轻轻绕一下
+  document.querySelectorAll(".row").forEach((row) => row.addEventListener("click", () => {
+    document.querySelectorAll(".row").forEach((x) => x.classList.toggle("on", x === row));
+    const i = +row.dataset.i; setPlate(i); sceneDirty = true; showMeta(i); $("scroll").scrollTo({ top: 0, behavior: "smooth" });
+    const a0 = st.ang, a1 = (i % 2 ? 1 : -1) * 0.12, t0 = performance.now(); st.focus = st.fTarget;
+    (function go(now) { const p = ease((now - t0) / 900); st.ang = a0 + (a1 - a0) * p; sceneDirty = true; draw(); if (p < 1) nextFrame(go); })(t0);
+  }));
+  const sbar = document.querySelector(".sb"); $("scroll").addEventListener("scroll", (e) => sbar.classList.toggle("solid", e.target.scrollTop > 470));
+  const tabs = [...document.querySelectorAll(".tab")];
+  tabs.forEach((t, i) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.classList.toggle("on", x === t));
+    if (i === 4) { st.fstop = 1.4; st.focus = st.fTarget; st.ang = 0; sceneDirty = true; document.querySelectorAll(".ap button").forEach((x, j) => x.classList.toggle("on", j === 0)); draw(); }
+    if (i === 1) $("scroll").scrollTo({ top: 600, behavior: "smooth" });
+  }));
+})();
+</script>
+</body>
+</html>

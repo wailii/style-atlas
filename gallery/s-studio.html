@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>产品棚拍</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1d1d1f; --mute: #6e6e73; --faint: #86868b; --line: #d2d2d7;
+    --bg: #f5f5f7; --card: #ffffff; --link: #0066cc; --blue: #0071e3; --new: #b64400;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; letter-spacing: -.01em; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .app { position: relative; height: 100vh; overflow: hidden; background: var(--bg); }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: 110px; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* 状态栏 + 产品导航：磨砂浅灰，压在影棚背景上 */
+  .sb { position: absolute; left: 0; right: 0; top: 0; height: 47px; z-index: 20; background: rgba(245,245,247,.72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); display: flex; align-items: center; justify-content: space-between; padding: 4px 30px 0 34px; font: 600 16px Inter; letter-spacing: -.02em; }
+  .sb .ic { display: flex; gap: 6px; align-items: center; }
+  .sb svg { display: block; }
+  .lnav { position: absolute; left: 0; right: 0; top: 47px; height: 52px; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 20px;
+    background: rgba(245,245,247,.72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: .5px solid rgba(0,0,0,.12); }
+  .lnav b { font: 600 19px/1 "Inter", Inter, "Noto Sans SC"; letter-spacing: -.02em; }
+  .lnav .r { display: flex; align-items: center; gap: 16px; font-size: 12px; color: var(--ink); }
+  .lnav .r button { font-size: 12px; opacity: .8; }
+  .lnav .r button.on { opacity: 1; font-weight: 600; }
+  .pill { background: var(--blue); color: #fff !important; opacity: 1 !important; border-radius: 980px; padding: 5px 12px; font-size: 12px; font-weight: 500; transition: background .25s; }
+  .pill.on { background: #e8e8ed; color: var(--ink) !important; }
+
+  /* 影棚：真 3D 的无缝背景纸 + 柔光箱，WebGL 画布铺满首屏上半 */
+  .hero { position: relative; height: 640px; overflow: hidden; touch-action: pan-y; cursor: grab; }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; -webkit-mask-image: linear-gradient(#000 88%, transparent); mask-image: linear-gradient(#000 88%, transparent); }
+  .copy { position: absolute; left: 0; right: 0; top: 122px; text-align: center; z-index: 2; pointer-events: none; }
+  .copy .eb { font: 600 15px/1.2 Inter, "Noto Sans SC"; color: var(--new); letter-spacing: 0; }
+  .copy h1 { margin-top: 6px; font: 700 52px/1.02 Inter; letter-spacing: -.035em; }
+  .copy p { margin-top: 10px; font: 600 19px/1.3 Inter, "Noto Sans SC"; letter-spacing: 0; }
+  .swatch { position: absolute; left: 0; right: 0; bottom: 104px; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .swatch .nm { font: 500 12px Inter; color: var(--mute); letter-spacing: 0; }
+  .swatch .dots { display: flex; gap: 14px; }
+  .swatch button { width: 22px; height: 22px; border-radius: 50%; position: relative; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.25), inset 0 -3px 5px rgba(0,0,0,.18), inset 0 2px 3px rgba(255,255,255,.6); }
+  .swatch button.on::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--ink); }
+  .ctas { position: absolute; left: 0; right: 0; bottom: 44px; z-index: 3; display: flex; justify-content: center; align-items: center; gap: 22px; }
+  .ctas .big { background: var(--blue); color: #fff; border-radius: 980px; padding: 10px 20px; font: 500 15px Inter, "Noto Sans SC"; }
+  .ctas .lk { color: var(--link); font: 500 15px Inter, "Noto Sans SC"; }
+  .ctas .lk::after { content: " ›"; font-size: 17px; }
+  .spin { position: absolute; right: 18px; bottom: 104px; z-index: 3; width: 44px; height: 44px; border-radius: 50%; background: rgba(232,232,237,.78); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); display: grid; place-items: center; font: 600 11px Inter; color: var(--ink); }
+  .spin.on { background: var(--ink); color: #fff; }
+  .cap { position: absolute; left: 0; right: 0; bottom: 14px; z-index: 3; text-align: center; font: 400 10px/1.45 Inter, "Noto Sans SC"; color: var(--faint); letter-spacing: 0; }
+
+  .more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s cubic-bezier(.25,.1,.25,1); }
+  .more.open { grid-template-rows: 1fr; }
+  .more > div { overflow: hidden; }
+  .more p { padding: 4px 28px 22px; font: 400 15px/1.6 Inter, "Noto Sans SC"; color: var(--mute); letter-spacing: 0; }
+  .more p b { color: var(--ink); font-weight: 600; }
+
+  /* 规格行：大数字 + 小灰字，发丝线分隔 */
+  .specs { margin: 0 16px; display: grid; grid-template-columns: repeat(4, 1fr); border-top: .5px solid var(--line); border-bottom: .5px solid var(--line); }
+  .specs div { padding: 16px 0 14px; text-align: center; }
+  .specs div + div { border-left: .5px solid var(--line); }
+  .specs b { display: block; font: 600 28px/1 Inter; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .specs b small { font-size: 15px; font-weight: 600; margin-left: 1px; }
+  .specs span { display: block; margin-top: 6px; font: 400 11px Inter, "Noto Sans SC"; color: var(--mute); letter-spacing: 0; }
+
+  .sec { padding: 40px 16px 0; }
+  .sec h2 { font: 600 28px/1.15 Inter, "Noto Sans SC"; letter-spacing: -.01em; padding: 0 4px 16px; }
+  .sec h2 em { font-style: normal; color: var(--faint); }
+  .rows { background: var(--card); border-radius: 18px; overflow: hidden; }
+  .row { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 15px 16px; cursor: pointer; position: relative; }
+  .row + .row::before { content: ""; position: absolute; left: 54px; right: 0; top: 0; border-top: .5px solid var(--line); }
+  .row .n { font: 600 15px Inter; color: var(--faint); }
+  .row h3 { font: 600 15.5px/1.4 Inter, "Noto Sans SC"; letter-spacing: 0; }
+  .row .m { margin-top: 3px; font: 400 12px Inter, "Noto Sans SC"; color: var(--mute); letter-spacing: 0; }
+  .row .m i { font-style: normal; font-family: Inter; }
+  .row .tn { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; background: var(--bg); }
+  .row .tn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .row .ch { color: var(--faint); font-size: 20px; width: 52px; text-align: center; transition: transform .3s; }
+  .row .x { grid-column: 2 / 4; display: none; font: 400 13.5px/1.6 Inter, "Noto Sans SC"; color: var(--mute); letter-spacing: 0; }
+  .row.open .x { display: block; }
+  .row.open .ch { transform: rotate(90deg); }
+  .foot { padding: 28px 22px 10px; font: 400 11px/1.6 Inter, "Noto Sans SC"; color: var(--faint); letter-spacing: 0; }
+  .foot b { font-weight: 500; color: var(--mute); }
+
+  /* 底栏：iOS 磨砂 */
+  .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 83px; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); padding: 7px 8px 0;
+    background: rgba(250,250,252,.8); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: .5px solid rgba(0,0,0,.14); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font: 500 10px Inter, "Noto Sans SC"; color: #8e8e93; letter-spacing: 0; height: 46px; }
+  .tab svg { width: 25px; height: 25px; stroke-width: 1.8; }
+  .tab.on { color: var(--blue); }
+  .home { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #111; z-index: 21; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/three-GLTFLoader.js"></script>
+<script>
+const app = document.getElementById("app");
+const [h1, ...rest] = HOT;
+const $ = (id) => document.getElementById(id);
+// 标题拆成「产品名 + 一句话」：产品名取关键词，其余原文照抄
+const NAME = KEY[1] || shortTitle(h1);
+const TAG = shortTitle(h1).replace(NAME, " ").replace(/\s+/g, " ").trim();
+const VARIANTS = [["Surgical White", "#e9e7e2"], ["Midnight Gold", "#c9a46a"], ["Commerce Green", "#45644c"], ["Khronos Red", "#b8262a"]];
+const sig = `<svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg>`;
+const wifi = `<svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 11.6 10.4 9.1a3.4 3.4 0 0 0-4.8 0Z"/><path d="M8 5.2a6.6 6.6 0 0 1 4.6 1.9l1.3-1.3a8.4 8.4 0 0 0-11.8 0l1.3 1.3A6.6 6.6 0 0 1 8 5.2Z"/><path d="M8 1.6a10.2 10.2 0 0 1 7.1 2.9L16 3.6A11.6 11.6 0 0 0 0 3.6l.9.9A10.2 10.2 0 0 1 8 1.6Z"/></svg>`;
+const bat = `<svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2"/><path d="M25 4.5v4a2 2 0 0 0 0-4Z" opacity=".45"/></svg>`;
+
+app.innerHTML = `
+  <main class="scroll" id="scroll">
+    <section class="hero" id="hero">
+      <canvas id="gl"></canvas>
+      <div class="copy" id="copy"><div class="eb">热度第 1 · ${heatText(h1)}</div><h1>${esc(NAME)}</h1><p>${esc(TAG)}</p></div>
+      <div class="cap" id="cap">示意产品，非新闻实物 · 3D：Chronograph Watch / Eric Chadwick · CC-BY 4.0</div>
+      <button class="spin" id="spin" aria-label="旋转">360°</button>
+      <div class="swatch" id="sw"><div class="nm" id="vn">Midnight Gold</div><div class="dots">${VARIANTS.map(([n, c], i) => `<button data-v="${i}" class="${i === 1 ? "on" : ""}" style="background:${c}" aria-label="${n}"></button>`).join("")}</div></div>
+      <div class="ctas" id="ctas"><button class="big" id="follow">关注这条</button><button class="lk" id="learn">了解更多</button></div>
+    </section>
+    <div class="more" id="more"><div><p><b>${esc(h1.latest)}。</b>${esc(clip(firstLine(h1.summary), 120))}</p></div></div>
+    <section class="specs" id="specs">
+      <div><b data-n="${heatText(h1)}">0</b><span>热度</span></div>
+      <div><b data-n="${h1.sources}">0</b><span>家来源</span></div>
+      <div><b data-n="${h1.people}">0</b><span>人参与</span></div>
+      <div><b data-n="${h1.trendPct}" data-f="1">0</b><span>热度变化 %</span></div>
+    </section>
+    <section class="sec" id="list"><h2>其余热点。<em>一条一条看。</em></h2>
+      <div class="rows">${rest.map((h) => `<div class="row" data-r="${h.rank}"><span class="n">${pad2(h.rank)}</span><div><h3>${esc(shortTitle(h))}</h3><div class="m">热度 <i>${heatText(h)}</i> · <i>${h.sources}</i> 家来源 · <i>${h.people}</i> 人</div></div>${h.cover ? `<div class="tn"><img src="${h.cover}" alt=""></div>` : `<span class="ch">›</span>`}<div class="x">${esc(clip(firstLine(h.summary), 90))}</div></div>`).join("")}</div>
+    </section>
+    <p class="foot"><b>示意说明</b>　产品是 3D 模型实时渲染，用来演示棚拍风格，与新闻无关。模型 Chronograph Watch 来自 Khronos glTF Sample Assets（Eric Chadwick，CC-BY 4.0；表盘与扣上的标志为各自商标）。数据：AI 热点 10 月 22 日榜单。</p>
+  </main>
+  <div class="sb"><span>${nowHM()}</span><span class="ic">${sig}${wifi}${bat}</span></div>
+  <nav class="lnav" id="lnav"><b>AI 热点</b><div class="r"><button class="on" data-go="hero">概览</button><button data-go="specs">规格</button><button data-go="list">榜单</button><button class="pill" id="sub">订阅</button></div></nav>
+  <nav class="tabs" id="tabs">${TAB_NAMES.map((n, i) => `<button class="tab ${i ? "" : "on"}">${iconSVG(i)}<span>${n}</span></button>`).join("")}</nav>
+  <i class="home"></i>`;
+
+// ── 下一帧：rAF 停了（无头截图偶尔会）就退回 setTimeout ──
+const nextFrame = (cb) => { let done = false; const go = () => { if (!done) { done = true; cb(performance.now()); } }; requestAnimationFrame(go); setTimeout(go, 1000 / 30); };
+const ease = (t) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+
+// ── 影棚环境：灰色房间 + 三块柔光箱（顶、左长条、右后长条），金属上的高光就是这几块箱子 ──
+function studioEnv() {
+  const s = new THREE.Scene(), box = new THREE.BoxGeometry();
+  const room = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: 0x1c1c1f, side: THREE.BackSide })); room.scale.setScalar(30); s.add(room);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshBasicMaterial({ color: 0x2c2c30 })); floor.rotation.x = -Math.PI / 2; floor.position.y = -1.2; s.add(floor);
+  const soft = (k, w, h, x, y, z, rx, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color().setScalar(k), side: THREE.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); s.add(m); };
+  soft(7, 8, 4, 0, 8, 1, Math.PI / 2, 0);             // 顶光大柔光箱
+  soft(12, 1.8, 11, -7, 3, 3, 0, Math.PI / 2.6);      // 左前长条
+  soft(7, 1.6, 10, 8, 3, -4, 0, -Math.PI / 3);        // 右后轮廓
+  soft(1.4, 10, 2, 0, 1, 12, 0, Math.PI);               // 正面反光板
+  return s;
+}
+
+// ── 无缝背景纸：地面往后弯上去变成墙，一整张 ──
+function sweep() {
+  const prof = []; const R = 2.4, z0 = -1.4;
+  for (let z = 9; z > z0; z -= 0.5) prof.push([z, 0]);
+  for (let i = 0; i <= 24; i++) { const t = (i / 24) * Math.PI / 2; prof.push([z0 - R * Math.sin(t), R - R * Math.cos(t)]); }
+  for (let y = R + 0.5; y <= 14; y += 0.5) prof.push([z0 - R, y]);
+  const nx = 24, pos = [], idx = [];
+  for (let j = 0; j < prof.length; j++) for (let i = 0; i <= nx; i++) pos.push(-14 + (28 * i) / nx, prof[j][1], prof[j][0]);
+  for (let j = 0; j < prof.length - 1; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b = a + nx + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xe4e4e8, roughness: 0.95, metalness: 0, envMapIntensity: 0.32 }));
+}
+
+(async () => {
+  await fontsReady();
+  [...$("copy").children, $("sw"), $("ctas"), $("cap"), $("spin")].forEach((el, i) => el.animate([{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duration: 900, delay: 150 + i * 90, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" }));
+  // 规格数字往上数
+  document.querySelectorAll(".specs b").forEach((b, i) => {
+    const n = +b.dataset.n, f = b.dataset.f, t1 = performance.now() + 500 + i * 120;
+    (function tick(now) { const p = ease((now - t1) / 900), v = n * p; b.textContent = f ? (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) : Math.round(v); if (p < 1) nextFrame(tick); })(t1);
+  });
+  const hero = $("hero"), W = hero.clientWidth, H = hero.clientHeight, DPR = Math.min(2, window.devicePixelRatio || 1);
+  const r = new THREE.WebGLRenderer({ canvas: $("gl"), antialias: true, alpha: false, preserveDrawingBuffer: true });
+  r.setPixelRatio(DPR); r.setSize(W, H, false);
+  r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1; r.physicallyCorrectLights = true;
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.shadowMap.autoUpdate = false;
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0xf5f5f7);
+  const pm = new THREE.PMREMGenerator(r);
+  scene.environment = pm.fromScene(studioEnv(), 0.02).texture;
+
+  const paper = sweep(); paper.receiveShadow = true; scene.add(paper);
+  // 主光：右上方一盏大柔光，地面和背景纸上出一块亮区、往四周暗下去
+  const key = new THREE.SpotLight(0xffffff, 300, 0, 0.62, 1, 2); key.position.set(1.5, 7.8, 5.2); key.target.position.set(0, 0.4, -0.6);
+  key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0004; key.shadow.radius = 6; key.shadow.camera.near = 3; key.shadow.camera.far = 16;
+  scene.add(key, key.target);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.5); fill.position.set(-4, 3, 6); scene.add(fill, new THREE.HemisphereLight(0xffffff, 0xd8d8dc, 1.1));
+
+  // 贴地阴影：从地面往上拍一张深度 → 模糊两遍 → 当阴影贴图（contact shadow）
+  const CS = 2.6, CSR = 256, CH = 0.9;
+  const rtA = new THREE.WebGLRenderTarget(CSR, CSR), rtB = new THREE.WebGLRenderTarget(CSR, CSR); rtA.texture.generateMipmaps = rtB.texture.generateMipmaps = false;
+  const sg = new THREE.Group(); sg.position.y = 0.002; scene.add(sg);
+  const pg = new THREE.PlaneGeometry(CS, CS).rotateX(Math.PI / 2);
+  const shadowPlane = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: rtA.texture, transparent: true, opacity: 0.9, depthWrite: false })); shadowPlane.renderOrder = 1; shadowPlane.scale.y = -1; sg.add(shadowPlane);
+  const blurPlane = new THREE.Mesh(pg); blurPlane.visible = false; sg.add(blurPlane);
+  const scam = new THREE.OrthographicCamera(-CS / 2, CS / 2, CS / 2, -CS / 2, 0, CH); scam.rotation.x = Math.PI / 2; sg.add(scam);
+  const depthMat = new THREE.MeshDepthMaterial(); depthMat.depthTest = depthMat.depthWrite = false;
+  depthMat.onBeforeCompile = (s) => { s.fragmentShader = s.fragmentShader.replace("gl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );", "gl_FragColor = vec4( vec3( 0.0 ), pow( 1.0 - fragCoordZ, 1.6 ) * 1.25 );"); };
+  const blurMat = new THREE.ShaderMaterial({ uniforms: { tDiffuse: { value: null }, dir: { value: new THREE.Vector2() } }, depthTest: false,
+    vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 dir; varying vec2 vUv;
+      void main(){ vec4 s = vec4(0.0); float w[5]; w[0]=.227027; w[1]=.1945946; w[2]=.1216216; w[3]=.054054; w[4]=.016216;
+        s += texture2D(tDiffuse, vUv) * w[0];
+        for (int i = 1; i < 5; i++) { s += texture2D(tDiffuse, vUv + dir * float(i)) * w[i]; s += texture2D(tDiffuse, vUv - dir * float(i)) * w[i]; }
+        gl_FragColor = s; }` });
+  const blurOnce = (amt) => {
+    blurPlane.visible = true; blurPlane.material = blurMat;
+    blurMat.uniforms.tDiffuse.value = rtA.texture; blurMat.uniforms.dir.value.set(amt / CSR, 0); r.setRenderTarget(rtB); r.render(blurPlane, scam);
+    blurMat.uniforms.tDiffuse.value = rtB.texture; blurMat.uniforms.dir.value.set(0, amt / CSR); r.setRenderTarget(rtA); r.render(blurPlane, scam);
+    blurPlane.visible = false;
+  };
+  const contact = () => {
+    const bg = scene.background; scene.background = null; paper.visible = false; shadowPlane.visible = false;
+    scene.overrideMaterial = depthMat; r.setRenderTarget(rtA); r.setClearColor(0x000000, 0); r.clear(); r.render(scene, scam); scene.overrideMaterial = null;
+    blurOnce(1.6); blurOnce(0.7);
+    r.setRenderTarget(null); scene.background = bg; paper.visible = true; shadowPlane.visible = true;
+  };
+
+  // 产品：手表，按高度 1 归一，放在背景纸上
+  const gltf = await new Promise((ok, bad) => new THREE.GLTFLoader().load("models/ChronographWatch.glb", ok, null, bad));
+  const watch = gltf.scene, pivot = new THREE.Group(); pivot.add(watch); scene.add(pivot);
+  const b0 = new THREE.Box3().setFromObject(watch), s0 = b0.getSize(new THREE.Vector3()), c0 = b0.getCenter(new THREE.Vector3()), k = 1.0 / s0.y;
+  watch.scale.setScalar(k); watch.position.set(-c0.x * k, -b0.min.y * k, -c0.z * k);
+  watch.traverse((o) => {
+    if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
+    const m = o.material; m.envMapIntensity = 1.15;
+    if (/Glass/.test(m.name)) { m.transmission = 0; m.transparent = true; m.opacity = 0.18; m.roughness = 0.03; m.metalness = 0; m.envMapIntensity = 2.2; m.depthWrite = false; o.castShadow = false; }
+  });
+  // 四种配色：模型自带 KHR_materials_variants，按材质名找到每个零件在各配色下用的材质
+  const J = gltf.parser.json, nameIdx = new Map(J.materials.map((m, i) => [m.name, i]));
+  const swaps = [];
+  watch.traverse((o) => {
+    if (!o.isMesh) return; const cur = nameIdx.get(o.material.name);
+    for (const me of J.meshes) for (const p of me.primitives) {
+      const maps = p.extensions && p.extensions.KHR_materials_variants && p.extensions.KHR_materials_variants.mappings;
+      if (p.material === cur && maps) { swaps.push({ o, maps }); return; }
+    }
+  });
+  const matCache = new Map();
+  const getMat = async (i) => { if (!matCache.has(i)) { const m = await gltf.parser.getDependency("material", i); m.envMapIntensity = 1.15; matCache.set(i, m); } return matCache.get(i); };
+  async function variant(v) {
+    for (const { o, maps } of swaps) { const mp = maps.find((x) => x.variants.includes(v)); if (mp) o.material = await getMat(mp.material); }
+    shotRot = null; draw();
+  }
+
+  const cam = new THREE.PerspectiveCamera(24, W / H, 0.05, 60);
+  const st = { rot: -0.55, spin: false, drag: 0, scrollRot: 0, exp: 1, dolly: 1 };
+  let shotRot = null;
+  function draw() {
+    pivot.rotation.y = st.rot + st.drag + st.scrollRot;
+    if (pivot.rotation.y !== shotRot) { shotRot = pivot.rotation.y; r.shadowMap.needsUpdate = true; contact(); }
+    cam.position.set(0.0, 1.3 + st.dolly * 0.3, 7.4 + st.dolly * 1.6); cam.lookAt(0, 0.7, 0);
+    r.toneMappingExposure = st.exp;
+    r.render(scene, cam);
+  }
+
+  // ── 入场：棚里先是暗的，柔光箱打开（曝光爬升），镜头慢慢推近；字和数字不等 3D，先上 ──
+  r.compile(scene, cam); st.exp = 0.06; draw();
+  const T0 = performance.now(), DUR = 1500;
+  (function loop(now) {
+    const t = Math.min(1, (now - T0) / DUR);
+    st.exp = 0.06 + 0.94 * ease(t * 1.15); st.dolly = 1 - ease(t);
+    draw();
+    if (t < 1) nextFrame(loop);
+  })(T0);
+
+  // ── 交互 ──
+  // 拖动转产品；滚动时产品跟着转一点（产品页常见的滚动转台）
+  let dx = null, base = 0;
+  hero.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; dx = e.clientX; base = st.drag; hero.style.cursor = "grabbing"; });
+  addEventListener("pointermove", (e) => { if (dx == null) return; st.drag = base + (e.clientX - dx) * 0.012; nextFrame(draw); });
+  addEventListener("pointerup", () => { dx = null; hero.style.cursor = ""; });
+  const sc = $("scroll"); let pend = false;
+  sc.addEventListener("scroll", () => { st.scrollRot = sc.scrollTop * 0.004; if (!pend) { pend = true; nextFrame(() => { pend = false; draw(); }); } });
+  // 360°：转台慢转
+  $("spin").addEventListener("click", () => {
+    st.spin = !st.spin; $("spin").classList.toggle("on", st.spin);
+    let last = performance.now();
+    (function turn(now) { if (!st.spin) return; st.rot += (now - last) * 0.0009; last = now; draw(); nextFrame(turn); })(last);
+  });
+  // 配色
+  document.querySelectorAll(".swatch button").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".swatch button").forEach((x) => x.classList.toggle("on", x === b));
+    $("vn").textContent = VARIANTS[+b.dataset.v][0]; variant(+b.dataset.v);
+  }));
+  $("learn").addEventListener("click", () => { const o = $("more").classList.toggle("open"); $("learn").textContent = o ? "收起" : "了解更多"; });
+  $("follow").addEventListener("click", (e) => { const on = e.currentTarget.classList.toggle("on"); e.currentTarget.textContent = on ? "已关注" : "关注这条"; e.currentTarget.style.background = on ? "#1d1d1f" : ""; });
+  $("sub").addEventListener("click", (e) => { const on = e.currentTarget.classList.toggle("on"); e.currentTarget.textContent = on ? "已订阅" : "订阅"; });
+  document.querySelectorAll(".lnav [data-go]").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".lnav [data-go]").forEach((x) => x.classList.toggle("on", x === b));
+    const el = $(b.dataset.go); sc.scrollTo({ top: b.dataset.go === "hero" ? 0 : el.offsetTop - 110, behavior: "smooth" });
+  }));
+  document.querySelectorAll(".row").forEach((row) => row.addEventListener("click", () => row.classList.toggle("open")));
+  const tabs = [...document.querySelectorAll(".tab")];
+  tabs.forEach((t, i) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.classList.toggle("on", x === t));
+    if (i === 4) { st.drag = 0; st.spin = false; $("spin").classList.remove("on"); sc.scrollTo({ top: 0, behavior: "smooth" }); st.scrollRot = 0; draw(); }
+    else if (i === 1) sc.scrollTo({ top: $("list").offsetTop - 110, behavior: "smooth" });
+  }));
+})();
+</script>
+</body>
+</html>
