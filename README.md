@@ -6,6 +6,12 @@
 
 [在线看 70 种（手机也能打开）](https://wailii.github.io/style-atlas/gallery/) · [安装](#安装) · [风格清单](#风格清单)
 
+**最近更新**
+
+- **1.6.0 · 写实 · 影像（61–70）**：产品棚拍、写实材质、设备实拍、电影剧照、纪实摄影、原相机、时尚大片、生活方式、俯拍平铺、卫星实景。真照片（带真实 EXIF）、实时 PBR 3D、真镜头效果。用法和素材规则见 [realistic.md](realistic.md)
+- **1.5.0 · 电影 · 漫画叙事（51–60）**：朱墨剧场、漫画分镜、黑色漫画、美漫宇宙、红幕剧场、意式招贴、新艺术、三渲二、线网幻视、黑白木刻。朱墨剧场附一个可滚动、按住推进的 3D 体验页 [`gallery/x-crimson.html`](gallery/x-crimson.html)（能直接出 1080p 视频）和一个 Dashboard [`gallery/d-crimson.html`](gallery/d-crimson.html)。要「炫」时先看 [cinematic.md](cinematic.md)
+- 完整记录见 [CHANGELOG.md](CHANGELOG.md)
+
 <img src=".github/readme/all-70.jpg" alt="70 种风格的参考页截图">
 
 同一份数据（2026 年 10 月 22 日晚的 AI 热点热榜，8 条新闻和 4 张封面）按 70 种风格各做了一遍。每个参考页都是 390×844 的手机页面，按钮和列表都能点，在线版能看到动效。
