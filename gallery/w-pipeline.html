@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>流程进度列表 · 资源申请单</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#f5f0e4;--paper:#fbf8f1;--ink:#1d2b27;--ink2:#56625d;--mute:#8d958f;--line:#e2dac8;--line2:#ece5d5;--done:#d3e2d6;--doneink:#2c5a43;--cur:#2f6b4f;--future:#ebe4d3;--futureink:#a39c88;--warn:#e8731a;--warnbg:#fbe6d2;--sel:#f0e8d0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden}
+body{font:13px/1.4 "DM Sans","Noto Sans SC",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none}
+.mono{font-family:"DM Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.app{height:100vh;display:flex;flex-direction:column;max-width:1400px;margin:0 auto;padding:0 28px}
+.top{flex:none;height:54px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line)}
+.mark{width:26px;height:26px;border-radius:50%;background:var(--ink);display:grid;place-items:center}
+.mark svg{width:14px;height:14px;stroke:var(--bg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top b{font-family:"Noto Serif SC",serif;font-size:15px}
+.top .nav{display:flex;gap:22px;margin-left:30px;color:var(--ink2)}
+.top .nav span{padding:4px 0}.top .nav .on{color:var(--ink);border-bottom:2px solid var(--ink);font-weight:600}
+.top .sp{flex:1}
+.me{display:flex;align-items:center;gap:8px;color:var(--ink2)}
+.me i{width:26px;height:26px;border-radius:50%;background:var(--cur);color:#fff;font-style:normal;display:grid;place-items:center;font-size:12px;font-weight:600}
+.head{flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:22px 0 16px}
+.head h1{font-family:"Noto Serif SC",serif;font-size:28px;font-weight:700;letter-spacing:.5px}
+.head p{color:var(--ink2);margin-top:4px}
+.head p b{color:var(--ink);font-weight:600}
+.ctl{display:flex;gap:12px;align-items:center}
+.sort{display:flex;align-items:center;gap:4px;color:var(--mute);font-size:12px}
+.sort button{height:28px;padding:0 12px;border-radius:14px;color:var(--ink2);border:1px solid transparent}
+.sort button:hover{border-color:var(--line)}
+.sort button.on{background:var(--ink);color:var(--bg)}
+.sort button .ar{display:inline-block;margin-left:3px;font-size:10px}
+.funnel{flex:none;display:grid;grid-template-columns:repeat(6,1fr);gap:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--line)}
+.fc{position:relative;padding:12px 16px 12px;text-align:left;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line2);transition:background .15s}
+.fc:last-child{border-right:0}
+.fc:hover{background:var(--paper)}
+.fc::before{content:"";position:absolute;left:0;right:0;top:-1px;height:3px;background:var(--cur);transform:scaleX(0);transform-origin:left;transition:transform .25s}
+.fc.on{background:var(--paper)}.fc.on::before{transform:scaleX(1)}
+.fc .n{font-family:"Noto Serif SC",serif;font-size:30px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.fc .l{color:var(--ink2);font-size:12.5px;display:flex;gap:8px;align-items:center}
+.fc .l em{font-style:normal;color:var(--warn);font-weight:600;font-size:11.5px;display:flex;align-items:center;gap:3px}
+.fc .l em i{width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.fc .no{position:absolute;right:14px;top:14px;color:var(--futureink);font-size:11px}
+.cols,.row{display:grid;grid-template-columns:34px 290px 140px minmax(470px,1fr) 118px 96px;gap:0 14px;align-items:center;padding:0 10px}
+.cols{flex:none;height:34px;color:var(--mute);font-size:12px;border-bottom:1px solid var(--line)}
+.list{flex:1;overflow:auto;padding-bottom:70px}
+.row{min-height:66px;border-bottom:1px solid var(--line2);position:relative;transition:background .15s,opacity .35s;opacity:0;transform:translateY(6px);animation:in .4s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.row:hover{background:var(--paper)}
+.row.sel{background:var(--sel)}
+.row.sel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ink)}
+.ck{width:16px;height:16px;border:1.5px solid #b8b09b;border-radius:4px;display:grid;place-items:center;background:#fff;transition:.12s}
+.ck svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.4;opacity:0}
+.sel .ck{background:var(--ink);border-color:var(--ink)}.sel .ck svg{opacity:1}
+.t1{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2{color:var(--mute);font-size:12px;margin-top:2px;display:flex;gap:8px;white-space:nowrap}
+.spec b{font-weight:500;font-size:13.5px}
+.spec .t2{margin-top:2px}
+.prog{padding:6px 0 4px}
+.bar{display:flex;height:28px}
+.seg{flex:1;position:relative;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;margin-right:-6px;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%,9px 50%);transition:filter .15s}
+.seg:first-child{clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%);border-radius:5px 0 0 5px}
+.seg:last-child{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,9px 50%);margin-right:0;border-radius:0 5px 5px 0}
+.seg.done{background:var(--done);color:var(--doneink)}
+.seg.cur{background:var(--cur);color:#fff;font-weight:700}
+.seg.cur.late{background:var(--warn)}
+.seg.fut{background:var(--future);color:var(--futureink)}
+.seg:hover{filter:brightness(.94)}
+.seg svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.note{margin-top:5px;font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.note b{color:var(--cur);font-weight:600}
+.note.late b{color:var(--warn)}
+.note svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.wait{text-align:right}
+.wait .d{font-family:"Noto Serif SC",serif;font-weight:700;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
+.wait .d small{font-family:"DM Sans","Noto Sans SC";font-size:11px;font-weight:500;margin-left:2px;color:var(--mute)}
+.wait .s{font-size:11px;color:var(--mute);margin-top:3px}
+.wait.late .d{color:var(--warn)}.wait.late .s{color:var(--warn);font-weight:600}
+.act{text-align:right}
+.urge{height:26px;padding:0 10px;border:1px solid var(--line);border-radius:13px;color:var(--ink2);font-size:12px;opacity:0;transition:.15s;background:#fff}
+.row:hover .urge,.row.sel .urge{opacity:1}
+.urge:hover{border-color:var(--ink);color:var(--ink)}
+.urged{white-space:nowrap;display:inline-flex;align-items:center;gap:4px;color:var(--doneink);font-size:12px;font-weight:600;background:var(--done);padding:3px 9px;border-radius:13px;animation:pop .3s}
+.urged svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.pop{position:fixed;z-index:30;width:268px;background:var(--ink);color:#f3efe4;border-radius:10px;padding:13px 15px;box-shadow:0 12px 32px rgba(29,43,39,.28);animation:pp .15s}
+@keyframes pp{from{opacity:0;transform:translateY(-4px)}}
+.pop::before{content:"";position:absolute;left:var(--ax,30px);top:-5px;width:10px;height:10px;background:var(--ink);transform:rotate(45deg)}
+.pop h4{font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pop h4 span{font-size:11px;font-weight:500;padding:1px 8px;border-radius:9px;background:rgba(255,255,255,.14)}
+.pop h4 span.w{background:var(--warn);color:#fff}
+.pop dl{display:grid;grid-template-columns:62px 1fr;gap:6px 8px;margin-top:11px;font-size:12.5px}
+.pop dt{color:#a2b1aa}
+.pop dd{color:#f3efe4}
+.pop .nt{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.14);color:#c9d3cd;font-size:12px;line-height:1.55}
+.bulk{position:fixed;left:50%;bottom:28px;transform:translate(-50%,90px);background:var(--ink);color:var(--bg);border-radius:30px;display:flex;align-items:center;gap:6px;padding:7px 8px 7px 20px;box-shadow:0 12px 34px rgba(29,43,39,.3);transition:transform .28s cubic-bezier(.3,1.3,.5,1);z-index:20}
+.bulk.on{transform:translate(-50%,0)}
+.bulk span{margin-right:10px}.bulk span b{font-family:"Noto Serif SC",serif;font-size:16px}
+.bulk button{height:32px;padding:0 16px;border-radius:16px;font-weight:600;display:flex;align-items:center;gap:6px}
+.bulk .go{background:var(--warn);color:#fff}.bulk .go:hover{filter:brightness(1.08)}
+.bulk .cl{color:#b9c4be}.bulk .cl:hover{color:#fff}
+.bulk svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toast{position:fixed;left:50%;top:70px;transform:translate(-50%,-14px);background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:20px;font-weight:500;opacity:0;pointer-events:none;transition:.22s;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{padding:70px 0;text-align:center;color:var(--mute)}
+.empty b{display:block;font-family:"Noto Serif SC",serif;font-size:18px;color:var(--ink2);margin-bottom:4px}
+.demo{position:fixed;right:14px;bottom:5px;font-size:10px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="mark"><svg viewBox="0 0 16 16"><path d="M2 8h3l2-4 2 8 2-4h3"/></svg></div><b>算力服务台</b>
+    <div class="nav"><span>概览</span><span class="on">申请单</span><span>资源池</span><span>账单</span></div>
+    <span class="sp"></span><div class="me"><span>赵明</span><i>赵</i></div>
+  </div>
+  <div class="head">
+    <div><h1>资源申请单</h1><p id="sum"></p></div>
+    <div class="ctl"><div class="sort"><span>排序</span><button data-s="time" class="on">提交时间</button><button data-s="wait">等待天数<span class="ar"></span></button></div></div>
+  </div>
+  <div class="funnel" id="funnel"></div>
+  <div class="cols"><span></span><span>申请</span><span>规格</span><span>审批进度（点任一步骤看详情）</span><span style="text-align:right">已等待</span><span></span></div>
+  <div class="list" id="list"></div>
+</div>
+<div class="bulk" id="bulk"><span>已选 <b id="bn">0</b> 单</span><button class="go" id="urgeAll"><svg viewBox="0 0 16 16"><path d="M8 2.5a3.5 3.5 0 0 0-3.5 3.5c0 3.5-1.5 4.5-1.5 4.5h10s-1.5-1-1.5-4.5A3.5 3.5 0 0 0 8 2.5zM6.7 13a1.4 1.4 0 0 0 2.6 0"/></svg>批量催办</button><button class="cl" id="clr">取消选择</button></div>
+<div class="toast" id="toast"></div><div class="demo">示例数据</div>
+<script>
+const $=s=>document.querySelector(s);
+const STEPS=["提交","部门审批","资源审批","交付","验收"];
+const SLA=[1,2,3,5,3];
+const WHO=[null,"部门负责人","资源管理员","运维工程师","申请人"];
+const TODAY=new Date(2026,10,20);
+const fmt=d=>`${d.getMonth()+1} 月 ${d.getDate()} 日`;
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+// [标题, 部门, 申请人, 规格, 用途, 当前步骤, 当前处理人, 已等待, 备注, 周期]
+const R=[
+ ["沐曦 64 卡训练集群首批","算法一部","李薇","64 × 沐曦 C550","大模型预训练",1,"张建国",4,"部门预算已确认，待负责人签字",90],
+ ["多模态训练 32 卡","基础模型组","陈思远","32 × H100","多模态训练",2,"周明",3,"等待卡型库存核对，H100 余量 24 卡",60],
+ ["推理服务扩容 16 卡","平台研发","王海涛","16 × A100","线上推理扩容",3,"吴凡",2,"机架已分配，等待上架",180],
+ ["评测集群临时借用 8 卡","数据中台","孙立","8 × H20","模型评测",4,"孙立",1,"已交付，待申请人验收",14],
+ ["年终压测专用 128 卡","基础模型组","陈思远","128 × H100","年终压测",2,"周明",6,"超出池内可用量，需要协调采购",30],
+ ["昇腾 910B 24 卡迁移","算法二部","刘芳","24 × 昇腾 910B","业务迁移",1,"郑浩",2,"",120],
+ ["语音模型续训 48 卡","算法二部","刘芳","48 × A100","续训",1,"郑浩",5,"负责人出差，已转电话确认",45],
+ ["数据清洗 CPU 节点 20 台","数据中台","孙立","20 × 96 核 CPU","数据清洗",3,"吴凡",7,"网络配置变更排队中",60],
+ ["长文本微调 16 卡","基础模型组","陈思远","16 × H100","长文本微调",0,"陈思远",1,"",21],
+ ["代码模型评测 8 卡","平台研发","王海涛","8 × H20","评测",2,"周明",1,"",14],
+ ["视频生成预研 32 卡","算法一部","李薇","32 × H100","预研",1,"张建国",2,"",60],
+ ["H20 推理池扩 24 卡","平台研发","王海涛","24 × H20","推理扩容",3,"吴凡",1,"今天上架",90],
+ ["离线批量推理 64 卡","数据中台","孙立","64 × A100","批量推理",3,"吴凡",8,"等待客户机房窗口期",30],
+ ["RAG 服务压测 8 卡","算法二部","刘芳","8 × A100","压测",4,"刘芳",4,"已交付 4 天未验收",7],
+ ["强化学习实验 40 卡","基础模型组","周雅琪","40 × H100","强化学习",2,"周明",1,"",45],
+ ["特征平台升级 12 台","数据中台","孙立","12 × 64 核 CPU","平台升级",0,"孙立",2,"草稿未提交完整，缺预算编号",90]
+];
+const reqs=R.map((r,i)=>{
+  const cur=r[5], wait=r[7]; const o={id:"WL-2611"+String(32-i).padStart(2,"0"),idx:i,title:r[0],dept:r[1],who:r[2],spec:r[3],use:r[4],cur,curWho:r[6],wait,note:r[8],days:r[9],urged:null};
+  // 反推每一步的开始与用时
+  const st=[]; let t=addD(TODAY,-wait);
+  const ppl=[r[2],"张建国","周明","吴凡",r[2]];
+  const hist=[]; let end=t;
+  for(let s=cur-1;s>=0;s--){const dur=Math.max(1,(s*3+i)%SLA[s]+1-(i%2?0:1));const start=addD(end,-dur);hist[s]={start,end,dur};end=start}
+  o.hist=hist; o.startCur=t;
+  o.who2=[r[2],i%3===0?"张建国":i%3===1?"孙兆":"钱国梁","周明",ppl[3],r[2]];
+  o.who2[cur]=r[6];
+  o.late=wait>SLA[cur]; o.over=wait-SLA[cur];
+  o.submit=addD(TODAY,-(wait+hist.reduce((a,h)=>a+(h?h.dur:0),0)));
+  return o;
+});
+let step="all",sortBy="time",desc=true,sel=new Set();
+const ck=`<svg viewBox="0 0 10 10"><path d="M1.5 5.2l2.4 2.4 4.6-5"/></svg>`;
+const bell=`<svg viewBox="0 0 16 16"><path d="M8 2.5a3.5 3.5 0 0 0-3.5 3.5c0 3.5-1.5 4.5-1.5 4.5h10s-1.5-1-1.5-4.5A3.5 3.5 0 0 0 8 2.5zM6.7 13a1.4 1.4 0 0 0 2.6 0"/></svg>`;
+const clock=`<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.8V8l2.2 1.4"/></svg>`;
+function visible(){
+  let v=reqs.filter(r=>step==="all"||r.cur===+step);
+  if(sortBy==="wait") v=[...v].sort((a,b)=>desc?b.wait-a.wait:a.wait-b.wait);
+  else v=[...v].sort((a,b)=>a.idx-b.idx);
+  return v;
+}
+function renderFunnel(){
+  const f=$("#funnel");
+  const cell=(k,label,n,late,no)=>`<button class="fc ${String(step)===String(k)?"on":""}" data-k="${k}"><span class="no mono">${no}</span><span class="n">${n}</span><span class="l">${label}${late?`<em><i></i>超时 ${late}</em>`:""}</span></button>`;
+  f.innerHTML=cell("all","全部在途",reqs.length,reqs.filter(r=>r.late).length,"ALL")+STEPS.map((s,i)=>cell(i,"卡在「"+s+"」",reqs.filter(r=>r.cur===i).length,reqs.filter(r=>r.cur===i&&r.late).length,"0"+(i+1))).join("");
+}
+function renderSum(){
+  const avg=(reqs.reduce((a,r)=>a+r.wait,0)/reqs.length).toFixed(1);
+  $("#sum").innerHTML=`<b>${reqs.length}</b> 单在途，其中 <b style="color:var(--warn)">${reqs.filter(r=>r.late).length}</b> 单当前步骤已超时，平均已等待 <b>${avg}</b> 天`;
+}
+function rowHTML(r,k){
+  const segs=STEPS.map((s,i)=>{
+    const c=i<r.cur?"done":i===r.cur?"cur"+(r.late?" late":""):"fut";
+    return `<div class="seg ${c}" data-i="${i}">${i<r.cur?`<svg viewBox="0 0 12 12"><path d="M2 6.3l2.5 2.5L10 3"/></svg>`:""}${s}</div>`;
+  }).join("");
+  const sub=r.note?`${r.note}`:"";
+  return `<div class="row ${sel.has(r.id)?"sel":""}" data-id="${r.id}" style="animation-delay:${k*28}ms">
+    <div class="ck" data-ck>${ck}</div>
+    <div><div class="t1">${r.title}</div><div class="t2"><span class="mono">${r.id}</span><span>${r.dept} · ${r.who}</span></div></div>
+    <div class="spec"><b class="mono">${r.spec}</b><div class="t2">${r.days} 天 · ${r.use}</div></div>
+    <div class="prog"><div class="bar">${segs}</div>
+      <div class="note ${r.late?"late":""}" style="${r.cur>=3?`width:${(r.cur+1)*20}%;justify-content:flex-end`:`margin-left:${r.cur*20}%`}">${clock}<span>${r.cur===4?"待验收":"卡在"} <b>${r.curWho}</b> · ${r.wait} 天${sub?` · ${sub}`:""}</span></div></div>
+    <div class="wait ${r.late?"late":""}"><div class="d">${r.wait}<small>天</small></div><div class="s">${r.late?`超时 ${r.over} 天`:`时限 ${SLA[r.cur]} 天`}</div></div>
+    <div class="act">${r.urged?`<span class="urged">${ck.replace('viewBox="0 0 10 10"','viewBox="0 0 10 10"')}已催办 ${r.urged}</span>`:`<button class="urge" data-urge>催办</button>`}</div>
+  </div>`;
+}
+function renderList(anim){
+  const v=visible();
+  $("#list").innerHTML=v.length?v.map(rowHTML).join(""):`<div class="empty"><b>这一步没有积压</b>换一个步骤看看</div>`;
+  if(!anim) document.querySelectorAll(".row").forEach(e=>{e.style.animation="none";e.style.opacity=1;e.style.transform="none"});
+  $("#bn").textContent=sel.size; $("#bulk").classList.toggle("on",sel.size>0);
+}
+function renderAll(anim){renderFunnel();renderSum();renderList(anim)}
+$("#funnel").onclick=e=>{const b=e.target.closest(".fc");if(!b)return;step=b.dataset.k;sel.clear();renderAll(true)};
+document.querySelectorAll(".sort button").forEach(b=>b.onclick=()=>{
+  const k=b.dataset.s;
+  if(k==="wait"){ if(sortBy==="wait") desc=!desc; else {sortBy="wait";desc=true} }
+  else sortBy="time";
+  document.querySelectorAll(".sort button").forEach(x=>x.classList.toggle("on",x.dataset.s===sortBy));
+  document.querySelector('.sort [data-s="wait"] .ar').textContent=sortBy==="wait"?(desc?"↓":"↑"):"";
+  renderList(true);
+});
+function nowStr(){const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2400)}
+function closePop(){document.querySelectorAll(".pop").forEach(p=>p.remove())}
+function showPop(r,i,el){
+  closePop();
+  const b=el.getBoundingClientRect(); const p=document.createElement("div"); p.className="pop";
+  let state,rows,nt;
+  if(i<r.cur){const h=r.hist[i];state=["已完成",""];rows=[["处理人",r.who2[i]],["开始",fmt(h.start)],["完成",fmt(h.end)],["用时",`${h.dur} 天（时限 ${SLA[i]} 天）`]];nt=h.dur>SLA[i]?"该步骤用时超过时限。":"按时完成。"}
+  else if(i===r.cur){const lt=r.late;state=[lt?`超时 ${r.over} 天`:"进行中",lt?"w":""];rows=[["处理人",r.curWho],["开始",fmt(r.startCur)],["已等待",`${r.wait} 天（时限 ${SLA[i]} 天）`]];nt=r.note||"暂无备注。"}
+  else{state=["未开始",""];rows=[["处理人",i===4?r.who:i===2?"周明（资源管理员）":i===3?"吴凡（运维）":"待分配"],["预计开始",fmt(addD(TODAY,(i-r.cur)*2))],["时限",`${SLA[i]} 天`]];nt="前一步完成后自动流转到这里。"}
+  p.innerHTML=`<h4>${STEPS[i]}<span class="${state[1]}">${state[0]}</span></h4><dl>${rows.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join("")}</dl><div class="nt">${nt}</div>`;
+  document.body.appendChild(p);
+  let x=Math.min(b.left+b.width/2-40,innerWidth-290); p.style.left=x+"px"; p.style.top=(b.bottom+10)+"px";
+  p.style.setProperty("--ax",(b.left+b.width/2-x-5)+"px");
+  if(b.bottom+200>innerHeight){p.style.top=(b.top-p.offsetHeight-10)+"px"}
+}
+$("#list").addEventListener("click",e=>{
+  const row=e.target.closest(".row"); if(!row) return; const r=reqs.find(x=>x.id===row.dataset.id);
+  const sg=e.target.closest(".seg");
+  if(sg){e.stopPropagation();showPop(r,+sg.dataset.i,sg);return}
+  if(e.target.closest("[data-urge]")){r.urged=nowStr();renderList(false);toast(`已催办 ${r.curWho}：${r.id}`);return}
+  if(e.target.closest("[data-ck]")||true){ if(e.target.closest(".act")) return; sel.has(r.id)?sel.delete(r.id):sel.add(r.id); row.classList.toggle("sel",sel.has(r.id)); $("#bn").textContent=sel.size; $("#bulk").classList.toggle("on",sel.size>0)}
+});
+document.addEventListener("click",e=>{if(!e.target.closest(".seg")&&!e.target.closest(".pop"))closePop()});
+$("#list").addEventListener("scroll",closePop);
+$("#urgeAll").onclick=()=>{let n=0,skip=0;sel.forEach(id=>{const r=reqs.find(x=>x.id===id);if(r.urged)skip++;else{r.urged=nowStr();n++}});toast(`已催办 ${n} 单${skip?`，${skip} 单此前已催办`:""}`);sel.clear();renderList(false)};
+$("#clr").onclick=()=>{sel.clear();renderList(false)};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePop();sel.clear();renderList(false)}});
+renderAll(true);
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时间轴列表 · 机器占用排期</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#e9edf3;--panel:#fff;--navy:#0f1b33;--navy2:#1b2a4a;--ink:#17202f;--ink2:#566174;--mute:#8a94a6;--line:#d9dfe9;--line2:#eaeef4;--wk:#f4f6fa;--today:#ff5a3c}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font:13px/1.4 "Noto Sans SC","Space Grotesk",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;user-select:none}
+button,input,select{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.app{height:100vh;display:flex;flex-direction:column;padding:0 24px 8px}
+.bar{flex:none;height:64px;display:flex;align-items:center;gap:18px}
+.bar h1{font:700 21px "Space Grotesk","Noto Sans SC";letter-spacing:.2px}
+.bar h1 small{display:block;font:400 12px "Noto Sans SC";color:var(--mute);margin-top:1px;letter-spacing:0}
+.seg{display:flex;background:var(--navy);border-radius:8px;padding:3px;margin-left:10px}
+.seg button{height:28px;padding:0 16px;border-radius:5px;color:#9fb0cf;font-weight:500}
+.seg button.on{background:#fff;color:var(--navy);font-weight:700}
+.btn{height:34px;padding:0 14px;border:1px solid var(--navy);border-radius:8px;font-weight:600;display:flex;align-items:center;gap:6px;background:#fff}
+.btn:hover{background:var(--navy);color:#fff}
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sp{flex:1}
+.legend{display:flex;gap:6px;align-items:center;color:var(--mute);font-size:12px}
+.lg{height:26px;padding:0 10px 0 8px;border-radius:13px;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink2);font-weight:500}
+.lg i{width:9px;height:9px;border-radius:3px}
+.lg.off{opacity:.4}
+.main{flex:1;min-height:0;display:flex;align-items:flex-start;background:var(--panel);border-radius:10px;overflow-x:hidden;overflow-y:auto;border:1px solid var(--line);scrollbar-width:thin}
+.left{flex:none;width:440px;border-right:1px solid var(--navy);position:relative;z-index:3}
+.lh{height:60px;background:var(--navy);color:#9fb0cf;display:grid;grid-template-columns:122px 124px 1fr;align-items:end;padding:0 0 9px 16px;font-size:12px}
+.lrow{height:42px;display:grid;grid-template-columns:122px 124px 1fr;align-items:center;padding-left:16px;border-bottom:1px solid var(--line2);transition:background .15s}
+.lrow:hover,.lrow.hl{background:#f3f6fb}
+.lrow b{font:500 13px "IBM Plex Mono";letter-spacing:-.2px}
+.lrow .md{color:var(--ink2);font-size:12px}
+.lrow .oc{min-width:0;display:flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap;overflow:hidden;padding-right:8px}
+.lrow .oc i{width:8px;height:8px;border-radius:50%;flex:none}
+.lrow .oc span{overflow:hidden;text-overflow:ellipsis}
+.lrow .oc.free{color:var(--mute)}
+.lrow .oc.free i{background:none;border:1.5px solid #bcc5d4}
+.tl{flex:1;overflow-x:auto;overflow-y:hidden;position:relative;scrollbar-width:thin}
+.cv{position:relative;transition:opacity .25s}
+.hd{height:60px;background:var(--navy);position:relative;color:#fff}
+.mo{position:absolute;top:0;height:30px;border-left:1px solid #2c3d63;padding:7px 8px;font:600 12.5px "Space Grotesk","Noto Sans SC";white-space:nowrap;overflow:hidden}
+.tk{position:absolute;top:30px;height:30px;font:500 11px "IBM Plex Mono";color:#9fb0cf;padding-top:8px;text-align:left;padding-left:4px;border-left:1px solid #26365a;white-space:nowrap}
+.tk.wk{color:#5f7096}
+.tk em{font-style:normal;color:#6f80a6;margin-left:2px;font-size:10px}
+.tflag{position:absolute;top:0;z-index:5;transform:translateX(-50%);background:var(--today);color:#fff;font:600 11px "Noto Sans SC";height:20px;padding:0 8px;border-radius:0 0 5px 5px;display:flex;align-items:center;white-space:nowrap}
+.body{position:relative}
+.wkd{position:absolute;top:0;bottom:0;background:var(--wk)}
+.vl{position:absolute;top:0;bottom:0;width:1px;background:var(--line2)}
+.vl.m{background:var(--line)}
+.lane{position:absolute;left:0;right:0;height:42px;border-bottom:1px solid var(--line2);cursor:crosshair}
+.lane:hover{background:rgba(15,27,51,.025)}
+.tline{position:absolute;top:0;bottom:0;width:2px;background:var(--today);z-index:4;pointer-events:none;margin-left:-1px}
+.occ{position:absolute;height:32px;margin-top:5px;border-radius:5px;overflow:hidden;cursor:grab;font-size:12px;font-weight:500;display:flex;align-items:center;padding:0 12px 0 10px;z-index:2;color:var(--ink);background:color-mix(in srgb,var(--c) 17%,#fff);box-shadow:inset 3px 0 0 var(--c),inset 0 0 0 1px color-mix(in srgb,var(--c) 38%,transparent);white-space:nowrap}
+.occ:hover{background:color-mix(in srgb,var(--c) 26%,#fff);z-index:6}
+.occ.drag{cursor:grabbing;z-index:9;box-shadow:inset 3px 0 0 var(--c),0 8px 20px rgba(15,27,51,.3);background:color-mix(in srgb,var(--c) 30%,#fff)}
+.occ.bad{box-shadow:inset 3px 0 0 #d92d20,inset 0 0 0 2px #d92d20;background:#fde8e6}
+.occ .nm{overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;padding-left:2px}
+.occ .dt{margin-left:8px;font:400 11px "IBM Plex Mono";color:var(--ink2);position:relative;z-index:1}
+.occ .tail{position:absolute;right:0;top:0;bottom:0;background:#ffb020;opacity:.9;border-left:1px solid rgba(0,0,0,.1)}
+.occ .rz{position:absolute;right:0;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:3}
+.occ .rz::after{content:"";position:absolute;right:3px;top:10px;bottom:10px;width:2px;border-radius:1px;background:currentColor;opacity:0;transition:.12s}
+.occ:hover .rz::after{opacity:.4}
+.occ.fade{opacity:.18;pointer-events:none}
+.ghost{position:absolute;height:32px;margin-top:5px;border-radius:5px;border:2px dashed var(--navy);background:rgba(15,27,51,.08);z-index:8;pointer-events:none;font:500 11px "IBM Plex Mono";display:flex;align-items:center;padding-left:8px;color:var(--navy);white-space:nowrap}
+.ghost.bad{border-color:#d92d20;background:#fde8e6;color:#d92d20}
+.foot{flex:none;height:28px;display:flex;align-items:center;gap:20px;color:var(--mute);font-size:12px}
+.foot b{color:var(--ink2);font-weight:500}
+.card{position:fixed;z-index:40;width:292px;background:#fff;border-radius:10px;box-shadow:0 0 0 1px var(--line),0 14px 36px rgba(15,27,51,.22);animation:pp .14s;overflow:hidden}
+@keyframes pp{from{opacity:0;transform:translateY(4px)}}
+.card .ch{padding:12px 14px 10px;background:var(--c);color:#fff;position:relative}
+.card .ch b{font-size:14px;display:block;padding-right:20px}
+.card .ch span{font:400 11.5px "IBM Plex Mono";opacity:.85}
+.card .cx{position:absolute;right:8px;top:9px;width:22px;height:22px;border-radius:5px;display:grid;place-items:center;color:#fff;opacity:.8}
+.card .cx:hover{background:rgba(255,255,255,.2);opacity:1}
+.card .cx svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.card dl{display:grid;grid-template-columns:58px 1fr;gap:7px 8px;padding:12px 14px;font-size:12.5px}
+.card dt{color:var(--mute)}
+.card .st{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.card .st i{width:7px;height:7px;border-radius:50%}
+.card .ca{display:flex;gap:8px;padding:0 14px 13px}
+.card .ca button{flex:1;height:30px;border-radius:7px;border:1px solid var(--line);font-weight:600;font-size:12.5px}
+.card .ca button:hover{border-color:var(--navy);background:var(--navy);color:#fff}
+.card .ca button.dg:hover{background:#d92d20;border-color:#d92d20}
+.card input[type=text]{width:100%;height:32px;border:1px solid var(--line);border-radius:7px;padding:0 10px;cursor:text;user-select:text}
+.card input[type=text]:focus{border-color:var(--navy)}
+.card .dp{display:flex;flex-wrap:wrap;gap:6px}
+.card .dp button{height:24px;padding:0 9px;border-radius:12px;border:1px solid var(--line);font-size:12px;display:flex;align-items:center;gap:5px}
+.card .dp button i{width:8px;height:8px;border-radius:2px}
+.card .dp button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-14px);background:var(--navy);color:#fff;padding:9px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s;z-index:60;font-weight:500}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:#d92d20}
+.demo{position:fixed;right:14px;bottom:3px;font-size:10px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <h1>机器占用排期<small>GPU 物理机 · 16 台 · 2026 年 9 月至 2027 年 3 月</small></h1>
+    <div class="seg" id="zoom"><button data-z="week">周</button><button data-z="month" class="on">月</button><button data-z="quarter">季度</button></div>
+    <button class="btn" id="goto"><svg viewBox="0 0 16 16"><path d="M8 2v12M2 8h12"/></svg>回到今天</button>
+    <span class="sp"></span>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="main">
+    <div class="left"><div class="lh"><span>机器</span><span>规格</span><span>当前占用</span></div><div id="lrows"></div></div>
+    <div class="tl" id="tl"><div class="cv" id="cv"><div class="hd" id="hd"></div><div class="body" id="bd"></div></div></div>
+  </div>
+  <div class="foot"><span><b>滚轮</b> 横向平移</span><span><b>拖动条</b> 改起止，可跨行换机器</span><span><b>拖右端</b> 改时长</span><span><b>空白处拖出一段</b> 新建预约</span><span><b>点条</b> 看申请单</span><span style="margin-left:auto">条尾橙色 = 7 天内到期</span></div>
+</div>
+<div class="toast" id="toast"></div><div class="demo">示例数据</div>
+<script>
+const $=s=>document.querySelector(s);
+const START=new Date(2026,8,7), TODAY=new Date(2026,10,20), N=203;
+const ONE=864e5;
+const idx=s=>{const [y,m,d]=s.split("-").map(Number);return Math.round((new Date(y,m-1,d)-START)/ONE)};
+const dayOf=i=>new Date(2026,8,7+i);
+const fm=i=>{const d=dayOf(i);return `${d.getMonth()+1}/${d.getDate()}`};
+const T0=Math.round((TODAY-START)/ONE);
+const DEPT={"算法一部":["#0f9d8a","李薇"],"算法二部":["#d9831f","刘芳"],"基础模型组":["#7a5af8","陈思远"],"平台研发":["#d6336c","王海涛"],"数据中台":["#5a8f1d","孙立"]};
+const M=[["gpu-bj-a01","H100 × 8"],["gpu-bj-a02","H100 × 8"],["gpu-bj-a03","H100 × 8"],["gpu-bj-a04","H100 × 8"],["gpu-bj-b01","A100 × 8"],["gpu-bj-b02","A100 × 8"],["gpu-bj-b03","A100 × 8"],["gpu-bj-b04","A100 × 8"],["gpu-sh-c01","H20 × 8"],["gpu-sh-c02","H20 × 8"],["gpu-sh-c03","H20 × 8"],["gpu-sh-d01","昇腾 910B × 8"],["gpu-sh-d02","昇腾 910B × 8"],["gpu-sh-e01","沐曦 C550 × 8"],["gpu-sh-e02","沐曦 C550 × 8"],["gpu-sh-e03","沐曦 C550 × 8"]];
+let seq=140;
+const fix=s=>/^\d{4}/.test(s)?s:(+s.slice(0,2)>=9?"2026-":"2027-")+s;
+const B=(m,a,b,name,dept)=>({id:"WL-2611"+(seq++),m,s:idx(fix(a)),e:idx(fix(b)),name,dept});
+let bars=[
+ B(0,"09-08","10-18","多模态预训练","基础模型组"),B(0,"10-21","11-24","长文本微调","基础模型组"),B(0,"12-02","01-15","强化学习实验","基础模型组"),
+ B(1,"09-14","11-08","视频生成预研","算法一部"),B(1,"11-12","12-20","对话模型 SFT","算法一部"),B(1,"01-05","02-28","年初压测","平台研发"),
+ B(2,"10-05","11-22","代码模型评测","平台研发"),B(2,"11-28","01-10","推理压测","平台研发"),
+ B(3,"09-20","12-31","大模型预训练","基础模型组"),B(3,"01-12","03-20","语音预训练","算法二部"),
+ B(4,"09-07","10-31","语音模型续训","算法二部"),B(4,"11-03","11-27","RAG 服务压测","算法二部"),B(4,"12-08","02-05","离线批量推理","数据中台"),
+ B(5,"10-10","11-30","图像理解训练","算法二部"),B(5,"12-05","12-26","集中评测","数据中台"),
+ B(6,"11-01","12-15","推理服务扩容","平台研发"),B(6,"01-04","03-05","推理灰度","平台研发"),
+ B(7,"09-15","10-25","数据标注 GPU","数据中台"),B(7,"11-11","11-25","数据标注 GPU","数据中台"),B(7,"12-10","03-10","特征平台升级","数据中台"),
+ B(8,"10-01","11-21","评测集群借用","数据中台"),B(8,"11-26","01-25","H20 推理池","平台研发"),
+ B(9,"11-10","01-31","H20 推理池","平台研发"),
+ B(10,"09-25","11-15","离线数据清洗","数据中台"),B(10,"11-20","12-20","特征平台","数据中台"),
+ B(11,"10-12","12-12","昇腾迁移","算法二部"),B(11,"12-20","03-15","昇腾 24 卡迁移","算法二部"),
+ B(12,"11-05","11-26","迁移验证","算法二部"),
+ B(13,"11-18","02-28","沐曦 64 卡集群","算法一部"),B(14,"11-18","02-28","沐曦 64 卡集群","算法一部"),
+ B(15,"01-10","02-10","沐曦扩容","算法一部")
+];
+let zoom="month",DW={week:36,month:10,quarter:5},off=new Set();
+const tl=$("#tl"),cv=$("#cv"),hd=$("#hd"),bd=$("#bd");
+const dw=()=>DW[zoom], RH=42;
+function build(){
+  const w=N*dw(); cv.style.width=w+"px"; hd.innerHTML=""; bd.innerHTML=""; bd.style.height=M.length*RH+"px";
+  // months
+  for(let i=0;i<N;){const d=dayOf(i);const next=new Date(d.getFullYear(),d.getMonth()+1,1);const len=Math.min(N-i,Math.round((next-d)/ONE));
+    const el=document.createElement("div");el.className="mo";el.style.left=i*dw()+"px";el.style.width=len*dw()+"px";el.textContent=`${d.getFullYear()} 年 ${d.getMonth()+1} 月`;hd.appendChild(el);
+    const v=document.createElement("div");v.className="vl m";v.style.left=i*dw()+"px";bd.appendChild(v);i+=len}
+  for(let i=0;i<N;i++){const d=dayOf(i),wd=d.getDay();
+    if(dw()>=10&&(wd===0||wd===6)){const e=document.createElement("div");e.className="wkd";e.style.left=i*dw()+"px";e.style.width=dw()+"px";bd.appendChild(e)}
+    let lab=null;
+    if(zoom==="week")lab=`${d.getDate()}<em>${"日一二三四五六"[wd]}</em>`;
+    else if(wd===1&&zoom==="month")lab=`${d.getDate()}`;
+    else if(wd===1&&zoom==="quarter"&&d.getDate()<=7)lab=`${d.getMonth()+1}/${d.getDate()}`;
+    if(lab){const t=document.createElement("div");t.className="tk"+(wd===0||wd===6?" wk":"");t.style.left=i*dw()+"px";t.style.width=(zoom==="week"?dw():zoom==="month"?7*dw():28*dw())+"px";t.innerHTML=lab;hd.appendChild(t);
+      if(zoom!=="week"||wd===1){const v=document.createElement("div");v.className="vl";v.style.left=i*dw()+"px";bd.appendChild(v)}}
+  }
+  M.forEach((m,r)=>{const l=document.createElement("div");l.className="lane";l.style.top=r*RH+"px";l.dataset.r=r;bd.appendChild(l)});
+  bars.forEach(drawBar);stick();
+  const tn=document.createElement("div");tn.className="tline";tn.style.left=(T0+.5)*dw()+"px";bd.appendChild(tn);
+  const fl=document.createElement("div");fl.className="tflag";fl.style.left=(T0+.5)*dw()+"px";fl.textContent="今天 11/20";hd.appendChild(fl);
+}
+function drawBar(b){
+  let el=bd.querySelector(`.occ[data-id="${b.id}"]`); if(!el){el=document.createElement("div");el.className="occ";el.dataset.id=b.id;bd.appendChild(el)}
+  const len=b.e-b.s+1; el.style.left=b.s*dw()+1+"px";el.style.width=len*dw()-2+"px";el.style.top=b.m*RH+"px";el.style.setProperty("--c",DEPT[b.dept][0]);
+  const exp=b.e>=T0&&b.e-T0<=7; const tailN=Math.min(len,5);
+  el.classList.toggle("fade",off.has(b.dept));
+  el.innerHTML=`${exp?`<span class="tail" style="width:${tailN*dw()}px"></span>`:""}<span class="nm">${b.name}</span>${len*dw()>150?`<span class="dt">${fm(b.s)}–${fm(b.e)}</span>`:""}<span class="rz"></span>`;stick();
+}
+function stick(){const sl=tl.scrollLeft;hd.querySelectorAll('.mo').forEach(el=>{const l=parseFloat(el.style.left),w=parseFloat(el.style.width);el.style.paddingLeft=Math.max(8,Math.min(sl-l+8,w-110))+'px'});bd.querySelectorAll(".occ").forEach(el=>{const l=parseFloat(el.style.left),w=parseFloat(el.style.width);const pl=Math.max(10,Math.min(sl-l+10,w-90));el.style.paddingLeft=(el.classList.contains("drag")?10:pl)+"px"})}
+tl.addEventListener("scroll",stick);
+function rows(){
+  $("#lrows").innerHTML=M.map((m,r)=>{const cur=bars.find(b=>b.m===r&&b.s<=T0&&b.e>=T0);
+    return `<div class="lrow" data-r="${r}"><b>${m[0]}</b><span class="md">${m[1]}</span><span class="oc ${cur?"":"free"}"><i style="background:${cur?DEPT[cur.dept][0]:""}"></i><span>${cur?cur.dept+" · "+cur.name:"空闲"}</span></span></div>`}).join("");
+}
+function legend(){
+  $("#legend").innerHTML=Object.keys(DEPT).map(k=>`<button class="lg ${off.has(k)?"off":""}" data-d="${k}"><i style="background:${DEPT[k][0]}"></i>${k}</button>`).join("");
+}
+$("#legend").onclick=e=>{const b=e.target.closest(".lg");if(!b)return;off.has(b.dataset.d)?off.delete(b.dataset.d):off.add(b.dataset.d);legend();bars.forEach(drawBar)};
+function setZoom(z){
+  const center=(tl.scrollLeft+tl.clientWidth/2)/dw(); zoom=z;
+  document.querySelectorAll("#zoom button").forEach(b=>b.classList.toggle("on",b.dataset.z===z));
+  cv.style.opacity=.3; build(); tl.scrollLeft=center*dw()-tl.clientWidth/2; requestAnimationFrame(()=>cv.style.opacity=1);
+}
+$("#zoom").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.z!==zoom)setZoom(b.dataset.z)};
+$("#goto").onclick=()=>tl.scrollTo({left:(T0+.5)*dw()-tl.clientWidth/2,behavior:"smooth"});
+tl.addEventListener("wheel",e=>{ if(Math.abs(e.deltaY)>=Math.abs(e.deltaX)){e.preventDefault();tl.scrollLeft+=e.deltaY} },{passive:false});
+function toast(m,err){const t=$("#toast");t.textContent=m;t.className="toast show"+(err?" err":"");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2400)}
+const clash=(b,s,e,m)=>bars.find(x=>x!==b&&x.m===m&&x.s<=e&&x.e>=s);
+function pos(ev){const r=bd.getBoundingClientRect();return {x:ev.clientX-r.left,y:ev.clientY-r.top}}
+/* 拖动 / 调整 / 新建 */
+let drag=null;
+bd.addEventListener("pointerdown",e=>{
+  if(e.button!==0) return; closeCard();
+  const occ=e.target.closest(".occ"), p=pos(e);
+  if(occ){const b=bars.find(x=>x.id===occ.dataset.id);
+    drag={t:e.target.closest(".rz")?"rz":"mv",b,el:occ,x0:p.x,y0:p.y,s:b.s,e:b.e,m:b.m,moved:false,ns:b.s,ne:b.e,nm:b.m};
+  } else if(e.target.closest(".lane")){const d0=Math.max(0,Math.min(N-1,Math.floor(p.x/dw()))),m=Math.floor(p.y/RH);
+    const g=document.createElement("div");g.className="ghost";bd.appendChild(g);
+    drag={t:"new",m,d0,x0:p.x,y0:p.y,g,ns:d0,ne:d0,moved:false};}
+  if(drag){e.preventDefault();document.body.style.userSelect="none"}
+});
+addEventListener("pointermove",e=>{ if(!drag) return; const p=pos(e), D=dw(); const dx=p.x-drag.x0; if(Math.abs(dx)+Math.abs(p.y-drag.y0)>3)drag.moved=true; if(!drag.moved)return;
+  if(drag.t==="mv"){const dd=Math.round(dx/D);drag.ns=drag.s+dd;drag.ne=drag.e+dd;drag.nm=Math.max(0,Math.min(M.length-1,Math.floor(p.y/RH)));
+    if(drag.ns<0){drag.ne-=drag.ns;drag.ns=0} if(drag.ne>=N){drag.ns-=drag.ne-N+1;drag.ne=N-1}
+    drag.el.classList.add("drag");const b=drag.b; drag.el.style.left=drag.ns*D+1+"px";drag.el.style.top=drag.nm*RH+"px";
+    drag.el.classList.toggle("bad",!!clash(b,drag.ns,drag.ne,drag.nm)); setTip(drag.el,drag.ns,drag.ne);
+  } else if(drag.t==="rz"){const dd=Math.round(dx/D);drag.ne=Math.max(drag.s,Math.min(N-1,drag.e+dd));drag.el.classList.add("drag");
+    drag.el.style.width=(drag.ne-drag.s+1)*D-2+"px";drag.el.classList.toggle("bad",!!clash(drag.b,drag.s,drag.ne,drag.m));setTip(drag.el,drag.s,drag.ne);
+  } else { const d1=Math.max(0,Math.min(N-1,Math.floor(p.x/D)));drag.ns=Math.min(drag.d0,d1);drag.ne=Math.max(drag.d0,d1);
+    drag.g.style.left=drag.ns*D+"px";drag.g.style.width=(drag.ne-drag.ns+1)*D+"px";drag.g.style.top=drag.m*RH+"px";drag.g.textContent=`${fm(drag.ns)} – ${fm(drag.ne)} · ${drag.ne-drag.ns+1} 天`;
+    drag.g.classList.toggle("bad",!!clash(null,drag.ns,drag.ne,drag.m)); }
+});
+function setTip(el,s,e){const t=el.querySelector(".dt");const n=el.querySelector(".nm");if(t){t.textContent=`${fm(s)}–${fm(e)}`}else{n.dataset.t=1}}
+addEventListener("pointerup",e=>{ if(!drag) return; const d=drag; drag=null; document.body.style.userSelect="";
+  if(d.t==="new"){ if(!d.moved){d.g.remove();return}
+    if(clash(null,d.ns,d.ne,d.m)){d.g.remove();toast("这段时间已被占用，换一段试试",1);return}
+    openCreate(d);return}
+  d.el.classList.remove("drag","bad");
+  if(!d.moved){showCard(d.b,e);return}
+  const ns=d.t==="mv"?d.ns:d.s,ne=d.ne,nm=d.t==="mv"?d.nm:d.m;
+  if(clash(d.b,ns,ne,nm)){drawBar(d.b);toast(`与「${clash(d.b,ns,ne,nm).name}」时间冲突，已还原`,1);return}
+  const was=`${fm(d.s)}–${fm(d.e)}`;d.b.s=ns;d.b.e=ne;d.b.m=nm;drawBar(d.b);rows();
+  toast(d.t==="rz"?`已调整时长：${fm(ns)}–${fm(ne)}，共 ${ne-ns+1} 天`:`已改期：${was} → ${fm(ns)}–${fm(ne)}${nm!==d.m?`，换到 ${M[nm][0]}`:""}`);
+});
+/* 卡片 */
+let cardEl=null;
+function closeCard(){if(cardEl){cardEl.remove();cardEl=null} bd.querySelectorAll(".ghost").forEach(g=>g.remove())}
+function place(c,ev,el){let x=ev.clientX+14,y=ev.clientY+14;c.style.left=Math.min(x,innerWidth-310)+"px";c.style.top=Math.min(y,innerHeight-c.offsetHeight-12)+"px"}
+function showCard(b,ev){closeCard();
+  const c=document.createElement("div");c.className="card";c.style.setProperty("--c",DEPT[b.dept][0]);
+  const state=b.e<T0?["已结束","#8a94a6"]:b.s>T0?["待开始","#d9831f"]:["占用中","#0f9d8a"];
+  const left=b.e-T0;
+  c.innerHTML=`<div class="ch"><b>${b.name}</b><span>${b.id}</span><button class="cx"><svg viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
+  <dl><dt>机器</dt><dd class="mono">${M[b.m][0]} · ${M[b.m][1]}</dd><dt>申请人</dt><dd>${DEPT[b.dept][1]} · ${b.dept}</dd><dt>起止</dt><dd class="mono">${fm(b.s)} – ${fm(b.e)}（${b.e-b.s+1} 天）</dd><dt>状态</dt><dd><span class="st"><i style="background:${state[1]}"></i>${state[0]}${state[0]==="占用中"?`，剩 ${left} 天`:""}${left>=0&&left<=7&&state[0]==="占用中"?'<span style="color:#d9831f"> · 即将到期</span>':""}</span></dd></dl>
+  <div class="ca"><button data-a="ext">续期 7 天</button><button data-a="rel" class="dg">提前释放</button></div>`;
+  document.body.appendChild(c);cardEl=c;place(c,ev);
+  c.querySelector(".cx").onclick=closeCard;
+  c.querySelector('[data-a="ext"]').onclick=()=>{ if(clash(b,b.s,b.e+7,b.m)){toast("续期会与后面的预约冲突",1);return} b.e+=7;drawBar(b);rows();closeCard();toast(`已续期到 ${fm(b.e)}`)};
+  c.querySelector('[data-a="rel"]').onclick=()=>{bars=bars.filter(x=>x!==b);bd.querySelector(`.occ[data-id="${b.id}"]`).remove();rows();closeCard();toast(`已释放 ${M[b.m][0]} 的「${b.name}」`)};
+}
+function openCreate(d){closeCard();bd.appendChild(d.g);d.g.style.pointerEvents="none";
+  let dept="算法一部";const c=document.createElement("div");c.className="card";c.style.setProperty("--c","#0f1b33");
+  c.innerHTML=`<div class="ch"><b>新建预约</b><span>${M[d.m][0]} · ${fm(d.ns)} – ${fm(d.ne)}（${d.ne-d.ns+1} 天）</span><button class="cx"><svg viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
+  <dl style="grid-template-columns:1fr"><div><div style="color:var(--mute);margin-bottom:5px">预约名称</div><input type="text" id="nn" placeholder="例如：推理压测" value="新预约"></div><div><div style="color:var(--mute);margin-bottom:6px">所属部门</div><div class="dp">${Object.keys(DEPT).map(k=>`<button data-k="${k}" class="${k===dept?"on":""}"><i style="background:${DEPT[k][0]}"></i>${k}</button>`).join("")}</div></div></dl>
+  <div class="ca"><button data-a="no">取消</button><button data-a="ok" style="background:var(--navy);color:#fff">创建预约</button></div>`;
+  document.body.appendChild(c);cardEl=c;const r=d.g.getBoundingClientRect();c.style.left=Math.min(r.left+10,innerWidth-310)+"px";c.style.top=Math.min(r.bottom+10,innerHeight-c.offsetHeight-12)+"px";
+  c.querySelectorAll(".dp button").forEach(b=>b.onclick=()=>{dept=b.dataset.k;c.querySelectorAll(".dp button").forEach(x=>x.classList.toggle("on",x===b))});
+  c.querySelector(".cx").onclick=c.querySelector('[data-a="no"]').onclick=closeCard;
+  const ok=()=>{const nb={id:"WL-2611"+(seq++),m:d.m,s:d.ns,e:d.ne,name:c.querySelector("#nn").value||"新预约",dept};bars.push(nb);closeCard();drawBar(nb);rows();toast(`已创建预约：${M[d.m][0]} · ${fm(d.ns)}–${fm(d.ne)}`)};
+  c.querySelector('[data-a="ok"]').onclick=ok;c.querySelector("#nn").focus();c.querySelector("#nn").select();c.querySelector("#nn").onkeydown=e=>{if(e.key==="Enter")ok();if(e.key==="Escape")closeCard()};
+}
+addEventListener("keydown",e=>{if(e.key==="Escape")closeCard()});
+// 行联动高亮
+bd.addEventListener("pointermove",e=>{const r=Math.floor(pos(e).y/RH);document.querySelectorAll(".lrow").forEach((l,i)=>l.classList.toggle("hl",i===r))});
+bd.addEventListener("pointerleave",()=>document.querySelectorAll(".lrow.hl").forEach(l=>l.classList.remove("hl")));
+rows();legend();build();tl.scrollLeft=(T0+.5)*dw()-tl.clientWidth*.38;stick();
+</script>
+</body>
+</html>

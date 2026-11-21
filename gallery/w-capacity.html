@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>容量规划 · GPU 供需预测</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+  :root { --ink:#1a1633; --ink2:#554f73; --mute:#8d88a8; --line:#e4e0f1; --violet:#5b3fd6; --band:#5b3fd6; --teal:#0a8f78; --coral:#ef4f34; --coral-bg:#fdece8; --tint:#f1eefc; --amber:#d99100; --pink:#c2338f; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:#fff; }
+  body { font-family:"IBM Plex Sans","Noto Sans SC",sans-serif; font-size:13px; color:var(--ink); -webkit-font-smoothing:antialiased; min-width:1180px; display:flex; min-height:100vh; }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; outline:none; }
+  button:focus-visible { outline:2px solid var(--violet); outline-offset:2px; }
+  svg { display:block; }
+  .mono { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  main { flex:1; min-width:0; padding:26px 36px 28px; }
+  aside { width:344px; flex:none; background:var(--tint); padding:26px 28px; position:sticky; top:0; height:100vh; overflow-y:auto; border-left:1px solid #d9d2f2; }
+
+  .hd { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:18px; }
+  .hd h1 { font-size:22px; font-weight:600; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
+  .hd h1 svg { width:22px; height:22px; color:var(--violet); }
+  .hd .s { color:var(--mute); font-size:12px; margin-top:4px; }
+  .legend { display:flex; gap:18px; font-size:12px; color:var(--ink2); align-items:center; }
+  .legend span { display:flex; align-items:center; gap:7px; }
+  .legend i { width:22px; height:0; display:block; }
+  .lg-h i { border-top:2.5px solid var(--ink); }
+  .lg-f i { border-top:2.5px dashed var(--violet); }
+  .lg-s i { border-top:3px solid var(--teal); }
+  
+  .lg-b i { height:11px; width:16px; background:#e2dbf8; }
+
+  .kpi { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--ink); border-bottom:1px solid var(--line); margin-bottom:6px; }
+  .kpi > div { padding:12px 18px 12px 0; border-right:1px solid var(--line); margin-right:18px; min-width:0; }
+  .kpi > div:last-child { border-right:0; margin-right:0; }
+  .kpi .k { font-size:11.5px; color:var(--mute); letter-spacing:.02em; }
+  .kpi .v { font-size:26px; font-weight:500; letter-spacing:-.02em; margin-top:3px; white-space:nowrap; }
+  .kpi .v small { font-size:12px; font-weight:400; color:var(--ink2); margin-left:4px; letter-spacing:0; }
+  .kpi .v.bad { color:var(--coral); } .kpi .v.ok { color:var(--teal); }
+  .kpi .n { font-size:11.5px; color:var(--ink2); margin-top:2px; }
+
+  #chartWrap { position:relative; user-select:none; }
+  #chart { width:100%; height:420px; cursor:crosshair; }
+  .tt { position:absolute; pointer-events:none; background:var(--ink); color:#fff; border-radius:4px; padding:9px 12px; font-size:12px; line-height:1.75; min-width:158px; opacity:0; transition:opacity .12s; z-index:5; }
+  .tt b { font-weight:500; display:block; margin-bottom:2px; color:#cfc7f5; letter-spacing:.03em; }
+  .tt div { display:flex; justify-content:space-between; gap:20px; }
+  .tt .gp { color:#ff9a86; }
+  .brushHint { position:absolute; right:6px; top:0; font-size:11.5px; color:var(--mute); display:flex; gap:10px; align-items:center; }
+  .brushHint button { color:var(--violet); text-decoration:underline; text-underline-offset:3px; }
+
+  .tb { margin-top:14px; }
+  .tb h3 { font-size:14px; font-weight:600; display:flex; align-items:baseline; gap:10px; padding-bottom:8px; border-bottom:1px solid var(--ink); }
+  .tb h3 small { font-weight:400; color:var(--mute); font-size:12px; }
+  table { width:100%; border-collapse:collapse; }
+  th { font-weight:400; font-size:11.5px; color:var(--mute); text-align:right; padding:8px 10px 6px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  td { padding:0 10px; height:36px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; font-size:12.5px; }
+  th:first-child, td:first-child { text-align:left; padding-left:0; }
+  th:last-child, td:last-child { text-align:left; width:36%; white-space:normal; padding-right:0; }
+  tr.rowh td { background:#f7f5fd; }
+  td.gp { font-weight:500; } td.gp.bad { color:var(--coral); } td.gp.ok { color:var(--teal); }
+  td.sg { color:var(--ink2); font-size:12.5px; line-height:1.4; }
+  .pill { display:inline-block; font-size:11px; padding:1px 7px; border-radius:9px; margin-right:6px; }
+  .pill.bad { background:var(--coral-bg); color:var(--coral); } .pill.ok { background:#dff3ee; color:var(--teal); } .pill.mid { background:#fbf0d6; color:#a56f00; }
+
+  /* 右侧假设面板 */
+  aside h2 { font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  aside h2 small { font-weight:400; color:var(--mute); font-size:12px; }
+  .sc { display:flex; margin:14px 0 4px; border:1px solid var(--ink); border-radius:4px; overflow:hidden; background:#fff; position:relative; }
+  .sc button { flex:1; height:34px; font-size:13px; color:var(--ink2); position:relative; z-index:1; transition:color .25s; }
+  .sc .thumb { position:absolute; top:0; bottom:0; width:33.333%; background:var(--ink); transition:left .35s cubic-bezier(.3,.8,.2,1); z-index:0; }
+  .sc button.on { color:#fff; }
+  .scd { font-size:12px; color:var(--ink2); line-height:1.65; min-height:40px; margin-bottom:10px; }
+  .as { padding:14px 0 16px; border-top:1px solid #d9d2f2; }
+  .as .t { display:flex; justify-content:space-between; align-items:baseline; }
+  .as .t label { font-weight:500; font-size:13px; }
+  .as .t .val { font-size:22px; font-weight:500; letter-spacing:-.02em; color:var(--violet); }
+  .as .t .val small { font-size:12px; color:var(--ink2); font-weight:400; margin-left:3px; letter-spacing:0; }
+  .as p { font-size:11.5px; color:var(--mute); margin:3px 0 10px; line-height:1.5; }
+  input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:20px; background:transparent; cursor:pointer; display:block; }
+  input[type=range]::-webkit-slider-runnable-track { height:3px; background:#c9c0ec; border-radius:2px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; border:2px solid var(--violet); margin-top:-7.5px; transition:transform .15s; }
+  input[type=range]:hover::-webkit-slider-thumb, input[type=range]:active::-webkit-slider-thumb { transform:scale(1.2); }
+  .ticks { display:flex; justify-content:space-between; font-size:10.5px; color:var(--mute); margin-top:2px; }
+  .save { width:100%; height:38px; background:var(--violet); color:#fff; border-radius:4px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:8px; transition:background .2s; margin:6px 0 4px; }
+  .save:hover { background:#4a30bd; }
+  .save svg { width:15px; height:15px; }
+  .plans { margin-top:12px; }
+  .plans h4 { font-size:12px; color:var(--ink2); font-weight:500; margin-bottom:6px; }
+  .plan { display:grid; grid-template-columns:10px 1fr auto; gap:9px; align-items:center; padding:8px 0; border-top:1px solid #d9d2f2; animation:pin .35s both; }
+  @keyframes pin { from { opacity:0; transform:translateY(-6px); } }
+  .plan i { width:10px; height:10px; border-radius:50%; }
+  .plan .nm { font-size:12.5px; font-weight:500; line-height:1.35; }
+  .plan .nm span { display:block; font-weight:400; font-size:11.5px; color:var(--ink2); }
+  .plan .ac { display:flex; gap:2px; }
+  .plan .ac button { width:26px; height:26px; border-radius:4px; display:grid; place-items:center; color:var(--ink2); }
+  .plan .ac button:hover { background:#e2dbf8; color:var(--ink); }
+  .plan .ac svg { width:15px; height:15px; }
+  .plan.off .nm, .plan.off i { opacity:.4; }
+  .cmp { margin-top:10px; font-size:12px; }
+  .cmp table { width:100%; }
+  .cmp th, .cmp td { padding:5px 0; height:auto; font-size:11.5px; text-align:right; border-bottom:1px solid #d9d2f2; }
+  .cmp th:first-child, .cmp td:first-child { text-align:left; }
+  .cmp td:last-child, .cmp th:last-child { width:auto; text-align:right; }
+  .foot { font-size:11px; color:var(--mute); margin-top:14px; }
+  .toast { position:fixed; left:calc(50% - 172px); bottom:26px; transform:translate(-50%,16px); background:var(--ink); color:#fff; padding:9px 16px; border-radius:4px; font-size:12.5px; opacity:0; transition:all .3s; pointer-events:none; z-index:50; }
+  .toast.on { opacity:1; transform:translate(-50%,0); }
+</style>
+</head>
+<body>
+<main>
+  <div class="hd">
+    <div>
+      <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 20v-5h4v5M11 20V9h4v11M17 20V4h3v16"/></svg>容量规划 <span style="font-weight:400;color:var(--ink2);font-size:15px">未来 6 个月 GPU 供需</span></h1>
+      <div class="s">单位：等效 H100 卡（按算力折算）· 全公司 6 个机房 · 采购参考单价 ¥21 万 / 卡</div>
+    </div>
+    <div class="legend">
+      <span class="lg-h"><i></i>实际需求</span><span class="lg-f"><i></i>预测需求</span><span class="lg-b"><i></i>P10–P90</span><span class="lg-s"><i></i>可用供给</span><span class="lg-g"><svg width="16" height="11" viewBox="0 0 16 11"><rect width="16" height="11" fill="#fdece8" stroke="#ef4f34"/><path d="M0 11L11 0M5 11L16 0M-3 6L6 -3M10 11L16 5" stroke="#ef4f34" stroke-width="1.2"/></svg>缺口</span>
+    </div>
+  </div>
+  <div class="kpi" id="kpi"></div>
+  <div id="chartWrap"><svg id="chart"></svg><div class="tt" id="tt"></div><div class="brushHint" id="bh"></div></div>
+  <div class="tb"><h3>逐月缺口与建议 <small id="tbSub"></small></h3><table id="tbl"></table></div>
+</main>
+<aside>
+  <h2>假设 <small>拖动后图表实时重算</small></h2>
+  <div class="sc" id="sc"><div class="thumb" id="scThumb" style="left:33.333%"></div><button data-s="cons">保守</button><button data-s="base" class="on">基准</button><button data-s="aggr">激进</button></div>
+  <div class="scd" id="scd"></div>
+  <div class="as"><div class="t"><label for="g">需求月增速</label><span class="val mono"><span id="gv"></span><small>% / 月</small></span></div><p>各部门申请卡数的合计，按复利增长。</p><input type="range" id="g" min="0" max="10" step="0.1"><div class="ticks"><span>0%</span><span>5%</span><span>10%</span></div></div>
+  <div class="as"><div class="t"><label for="buy">新采购卡数</label><span class="val mono"><span id="bv"></span><small>卡</small></span></div><p>一次性到货，计入可用供给。</p><input type="range" id="buy" min="0" max="1536" step="64"><div class="ticks"><span>0</span><span>768</span><span>1,536</span></div></div>
+  <div class="as"><div class="t"><label for="arr">到货月份</label><span class="val mono"><span id="av"></span></span></div><p>上架并可调度的月份，晚于计划会放大缺口。</p><input type="range" id="arr" min="1" max="6" step="1"><div class="ticks"><span>12 月</span><span>3 月</span><span>5 月</span></div></div>
+  <button class="save" id="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M5 3h11l3 3v15H5zM8 3v6h7V3M8 21v-7h8v7"/></svg>保存为方案</button>
+  <div class="plans" id="plans"></div>
+  <div class="foot">示例数据 · 最多同时叠加 2 个方案</div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const MN = ["2026-06","2026-07","2026-08","2026-09","2026-10","2026-11","2026-12","2027-01","2027-02","2027-03","2027-04","2027-05"];
+const ML = i => { const m = +MN[i].slice(5); return m + " 月"; };
+const MF = i => MN[i].slice(0,4) + " 年 " + (+MN[i].slice(5)) + " 月";
+const HD = [2310,2420,2560,2690,2880,3050];       // 历史峰值需求
+const HS = [2816,2816,2944,3072,3264,3264];       // 历史可用供给
+const NOW = 5, PRICE = 21;                         // 万元/卡
+const SC = { cons:{g:2.8,buy:256,arr:4,d:"需求增速偏低，采购按计划 3 月到货。"}, base:{g:4.5,buy:256,arr:4,d:"按近 6 个月实际增速外推，采购 256 卡，3 月到货。"}, aggr:{g:7.0,buy:256,arr:5,d:"新业务集中上线，增速升到 7%，到货延后 1 个月。"} };
+const A = { g:4.5, buy:256, arr:4 };               // 当前假设（会被补间）
+let plans = [], pid = 0, sel = null, hover = null, curSc = "base";
+const COLORS = ["#d99100","#c2338f"];
+
+function calc(a){
+  const D=[], S=[], lo=[], hi=[];
+  for(let i=0;i<12;i++){
+    if(i<=NOW){ D.push(HD[i]); S.push(HS[i]); lo.push(HD[i]); hi.push(HD[i]); }
+    else { const k=i-NOW, d=HD[NOW]*Math.pow(1+a.g/100,k), w=d*(0.012*k+0.006*k*k/6+0.01);
+      D.push(d); lo.push(d-w); hi.push(d+w);
+      S.push(HS[NOW] + (k>=2?128:0) + (k>=a.arr?a.buy:0)); }
+  }
+  const gap = D.map((d,i)=>d-S[i]);
+  const fg = gap.slice(NOW+1), idx = fg.map((v,i)=>v>0.5?i+NOW+1:-1).filter(i=>i>=0);
+  const peak = Math.max(0, ...fg), pi = peak>0.5 ? gap.indexOf(Math.max(...gap.slice(NOW+1)), NOW+1) : -1;
+  return {D,S,lo,hi,gap,first:idx[0]??-1,months:idx.length,peak,pi, need:Math.ceil(peak/64)*64};
+}
+
+/* ---------- 绘图 ---------- */
+const svg = $("#chart"), NS = "http://www.w3.org/2000/svg";
+const M = {l:52,r:22,t:30,b:46}, YMIN=2000, YMAX=5200;
+let W=1000, H=420;
+const X = i => M.l + i*(W-M.l-M.r)/11, Y = v => M.t + (1-(v-YMIN)/(YMAX-YMIN))*(H-M.t-M.b);
+const stepPath = (S,from,to) => { let d = `M${X(from)} ${Y(S[from])}`; for(let i=from+1;i<=to;i++) d += `L${X(i)} ${Y(S[i-1])}L${X(i)} ${Y(S[i])}`; return d; };
+const line = (A_,from,to) => A_.slice(from,to+1).map((v,i)=>(i?"L":"M")+X(from+i).toFixed(1)+" "+Y(v).toFixed(1)).join("");
+function demAt(D,x){ const i=Math.floor(x), f=x-i; return i>=11?D[11]:D[i]*(1-f)+D[i+1]*f; }
+function gapPolys(c){
+  const out=[]; let run=null; const steps=(11-NOW)*40;
+  for(let s=0;s<=steps;s++){
+    const x = NOW + s*(11-NOW)/steps, d = demAt(c.D,x), k = Number.isInteger(+x.toFixed(6)) ? Math.round(x) : Math.floor(x), sv = c.S[k];
+    if(d>sv+0.01){ if(!run){ run=[]; out.push(run); } run.push([x,d,sv]); } else run=null;
+  }
+  return out.map(r => { const top=r.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)), bot=r.slice().reverse().map(p=>X(p[0]).toFixed(1)+","+Y(p[2]).toFixed(1)); return top.concat(bot).join(" "); });
+}
+
+function draw(){
+  const c = calc(A); const wrap=$("#chartWrap"); W = wrap.clientWidth; svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  let s = `<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#fdece8"/><line x1="0" y1="0" x2="0" y2="6" stroke="#ef4f34" stroke-width="1.6" opacity=".8"/></pattern></defs>`;
+  // 历史底色
+  s += `<rect x="${M.l}" y="${M.t}" width="${X(NOW)-M.l}" height="${H-M.t-M.b}" fill="#f7f6fb"/>`;
+  s += `<text x="${M.l+8}" y="${M.t+15}" font-size="11" fill="#8d88a8" letter-spacing="1">历史</text><text x="${X(NOW)+8}" y="${M.t+15}" font-size="11" fill="#5b3fd6" letter-spacing="1">预测</text>`;
+  for(let v=YMIN; v<=YMAX; v+=400){ if(v<YMIN) continue; s += `<line x1="${M.l}" x2="${W-M.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e8e4f4" stroke-width="1"/><text x="${M.l-10}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#8d88a8" font-family="IBM Plex Mono">${v.toLocaleString("en-US")}</text>`; }
+  for(let i=0;i<12;i++){ s += `<text x="${X(i)}" y="${H-12}" text-anchor="middle" font-size="11.5" fill="${i>NOW?'#554f73':'#8d88a8'}">${ML(i)}</text>`; if(i===0||i===7) s += `<text x="${X(i)}" y="${H-0}" text-anchor="middle" font-size="9.5" fill="#8d88a8" font-family="IBM Plex Mono">${MN[i].slice(0,4)}</text>`; }
+  // 选区
+  if(sel){ const a=Math.min(sel[0],sel[1]), b=Math.max(sel[0],sel[1]); const x0=X(a)-(X(1)-X(0))/2, x1=X(b)+(X(1)-X(0))/2;
+    s += `<rect x="${Math.max(M.l,x0)}" y="${M.t}" width="${Math.min(W-M.r,x1)-Math.max(M.l,x0)}" height="${H-M.t-M.b}" fill="#5b3fd6" opacity=".09"/><line x1="${Math.max(M.l,x0)}" x2="${Math.max(M.l,x0)}" y1="${M.t}" y2="${H-M.b}" stroke="#5b3fd6" stroke-width="1.5"/><line x1="${Math.min(W-M.r,x1)}" x2="${Math.min(W-M.r,x1)}" y1="${M.t}" y2="${H-M.b}" stroke="#5b3fd6" stroke-width="1.5"/>`; }
+  // 置信带
+  const up = c.hi.slice(NOW).map((v,i)=>X(NOW+i).toFixed(1)+","+Y(v).toFixed(1)), dn = c.lo.slice(NOW).map((v,i)=>X(NOW+i).toFixed(1)+","+Y(v).toFixed(1)).reverse();
+  s += `<polygon points="${up.concat(dn).join(" ")}" fill="#5b3fd6" opacity=".14"/>`;
+  // 缺口
+  gapPolys(c).forEach(p => s += `<polygon points="${p}" fill="url(#hatch)" stroke="#ef4f34" stroke-width="0" />`);
+  // 方案叠加
+  plans.filter(p=>p.on).forEach(p => { const pc = calc(p);
+    s += `<path d="${line(pc.D,NOW,11)}" fill="none" stroke="${p.color}" stroke-width="1.8" stroke-dasharray="2 4" stroke-linecap="round"/><path d="${stepPath(pc.S,NOW,11)}" fill="none" stroke="${p.color}" stroke-width="2" opacity=".95"/>`;
+    s += `<text x="${W-M.r}" y="${Y(pc.S[11])-7}" text-anchor="end" font-size="11" fill="${p.color}" font-weight="600">${p.name.split(" ").slice(0,2).join(" ")}</text>`; });
+  // 供给与需求
+  s += `<path d="${stepPath(c.S,0,11)}" fill="none" stroke="#0a8f78" stroke-width="3" stroke-linejoin="round"/>`;
+  s += `<path d="${line(c.D,0,NOW)}" fill="none" stroke="#1a1633" stroke-width="2.6" stroke-linejoin="round"/>`;
+  s += `<path d="${line(c.D,NOW,11)}" fill="none" stroke="#5b3fd6" stroke-width="2.6" stroke-dasharray="7 5" stroke-linecap="round"/>`;
+  for(let i=0;i<=NOW;i++) s += `<circle cx="${X(i)}" cy="${Y(c.D[i])}" r="${i===NOW?4.5:2.6}" fill="#fff" stroke="#1a1633" stroke-width="${i===NOW?2.4:1.8}"/>`;
+  // 今天
+  s += `<line x1="${X(NOW)}" x2="${X(NOW)}" y1="${M.t-6}" y2="${H-M.b}" stroke="#1a1633" stroke-width="1" stroke-dasharray="2 3"/><text x="${X(NOW)}" y="${M.t-12}" text-anchor="middle" font-size="11" fill="#1a1633" font-weight="600">今天 11-20</text>`;
+  // 峰值缺口标注
+  if(c.pi>0){ const x=X(c.pi), yt=Y(c.D[c.pi]), yb=Y(c.S[c.pi]);
+    s += `<line x1="${x}" x2="${x}" y1="${yt}" y2="${yb}" stroke="#ef4f34" stroke-width="1.6"/><path d="M${x-4} ${yt+5}L${x} ${yt}L${x+4} ${yt+5}M${x-4} ${yb-5}L${x} ${yb}L${x+4} ${yb-5}" stroke="#ef4f34" stroke-width="1.6" fill="none"/>`;
+    const lx = Math.min(x, W-M.r-62);
+    s += `<rect x="${lx-60}" y="${yt-26}" width="120" height="20" rx="3" fill="#ef4f34"/><text x="${lx}" y="${yt-12}" text-anchor="middle" font-size="12" fill="#fff" font-weight="600" font-family="IBM Plex Mono">缺口 ${Math.round(c.peak).toLocaleString("en-US")} 卡</text>`; }
+  // 悬停
+  if(hover!=null){ const x=X(hover); s += `<line x1="${x}" x2="${x}" y1="${M.t}" y2="${H-M.b}" stroke="#1a1633" stroke-width="1" opacity=".5"/><circle cx="${x}" cy="${Y(c.S[hover])}" r="4" fill="#0a8f78"/><circle cx="${x}" cy="${Y(c.D[hover])}" r="4" fill="${hover>NOW?'#5b3fd6':'#1a1633'}"/>`; }
+  svg.innerHTML = s;
+  renderKpi(c); renderTable(c); renderPlans(c);
+}
+
+function renderKpi(c){
+  const bad = c.peak>0.5;
+  $("#kpi").innerHTML = `
+   <div><div class="k">首次出现缺口</div><div class="v ${bad?'bad':'ok'}">${c.first>=0?MF(c.first):"6 个月内无缺口"}</div><div class="n">${c.first>=0?"距今 "+(c.first-NOW)+" 个月":"当前假设下供给足够"}</div></div>
+   <div><div class="k">峰值缺口</div><div class="v mono ${bad?'bad':'ok'}">${bad?Math.round(c.peak).toLocaleString("en-US"):"0"}<small>卡</small></div><div class="n">${bad?"出现在 "+MF(c.pi):"富余最少 "+Math.round(Math.min(...c.gap.slice(NOW+1).map(v=>-v))).toLocaleString("en-US")+" 卡"}</div></div>
+   <div><div class="k">缺口持续</div><div class="v mono">${c.months}<small>个月 / 共 6 个月</small></div><div class="n">${c.months?"按预测中位数计":"—"}</div></div>
+   <div><div class="k">补齐峰值需追加</div><div class="v mono">${bad?c.need.toLocaleString("en-US"):"0"}<small>卡</small></div><div class="n">${bad?"约 ¥"+(c.need*PRICE/10000).toFixed(2)+" 亿":"无需追加采购"}</div></div>`;
+}
+const sgn = v => (v>0?"+":v<0?"−":"") + Math.abs(Math.round(v)).toLocaleString("en-US");
+function advice(g, d){
+  if(g>400) return [`<span class="pill bad">严重</span>`, `缺口超过 4 成余量：加采购或限制新增训练任务。`];
+  if(g>150) return [`<span class="pill bad">缺口</span>`, `短租云上 ${Math.ceil(g/32)*32} 卡，并回收低利用率资源。`];
+  if(g>0.5) return [`<span class="pill mid">偏紧</span>`, `低优先级训练错峰到夜间，可消化 ${Math.round(g)} 卡。`];
+  const r = -g, ratio = r/d; if(ratio<0.04) return [`<span class="pill mid">临界</span>`, `余量不足 4%，不要再批大单。`];
+  return [`<span class="pill ok">充足</span>`, `富余 ${Math.round(r).toLocaleString("en-US")} 卡，可接新申请。`];
+}
+function renderTable(c){
+  let from=NOW+1, to=11; if(sel){ from=Math.max(NOW+1,Math.min(sel[0],sel[1])); to=Math.max(from,Math.max(sel[0],sel[1])); if(Math.max(sel[0],sel[1])<=NOW){ from=NOW+1; to=11; } }
+  $("#tbSub").textContent = sel && Math.max(sel[0],sel[1])>NOW ? `已选 ${MF(from)} – ${MF(to)}，在图上单击空白处取消` : "在图上拖选一段时间，只看这一段";
+  let h = `<tr><th>月份</th><th>预测需求</th><th>供给</th><th>缺口（中位）</th><th>缺口区间 P10–P90</th><th>建议</th></tr>`;
+  for(let i=from;i<=to;i++){ const g=c.gap[i], lo=c.lo[i]-c.S[i], hi=c.hi[i]-c.S[i], a=advice(g,c.D[i]);
+    h += `<tr data-i="${i}" class="${hover===i?'rowh':''}"><td>${MF(i)}</td><td class="mono">${Math.round(c.D[i]).toLocaleString("en-US")}</td><td class="mono">${c.S[i].toLocaleString("en-US")}</td><td class="mono gp ${g>0.5?'bad':'ok'}">${g>0.5?sgn(g):"0"}</td><td class="mono" style="color:var(--ink2)">${sgn(lo>0?lo:Math.min(0,lo))} ~ ${sgn(hi)}</td><td class="sg">${a[0]}${a[1]}</td></tr>`; }
+  $("#tbl").innerHTML = h;
+  $("#bh").innerHTML = sel && Math.max(sel[0],sel[1])>NOW ? `<span>已选 ${to-from+1} 个月</span><button id="clr">清除选区</button>` : `<span>拖动选取时间段</span>`;
+  const cl=$("#clr"); if(cl) cl.onclick=()=>{ sel=null; draw(); };
+}
+function sumPlan(a){ const c=calc(a); return {peak:c.peak,months:c.months,cost:a.buy*PRICE/10000}; }
+function renderPlans(c){
+  let h="";
+  if(plans.length){ h += `<h4>已保存方案</h4>` + plans.map(p=>`<div class="plan ${p.on?'':'off'}" data-id="${p.id}"><i style="background:${p.color}"></i><div class="nm">${p.name}<span>增速 ${p.g.toFixed(1)}% · 采购 ${p.buy} · ${ML(NOW+p.arr)}到货</span></div><div class="ac"><button data-a="eye" title="叠加显示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p.on?'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>':'<path d="M3 3l18 18M10.6 5.1A9.6 9.6 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.4 6.4A17 17 0 0 0 2 12s4 7 10 7a9.7 9.7 0 0 0 4-.9"/>'}</svg></button><button data-a="load" title="载入为当前假设"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 20h16"/></svg></button><button data-a="del" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>`).join("");
+    const rows = [["当前假设",A,"#5b3fd6"], ...plans.map(p=>[p.name.split(" ").slice(0,2).join(" "),p,p.color])];
+    h += `<div class="cmp"><table><tr><th>对比</th><th>峰值缺口</th><th>缺口月</th><th>采购</th></tr>${rows.map(r=>{const s=sumPlan(r[1]); return `<tr><td><b style="color:${r[2]}">●</b> ${r[0]}</td><td class="mono">${Math.round(s.peak)||0}</td><td class="mono">${s.months}</td><td class="mono">¥${s.cost.toFixed(2)} 亿</td></tr>`}).join("")}</table></div>`;
+  }
+  $("#plans").innerHTML = h;
+}
+
+/* ---------- 控件 ---------- */
+function syncCtl(){ $("#g").value=A.g; $("#buy").value=A.buy; $("#arr").value=A.arr; $("#gv").textContent=A.g.toFixed(1); $("#bv").textContent=Math.round(A.buy).toLocaleString("en-US"); $("#av").textContent=ML(NOW+Math.round(A.arr)); }
+function onSlide(){ cancelAnimationFrame(tw); tweenTo=null; A.g=+$("#g").value; A.buy=+$("#buy").value; A.arr=+$("#arr").value; curSc=null; document.querySelectorAll("#sc button").forEach(b=>b.classList.remove("on")); syncCtl(); draw(); }
+["g","buy","arr"].forEach(id=>$("#"+id).addEventListener("input",onSlide));
+let tw=0, tweenTo=null;
+function tween(to){
+  cancelAnimationFrame(tw); tweenTo=to; const f={g:A.g,buy:A.buy,arr:A.arr}, t0=performance.now(), D=550;
+  const step=t=>{ const k=Math.min(1,(t-t0)/D), e=1-Math.pow(1-k,3); A.g=f.g+(to.g-f.g)*e; A.buy=f.buy+(to.buy-f.buy)*e; A.arr=f.arr+(to.arr-f.arr)*e; syncCtl(); draw(); if(k<1) tw=requestAnimationFrame(step); else tweenTo=null; };
+  tw=requestAnimationFrame(step);
+}
+$("#sc").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; const k=b.dataset.s; curSc=k; document.querySelectorAll("#sc button").forEach(x=>x.classList.toggle("on",x===b));
+  $("#scThumb").style.left = ({cons:0,base:33.333,aggr:66.666})[k]+"%"; $("#scd").textContent=SC[k].d; tween(SC[k]); });
+function toast(t){ const e=$("#toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),2000); }
+$("#save").onclick=()=>{
+  if(plans.length>=2){ toast("最多叠加 2 个方案，先删除一个"); return; }
+  const used = plans.map(p=>p.color), color = COLORS.find(c=>!used.includes(c)), letter = plans.some(p=>p.name.startsWith("方案 A"))?"B":"A";
+  const sc = curSc ? {cons:"保守",base:"基准",aggr:"激进"}[curSc] : "自定义";
+  const T=tweenTo||A; plans.push({id:++pid,name:`方案 ${letter} · ${sc}`,g:T.g,buy:Math.round(T.buy),arr:Math.round(T.arr),on:true,color});
+  toast(`已保存「方案 ${letter}」，已叠加到图上`); draw();
+};
+$("#plans").addEventListener("click",e=>{ const b=e.target.closest("[data-a]"); if(!b) return; const p=plans.find(x=>x.id==b.closest(".plan").dataset.id);
+  if(b.dataset.a==="eye") p.on=!p.on;
+  if(b.dataset.a==="del") plans=plans.filter(x=>x!==p);
+  if(b.dataset.a==="load"){ curSc=null; document.querySelectorAll("#sc button").forEach(x=>x.classList.remove("on")); tween({g:p.g,buy:p.buy,arr:p.arr}); return; }
+  draw(); });
+
+/* 图上交互：悬停 + 拖选 */
+const tt=$("#tt"); let drag=null;
+const idxAt = e => { const r=svg.getBoundingClientRect(), x=(e.clientX-r.left)*(W/r.width); return Math.max(0,Math.min(11,Math.round((x-M.l)/((W-M.l-M.r)/11)))); };
+svg.addEventListener("mousedown",e=>{ drag={i:idxAt(e),x:e.clientX,moved:false}; });
+window.addEventListener("mouseup",e=>{ if(!drag) return; if(!drag.moved){ sel=null; draw(); } drag=null; });
+svg.addEventListener("mousemove",e=>{
+  const i=idxAt(e);
+  if(drag){ if(Math.abs(e.clientX-drag.x)>6){ drag.moved=true; sel=[drag.i,i]; tt.style.opacity=0; hover=null; draw(); } return; }
+  if(hover!==i){ hover=i; draw(); }
+  const c=calc(A), r=svg.getBoundingClientRect(), px=X(i)*(r.width/W);
+  const fc=i>NOW, g=c.gap[i];
+  tt.innerHTML=`<b>${MF(i)}${fc?" · 预测":" · 实际"}</b><div><span>${fc?"需求（中位）":"需求"}</span><span class="mono">${Math.round(c.D[i]).toLocaleString("en-US")}</span></div>${fc?`<div><span>P10–P90</span><span class="mono">${Math.round(c.lo[i])}–${Math.round(c.hi[i])}</span></div>`:""}<div><span>可用供给</span><span class="mono">${c.S[i].toLocaleString("en-US")}</span></div><div class="${g>0.5?'gp':''}"><span>${g>0.5?"缺口":"富余"}</span><span class="mono">${Math.abs(Math.round(g)).toLocaleString("en-US")}</span></div>`;
+  tt.style.opacity=1; const left = px+16+tt.offsetWidth > r.width ? px-16-tt.offsetWidth : px+16; tt.style.left=left+"px"; tt.style.top="48px";
+});
+svg.addEventListener("mouseleave",()=>{ if(drag) return; hover=null; tt.style.opacity=0; draw(); });
+$("#tbl").addEventListener("mouseover",e=>{ const tr=e.target.closest("tr[data-i]"); if(tr){ const i=+tr.dataset.i; if(hover!==i){ hover=i; draw(); } } });
+$("#tbl").addEventListener("mouseleave",()=>{ hover=null; draw(); });
+window.addEventListener("resize",draw);
+
+$("#scd").textContent=SC.base.d; syncCtl(); draw();
+</script>
+</body>
+</html>

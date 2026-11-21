@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密钥与用量</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#f4f4ee;--card:#fcfcf8;--ink:#13151a;--ink2:#51545b;--mute:#9a9c9f;--line:#deded4;--line2:#eaeae1;--lime:#c8f542;--lime2:#9fcc16;--warn:#ec7a12;--bad:#d9342b;
+--m1:#13151a;--m2:#b9e92c;--m3:#4157d8;--m4:#d4cfbd}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--bg)}
+body{font-family:"Space Grotesk","Noto Sans SC",sans-serif;font-size:13px;color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit;background:none;border:0;outline:none}
+button{cursor:pointer}
+.mono{font-family:"Geist Mono",monospace;font-variant-numeric:tabular-nums}
+svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1440px;margin:0 auto;padding:0 40px 40px}
+.top{height:56px;display:flex;align-items:center;gap:26px}
+.brand{font-weight:700;font-size:16px;display:flex;align-items:center;gap:9px;letter-spacing:-.01em}
+.brand i{width:20px;height:20px;background:var(--ink);border-radius:5px;position:relative}
+.brand i:after{content:"";position:absolute;left:5px;top:5px;width:10px;height:4px;background:var(--lime);border-radius:1px;box-shadow:0 6px 0 var(--lime)}
+.tabs{display:flex;gap:4px}
+.tabs a{padding:6px 12px;border-radius:6px;color:var(--ink2);font-weight:500;cursor:pointer}
+.tabs a.on{background:var(--ink);color:#fff}
+.sp{flex:1}
+.ws{color:var(--ink2);display:flex;align-items:center;gap:8px}
+.ws b{width:24px;height:24px;border-radius:50%;background:var(--m3);color:#fff;display:grid;place-items:center;font-size:11px}
+.head{display:flex;align-items:flex-end;gap:16px;margin:18px 0 20px}
+h1{font-size:30px;font-weight:600;letter-spacing:-.025em;line-height:1.1}
+.sub{color:var(--ink2);margin-top:6px}
+.seg{display:flex;gap:2px;padding:3px;background:var(--line2);border-radius:8px}
+.seg button{padding:5px 12px;border-radius:6px;font-weight:500;color:var(--ink2)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.btn{height:36px;padding:0 16px;border-radius:8px;background:var(--ink);color:#fff;font-weight:600;display:flex;align-items:center;gap:8px}
+.btn svg{color:var(--lime)}
+.btn:hover{background:#2a2d35}
+.board{display:grid;grid-template-columns:268px 1fr;gap:0;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+.kpi{background:var(--ink);color:#f2f2ea;padding:24px 24px 20px;display:flex;flex-direction:column}
+.kpi small{font-size:11.5px;color:#9b9d94;letter-spacing:.06em}
+.kpi .big{font:600 44px/1.05 "Space Grotesk";letter-spacing:-.03em;margin:8px 0 2px;color:var(--lime)}
+.kpi .big span{font-size:18px;color:#c9cbc0;margin-left:3px;font-weight:500}
+.kpi .row{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid #2a2d33;font-size:13px}
+.kpi .row span{color:#9b9d94}
+.kpi .row b{font:500 13px "Geist Mono"}
+.kpi .scope{margin-top:auto;display:flex;visibility:hidden;align-items:center;gap:8px;background:#23262c;border-radius:8px;padding:9px 10px;font-size:12px}
+.kpi .scope.on{visibility:visible}
+.kpi .scope button{margin-left:auto;color:var(--lime);font-weight:600}
+.chartbox{padding:20px 24px 14px;position:relative;min-width:0}
+.ch-h{display:flex;align-items:center;gap:18px;margin-bottom:8px}
+.ch-h h3{font-size:14px;font-weight:600}
+.leg{display:flex;gap:14px;margin-left:auto;color:var(--ink2);font-size:12px}
+.leg label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.leg i{width:10px;height:10px;border-radius:3px}
+.leg label.off{opacity:.35;text-decoration:line-through}
+#chart,#chart *{stroke:none}#chart line{stroke-width:1}#chart{width:100%;height:232px;display:block}
+.tt{position:absolute;pointer-events:none;background:var(--ink);color:#f4f4ee;border-radius:8px;padding:10px 12px;font-size:12px;min-width:176px;opacity:0;transition:opacity .1s;z-index:6;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.tt .d{font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;gap:20px}
+.tt div.l{display:flex;align-items:center;gap:7px;padding:1px 0}
+.tt .l i{width:8px;height:8px;border-radius:2px}
+.tt .l b{margin-left:auto;font:500 12px "Geist Mono";padding-left:14px}
+.tt .t{border-top:1px solid #34373d;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between}
+.tbl{margin-top:26px}
+.tbl-h{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.tbl-h h3{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.tbl-h .n{color:var(--mute);font-family:"Geist Mono"}
+.th,.tr{display:grid;grid-template-columns:minmax(0,2.1fr) 1.45fr 1.6fr 130px 118px 70px;gap:18px;align-items:center;padding:0 18px}
+.th{font-size:11px;color:var(--mute);letter-spacing:.06em;height:30px}
+.tr{height:64px;border-top:1px solid var(--line);cursor:pointer;position:relative;transition:background .12s}
+.tr:hover{background:#f0f0e7}
+.tr.sel{background:#f0f0e7}
+.tr.sel:before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;background:var(--ink);border-radius:2px}
+.tr.dim{opacity:.5}
+.tr.new{animation:flash 1.6s ease}
+@keyframes flash{0%{background:var(--lime)}100%{background:transparent}}
+.list{border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+.list .th{border-bottom:0}
+.list .tr:first-of-type{border-top:1px solid var(--line)}
+.nm{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nm b{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm code{font:12px "Geist Mono";color:var(--mute)}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chips i{font-style:normal;font-size:11px;padding:1px 7px;border-radius:99px;background:var(--line2);color:var(--ink2);display:flex;align-items:center;gap:5px}
+.chips i:before{content:"";width:6px;height:6px;border-radius:2px;background:var(--c)}
+.lim{display:flex;flex-direction:column;gap:5px}
+.lim .t{display:flex;justify-content:space-between;font:12px "Geist Mono"}
+.lim .t span{color:var(--ink2)}
+.lim .t button{border-bottom:1px dashed var(--mute);color:var(--ink);padding:0}
+.lim .t button:hover{border-color:var(--ink)}
+.lim .t input{width:70px;font:12px "Geist Mono";border:1px solid var(--ink);border-radius:4px;padding:0 4px;text-align:right;background:#fff}
+.pg{height:6px;background:var(--line2);border-radius:3px;overflow:hidden}
+.pg i{display:block;height:100%;border-radius:3px;background:var(--ink);transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.pg.warn i{background:var(--warn)}
+.pg.bad i{background:var(--bad)}
+.lim .t b.warn{color:var(--warn);font-weight:600}
+.lim .t b.bad{color:var(--bad);font-weight:600}
+.spark{display:flex;align-items:flex-end;gap:3px;height:32px}
+.spark i{flex:1;background:var(--ink);border-radius:1.5px 1.5px 0 0;opacity:.85;min-height:2px}
+.spark i:last-child{background:var(--lime2);opacity:1}
+.last{color:var(--ink2);font-size:12.5px}
+.last small{display:block;color:var(--mute);font-size:11px}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--lime2);margin-right:5px;vertical-align:1px}
+.act{display:flex;justify-content:flex-end;gap:2px}
+.act button{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--ink2)}
+.act button:hover{background:var(--line);color:var(--ink)}
+.note{margin-top:18px;font-size:11px;color:var(--mute);display:flex;justify-content:space-between}
+/* 弹层 */
+.ov{position:fixed;inset:0;background:rgba(19,21,26,.45);display:none;place-items:center;z-index:30}
+.ov.on{display:grid}
+.mod{width:480px;background:var(--card);border-radius:14px;padding:26px 28px 24px;box-shadow:0 30px 80px rgba(0,0,0,.3);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}}
+.mod h2{font-size:20px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.mod p.s{color:var(--ink2);margin-bottom:18px}
+.fld{margin-bottom:15px}
+.fld label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
+.fld input[type=text],.fld input[type=number]{width:100%;height:38px;border:1px solid var(--line);border-radius:8px;padding:0 12px;background:#fff;font-size:13.5px}
+.fld input:focus{border-color:var(--ink)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{display:flex;align-items:center;gap:8px;height:38px;border:1px solid var(--line);border-radius:8px;padding:0 11px;cursor:pointer;background:#fff;user-select:none}
+.opt i{width:8px;height:8px;border-radius:2px}
+.opt.on{border-color:var(--ink);background:#f6f9e4}
+.opt .ck{margin-left:auto;width:16px;height:16px;border:1.5px solid var(--line);border-radius:4px;display:grid;place-items:center}
+.opt.on .ck{background:var(--ink);border-color:var(--ink)}
+.opt .ck svg{width:11px;height:11px;stroke:var(--lime);stroke-width:3;opacity:0}
+.opt.on .ck svg{opacity:1}
+.mf{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.mf .g{height:36px;padding:0 16px;border-radius:8px;border:1px solid var(--line);font-weight:500}
+.keybox{background:var(--ink);color:var(--lime);font:500 14px/1.5 "Geist Mono";border-radius:10px;padding:14px 16px;word-break:break-all;display:flex;gap:12px;align-items:flex-start}
+.keybox span{flex:1}
+.keybox button{color:#fff;border:1px solid #444;border-radius:6px;padding:4px 10px;font:500 12px "Space Grotesk";white-space:nowrap}
+.keybox button.ok{background:var(--lime);color:var(--ink);border-color:var(--lime)}
+.warnbar{margin-top:12px;font-size:12.5px;color:#8a4a06;background:#fdf0dc;border-radius:8px;padding:9px 12px;display:flex;gap:8px}
+.warnbar svg{color:var(--warn);margin-top:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><i></i>量程</div>
+    <div class="tabs"><a>概览</a><a>模型</a><a class="on">密钥与用量</a><a>账单</a><a>成员</a></div>
+    <div class="sp"></div>
+    <div class="ws"><b>雨</b>天枢实验室 · 生产空间</div>
+  </div>
+  <div class="head">
+    <div><h1>密钥与用量</h1><div class="sub">管理团队的 API 密钥，按模型查看每天的 Token 消耗与费用。</div></div>
+    <div class="sp"></div>
+    <div class="seg" id="range"><button data-d="7">7 天</button><button data-d="14">14 天</button><button class="on" data-d="30">30 天</button></div>
+    <button class="btn" id="newKey"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>创建密钥</button>
+  </div>
+
+  <div class="board">
+    <div class="kpi">
+      <small id="kLabel">全部密钥 · 近 30 天</small>
+      <div class="big" id="kTok">0<span>M Token</span></div>
+      <div class="row"><span>费用</span><b id="kCost">¥0</b></div>
+      <div class="row"><span>请求数</span><b id="kReq">0</b></div>
+      <div class="row"><span>日均</span><b id="kAvg">0</b></div>
+      <div class="row"><span>峰值日</span><b id="kPeak">—</b></div>
+      <div class="scope" id="scope"><span id="scopeN"></span><button id="clr">清除</button></div>
+    </div>
+    <div class="chartbox">
+      <div class="ch-h"><h3>每日 Token 用量（百万）</h3>
+        <div class="leg" id="leg"></div></div>
+      <svg id="chart" viewBox="0 0 1000 232"></svg>
+      <div class="tt" id="tt"></div>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <div class="tbl-h"><h3>密钥</h3><span class="n" id="cnt"></span><span style="color:var(--mute);font-size:12px">点任意一行，上方用量只看这把密钥</span></div>
+    <div class="list">
+      <div class="th"><span>名称</span><span>可用模型</span><span>30 天费用 / 限额</span><span>近 7 天</span><span>最后使用</span><span></span></div>
+      <div id="rows"></div>
+    </div>
+  </div>
+  <div class="note"><span>示例数据 · 密钥均为虚构，价格为演示价</span><span class="mono">2026-11-20</span></div>
+</div>
+
+<div class="ov" id="ov"><div class="mod" id="mod"></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const MODELS = [
+  { id:"xh", name:"星河-72B", c:"var(--m1)", p:8 },
+  { id:"yx", name:"云岫-Pro", c:"var(--m2)", p:4 },
+  { id:"bc", name:"北辰-8B", c:"var(--m3)", p:.8 },
+  { id:"qt", name:"嵌入-M3", c:"var(--m4)", p:.1 },
+];
+const MC = Object.fromEntries(MODELS.map(m=>[m.id,m]));
+let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+const DAYS = 30, today = new Date(2026,10,20);
+const KEYS = [
+  { id:1, name:"线上客服网关", pre:"lc-8f3a…c21d", owner:"陈默", models:{xh:.6,yx:1.4,bc:2.2}, lim:900, last:"刚刚" },
+  { id:2, name:"离线批处理 · 标注", pre:"lc-2b91…77e0", owner:"林晓", models:{yx:3.1,bc:1.6}, lim:600, last:"4 分钟前" },
+  { id:3, name:"检索嵌入服务", pre:"lc-c05d…19aa", owner:"周博", models:{qt:9.5}, lim:120, last:"21 秒前" },
+  { id:4, name:"算法一部 · 评测集群", pre:"lc-71e4…5d03", owner:"吴越", models:{xh:2.3,yx:.9}, lim:700, last:"12 分钟前" },
+  { id:5, name:"产品经理 · 原型试用", pre:"lc-a6c8…0f42", owner:"陆遥", models:{yx:.4,bc:.3}, lim:80, last:"2 小时前" },
+  { id:6, name:"数据平台 · 摘要", pre:"lc-93d2…ab61", owner:"赵一", models:{bc:2.8,qt:1.1}, lim:150, last:"昨天 18:40" },
+  { id:7, name:"预发环境", pre:"lc-4e07…e8b9", owner:"陈默", models:{xh:.15,yx:.3}, lim:100, last:"3 天前" },
+];
+KEYS.forEach(k=>{
+  k.on = Object.keys(k.models);
+  k.data = Array.from({length:DAYS},(_,i)=>{ const d={}, wk=new Date(+today-(DAYS-1-i)*864e5).getDay(), f=(wk===0||wk===6)?.55:1, ramp=.8+i/DAYS*.35;
+    for(const m in k.models) d[m]=Math.max(0, k.models[m]*f*ramp*(.7+rnd()*.6)); return d; });
+});
+// 调整，使几把密钥处于警戒区
+const cost = (d) => Object.entries(d).reduce((a,[m,v])=>a+v*MC[m].p,0);
+function keyCost(k){ return k.data.reduce((a,d)=>a+cost(d),0); }
+KEYS[0].lim = Math.round(keyCost(KEYS[0])/.86/10)*10;
+KEYS[3].lim = Math.round(keyCost(KEYS[3])/.97/10)*10;
+KEYS[4].lim = Math.round(keyCost(KEYS[4])/.31/10)*10;
+KEYS.forEach(k=>{ if(!k.lim2) k.lim2=k.lim; });
+let range = 30, sel = null, hidden = new Set(), flashId = null;
+const dayLabel = i => { const d=new Date(+today-(DAYS-1-i)*864e5); return `${d.getMonth()+1}/${d.getDate()}`; };
+const fmt = (v,n=1)=>v.toLocaleString("en-US",{minimumFractionDigits:n,maximumFractionDigits:n});
+
+function series(){ // 返回每天 {m:v}
+  const src = sel ? KEYS.filter(k=>k.id===sel) : KEYS;
+  return Array.from({length:range},(_,j)=>{ const i=DAYS-range+j, o={}; src.forEach(k=>{ for(const m in k.data[i]) o[m]=(o[m]||0)+k.data[i][m]; }); return o; });
+}
+function drawChart(){
+  const data = series(), W=Math.round($("#chart").getBoundingClientRect().width)||1000, H=232, L=34, B=22, T=8, plotW=W-L-6, plotH=H-B-T;
+  const act = MODELS.filter(m=>!hidden.has(m.id));
+  const tot = data.map(d=>act.reduce((a,m)=>a+(d[m.id]||0),0));
+  const maxV = Math.max(1, ...tot), step = niceStep(maxV/4), top = Math.ceil(maxV/step)*step;
+  let s = "";
+  for(let v=0; v<=top+1e-9; v+=step){ const y=T+plotH-(v/top)*plotH; s+=`<rect x="${L}" y="${y-.5}" width="${W-6-L}" height="1" fill="${v===0?'#13151a':'#e3e3d9'}"/><text x="${L-6}" y="${y+3.5}" text-anchor="end" font-size="10.5" fill="#9a9c9f" font-family="Geist Mono">${v}</text>`; }
+  const bw = plotW/range, gap = Math.min(6, bw*.22);
+  data.forEach((d,i)=>{ let y=T+plotH; const x=L+i*bw+gap/2;
+    act.forEach(m=>{ const h=(d[m.id]||0)/top*plotH; if(h<=0) return; y-=h; s+=`<rect class="bar" data-i="${i}" x="${x}" y="${y}" width="${bw-gap}" height="${h}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--'+({xh:'m1',yx:'m2',bc:'m3',qt:'m4'})[m.id]).trim()}" rx="1.5"><animate attributeName="height" from="0" to="${h}" dur=".45s" fill="freeze"/><animate attributeName="y" from="${y+h}" to="${y}" dur=".45s" fill="freeze"/></rect>`; });
+    s+=`<rect class="hit" data-i="${i}" x="${L+i*bw}" y="${T}" width="${bw}" height="${plotH}" fill="transparent"/>`;
+    if(range<=14 || i%3===0 || i===range-1) s+=`<text x="${x+(bw-gap)/2}" y="${H-5}" text-anchor="middle" font-size="10.5" fill="#9a9c9f" font-family="Geist Mono">${dayLabel(DAYS-range+i)}</text>`;
+  });
+  $("#chart").setAttribute("viewBox",`0 0 ${W} ${H}`); $("#chart").innerHTML = s;
+  // KPI
+  const sum = tot.reduce((a,b)=>a+b,0), c = data.reduce((a,d)=>a+act.reduce((x,m)=>x+(d[m.id]||0)*m.p,0),0);
+  $("#kTok").innerHTML = `${fmt(sum,1)}<span>M Token</span>`;
+  $("#kCost").textContent = "¥"+Math.round(c).toLocaleString();
+  $("#kReq").textContent = Math.round(sum*1000/2.4).toLocaleString()+" 次";
+  $("#kAvg").textContent = fmt(sum/range,2)+" M/天";
+  const pi = tot.indexOf(Math.max(...tot)); $("#kPeak").textContent = dayLabel(DAYS-range+pi)+" · "+fmt(tot[pi],1)+" M";
+  $("#kLabel").textContent = (sel?KEYS.find(k=>k.id===sel).name:"全部密钥")+` · 近 ${range} 天`;
+  $("#scope").classList.toggle("on",!!sel); if(sel) $("#scopeN").textContent="仅："+KEYS.find(k=>k.id===sel).name;
+  window.__data = data; window.__act = act;
+}
+function niceStep(x){ const p=Math.pow(10,Math.floor(Math.log10(x))), n=x/p; return (n<=1?1:n<=2?2:n<=5?5:10)*p; }
+
+const tt = $("#tt");
+$("#chart").addEventListener("mousemove", e=>{
+  const h = e.target.closest(".hit"); if(!h){ tt.style.opacity=0; return; }
+  const i=+h.dataset.i, d=window.__data[i], act=window.__act, box=$(".chartbox").getBoundingClientRect(), r=h.getBoundingClientRect();
+  const total = act.reduce((a,m)=>a+(d[m.id]||0),0), cst = act.reduce((a,m)=>a+(d[m.id]||0)*m.p,0);
+  tt.innerHTML = `<div class="d"><span>${dayLabel(DAYS-range+i)}</span><span class="mono">${fmt(total,2)} M</span></div>` +
+    act.slice().reverse().map(m=>`<div class="l"><i style="background:${m.c}"></i>${m.name}<b>${fmt(d[m.id]||0,2)}</b></div>`).join("") +
+    `<div class="t"><span>费用</span><b class="mono">¥${Math.round(cst).toLocaleString()}</b></div>`;
+  let x = r.left - box.left + r.width/2 + 14; if (x + 190 > box.width) x = r.left - box.left - 196;
+  tt.style.left = x+"px"; tt.style.top = "58px"; tt.style.opacity = 1;
+});
+$("#chart").addEventListener("mouseleave",()=>tt.style.opacity=0);
+
+function drawLegend(){
+  $("#leg").innerHTML = MODELS.map(m=>`<label class="${hidden.has(m.id)?'off':''}" data-m="${m.id}"><i style="background:${m.c}"></i>${m.name}</label>`).join("");
+}
+$("#leg").addEventListener("click",e=>{ const l=e.target.closest("label"); if(!l) return; const m=l.dataset.m; hidden.has(m)?hidden.delete(m):hidden.add(m); drawLegend(); drawChart(); });
+
+function drawRows(){
+  $("#cnt").textContent = KEYS.length+" 把";
+  $("#rows").innerHTML = KEYS.map(k=>{
+    const spent = keyCost(k), pct = spent/k.lim, cls = pct>=1?"bad":pct>=.8?"warn":"";
+    const last7 = k.data.slice(-7).map(d=>Object.values(d).reduce((a,b)=>a+b,0)), mx=Math.max(...last7);
+    return `<div class="tr ${sel===k.id?"sel":""} ${sel&&sel!==k.id?"dim":""} ${flashId===k.id?"new":""}" data-id="${k.id}">
+      <div class="nm"><b>${k.name}</b><code>${k.pre} · ${k.owner}</code></div>
+      <div class="chips">${k.on.map(m=>`<i style="--c:${MC[m].c}">${MC[m].name}</i>`).join("")}</div>
+      <div class="lim"><div class="t"><span>¥${Math.round(spent).toLocaleString()} <b class="${cls}">${Math.round(pct*100)}%</b></span><button data-edit="${k.id}" title="点击修改限额">限额 ¥${Math.round(k.lim).toLocaleString()}</button></div><div class="pg ${cls}"><i style="width:${Math.min(100,pct*100)}%"></i></div></div>
+      <div class="spark">${last7.map(v=>`<i style="height:${Math.max(6,v/mx*100)}%"></i>`).join("")}</div>
+      <div class="last">${k.last==="刚刚"||k.last.includes("秒")||k.last.includes("分钟")?'<span class="dot"></span>':""}${k.last}</div>
+      <div class="act"><button data-copy="${k.id}" title="复制前缀"><svg viewBox="0 0 16 16"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 10V4a1 1 0 011-1h6"/></svg></button><button data-del="${k.id}" title="吊销"><svg viewBox="0 0 16 16"><path d="M3 5h10M6 5V3h4v2M5 5l.5 8h5L11 5"/></svg></button></div>
+    </div>`; }).join("");
+  flashId=null;
+}
+$("#rows").addEventListener("click",e=>{
+  const ed=e.target.closest("[data-edit]");
+  if(ed){ e.stopPropagation(); const k=KEYS.find(x=>x.id==ed.dataset.edit); const box=ed.parentElement;
+    box.innerHTML=`<span></span><input type="number" value="${Math.round(k.lim)}">`; const inp=box.querySelector("input"); inp.focus(); inp.select();
+    const done=ok=>{ if(ok&&+inp.value>0) k.lim=+inp.value; drawRows(); };
+    inp.addEventListener("keydown",ev=>{ if(ev.key==="Enter") done(true); if(ev.key==="Escape") done(false); });
+    inp.addEventListener("blur",()=>done(true)); inp.addEventListener("click",ev=>ev.stopPropagation()); return; }
+  if(e.target.closest("[data-copy]")){ e.stopPropagation(); const b=e.target.closest("[data-copy]"); b.style.color="#4a8a00"; setTimeout(()=>b.style.color="",900); return; }
+  if(e.target.closest("[data-del]")){ e.stopPropagation(); const id=+e.target.closest("[data-del]").dataset.del; const i=KEYS.findIndex(k=>k.id===id); KEYS.splice(i,1); if(sel===id) sel=null; drawRows(); drawChart(); return; }
+  const r=e.target.closest(".tr"); if(!r) return; const id=+r.dataset.id; sel = sel===id?null:id; drawRows(); drawChart();
+});
+$("#clr").onclick=()=>{ sel=null; drawRows(); drawChart(); };
+$("#range").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; range=+b.dataset.d; document.querySelectorAll("#range button").forEach(x=>x.classList.toggle("on",x===b)); drawChart(); });
+
+// 创建密钥
+let draft;
+function openCreate(){
+  draft = { name:"", lim:300, models:new Set(["yx","bc"]) };
+  $("#mod").innerHTML = `<h2>创建密钥</h2><p class="s">限额按自然月计费，到达后拒绝新请求。</p>
+    <div class="fld"><label>名称</label><input type="text" id="fn" placeholder="例如：客服机器人 · 生产"></div>
+    <div class="fld"><label>月限额（元）</label><input type="number" id="fl" value="300"></div>
+    <div class="fld"><label>可用模型</label><div class="opts">${MODELS.map(m=>`<div class="opt ${draft.models.has(m.id)?'on':''}" data-m="${m.id}"><i style="background:${m.c}"></i>${m.name}<span class="ck"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span></div>`).join("")}</div></div>
+    <div class="mf"><button class="g" id="cx">取消</button><button class="btn" id="go">生成密钥</button></div>`;
+  $("#ov").classList.add("on"); setTimeout(()=>$("#fn").focus(),30);
+}
+$("#newKey").onclick=openCreate;
+$("#ov").addEventListener("click",e=>{
+  if(e.target===$("#ov")&&!draft?.shown){ $("#ov").classList.remove("on"); return; }
+  const o=e.target.closest(".opt"); if(o){ const m=o.dataset.m; draft.models.has(m)?draft.models.delete(m):draft.models.add(m); o.classList.toggle("on"); return; }
+  if(e.target.id==="cx") $("#ov").classList.remove("on");
+  if(e.target.id==="go"){
+    const name=$("#fn").value.trim()||"未命名密钥", lim=+$("#fl").value||300; if(!draft.models.size) return;
+    const full="lc-"+Array.from({length:40},()=>"abcdef0123456789ghijkmnpqrstuvwxyz"[Math.floor(Math.random()*35)]).join("");
+    draft.full=full; draft.nm=name; draft.lim=lim; draft.shown=true;
+    $("#mod").innerHTML=`<h2>密钥已创建</h2><p class="s">请现在复制。关闭后只会显示前缀，无法再次查看完整密钥。</p>
+      <div class="keybox"><span id="kv">${full}</span><button id="cp">复制</button></div>
+      <div class="warnbar"><svg viewBox="0 0 16 16"><path d="M8 2l6.5 11.5h-13zM8 6.5v3M8 11.5v.5"/></svg>${name} · 月限额 ¥${lim} · ${[...draft.models].map(m=>MC[m].name).join("、")}</div>
+      <div class="mf"><button class="btn" id="fin">我已保存，关闭</button></div>`;
+  }
+  if(e.target.id==="cp"){ navigator.clipboard?.writeText(draft.full).catch(()=>{}); const b=$("#cp"); b.textContent="已复制"; b.classList.add("ok"); }
+  if(e.target.id==="fin"){
+    const mm={}; [...draft.models].forEach(m=>mm[m]=.2);
+    const k={ id:Date.now(), name:draft.nm, pre:draft.full.slice(0,7)+"…"+draft.full.slice(-4), owner:"陆遥", models:mm, lim:draft.lim, last:"尚未使用", on:[...draft.models] };
+    k.data=Array.from({length:DAYS},()=>Object.fromEntries(Object.keys(mm).map(m=>[m,0])));
+    KEYS.unshift(k); flashId=k.id; draft=null; $("#ov").classList.remove("on"); drawRows(); drawChart();
+  }
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!draft?.shown) $("#ov").classList.remove("on"); });
+drawLegend(); drawRows(); drawChart(); addEventListener("resize",drawChart);
+</script>
+</body>
+</html>

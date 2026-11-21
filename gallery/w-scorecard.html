@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>记分卡 · 部门资源 KPI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+  :root { --ink:#141414; --ink2:#5b5b57; --mute:#9a9a94; --line:#dcdcd6; --b1:#ececE7; --b2:#d8d8d2; --b3:#bfbfb8; --bar:#2b2b2a; --red:#e03b2e; --amber:#f0a300; --ok:#1b1b1b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:#fff; }
+  body { font-family:"Hanken Grotesk","Noto Sans SC",sans-serif; font-size:13px; color:var(--ink); -webkit-font-smoothing:antialiased; min-width:1200px; }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; outline:none; }
+  button:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
+  .mono { font-family:"DM Mono",monospace; font-variant-numeric:tabular-nums; }
+  svg { display:block; }
+  .page { max-width:1440px; margin:0 auto; padding:30px 48px 40px; }
+
+  .hd { display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:18px; border-bottom:3px solid var(--ink); }
+  .hd h1 { font-size:34px; font-weight:700; letter-spacing:-.02em; line-height:1; }
+  .hd .sub { margin-top:9px; font-size:13px; color:var(--ink2); }
+  .hd .sub b { color:var(--ink); font-weight:600; }
+  .ctl { display:flex; align-items:flex-end; gap:34px; }
+  .how { display:flex; align-items:center; gap:12px; font-size:11.5px; color:var(--ink2); }
+  .how .ex { width:96px; height:16px; position:relative; flex:none; }
+  .how .ex i { position:absolute; top:0; bottom:0; }
+  .how ul { list-style:none; display:grid; grid-template-columns:auto auto; gap:1px 16px; }
+  .how li { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .how li s { width:12px; height:8px; display:block; text-decoration:none; }
+  .seg { display:flex; border:2px solid var(--ink); }
+  .seg button { height:34px; padding:0 20px; font-weight:600; font-size:14px; transition:background .2s, color .2s; }
+  .seg button.on { background:var(--ink); color:#fff; }
+  .seg button:not(.on):hover { background:#f0f0ec; }
+
+  .grid { position:relative; }
+  .row { display:grid; grid-template-columns:218px repeat(5,1fr); align-items:center; }
+  .head { align-items:end; border-bottom:1px solid var(--ink); padding:20px 0 10px; }
+  .head .h { padding:0 30px 0 0; text-align:left; width:100%; display:block; }
+  .head .h .nm { font-weight:600; font-size:14px; display:flex; align-items:center; gap:6px; }
+  .head .h .tg { font-size:11.5px; color:var(--ink2); margin-top:2px; }
+  .head .h:hover .nm { text-decoration:underline; text-underline-offset:3px; }
+  .head .h .ar { width:12px; height:12px; color:var(--mute); transition:transform .25s; flex:none; }
+  .head .h.on .ar { color:var(--ink); }
+  .head .h.on.asc .ar { transform:rotate(180deg); }
+  .head .first { font-size:11.5px; color:var(--mute); padding-bottom:2px; }
+
+  .body { position:relative; }
+  .total { border-bottom:2px solid var(--ink); background:#f6f6f3; height:66px; }
+  .tr { position:absolute; left:0; right:0; height:66px; border-bottom:1px solid var(--line); transition:transform .6s cubic-bezier(.3,.8,.2,1), background .15s; }
+  .tr:hover { background:#f6f6f3; }
+  .tr.act { background:#eeeeea; }
+  .dn { padding:0 12px 0 0; text-align:left; cursor:pointer; display:block; width:100%; }
+  .dn .a { font-size:15px; font-weight:600; display:flex; align-items:center; gap:7px; }
+  .dn .a svg { width:11px; height:11px; opacity:0; transform:translateX(-4px); transition:all .2s; color:var(--ink2); }
+  .tr:hover .dn .a svg, .tr.act .dn .a svg { opacity:1; transform:none; }
+  .dn .b { font-size:11.5px; color:var(--mute); margin-top:2px; }
+  .total .dn { cursor:default; } .total .dn .a { font-size:15px; }
+  .cell { padding:0 26px 0 0; display:flex; align-items:center; gap:10px; height:100%; }
+  .cell .v { width:52px; flex:none; font-size:15px; font-weight:500; text-align:right; }
+  .cell .v.miss { color:var(--red); } .cell .v.near { color:#b87900; }
+  .bul { position:relative; flex:1; height:26px; cursor:default; }
+  .bul .band { position:absolute; top:0; bottom:0; }
+  .bul .act { position:absolute; left:0; top:8px; bottom:8px; background:var(--bar); width:0; transition:width .8s cubic-bezier(.2,.8,.2,1); z-index:2; }
+  .bul .act.miss { background:var(--red); } .bul .act.near { background:var(--amber); }
+  .bul .tgt { position:absolute; top:2px; bottom:2px; width:3px; margin-left:-1.5px; background:#000; z-index:3; }
+  .bul:hover .tgt { top:-3px; bottom:-3px; }
+  .bul .gp { position:absolute; top:-1px; bottom:-1px; z-index:1; opacity:0; transition:opacity .2s; }
+  .tip { position:fixed; z-index:40; pointer-events:none; background:var(--ink); color:#fff; padding:9px 12px; font-size:12px; line-height:1.7; opacity:0; transition:opacity .1s; min-width:176px; }
+  .tip b { display:block; font-weight:600; margin-bottom:1px; }
+  .tip div { display:flex; justify-content:space-between; gap:18px; }
+  .tip .m { color:#ff8e83; } .tip .n { color:#ffcf66; } .tip .k { color:#8fe0a8; }
+  .foot { margin-top:18px; display:flex; justify-content:space-between; font-size:11.5px; color:var(--mute); }
+
+  /* 抽屉 */
+  .scrim { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity .3s; z-index:30; }
+  .scrim.on { opacity:.7; pointer-events:auto; }
+  .drawer { position:fixed; top:0; right:0; bottom:0; width:560px; background:#fff; border-left:3px solid var(--ink); z-index:31; transform:translateX(100%); transition:transform .45s cubic-bezier(.2,.8,.2,1); overflow-y:auto; padding:28px 32px 30px; }
+  .drawer.on { transform:none; }
+  .drawer .x { position:absolute; right:18px; top:18px; width:34px; height:34px; display:grid; place-items:center; }
+  .drawer .x:hover { background:#f0f0ec; }
+  .drawer h2 { font-size:28px; font-weight:700; letter-spacing:-.02em; }
+  .drawer .s { font-size:13px; color:var(--ink2); margin:6px 0 20px; line-height:1.6; }
+  .drawer .s b.r { color:var(--red); }
+  .sm { display:grid; grid-template-columns:1fr 1fr; gap:22px 28px; }
+  .sm .c { border-top:1px solid var(--ink); padding-top:8px; }
+  .sm .c .t { display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; font-weight:600; }
+  .sm .c .t span { font:500 14px "DM Mono"; }
+  .sm .c .t span.miss { color:var(--red); }
+  .sm .c .g { font-size:11px; color:var(--mute); margin-bottom:4px; }
+  .sm svg { width:100%; height:86px; overflow:visible; }
+  .sm .note { grid-column:1 / -1; font-size:11.5px; color:var(--mute); border-top:1px solid var(--line); padding-top:10px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hd">
+    <div>
+      <h1>资源使用记分卡</h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <div class="ctl">
+      <div class="how"><div class="ex"><i style="left:0;width:32%;background:var(--b3)"></i><i style="left:32%;width:30%;background:var(--b2)"></i><i style="left:62%;right:0;background:var(--b1)"></i><i style="left:0;top:5px;bottom:5px;width:62%;background:var(--bar);z-index:2"></i><i style="left:76%;top:-1px;bottom:-1px;width:3px;background:#000;z-index:3"></i></div>
+        <ul><li><s style="background:var(--b1)"></s>好</li><li><s style="background:var(--bar)"></s>实际值</li><li><s style="background:var(--b3)"></s>差</li><li><s style="background:#000;width:3px;height:12px"></s>目标</li><li style="grid-column:1/-1"><s style="background:var(--red)"></s>未达标才上色</li></ul></div>
+      <div class="seg" id="seg"><button data-p="m" class="on">本月</button><button data-p="q">本季度</button></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="row head" id="head"></div>
+    <div class="row total" id="total"></div>
+    <div class="body" id="body"></div>
+  </div>
+  <div class="foot"><span>示例数据 · 品牌与数据均为虚构 · 加权按各部门占用卡数</span><span id="note"></span></div>
+</div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="tip" id="tip"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let seed = 7261120; const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+// 指标：t 目标，hi 越高越好，lo/hi 刻度范围，bands 差/中/好的分界
+const MET = [
+  { id:"util",  name:"GPU 利用率",   unit:"%",  t:70,  hi:true,  min:0,  max:100, cut:[50,70],  dec:0, tg:"目标 ≥ 70%" },
+  { id:"bud",   name:"预算占用",     unit:"%",  t:100, hi:false, min:60, max:130, cut:[100,110], dec:0, tg:"目标 ≤ 100%" },
+  { id:"wait",  name:"平均排队",     unit:"天", t:2,   hi:false, min:0,  max:6,   cut:[2,3.5],  dec:1, tg:"目标 ≤ 2 天" },
+  { id:"idle",  name:"闲置卡占比",   unit:"%",  t:8,   hi:false, min:0,  max:25,  cut:[8,14],   dec:1, tg:"目标 ≤ 8%" },
+  { id:"ontime",name:"按时交付率",   unit:"%",  t:90,  hi:true,  min:50, max:100, cut:[75,90],  dec:0, tg:"目标 ≥ 90%" },
+];
+// 部门：卡数，各指标 12 个月基准与月趋势
+const DEP = [
+  ["算法中心",816,"陈思远",[76,93,1.6,6.2,94],[.2,.3,0,0,0]],
+  ["推荐平台部",560,"李晓宁",[79,88,1.3,4.8,96],[.1,.4,-.02,0,0]],
+  ["数据平台部",352,"周明",[52,104,2.8,15.5,86],[.5,-.2,-.05,-.3,.2]],
+  ["自动驾驶组",336,"赵岚",[67,108,3.9,9.4,78],[.3,.8,.12,.1,-.4]],
+  ["多模态组",320,"吴越",[64,111,2.4,7.1,91],[.5,1.0,.06,.1,.1]],
+  ["基础架构部",296,"郑凯",[39,92,1.1,19.8,97],[-.2,.1,0,.4,0]],
+  ["搜索部",296,"孙立",[61,97,2.1,10.6,88],[.1,.2,-.01,0,.1]],
+  ["语音组",288,"林佳",[56,86,1.8,12.4,92],[.2,.2,.02,-.2,0]],
+];
+const MONTHS = ["2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10","2026-11"];
+const clampM = (m,v) => Math.max(m.min+(m.max-m.min)*.02, Math.min(m.max*.99, v));
+const rows = DEP.map(([name,cards,owner,base,slope]) => {
+  const series = MET.map((m,i) => Array.from({length:12},(_,k) => { const noise=(rnd()-.5)*(m.max-m.min)*.06; return clampM(m,base[i] - slope[i]*(11-k)*(m.max>50?3:.8) + noise); }));
+  // 最后一个月取基准值，保证本月数字与设计一致
+  series.forEach((a,i)=>{ a[11] = base[i]; });
+  return { name, cards, owner, series, m:series.map(a=>a[11]), q:series.map(a=>(a[9]+a[10]+a[11])/3) };
+});
+const tot = { m:MET.map((_,i)=>rows.reduce((a,r)=>a+r.m[i]*r.cards,0)/3264), q:MET.map((_,i)=>rows.reduce((a,r)=>a+r.q[i]*r.cards,0)/3264) };
+
+const st = { p:"m", key:null, dir:1, open:null };
+const status = (m,v) => { v = +(+v).toFixed(m.dec); const miss = m.hi ? m.t - v : v - m.t; if(miss<=0) return {s:"ok",gap:miss}; return {s:(miss/m.t<=.1?"near":"miss"),gap:miss}; };
+const fmt = (m,v) => v.toFixed(m.dec);
+const pos = (m,v) => Math.max(0,Math.min(100,(v-m.min)/(m.max-m.min)*100));
+const gapTxt = (m,v) => { const g = m.hi ? v-m.t : m.t-v; return (g>=0?"+":"−")+Math.abs(g).toFixed(m.dec)+(m.unit==="%"?" pt":" 天"); };
+
+function bullet(m, v, first){
+  const c0=pos(m,m.cut[0]), c1=pos(m,m.cut[1]), tg=pos(m,m.t), vv=pos(m,v), s=status(m,v);
+  const b = m.hi ? [[0,c0,"b3"],[c0,c1,"b2"],[c1,100,"b1"]] : [[0,c0,"b1"],[c0,c1,"b2"],[c1,100,"b3"]];
+  return `<div class="bul" data-m="${m.id}" data-v="${v}"><i class="band" style="left:${b[0][0]}%;width:${b[0][1]-b[0][0]}%;background:var(--${b[0][2]})"></i><i class="band" style="left:${b[1][0]}%;width:${b[1][1]-b[1][0]}%;background:var(--${b[1][2]})"></i><i class="band" style="left:${b[2][0]}%;width:${b[2][1]-b[2][0]}%;background:var(--${b[2][2]})"></i><i class="act ${s.s==="ok"?"":s.s}" data-w="${vv}" style="${first?"":"width:"+vv+"%"}"></i><i class="tgt" style="left:${tg}%"></i></div>`;
+}
+const ARR = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="ar"><path d="M6 2v8M2.5 6.5 6 10l3.5-3.5"/></svg>';
+function renderHead(){
+  $("#head").innerHTML = `<div class="first">部门</div>` + MET.map(m => `<div><button class="h ${st.key===m.id?'on':''} ${st.key===m.id&&st.dir<0?'asc':''}" data-k="${m.id}"><div class="nm">${m.name}${ARR}</div><div class="tg">${m.tg}</div></button></div>`).join("");
+}
+function miss(r, i){ const m=MET[i]; return status(m, r[st.p][i]).gap / (m.max-m.min); }   // 离目标的差距，越大越差
+function order(){
+  const a = rows.slice();
+  if(st.key){ const i = MET.findIndex(m=>m.id===st.key); a.sort((x,y)=> (miss(y,i)-miss(x,i))*st.dir); }
+  else a.sort((x,y)=>y.cards-x.cards);
+  return a;
+}
+function rowHTML(r, first){
+  return `<div class="dn" data-d="${r.name}"><div class="a">${r.name}<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2l4 4-4 4"/></svg></div><div class="b">${r.cards} 卡 · ${r.owner}</div></div>` +
+    MET.map((m,i) => { const v=r[st.p][i], s=status(m,v); return `<div class="cell"><div class="v mono ${s.s==="ok"?"":s.s}">${fmt(m,v)}<span style="font-size:11px;color:var(--mute);margin-left:1px">${m.unit==="%"?"%":""}</span></div>${bullet(m,v,first)}</div>`; }).join("");
+}
+function build(first){
+  renderHead();
+  const o = order();
+  $("#total").innerHTML = `<div class="dn"><div class="a">全公司</div><div class="b">3,264 卡 · 加权</div></div>` + MET.map((m,i)=>{ const v=tot[st.p][i], s=status(m,v); return `<div class="cell"><div class="v mono ${s.s==="ok"?"":s.s}">${fmt(m,v)}${m.unit==="%"?"%":""}</div>${bullet(m,v,first)}</div>`; }).join("");
+  const body = $("#body"); body.style.height = o.length*66+"px";
+  body.innerHTML = o.map((r,i)=>`<div class="tr row ${st.open===r.name?'act':''}" data-n="${r.name}" style="transform:translateY(${i*66}px)">${rowHTML(r,first)}</div>`).join("");
+  summary();
+  if(first) requestAnimationFrame(()=>requestAnimationFrame(()=>{ document.querySelectorAll(".act[data-w]").forEach((e,i)=>{ e.style.transitionDelay=(i%6*66+Math.floor(i/6)*40)+"ms"; e.style.width=e.dataset.w+"%"; }); setTimeout(()=>document.querySelectorAll(".act[data-w]").forEach(e=>e.style.transitionDelay=""),1500); }));
+}
+function summary(){
+  let ok=0,n=0; rows.forEach(r=>MET.forEach((m,i)=>{ n++; if(status(m,r[st.p][i]).s==="ok") ok++; }));
+  $("#sub").innerHTML = `${st.p==="m"?"2026 年 11 月":"2026 年第 4 季度（10–11 月均值）"} · 8 个部门 × 5 项指标，<b>${ok} / ${n}</b> 格达标`;
+  const worst = rows.map(r=>({n:r.name,c:MET.filter((m,i)=>status(m,r[st.p][i]).s!=="ok").length})).sort((a,b)=>b.c-a.c)[0];
+  $("#note").textContent = `未达标最多：${worst.n}（${worst.c} 项）`;
+}
+function update(){ // 切换周期：原地改数字，让条形长度过渡
+  const o = order();
+  $("#total").querySelectorAll(".cell").forEach((c,i)=>{ const m=MET[i], v=tot[st.p][i], s=status(m,v); const vv=c.querySelector(".v"); vv.className="v mono "+(s.s==="ok"?"":s.s); vv.textContent=fmt(m,v)+(m.unit==="%"?"%":""); const a=c.querySelector(".act"); a.className="act "+(s.s==="ok"?"":s.s); a.style.width=pos(m,v)+"%"; c.querySelector(".bul").dataset.v=v; });
+  document.querySelectorAll(".tr").forEach(tr=>{ const r=rows.find(x=>x.name===tr.dataset.n); tr.querySelectorAll(".cell").forEach((c,i)=>{ const m=MET[i], v=r[st.p][i], s=status(m,v); const vv=c.querySelector(".v"); vv.className="v mono "+(s.s==="ok"?"":s.s); vv.innerHTML=fmt(m,v)+`<span style="font-size:11px;color:var(--mute);margin-left:1px">${m.unit==="%"?"%":""}</span>`; const a=c.querySelector(".act"); a.className="act "+(s.s==="ok"?"":s.s); a.style.width=pos(m,v)+"%"; c.querySelector(".bul").dataset.v=v; }); tr.style.transform=`translateY(${o.findIndex(x=>x.name===r.name)*66}px)`; });
+  renderHead(); summary(); if(st.open) drawer(st.open,true);
+}
+function resort(){ const o=order(); document.querySelectorAll(".tr").forEach(tr=>{ tr.style.transform=`translateY(${o.findIndex(x=>x.name===tr.dataset.n)*66}px)`; }); renderHead(); }
+
+$("#seg").addEventListener("click", e => { const b=e.target.closest("button"); if(!b||b.dataset.p===st.p) return; st.p=b.dataset.p; document.querySelectorAll("#seg button").forEach(x=>x.classList.toggle("on",x===b)); update(); });
+$("#head").addEventListener("click", e => { const h=e.target.closest(".h"); if(!h) return; const k=h.dataset.k; if(st.key===k){ if(st.dir===1) st.dir=-1; else { st.key=null; st.dir=1; } } else { st.key=k; st.dir=1; } resort(); });
+
+/* 悬停提示 */
+const tip=$("#tip");
+document.addEventListener("mousemove", e => { const b=e.target.closest(".bul"); if(!b){ tip.style.opacity=0; return; }
+  const m=MET.find(x=>x.id===b.dataset.m), v=+b.dataset.v, s=status(m,v), g=gapTxt(m,v);
+  const who = (b.closest(".tr")||b.closest(".total")).querySelector(".dn .a").textContent;
+  tip.innerHTML = `<b>${who} · ${m.name}</b><div><span>实际</span><span class="mono">${fmt(m,v)}${m.unit==="%"?"%":" 天"}</span></div><div><span>目标</span><span class="mono">${m.hi?"≥":"≤"} ${m.t}${m.unit==="%"?"%":" 天"}</span></div><div class="${s.s==="ok"?"k":s.s==="near"?"n":"m"}"><span>${s.s==="ok"?"达标，余量":"差距"}</span><span class="mono">${g}</span></div>`;
+  tip.style.opacity=1; let x=e.clientX+16, y=e.clientY+18; if(x+200>innerWidth) x=e.clientX-210; tip.style.left=x+"px"; tip.style.top=y+"px"; });
+
+/* 抽屉：12 个月小图组 */
+function spark(m, a){
+  const W=240,H=86,pl=2,pr=34,pt=6,pb=16, lo=Math.min(m.min, ...a, m.t), hi=Math.max(...a, m.t), span=(hi-lo)||1;
+  const lo2=Math.min(...a,m.t)-span*.15, hi2=Math.max(...a,m.t)+span*.15, X=i=>pl+i*(W-pl-pr)/11, Y=v=>pt+(1-(v-lo2)/(hi2-lo2))*(H-pt-pb);
+  const d=a.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)).join("");
+  const dots=a.map((v,i)=>{ const s=status(m,v).s; return `<circle cx="${X(i)}" cy="${Y(v)}" r="${i===11?4:2.6}" fill="${s==="ok"?"#141414":s==="near"?"#f0a300":"#e03b2e"}"/>`; }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}"><line x1="${pl}" x2="${W-pr}" y1="${Y(m.t)}" y2="${Y(m.t)}" stroke="#000" stroke-width="1.5" stroke-dasharray="3 3"/><text x="${W-pr+5}" y="${Y(m.t)+3.5}" font-size="9.5" fill="#5b5b57" font-family="DM Mono">${m.t}</text><path d="${d}" fill="none" stroke="#141414" stroke-width="1.6" stroke-linejoin="round"/>${dots}<text x="${pl}" y="${H-2}" font-size="9.5" fill="#9a9a94" font-family="DM Mono">25-12</text><text x="${W-pr}" y="${H-2}" text-anchor="end" font-size="9.5" fill="#9a9a94" font-family="DM Mono">26-11</text></svg>`;
+}
+function drawer(name, keep){
+  const r=rows.find(x=>x.name===name); st.open=name;
+  const bad = MET.filter((m,i)=>status(m,r.series[i][11]).s!=="ok");
+  $("#drawer").innerHTML = `<button class="x" aria-label="关闭"><svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 3l10 10M13 3 3 13"/></svg></button><h2>${r.name}</h2><div class="s">${r.cards} 卡 · 负责人 ${r.owner}。本月 ${bad.length?`<b class="r">${bad.length} 项未达标</b>：${bad.map(m=>m.name).join("、")}`:"5 项全部达标"}。</div>
+    <div class="sm">${MET.map((m,i)=>{ const a=r.series[i], s=status(m,a[11]); const missed=a.filter(v=>status(m,v).s!=="ok").length; return `<div class="c"><div class="t">${m.name}<span class="${s.s==="ok"?"":"miss"}">${fmt(m,a[11])}${m.unit==="%"?"%":" 天"}</span></div><div class="g">${m.tg} · 近 12 月 ${missed} 月未达标</div>${spark(m,a)}</div>`; }).join("")}
+    <div class="note">黑点为达标月份，橙点为差距不到目标 10%，红点为未达标；虚线是目标值。各图纵轴独立。</div></div>`;
+  $("#drawer").classList.add("on"); $("#scrim").classList.add("on");
+  document.querySelectorAll(".tr").forEach(t=>t.classList.toggle("act",t.dataset.n===name));
+  $("#drawer .x").onclick=closeD; $("#drawer").scrollTop=keep?$("#drawer").scrollTop:0;
+}
+function closeD(){ st.open=null; $("#drawer").classList.remove("on"); $("#scrim").classList.remove("on"); document.querySelectorAll(".tr").forEach(t=>t.classList.remove("act")); }
+$("#body").addEventListener("click", e => { const d=e.target.closest(".dn"); if(d) drawer(d.dataset.d); });
+$("#scrim").onclick=closeD; window.addEventListener("keydown",e=>{ if(e.key==="Escape") closeD(); });
+
+build(true);
+</script>
+</body>
+</html>

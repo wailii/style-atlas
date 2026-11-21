@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>状态条列表 · GPU 服务器健康</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#f7f9f7;--panel:#fff;--ink:#17231d;--ink2:#58675f;--mute:#98a59e;--line:#e4eae6;--ok:#2cb67d;--warn:#f0b429;--bad:#e5484d;--mt:#9db4d1;--nd:#e6ebe8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font:13px/1.45 Manrope,"Noto Sans SC",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.mono{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
+.app{display:flex;height:100vh}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 44px}
+.nav{height:58px;flex:none;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.nav i{width:22px;height:22px;border-radius:50%;background:var(--ok);display:grid;place-items:center;position:relative}
+.nav i::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--ok);opacity:0;animation:ring 2.4s infinite}
+@keyframes ring{0%{transform:scale(.7);opacity:.7}100%{transform:scale(1.35);opacity:0}}
+.nav i svg{width:12px;height:12px;stroke:#fff;stroke-width:2.4}
+.nav small{margin-left:auto;font-weight:400;font-size:11px;color:var(--mute)}
+.hero{display:flex;align-items:flex-end;gap:40px;padding:10px 0 22px}
+.hero h1{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.hero h1 span{color:var(--ok)}
+.hero p{color:var(--ink2);margin-top:8px}
+.hero .big{margin-left:auto;text-align:right}
+.hero .big b{font:500 40px "JetBrains Mono";letter-spacing:-.04em}
+.hero .big b small{font-size:20px;color:var(--mute)}
+.hero .big span{display:block;font-size:12px;color:var(--ink2)}
+.fleet{margin-bottom:20px}
+.fleet .cap{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mute);margin-top:6px}
+.strip{display:flex;gap:2px;height:30px}
+.strip.fl{height:46px}
+.strip i{flex:1;min-width:0;border-radius:2px;background:var(--ok);transform-origin:bottom;animation:bar .5s both;cursor:pointer;position:relative}
+.strip i:hover{filter:brightness(.88);transform:scaleY(1.12)}
+@keyframes bar{from{transform:scaleY(.2);opacity:0}}
+.s1{background:var(--warn)!important}.s2{background:var(--bad)!important}.s3{background:var(--mt)!important}.s-1{background:var(--nd)!important}
+.ctl{display:flex;align-items:center;gap:26px;height:48px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ctl .lab{font-size:12px;color:var(--mute)}
+.pill{display:flex;gap:2px;background:#e9efeb;border-radius:8px;padding:2px}
+.pill button{height:26px;padding:0 12px;border-radius:6px;font-weight:500;color:var(--ink2);font-size:12.5px}
+.pill button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.sp{flex:1}
+.srch{display:flex;align-items:center;gap:7px;height:30px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:#fff;width:200px}
+.srch svg{width:14px;height:14px;color:var(--mute)}.srch input{flex:1;cursor:text;min-width:0}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:5px}.legend i{width:8px;height:8px;border-radius:2px}
+.list{flex:1;min-height:0;overflow:auto;position:relative}
+.hd,.row{display:grid;grid-template-columns:230px 78px minmax(220px,1fr) 78px 88px;gap:22px;align-items:center}
+.hd{height:34px;font-size:11.5px;color:var(--mute);position:sticky;top:0;background:var(--bg);z-index:3}
+.hd button{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--mute)}
+.hd button.on{color:var(--ink);font-weight:700}
+.row{height:62px;border-bottom:1px solid var(--line);position:relative;cursor:default;background:var(--bg);will-change:transform}
+.row:hover{background:#f0f4f1}
+.row.sel{background:#e9f5ef}.row.sel .nm b{color:var(--ok)}
+.nm{cursor:pointer;display:block;min-width:0}
+.nm b{display:block;font:500 13.5px "JetBrains Mono";letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm:hover b{text-decoration:underline;text-underline-offset:3px}
+.nm span{font-size:11.5px;color:var(--mute)}
+.st{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.st i{width:8px;height:8px;border-radius:50%}
+.av{font:500 14px "JetBrains Mono";text-align:right;letter-spacing:-.03em}
+.av.bad{color:var(--bad)}.av.warn{color:#b78612}
+.ic{text-align:right;font:500 13px "JetBrains Mono";color:var(--mute)}
+.ic.on{color:var(--bad);font-weight:600}
+.ic small{font:11px Manrope,"Noto Sans SC";margin-left:3px;font-weight:400}
+.tip{position:fixed;z-index:60;width:250px;background:var(--ink);color:#fff;border-radius:10px;padding:11px 13px;pointer-events:none;opacity:0;transition:opacity .1s;font-size:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.tip.show{opacity:1}
+.tip h5{font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;margin-bottom:6px}
+.tip h5 em{font-style:normal;font-weight:500;color:#b9c6be}
+.tip .ev{padding:6px 0;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:8px}
+.tip .ev i{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:none}
+.tip .ev b{font-weight:500;display:block}.tip .ev span{color:#b9c6be;font-size:11px}
+.tip .ok{color:#8fe0b9}
+/* 面板 */
+.pn{width:0;flex:none;overflow:hidden;transition:width .3s cubic-bezier(.2,.8,.2,1);background:var(--panel);border-left:1px solid var(--line)}
+.pn.open{width:400px}
+.pn .in{width:400px;height:100vh;display:flex;flex-direction:column}
+.pn header{padding:22px 26px 16px;border-bottom:1px solid var(--line)}
+.pn header .t{display:flex;align-items:flex-start;gap:8px}
+.pn header h2{font:500 18px "JetBrains Mono";letter-spacing:-.03em}
+.pn header p{color:var(--mute);font-size:12px;margin-top:3px}
+.pn header .x{margin-left:auto;width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--ink2)}
+.pn header .x:hover{background:var(--bg)}
+.pn header .x svg{width:14px;height:14px}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.kp div{background:var(--bg);border-radius:8px;padding:9px 11px}
+.kp b{display:block;font:500 17px "JetBrains Mono";letter-spacing:-.03em}.kp span{font-size:11px;color:var(--mute)}
+.pn .tl{flex:1;overflow:auto;padding:12px 26px 30px}
+.pn h4{font-size:11.5px;color:var(--mute);font-weight:600;letter-spacing:.06em;margin:8px 0 12px}
+.ev2{display:grid;grid-template-columns:16px 1fr;gap:12px;position:relative;padding-bottom:20px}
+.ev2::before{content:"";position:absolute;left:7px;top:16px;bottom:0;width:2px;background:var(--line)}
+.ev2:last-child::before{display:none}
+.ev2 i{width:14px;height:14px;border-radius:50%;margin-top:2px;border:3px solid #fff;box-shadow:0 0 0 1.5px currentColor;background:currentColor}
+.ev2 b{display:block;font-weight:600;font-size:13px}
+.ev2 .d{font-size:11.5px;color:var(--mute);margin-top:2px}
+.ev2 .n{margin-top:5px;color:var(--ink2);font-size:12px}
+.ev2.hl{animation:hl 1.8s}.ev2.hl b{color:var(--ink)}
+@keyframes hl{0%,40%{background:#fff4cc;box-shadow:0 0 0 8px #fff4cc;border-radius:4px}100%{background:transparent;box-shadow:0 0 0 8px transparent}}
+.none{text-align:center;color:var(--mute);padding:50px 0}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="main">
+  <div class="nav"><i><svg viewBox="0 0 12 12"><path d="M2.5 6.3l2.5 2.4 4.5-5"/></svg></i>机器健康<small>示例数据</small></div>
+  <div class="hero">
+    <div><h1 id="h1"></h1><p id="hp"></p></div>
+    <div class="big"><b id="bigav"></b><span id="bigcap"></span></div>
+  </div>
+  <div class="fleet"><div class="strip fl" id="fleet"></div><div class="cap"><span id="fl0"></span><span>今天</span></div></div>
+  <div class="ctl">
+    <span class="lab">时间范围</span>
+    <div class="pill" id="rg"><button data-d="7">7 天</button><button data-d="30">30 天</button><button data-d="90" class="on">90 天</button></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>正常</span><span><i style="background:var(--warn)"></i>降级</span><span><i style="background:var(--bad)"></i>故障</span><span><i style="background:var(--mt)"></i>计划维护</span><span><i style="background:var(--nd)"></i>未上线</span></div>
+    <div class="sp"></div>
+    <div class="srch"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="机器名、机房、型号"></div>
+  </div>
+  <div class="list" id="list">
+   <div class="hd"><div>机器</div><div>当前</div><div>每天一条 · 最近 <span id="rgl">90</span> 天</div><button data-s="av" style="justify-content:flex-end">可用率<span class="ar"></span></button><button data-s="f7" style="justify-content:flex-end">近 7 天故障<span class="ar"></span></button></div>
+   <div id="rows"></div>
+  </div>
+ </div>
+ <aside class="pn" id="pn"><div class="in" id="pin"></div></aside>
+</div>
+<div class="tip" id="tip"></div>
+<script>
+const $=s=>document.querySelector(s);
+const TODAY=new Date(2026,10,20),N=90;
+const dstr=i=>{const d=new Date(TODAY.getTime()-(N-1-i)*864e5);return d};
+const fd=d=>`${d.getMonth()+1} 月 ${d.getDate()} 日 周${"日一二三四五六"[d.getDay()]}`;
+const GPUS=["H100","H800","H20","A100","L40S","910B"],ROOMS=[["亦庄A","yz"],["临港B","lg"],["乌兰察布C","wl"]];
+const TITLES={1:["GPU 温度超过 85℃，触发降频","NVLink 链路降级","网卡丢包率升高","1 张卡 ECC 可纠正错误激增","磁盘 SMART 预警"],2:["GPU 掉卡（XID 79）","节点失联，BMC 无响应","ECC 不可纠正错误，节点宕机","电源模块故障重启","驱动崩溃，节点不可调度"],3:["固件升级窗口","驱动升级重启","机柜例行巡检"]};
+const NOTE={1:["已由机房巡检处理，调低风扇阈值","换线后恢复","","观察 24 小时无复发"],2:["已重启并重新加入调度池","更换故障卡后恢复","更换电源模块","工单 OPS-"],3:["提前 3 天通知各部门","按计划完成"]};
+const WHO=["林骁","陈汐","周牧","何言","吴桐","机房值班"];
+let seed=5;const rnd=()=>(seed=(seed*9301+49297)%233280)/233280;const pick=a=>a[Math.floor(rnd()*a.length)];
+const MAINT_DAYS={61:"B 区固件升级窗口",74:"A 区网络割接"};
+const M=[];
+for(let k=0;k<44;k++){const [room,rc]=pick(ROOMS),gpu=pick(GPUS),flaky=k===2||k===9||k===17||k===30||k===37?.09:rnd()<.22?.025:.006;
+ const start=(k===5||k===21||k===33)?30+Math.floor(rnd()*35):0;const days=[],evs=[];
+ for(let i=0;i<N;i++){if(i<start){days.push({s:-1,u:null});continue}
+  const evd=[];let f=flaky;if(i>=N-7&&flaky>=.09)f=.5;
+  if(rnd()<f){const sev=rnd()<(flaky>=.09?.55:.3)?2:1;evd.push({kind:sev,title:pick(TITLES[sev]),dur:sev===2?20+Math.floor(rnd()*400):10+Math.floor(rnd()*160),who:pick(WHO)});}
+  if(MAINT_DAYS[i]&&k%3===0)evd.push({kind:3,title:MAINT_DAYS[i],dur:45+Math.floor(rnd()*60),who:"机房值班"});
+  let s=0,u=1;evd.forEach(e=>{if(e.kind===2){s=2;u-=e.dur/1440}else if(e.kind===1){if(s!==2)s=1;u-=e.dur/1440*.25}else if(s===0)s=3});
+  days.push({s,u:Math.max(0,u)});evd.forEach(e=>evs.push({day:i,...e,note:e.kind===3?pick(NOTE[3]):pick(NOTE[e.kind])+(NOTE[e.kind].length&&e.kind===2?"":"")}));}
+ M.push({id:`gpu-${rc}-${String(100+k*3+Math.floor(rnd()*3))}`,gpu,room,cnt:gpu==="L40S"?4:8,days,evs,start})}
+M.forEach(m=>m.evs.forEach(e=>{if(e.note==="工单 OPS-")e.note="工单 OPS-"+(4100+Math.floor(rnd()*800))}));
+const ST=["正常","降级","故障","维护中"],COL=["var(--ok)","var(--warn)","var(--bad)","var(--mt)"];
+let range=90,sortK="av",sortD=1,sel=null,q="";
+const ndays=m=>m.days.slice(N-range).filter(d=>d.s!==-1);
+const avail=m=>{const a=ndays(m);return a.length?a.reduce((s,d)=>s+d.u,0)/a.length*100:100};
+const f7=m=>m.evs.filter(e=>e.day>=N-7&&e.kind!==3).length;
+const cur=m=>m.days[N-1].s;
+/* 总览 */
+const fleetDay=i=>{const ms=M.filter(m=>m.days[i].s!==-1);const bad=ms.filter(m=>m.days[i].s===2).length,deg=ms.filter(m=>m.days[i].s===1).length;return{bad,deg,tot:ms.length,s:bad>=4?2:bad>=2||deg>=4?1:0}};
+function drawFleet(){const a=[];for(let i=N-range;i<N;i++)a.push(fleetDay(i));
+ $("#fleet").innerHTML=a.map((x,j)=>`<i class="s${x.s}" data-fl="${N-range+j}" style="animation-delay:${j*(range>40?4:12)}ms"></i>`).join("");
+ $("#fl0").textContent=`${range} 天前`}
+/* 列表 */
+const rowEls=new Map();
+function strip(m){const days=m.days.slice(N-range);return `<div class="strip">${days.map((d,j)=>`<i class="s${d.s}" data-m="${m.id}" data-d="${N-range+j}" style="animation-delay:${j*(range>40?5:14)}ms"></i>`).join("")}</div>`}
+function mkRow(m){const r=document.createElement("div");r.className="row";r.dataset.id=m.id;
+ r.innerHTML=`<div class="nm" data-open="${m.id}"><b>${m.id}</b><span>${m.gpu} × ${m.cnt} · ${m.room}</span></div><div class="st"><i></i><span></span></div><div class="sc"></div><div class="av"></div><div class="ic"></div>`;rowEls.set(m.id,r);return r}
+function fill(m){const r=rowEls.get(m.id),c=cur(m),a=avail(m),n=f7(m);
+ const st=r.querySelector(".st");st.querySelector("i").style.background=COL[c<0?0:c];st.lastElementChild.textContent=ST[c<0?0:c];st.style.color=c===2?"var(--bad)":c===1?"#b78612":"var(--ink)";
+ r.querySelector(".sc").innerHTML=strip(m);
+ const av=r.querySelector(".av");av.textContent=a.toFixed(a>=99.995?0:2)+"%";av.className="av "+(a<97?"bad":a<99.5?"warn":"");
+ const ic=r.querySelector(".ic");ic.innerHTML=`${n}<small>次</small>`;ic.className="ic mono"+(n?" on":"");
+ r.classList.toggle("sel",sel===m.id)}
+function visible(){let a=M.filter(m=>!q||(m.id+m.gpu+m.room).toLowerCase().includes(q.toLowerCase()));
+ a.sort((x,y)=>sortK==="f7"?(f7(y)-f7(x))||(avail(x)-avail(y)):sortK==="av"?avail(x)-avail(y):0);return a}
+function layout(anim){const a=visible(),box=$("#rows"),old=new Map();rowEls.forEach((r,id)=>{if(r.parentNode)old.set(id,r.getBoundingClientRect().top)});
+ [...box.children].forEach(c=>c.remove());
+ if(!a.length){box.innerHTML=`<div class="none">没有匹配的机器</div>`}
+ a.forEach(m=>{const r=rowEls.get(m.id)||mkRow(m);box.appendChild(r)});
+ if(anim){a.forEach(m=>{const r=rowEls.get(m.id),t=old.get(m.id);if(t===undefined)return;const d=t-r.getBoundingClientRect().top;if(Math.abs(d)<1)return;r.style.transition="none";r.style.transform=`translateY(${d}px)`;r.style.zIndex=2;requestAnimationFrame(()=>requestAnimationFrame(()=>{r.style.transition="transform .55s cubic-bezier(.2,.8,.2,1)";r.style.transform="";setTimeout(()=>r.style.zIndex="",600)}))})}
+ document.querySelectorAll(".hd button").forEach(b=>{b.classList.toggle("on",b.dataset.s===sortK);b.querySelector(".ar").textContent=b.dataset.s===sortK?(b.dataset.s==="f7"?" ↓":" ↑"):""});
+ head()}
+function head(){const a=M,bad=a.filter(m=>cur(m)===2).length,deg=a.filter(m=>cur(m)===1).length,mt=a.filter(m=>cur(m)===3).length;
+ const ok=a.length-bad-deg-mt;$("#h1").innerHTML=bad||deg?`${a.length} 台中 <span style="color:${bad?"var(--bad)":"#b78612"}">${bad+deg} 台</span>需要关注`:`${a.length} 台机器<span> 全部正常</span>`;
+ $("#hp").textContent=`${ok} 台正常${deg?`，${deg} 台降级`:""}${bad?`，${bad} 台故障`:""}${mt?`，${mt} 台维护中`:""}。点机器名查看事件时间线。`;
+ const dayAv=M.reduce((s,m)=>s+avail(m),0)/M.length;$("#bigav").innerHTML=`${dayAv.toFixed(2)}<small>%</small>`;$("#bigcap").textContent=`近 ${range} 天全部机器平均可用率`}
+function refresh(){rowEls.forEach((r,id)=>fill(M.find(m=>m.id===id)));$("#rgl").textContent=range;drawFleet()}
+/* 悬停 */
+const tip=$("#tip");
+function showTip(e,html){tip.innerHTML=html;tip.classList.add("show");const w=250,h=tip.offsetHeight;let x=e.clientX+14,y=e.clientY+16;if(x+w>innerWidth-10)x=e.clientX-w-14;if(y+h>innerHeight-10)y=e.clientY-h-12;tip.style.left=x+"px";tip.style.top=y+"px"}
+$("#list").addEventListener("mousemove",e=>{const b=e.target.closest(".strip i");if(!b){tip.classList.remove("show");return}
+ const m=M.find(x=>x.id===b.dataset.m),i=+b.dataset.d,d=m.days[i],evs=m.evs.filter(x=>x.day===i);
+ showTip(e,`<h5>${fd(dstr(i))}<em>${d.s===-1?"未上线":d.s===0?"当日可用 100%":"当日可用 "+(d.u*100).toFixed(1)+"%"}</em></h5>${d.s===-1?`<span style="color:#b9c6be">这台机器当时还没有投入使用</span>`:evs.length?evs.map(x=>`<div class="ev"><i style="background:${COL[x.kind]}"></i><div><b>${x.title}</b><span>${["","降级","故障","维护"][x.kind]} · 持续 ${x.dur>=60?Math.floor(x.dur/60)+" 小时 "+(x.dur%60?x.dur%60+" 分钟":""):x.dur+" 分钟"}</span></div></div>`).join(""):`<span class="ok">● 无故障记录</span>`}`)});
+$("#list").addEventListener("mouseleave",()=>tip.classList.remove("show"));
+$("#fleet").addEventListener("mousemove",e=>{const b=e.target.closest("i");if(!b){tip.classList.remove("show");return}const i=+b.dataset.fl,x=fleetDay(i);
+ showTip(e,`<h5>${fd(dstr(i))}<em>${x.tot} 台在线</em></h5>${x.bad+x.deg?`<div class="ev"><i style="background:${x.bad?COL[2]:COL[1]}"></i><div><b>${x.bad} 台故障 · ${x.deg} 台降级</b></div></div>`:`<span class="ok">● 全部正常</span>`}`)});
+$("#fleet").addEventListener("mouseleave",()=>tip.classList.remove("show"));
+/* 事件面板 */
+function openPn(id,day){sel=id;const m=M.find(x=>x.id===id),a=avail(m);rowEls.forEach((r,k)=>r.classList.toggle("sel",k===id));
+ const all=m.evs.filter(e=>e.kind!==3||true).slice().sort((x,y)=>y.day-x.day),inc=m.evs.filter(e=>e.kind!==3),mttr=inc.length?Math.round(inc.reduce((s,e)=>s+e.dur,0)/inc.length):0,c=cur(m);
+ $("#pin").innerHTML=`<header><div class="t"><div><h2>${m.id}</h2><p>${m.gpu} × ${m.cnt} 卡 · ${m.room}</p></div><button class="x" id="px"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button></div>
+ <div class="kp"><div><b>${avail({days:m.days,evs:m.evs}).toFixed(2)}%</b><span>${range} 天可用率</span></div><div><b>${inc.length}</b><span>90 天故障次数</span></div><div><b>${mttr}<small style="font-size:11px"> 分</small></b><span>平均恢复时长</span></div></div></header>
+ <div class="tl"><h4>事件时间线 · 共 ${all.length} 条</h4>${all.length?all.map(e=>`<div class="ev2" data-day="${e.day}" style="color:${COL[e.kind]}"><i></i><div style="color:var(--ink)"><b>${e.title}</b><div class="d">${fd(dstr(e.day))} · ${["","降级","故障","计划维护"][e.kind]} · ${e.dur>=60?Math.floor(e.dur/60)+" 小时"+(e.dur%60?" "+e.dur%60+" 分钟":""):e.dur+" 分钟"}</div><div class="n">${e.who}${e.note?" · "+e.note:""}</div></div></div>`).join(""):`<div class="none">近 90 天没有任何事件</div>`}</div>`;
+ $("#pn").classList.add("open");$("#px").onclick=closePn;
+ if(day!=null){const el=$("#pin").querySelector(`.ev2[data-day="${day}"]`);if(el){el.scrollIntoView({block:"center"});el.classList.add("hl")}}}
+function closePn(){sel=null;$("#pn").classList.remove("open");rowEls.forEach(r=>r.classList.remove("sel"))}
+$("#list").addEventListener("click",e=>{const n=e.target.closest("[data-open]");if(n){sel===n.dataset.open&&!e.shiftKey?closePn():openPn(n.dataset.open);return}
+ const b=e.target.closest(".strip i");if(b&&b.dataset.d){const m=M.find(x=>x.id===b.dataset.m);if(m.evs.some(x=>x.day===+b.dataset.d))openPn(b.dataset.m,+b.dataset.d)}
+ const h=e.target.closest(".hd button");if(h){const k=h.dataset.s;if(sortK!==k){sortK=k;layout(true)}}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closePn()});
+$("#rg").onclick=e=>{const b=e.target.closest("button");if(!b)return;range=+b.dataset.d;document.querySelectorAll("#rg button").forEach(x=>x.classList.toggle("on",x===b));refresh();layout(true);if(sel)openPn(sel)};
+$("#q").oninput=e=>{q=e.target.value.trim();layout(false)};
+layout(false);refresh();
+</script>
+</body>
+</html>

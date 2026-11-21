@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模型调试台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#eceae4;--panel:#f8f7f3;--card:#fffefb;--ink:#1d1c1a;--ink2:#58554e;--mute:#9a968c;--line:#d9d6cc;--line2:#e7e4db;--sig:#ff5a1f;--sig-bg:#ffe9df;--part:#ffd9a8;--r:6px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:"DM Sans","Noto Sans SC",sans-serif;font-size:13px;color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit;background:none;border:0;outline:none}
+button{cursor:pointer}
+.mono{font-family:"DM Mono",monospace;font-variant-numeric:tabular-nums}
+svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{display:grid;grid-template-rows:52px 1fr;height:100vh}
+.bar{display:flex;align-items:center;gap:18px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;letter-spacing:.01em}
+.logo i{width:22px;height:22px;border:1.8px solid var(--ink);border-radius:50% 50% 50% 4px;display:grid;place-items:center}
+.logo i:after{content:"";width:6px;height:6px;background:var(--sig);border-radius:50%}
+.crumb{color:var(--mute)}
+.crumb b{color:var(--ink);font-weight:500}
+.sp{flex:1}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:hidden}
+.seg button{height:30px;padding:0 13px;color:var(--ink2);font-weight:500;display:flex;align-items:center;gap:6px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:#fff}
+.ghost{height:30px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);display:flex;align-items:center;gap:6px;color:var(--ink2);font-weight:500}
+.ghost:hover{border-color:var(--ink2);color:var(--ink)}
+.ghost:disabled{opacity:.4;cursor:not-allowed}
+.run{height:32px;padding:0 18px 0 14px;border-radius:var(--r);background:var(--sig);color:#fff;font-weight:600;display:flex;align-items:center;gap:7px}
+.run:hover{filter:brightness(.94)}
+.run.stop{background:var(--ink)}
+.run kbd{font:11px "DM Mono";opacity:.75;border:1px solid rgba(255,255,255,.5);border-radius:3px;padding:0 4px;margin-left:4px}
+.main{display:grid;grid-template-columns:344px 1fr;min-height:0}
+.left{border-right:1px solid var(--line);background:var(--panel);overflow:auto;padding:18px 20px 30px}
+.left h5{font-size:11px;font-weight:600;color:var(--mute);letter-spacing:.09em;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.left h5 span{font-weight:400;letter-spacing:0;font-family:"DM Mono"}
+.ta{width:100%;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;resize:none;line-height:1.65;font-size:13px;font-family:"Noto Sans SC","DM Sans",sans-serif}
+.ta:focus{border-color:var(--ink)}
+.blk{margin-bottom:22px}
+.prm{margin-bottom:17px;position:relative}
+.prm .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.prm .nm{display:flex;align-items:center;gap:6px;font-weight:500;cursor:help}
+.prm .nm i{width:14px;height:14px;border:1px solid var(--mute);border-radius:50%;font:600 9px/12px "DM Sans";text-align:center;color:var(--mute);font-style:normal}
+.prm .nm:hover i{background:var(--ink);color:#fff;border-color:var(--ink)}
+.prm output{font:500 12px "DM Mono";background:var(--card);border:1px solid var(--line);border-radius:4px;padding:1px 7px;min-width:48px;text-align:right}
+.tip{position:absolute;left:0;top:26px;width:262px;background:var(--ink);color:#f4f2ec;font-size:12px;line-height:1.6;padding:9px 11px;border-radius:6px;opacity:0;transform:translateY(-3px);pointer-events:none;transition:.14s;z-index:5}
+.nm:hover+.tip,.nm:focus+.tip{opacity:1;transform:none}
+.tip b{color:var(--sig);font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:linear-gradient(to right,var(--ink) var(--p,50%),var(--line) var(--p,50%));border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5.5px;background:var(--card);border:2px solid var(--ink);border-radius:50%;transition:.12s}
+input[type=range]:hover::-webkit-slider-thumb{border-color:var(--sig);transform:scale(1.15)}
+.rule{height:1px;background:var(--line);margin:4px 0 20px}
+.pricing{font-size:11.5px;color:var(--mute);line-height:1.7}
+.pricing div{display:flex;justify-content:space-between}
+.cols{display:grid;min-width:0;min-height:0;background:var(--bg)}
+.col{display:grid;grid-template-rows:46px 1fr auto;min-width:0;min-height:0;background:var(--card);border-right:1px solid var(--line);animation:cin .35s ease both}
+.col:last-child{border-right:0}
+@keyframes cin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.ch{display:flex;align-items:center;gap:9px;padding:0 14px;border-bottom:1px solid var(--line2);position:relative}
+.ch .dot{width:9px;height:9px;border-radius:50%}
+.msel{display:flex;align-items:center;gap:5px;font-weight:600;font-size:13.5px;padding:4px 7px;margin-left:-7px;border-radius:5px}
+.msel:hover{background:var(--panel)}
+.msel svg{width:12px;height:12px;color:var(--mute)}
+.ch .x{margin-left:auto;color:var(--mute);width:24px;height:24px;display:grid;place-items:center;border-radius:5px}
+.ch .x:hover{background:var(--panel);color:var(--ink)}
+.menu{position:absolute;left:10px;top:42px;width:268px;background:var(--card);border:1px solid var(--ink);border-radius:8px;box-shadow:4px 4px 0 rgba(29,28,26,.12);z-index:8;padding:5px;display:none}
+.menu.open{display:block}
+.menu button{width:100%;text-align:left;padding:8px 9px;border-radius:5px;display:flex;align-items:center;gap:9px}
+.menu button:hover{background:var(--panel)}
+.menu button .t{font-weight:500}
+.menu button .s{font-size:11.5px;color:var(--mute)}
+.menu button.cur{background:var(--sig-bg)}
+.out{padding:22px 26px;overflow:auto;font-family:"Noto Serif SC",serif;font-size:15px;line-height:1.95;color:#262420}
+.out p{margin-bottom:12px}
+.out .empty{font-family:"Noto Sans SC",sans-serif;font-size:13px;color:var(--mute);display:flex;flex-direction:column;gap:8px;align-items:flex-start;padding-top:6px}
+.cur-blink{display:inline-block;width:8px;height:1.05em;background:var(--sig);vertical-align:-3px;margin-left:2px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+.s{transition:background .2s}
+.cmp .s.u{background:var(--sig-bg);box-shadow:inset 0 -2px 0 var(--sig)}
+.cmp .s.p{background:#fff1d6;box-shadow:inset 0 -2px 0 var(--part)}
+.legend{display:none;align-items:center;gap:14px;font-size:12px;color:var(--ink2)}
+.legend.on{display:flex}
+.legend i{display:inline-block;width:14px;height:9px;margin-right:5px;vertical-align:0;border-radius:2px}
+.foot{border-top:1px solid var(--line2);padding:11px 14px 12px;background:var(--panel)}
+.meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.meter i{display:block;height:100%;width:0;background:var(--sig);transition:width .12s linear}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stats div{display:flex;flex-direction:column}
+.stats small{font-size:10.5px;color:var(--mute);letter-spacing:.04em}
+.stats b{font:500 13.5px "DM Mono";font-variant-numeric:tabular-nums}
+.stats b.hot{color:var(--sig)}
+.stats b.best{color:#0e7c4a}
+.addcol{display:grid;place-items:center;color:var(--mute);min-width:0}
+.hint{margin-top:14px;font-size:10.5px;color:var(--mute)}
+.addbtn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px 26px;border:1.5px dashed var(--line);border-radius:10px;color:var(--ink2);font-weight:500}
+.addbtn:hover{border-color:var(--ink);color:var(--ink)}
+.addbtn svg{width:20px;height:20px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="logo"><i></i>墨池 · 调试台</div>
+    <div class="crumb">工作区 / 算力客服 / <b>GPU 交付说明</b></div>
+    <div class="sp"></div>
+    <div class="legend" id="legend"><span><i style="background:#ffe9df;box-shadow:inset 0 -2px 0 var(--sig)"></i>仅此列有</span><span><i style="background:#fff1d6;box-shadow:inset 0 -2px 0 var(--part)"></i>部分列有</span><span><i style="background:#fff;border:1px solid var(--line)"></i>各列相同</span></div>
+    <div class="seg" id="mode"><button class="on" data-m="side">并排</button><button data-m="cmp">对比差异</button></div>
+    <button class="ghost" id="addTop"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>增加对比列</button>
+    <button class="run" id="run"><svg viewBox="0 0 16 16" style="fill:currentColor;stroke:none"><path d="M4.5 3l8 5-8 5z"/></svg>运行<kbd>⌘↵</kbd></button>
+  </div>
+  <div class="main">
+    <aside class="left">
+      <div class="blk">
+        <h5>系统提示 <span id="sysN">0 字</span></h5>
+        <textarea class="ta" id="sys" rows="6">你是GPU 云平台的客服助手。回答要简短、克制，先说结论，再说原因，最后给出下一步。不要承诺没有确认的交付日期。</textarea>
+      </div>
+      <div class="blk">
+        <h5>用户消息</h5>
+        <textarea class="ta" id="usr" rows="4">请用几句话向业务部门解释：本月申请的 64 张 H100 为什么没能按原计划交付，以及他们现在可以怎么做。</textarea>
+      </div>
+      <div class="rule"></div>
+      <h5>参数</h5>
+      <div class="prm">
+        <div class="hd"><span class="nm" tabindex="0">温度<i>?</i></span><output id="oT" class="mono"></output></div>
+        <div class="tip"><b>控制随机程度。</b>越低越稳，同样的问题答案几乎一致；越高越发散。超过 1.2 时，部分模型会多出一句自由发挥。</div>
+        <input type="range" id="pT" min="0" max="2" step="0.1" value="0.7">
+      </div>
+      <div class="prm">
+        <div class="hd"><span class="nm" tabindex="0">最大长度<i>?</i></span><output id="oL" class="mono"></output></div>
+        <div class="tip"><b>输出 Token 上限。</b>到上限就硬截断，并按截断后的长度计费。中文约 1.4 个字一个 Token。</div>
+        <input type="range" id="pL" min="20" max="400" step="10" value="300">
+      </div>
+      <div class="prm">
+        <div class="hd"><span class="nm" tabindex="0">Top P<i>?</i></span><output id="oP" class="mono"></output></div>
+        <div class="tip"><b>核采样。</b>只在累计概率达到该值的候选词里选。一般与温度二选一调，不要同时拉高。</div>
+        <input type="range" id="pP" min="0.1" max="1" step="0.05" value="0.95">
+      </div>
+      <div class="prm">
+        <div class="hd"><span class="nm" tabindex="0">流式速度<i>?</i></span><output id="oS" class="mono"></output></div>
+        <div class="tip"><b>仅用于演示。</b>调整各列输出的速度倍率；各模型自带不同的首字延迟和吐字速度。</div>
+        <input type="range" id="pS" min="0.5" max="3" step="0.5" value="2">
+      </div>
+      <div class="rule"></div>
+      <h5>价格（元 / 百万 Token）</h5>
+      <div class="pricing mono" id="price"></div>
+      <div class="hint">示例数据 · 模型与价格均为虚构</div>
+    </aside>
+    <section class="cols" id="cols"></section>
+  </div>
+</div>
+<script>
+const MODELS = {
+  xh: { name:"星河-72B", sub:"旗舰 · 128K", c:"#1d1c1a", inP:4, outP:12, ttft:900, cps:30 },
+  yx: { name:"云岫-Pro", sub:"均衡 · 64K", c:"#ff5a1f", inP:2, outP:6, ttft:520, cps:44 },
+  bc: { name:"北辰-8B 极速", sub:"低延迟 · 32K", c:"#2f7d6d", inP:.4, outP:1.2, ttft:180, cps:90 },
+  ls: { name:"岚山-Mini", sub:"端侧 · 8K", c:"#7a6bd8", inP:.1, outP:.3, ttft:120, cps:120 },
+};
+const S = {
+  a: "本月的 64 张 H100 没有按期交付，是因为第二批到货的 32 张在机房验收时未通过网卡固件检测。",
+  b: "这批卡需要返厂刷新固件，厂商给出的预计时间是 9 个工作日。",
+  c: "目前已交付的 32 张可以先开通，建议优先满足正在排队的训练任务。",
+  d: "如果业务不能等，可以在资源申请单里勾选「接受 A800 替代」，由调度侧临时补位。",
+  e: "具体到货日期以厂商书面确认为准，我们确认后会第一时间同步。",
+  f: "先说结论：32 张卡已可使用，另外 32 张要晚到。",
+  g: "晚到的原因是机房验收时发现网卡固件版本不符，需要返厂处理。",
+  h: "建议这两天先把紧急任务排进已交付的 32 张里。",
+  i: "确实比较遗憾，希望大家理解，我们会持续跟进。",
+  j: "也可以考虑把部分推理任务迁到共享池，缓解训练卡紧张。",
+  k: "最晚的一批预计下月中旬到位，但这个时间还没有厂商确认。"
+};
+const OUT = {
+  xh: [S.a,S.b,S.c,S.d,S.e],
+  yx: [S.f,S.g,S.b,S.c,S.e],
+  bc: [S.f,S.a,S.c,S.j],
+  ls: [S.f,S.g,S.h,S.i],
+};
+const WILD = { xh:S.k, yx:S.j, bc:S.k, ls:S.k };
+const tok = s => Math.round(s.length / 1.4);
+let cols = [{ id:"xh" },{ id:"yx" },{ id:"bc" }];
+let mode = "side", running = false, raf = 0;
+const $ = s => document.querySelector(s);
+const ICON = { x:'<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>', dn:'<svg viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>', pl:'<svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>' };
+
+function params(){ return { T:+$("#pT").value, L:+$("#pL").value, P:+$("#pP").value, S:+$("#pS").value }; }
+function syncParams(){
+  const p = params();
+  for (const [k,id] of [["T","#pT"],["L","#pL"],["P","#pP"],["S","#pS"]]){
+    const el=$(id); el.style.setProperty("--p",(el.value-el.min)/(el.max-el.min)*100+"%");
+  }
+  $("#oT").textContent=p.T.toFixed(1); $("#oL").textContent=p.L+" tok"; $("#oP").textContent=p.P.toFixed(2); $("#oS").textContent=p.S+"×";
+  $("#sysN").textContent=$("#sys").value.length+" 字";
+}
+function plan(id){
+  const p = params(); let list = OUT[id].slice();
+  if (p.T > 1.2) list.splice(Math.min(2,list.length), 0, WILD[id]);
+  if (p.T < .3 && list.length > 4) list.pop();
+  let text = list, out = [], used = 0;
+  for (const s of text){
+    const t = tok(s);
+    if (used + t <= p.L){ out.push(s); used += t; }
+    else { const keep = Math.max(0, Math.floor((p.L - used) * 1.4)); if (keep>0) out.push(s.slice(0, keep)); used = p.L; break; }
+  }
+  return out;
+}
+function render(){
+  const root = $("#cols");
+  root.style.gridTemplateColumns = `repeat(${cols.length},1fr)`;
+  root.innerHTML = cols.map((c,i)=>{
+    const m = MODELS[c.id];
+    return `<div class="col" data-i="${i}">
+      <div class="ch"><span class="dot" style="background:${m.c}"></span>
+        <button class="msel" data-i="${i}">${m.name}${ICON.dn}</button><span style="color:var(--mute);font-size:11.5px">${m.sub}</span>
+        ${cols.length>1?`<button class="x" data-del="${i}" title="移除此列">${ICON.x}</button>`:""}
+        <div class="menu" id="menu${i}">${Object.entries(MODELS).map(([k,v])=>`<button data-pick="${k}" data-i="${i}" class="${k===c.id?"cur":""}"><span class="dot" style="width:9px;height:9px;border-radius:50%;background:${v.c}"></span><span><div class="t">${v.name}</div><div class="s">${v.sub} · 出 ¥${v.outP}/百万</div></span></button>`).join("")}</div>
+      </div>
+      <div class="out" id="out${i}"><div class="empty"><span>点「运行」，各列同时开始输出。</span></div></div>
+      <div class="foot"><div class="meter"><i id="mt${i}"></i></div>
+        <div class="stats"><div><small>输入 TOK</small><b id="si${i}">—</b></div><div><small>输出 TOK</small><b id="so${i}">—</b></div><div><small>耗时</small><b id="st${i}">—</b></div><div><small>费用</small><b id="sc${i}">—</b></div></div>
+      </div></div>`;
+  }).join("");
+  $("#addTop").disabled = cols.length>=3;
+  document.querySelectorAll(".col").forEach(el=>el.style.animation="none");
+}
+function sentenceHTML(i, list, partial){
+  return list.map((s,k)=>`<span class="s" data-s="${encodeURIComponent(s)}">${s}</span>`).join("");
+}
+function paint(i, list, typing){
+  const el = $("#out"+i);
+  if (!el) return;
+  el.innerHTML = `<p>${list.map(s=>`<span class="s" data-s="${encodeURIComponent(s)}">${s}</span>`).join("")}${typing?'<span class="cur-blink"></span>':""}</p>`;
+  el.scrollTop = el.scrollHeight;
+}
+function applyCompare(){
+  const cmp = mode==="cmp";
+  $("#legend").classList.toggle("on", cmp);
+  const sets = cols.map((c,i)=>new Set([...document.querySelectorAll(`#out${i} .s`)].map(n=>n.dataset.s)));
+  cols.forEach((c,i)=>{
+    const el = $("#out"+i); if(!el) return;
+    el.classList.toggle("cmp", cmp);
+    el.querySelectorAll(".s").forEach(n=>{
+      n.classList.remove("u","p");
+      if (!cmp || cols.length<2) return;
+      const others = sets.filter((_,j)=>j!==i), has = others.filter(s=>s.has(n.dataset.s)).length;
+      if (has===0) n.classList.add("u"); else if (has<others.length) n.classList.add("p");
+    });
+  });
+}
+function run(){
+  if (running){ stop(); return; }
+  running = true;
+  const btn = $("#run"); btn.classList.add("stop");
+  btn.innerHTML = '<svg viewBox="0 0 16 16" style="fill:currentColor;stroke:none"><rect x="4" y="4" width="8" height="8" rx="1"/></svg>停止';
+  const p = params(), sys = $("#sys").value, usr = $("#usr").value;
+  const inTok = Math.round((sys.length + usr.length) / 1.4);
+  const t0 = performance.now();
+  const jobs = cols.map((c,i)=>{
+    const m = MODELS[c.id], list = plan(c.id), full = list.join("");
+    const cps = m.cps * p.S, ttft = m.ttft / p.S;
+    const total = ttft + full.length / cps * 1000;
+    return { i, m, list, full, cps, ttft, total, done:false };
+  });
+  jobs.forEach(j=>{ $("#si"+j.i).textContent = inTok; $("#so"+j.i).textContent = 0; $("#st"+j.i).textContent="0.00 s"; $("#sc"+j.i).textContent="¥0.0000"; $("#out"+j.i).innerHTML = '<p><span class="cur-blink"></span></p>'; $("#so"+j.i).classList.remove("best"); $("#st"+j.i).classList.remove("best","hot"); });
+  const tick = now => {
+    const el = now - t0; let alive = 0;
+    jobs.forEach(j=>{
+      if (j.done) return;
+      const t = Math.min(el, j.total);
+      const n = Math.max(0, Math.floor((t - j.ttft) / 1000 * j.cps));
+      const shown = j.full.slice(0, n);
+      // 还原成句子列表
+      let rest = n, part = [];
+      for (const s of j.list){ if (rest<=0) break; part.push(s.slice(0,rest)); rest -= s.length; }
+      const finished = t >= j.total;
+      paint(j.i, part, !finished);
+      const ot = tok(shown);
+      $("#so"+j.i).textContent = ot;
+      $("#st"+j.i).textContent = (t/1000).toFixed(2)+" s";
+      $("#sc"+j.i).textContent = "¥"+((inTok*j.m.inP+ot*j.m.outP)/1e6).toFixed(4);
+      $("#mt"+j.i).style.width = (t/j.total*100)+"%";
+      if (finished){ j.done = true; } else alive++;
+    });
+    if (alive>0 && running) raf = requestAnimationFrame(tick); else finish(jobs);
+  };
+  raf = requestAnimationFrame(tick);
+}
+function finish(jobs){
+  running=false; cancelAnimationFrame(raf);
+  const btn=$("#run"); btn.classList.remove("stop");
+  btn.innerHTML='<svg viewBox="0 0 16 16" style="fill:currentColor;stroke:none"><path d="M4.5 3l8 5-8 5z"/></svg>运行<kbd>⌘↵</kbd>';
+  if (jobs.every(j=>j.done)){
+    const fast = Math.min(...jobs.map(j=>j.total));
+    jobs.forEach(j=>{ if (jobs.length>1 && j.total===fast) $("#st"+j.i).classList.add("best"); });
+    const cheap = jobs.map(j=>(inTokOf()*j.m.inP+tok(j.full)*j.m.outP));
+    const mn = Math.min(...cheap); jobs.forEach((j,k)=>{ if(jobs.length>1&&cheap[k]===mn) $("#sc"+j.i).classList.add("best"); });
+  }
+  applyCompare();
+}
+function inTokOf(){ return Math.round(($("#sys").value.length+$("#usr").value.length)/1.4); }
+function stop(){ running=false; }
+
+document.addEventListener("click", e=>{
+  const t = e.target.closest("button");
+  if (!e.target.closest(".menu") && !e.target.closest(".msel")) document.querySelectorAll(".menu.open").forEach(m=>m.classList.remove("open"));
+  if (!t) return;
+  if (t.classList.contains("msel")){ const m=$("#menu"+t.dataset.i); const was=m.classList.contains("open"); document.querySelectorAll(".menu.open").forEach(x=>x.classList.remove("open")); if(!was) m.classList.add("open"); }
+  else if (t.dataset.pick){ cols[+t.dataset.i].id=t.dataset.pick; stopIfRunning(); render(); }
+  else if (t.dataset.del!==undefined){ cols.splice(+t.dataset.del,1); stopIfRunning(); render(); applyCompare(); }
+  else if (t.id==="addTop"){ const used=cols.map(c=>c.id), nxt=Object.keys(MODELS).find(k=>!used.includes(k))||"xh"; cols.push({id:nxt}); stopIfRunning(); render(); }
+  else if (t.id==="run") run();
+  else if (t.closest("#mode")){ mode=t.dataset.m; document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on",b===t)); applyCompare(); }
+});
+function stopIfRunning(){ running=false; cancelAnimationFrame(raf); const btn=$("#run"); btn.classList.remove("stop"); btn.innerHTML='<svg viewBox="0 0 16 16" style="fill:currentColor;stroke:none"><path d="M4.5 3l8 5-8 5z"/></svg>运行<kbd>⌘↵</kbd>'; }
+document.addEventListener("keydown", e=>{ if ((e.metaKey||e.ctrlKey)&&e.key==="Enter"){ e.preventDefault(); run(); } });
+["#pT","#pL","#pP","#pS","#sys"].forEach(s=>$(s).addEventListener("input",syncParams));
+$("#price").innerHTML = Object.values(MODELS).map(m=>`<div><span>${m.name}</span><span>入 ${m.inP} / 出 ${m.outP}</span></div>`).join("");
+syncParams(); render();
+window.__run = run; window.__setMode = m=>{ document.querySelector(`#mode [data-m=${m}]`).click(); };
+// 完成态：载入后自动运行一次（快速），便于一眼看到输出
+setTimeout(run, 500);
+</script>
+</body>
+</html>

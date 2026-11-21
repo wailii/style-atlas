@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 表格 · 资源台账</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#faf9f4;--ink:#151512;--ink2:#5b5a52;--mute:#98968a;--line:#e6e3d8;--line2:#efede4;--lime:#d8f34e;--lime2:#eef9b8;--warn:#e08a1e;--red:#d4402b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font:13px/1.4 "Instrument Sans","Noto Sans SC",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.app{height:100vh;max-width:1400px;margin:0 auto;padding:0 32px;display:flex;flex-direction:column}
+.top{flex:none;height:52px;display:flex;align-items:center;gap:10px}
+.logo{width:22px;height:22px;background:var(--ink);border-radius:6px;display:grid;place-items:center}
+.logo svg{width:13px;height:13px;stroke:var(--lime);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top b{font-weight:700;font-size:14px;letter-spacing:.2px}
+.top .path{color:var(--mute);margin-left:4px}.top .path i{font-style:normal;margin:0 6px}
+.top .sp{flex:1}
+.top .av{width:24px;height:24px;border-radius:50%;background:var(--lime);display:grid;place-items:center;font-size:11px;font-weight:700}
+h1{font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.3px;margin:14px 0 14px}
+h1 span{background:var(--lime);padding:0 8px;margin-left:-2px;border-radius:5px}
+.ask{flex:none;position:relative;background:#fff;border:1.5px solid var(--ink);border-radius:14px;height:56px;display:flex;align-items:center;gap:12px;padding:0 10px 0 18px;box-shadow:4px 4px 0 var(--ink);transition:box-shadow .15s,transform .15s}
+.ask:focus-within{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.ask>svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ask input{flex:1;height:100%;font-size:17px;cursor:text}
+.ask input::placeholder{color:#b3b1a4}
+.ask .go{height:38px;padding:0 18px;border-radius:9px;background:var(--ink);color:#fff;font-weight:600;display:flex;align-items:center;gap:8px}
+.ask .go:hover{background:#2c2c27}
+.ask .go kbd{font:400 11px "Geist Mono";opacity:.6}
+.try{flex:none;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0 0;color:var(--mute);font-size:12.5px;min-height:24px}
+.try button{padding:2px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink2)}
+.try button:hover{border-color:var(--ink);color:var(--ink)}
+.parsed{flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:50px;padding:12px 0 0}
+.parsed .lab{font-size:12px;color:var(--mute);margin-right:2px}
+.chip{display:flex;align-items:stretch;height:30px;border-radius:8px;background:var(--lime);border:1px solid #b9d533;overflow:visible;position:relative;animation:chipin .35s cubic-bezier(.3,1.4,.5,1) backwards;animation-delay:var(--d,0s)}
+@keyframes chipin{from{opacity:0;transform:translateY(8px) scale(.9)}}
+.chip>*{display:flex;align-items:center;padding:0 9px;white-space:nowrap}
+.chip .f{color:#51601a;font-size:12px;border-right:1px solid #b9d533}
+.chip .op{padding:0 7px;color:#51601a;font-weight:600;cursor:pointer}
+.chip .op:hover{background:rgba(0,0,0,.07)}
+.chip .v{font-weight:600;cursor:pointer;gap:4px}
+.chip .v:hover{background:rgba(0,0,0,.07)}
+.chip .v svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2;opacity:.55}
+.chip .x{padding:0 8px;cursor:pointer;border-left:1px solid #b9d533;border-radius:0 7px 7px 0;color:#51601a}
+.chip .x:hover{background:var(--ink);color:#fff}
+.chip .x svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+.confirm{display:flex;align-items:center;gap:6px;font-size:12px;color:#8a5200;background:#ffefd0;border:1px dashed #e0a23c;border-radius:8px;height:30px;padding:0 10px}
+.confirm button{font-weight:600;text-decoration:underline;color:#8a5200}
+.clearf{color:var(--mute);font-size:12px;padding:0 6px;height:30px}.clearf:hover{color:var(--ink)}
+.menu{position:fixed;z-index:50;background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:5px;box-shadow:3px 3px 0 var(--ink);min-width:150px;animation:pp .12s}
+@keyframes pp{from{opacity:0;transform:translateY(-3px)}}
+.menu button{display:flex;width:100%;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;text-align:left;font-size:13px}
+.menu button:hover{background:var(--lime2)}
+.menu button.on{font-weight:700}
+.menu button.on::after{content:"✓";margin-left:auto}
+.menu .ti{padding:5px 10px 3px;color:var(--mute);font-size:11.5px}
+.menu .ai b{display:block;font-weight:600}.menu .ai small{color:var(--mute);font-size:11.5px}
+.menu .ai{flex-direction:column;align-items:flex-start;gap:1px}
+.bar{flex:none;display:flex;align-items:center;gap:10px;height:56px}
+.bar .cnt{font-size:13px;color:var(--ink2)}.bar .cnt b{color:var(--ink);font-size:15px}
+.bar .sp{flex:1}
+.tb{height:32px;padding:0 13px;border:1px solid var(--ink);border-radius:8px;font-weight:600;display:flex;align-items:center;gap:7px;background:#fff}
+.tb:hover:not(:disabled){background:var(--ink);color:#fff}
+.tb svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tb.lime{background:var(--lime);border-color:var(--ink)}
+.tb.lime:hover:not(:disabled){background:var(--ink);color:var(--lime)}
+.tb:disabled{border-color:var(--line);color:var(--mute);cursor:not-allowed;background:transparent}
+.sheet{flex:1;min-height:0;overflow:auto;border:1px solid var(--ink);border-radius:10px 10px 0 0;background:#fff;border-bottom:0}
+.g{display:grid;min-width:100%;width:max-content}
+.c{height:36px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:0 12px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;min-width:0;position:relative}
+.c.num{justify-content:flex-end;font-family:"Geist Mono";font-variant-numeric:tabular-nums}
+.c.rn{justify-content:center;color:var(--mute);font:400 11.5px "Geist Mono";padding:0;background:#fcfbf7}
+.h{position:sticky;top:0;z-index:3;height:38px;background:#f5f3ea;border-bottom:1px solid var(--ink);font-weight:600;font-size:12.5px;color:var(--ink2)}
+.h svg{width:13px;height:13px;stroke:var(--mute);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.h.ai{background:var(--lime);color:var(--ink)}.h.ai svg{stroke:var(--ink)}
+.h .rm{margin-left:auto;opacity:0;width:18px;height:18px;border-radius:4px;display:grid;place-items:center}
+.h:hover .rm{opacity:.7}.h .rm:hover{background:rgba(0,0,0,.12)}
+.h .rm svg{width:9px;height:9px}
+.r:hover>.c{background:#fbfaf3}
+.r.new>.c{background:var(--lime2)}
+.r{display:contents}
+.st{display:inline-flex;align-items:center;gap:6px}
+.st i{width:7px;height:7px;border-radius:50%}
+.st.s1 i{background:var(--ink)}.st.s2 i{background:var(--warn)}.st.s3 i{background:var(--red)}
+.st.s4{background:var(--lime);padding:1px 8px;border-radius:5px;font-weight:600;animation:flash .6s}
+.st.s4 i{display:none}
+@keyframes flash{from{background:var(--ink);color:#fff}}
+.bad{color:var(--red);font-weight:500}
+.dim{color:var(--mute)}
+.ac{background:#fdfdf6;white-space:normal;line-height:1.35;font-size:12.5px;gap:0;cursor:help}
+.ac .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:100%}
+.ac .caret{display:inline-block;width:2px;height:13px;background:var(--ink);vertical-align:-2px;margin-left:1px;animation:blink .7s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.ac .vd{font-weight:700;margin-right:6px;padding:0 6px;border-radius:4px;font-size:12px}
+.ac .vd.y{background:var(--lime)}.ac .vd.m{background:#ffe7bd}.ac .vd.n{background:#eceae0;color:var(--ink2)}
+.ac .wait{color:var(--mute);display:flex;align-items:center;gap:6px}
+.ac .wait i{width:5px;height:5px;border-radius:50%;background:var(--ink);animation:dots 1s infinite}
+@keyframes dots{50%{opacity:.2}}
+.empty{padding:60px 0;text-align:center;color:var(--mute);grid-column:1/-1}
+.empty b{display:block;font-size:16px;color:var(--ink2);margin-bottom:4px}
+.tip{position:fixed;z-index:60;width:272px;background:var(--ink);color:#f3f2e8;border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.55;pointer-events:none;animation:pp .12s;box-shadow:0 10px 26px rgba(0,0,0,.25)}
+.tip h5{font-size:11.5px;font-weight:600;color:var(--lime);display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.tip h5 svg{width:12px;height:12px;stroke:var(--lime);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tip li{list-style:none;padding-left:12px;position:relative}.tip li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:1.5px;background:var(--lime)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,14px);background:var(--ink);color:#fff;border-radius:10px;padding:9px 10px 9px 16px;display:flex;gap:14px;align-items:center;opacity:0;pointer-events:none;transition:.2s;z-index:70;font-weight:500}
+.toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.toast button{color:var(--lime);font-weight:700;padding:2px 8px;border-radius:5px}.toast button:hover{background:rgba(255,255,255,.12)}
+.demo{position:fixed;right:14px;bottom:4px;font-size:10px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="logo"><svg viewBox="0 0 16 16"><path d="M8 1.5l1.6 4.4L14 7.5l-4.4 1.6L8 13.5 6.4 9.1 2 7.5l4.4-1.6z"/></svg></div><b>台账</b><span class="path">资源中心<i>/</i>GPU 物理机</span><span class="sp"></span><span class="av">赵</span></div>
+  <h1>用一句话，<span>筛出你要的机器</span></h1>
+  <div class="ask"><svg viewBox="0 0 20 20"><path d="M10 2l1.7 4.8L16.5 8.5l-4.8 1.7L10 15l-1.7-4.8L3.5 8.5l4.8-1.7zM16 13.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><input id="q" placeholder="上个月闲置超过 7 天的 H100" autocomplete="off"><button class="go" id="go">筛选<kbd>↵</kbd></button></div>
+  <div class="try" id="try"></div>
+  <div class="parsed" id="parsed"></div>
+  <div class="bar"><div class="cnt" id="cnt"></div><span class="sp"></span><button class="tb" id="addai"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>AI 列</button><button class="tb lime" id="adopt" disabled><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5"/></svg><span id="adoptT">采纳建议</span></button></div>
+  <div class="sheet" id="sheet"></div>
+</div>
+<div class="toast" id="toast"><span id="tm"></span><button id="undo">撤销</button></div>
+<div class="demo">示例数据</div>
+<script>
+const $=s=>document.querySelector(s);
+const MODELS=["H100","H20","A100","昇腾 910B","沐曦 C550"];
+const DEPTS=["算法一部","算法二部","基础模型组","平台研发","数据中台"];
+const STAT=["在用","闲置","维修","回收中"];
+// id, 型号, 部门, 状态, 10月闲置, 11月闲置, 7日利用率, 月费用(元), 排队申请
+const D=[
+["gpu-bj-a01","H100","基础模型组",1,0,0,93,46800,0],["gpu-bj-a02","H100","算法一部",2,14,6,3,46800,2],["gpu-bj-a03","H100","平台研发",1,2,0,71,46800,0],["gpu-bj-a04","H100","基础模型组",2,9,12,8,46800,0],
+["gpu-bj-b01","A100","算法二部",1,0,0,88,31200,0],["gpu-bj-b02","A100","算法二部",1,5,0,64,31200,0],["gpu-bj-b03","A100","平台研发",2,21,13,0,31200,1],["gpu-bj-b04","A100","数据中台",3,0,0,0,31200,0],
+["gpu-sh-c01","H20","数据中台",2,11,9,12,21600,0],["gpu-sh-c02","H20","平台研发",1,0,0,79,21600,0],["gpu-sh-c03","H20","数据中台",2,8,11,5,21600,3],["gpu-sh-c04","H20","算法一部",1,3,2,58,21600,0],
+["gpu-sh-d01","昇腾 910B","算法二部",1,0,0,91,27400,0],["gpu-sh-d02","昇腾 910B","数据中台",2,16,4,6,27400,0],["gpu-sh-d03","昇腾 910B","算法二部",1,1,0,76,27400,0],["gpu-sh-d04","昇腾 910B","平台研发",3,0,0,0,27400,0],
+["gpu-sh-e01","沐曦 C550","算法一部",1,0,0,96,24900,0],["gpu-sh-e02","沐曦 C550","算法一部",1,0,0,94,24900,0],["gpu-sh-e03","沐曦 C550","基础模型组",2,30,17,0,24900,0],
+["gpu-bj-a05","H100","算法一部",1,4,1,67,46800,0],["gpu-bj-a06","H100","算法二部",2,19,8,4,46800,1],["gpu-bj-b05","A100","基础模型组",1,0,0,85,31200,0],["gpu-sh-c05","H20","平台研发",1,6,0,62,21600,0],["gpu-sh-d05","昇腾 910B","基础模型组",2,12,10,9,27400,0]
+].map(a=>({id:a[0],model:a[1],dept:a[2],st:STAT[a[3]===1?(a[4]>0&&a[6]<15?1:0):a[3]===2?1:a[3]===3?2:0],idle:[a[4],a[5]],util:a[6],cost:a[7],queue:a[8]}));
+// 状态一致化
+D.forEach(r=>{ if(r.st==="在用"&&r.util<15) r.st="闲置"; if(r.st==="闲置"&&r.util>=50) r.st="在用"});
+D.forEach(r=>{ if(r.id==="gpu-bj-b04"||r.id==="gpu-sh-d04") r.st="维修"});
+const ICON={
+ text:'<svg viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>',
+ tag:'<svg viewBox="0 0 16 16"><path d="M2.5 8.5V3.5h5l6 6-5 5z"/><circle cx="5.5" cy="6.5" r=".6"/></svg>',
+ num:'<svg viewBox="0 0 16 16"><path d="M6 2.5L5 13.5M11 2.5l-1 11M3 6h10M2.5 10h10"/></svg>',
+ sel:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M5.5 7l2.5 2.5L10.5 7"/></svg>',
+ ai:'<svg viewBox="0 0 16 16"><path d="M8 1.5l1.6 4.4L14 7.5l-4.4 1.6L8 13.5 6.4 9.1 2 7.5l4.4-1.6z"/></svg>',
+ x:'<svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2L2 8"/></svg>',
+ dd:'<svg viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3"/></svg>'
+};
+/* ---------- 自然语言解析 ---------- */
+const PRESETS=["上个月闲置超过 7 天的 H100","算法二部在用的 A100","月费用超过 3 万的机器","7 天利用率低于 10% 的机器","平台研发维修中的机器","本月闲置超过 10 天的 H20","数据中台的昇腾 910B"];
+const norm=s=>s.replace(/\s+/g,"").toLowerCase();
+function parse(t){
+  const chips=[]; const s=t.replace(/\s+/g,"");
+  const mm=[["H100",/h100/i],["H20",/h20/i],["A100",/a100/i],["昇腾 910B",/910b|昇腾/i],["沐曦 C550",/c550|沐曦/i]].find(x=>x[1].test(s)); if(mm) chips.push({f:"型号",op:"=",v:mm[0]});
+  const dd=DEPTS.find(d=>s.includes(d)||s.includes(d.slice(0,3)+"")&&d.length>3&&false)||DEPTS.find(d=>s.includes(d.replace(/[部组]$/,"")));
+  if(dd) chips.push({f:"部门",op:"=",v:dd});
+  let m;
+  const mon=/上个?月/.test(s)?0:/本月|这个月/.test(s)?1:null;
+  if(mon!==null) chips.push({f:"周期",op:"=",v:mon===0?"10 月":"11 月"});
+  if(m=s.match(/闲置(?:超过|大于|多于|>|不止)?(\d+)天/)) chips.push({f:"闲置天数",op:">",v:+m[1]});
+  else if(m=s.match(/闲置(?:不到|少于|低于|<)(\d+)天/)) chips.push({f:"闲置天数",op:"<",v:+m[1]});
+  else if(/闲置|空闲|没人用/.test(s)) chips.push({f:"状态",op:"=",v:"闲置"});
+  if(/在用|使用中/.test(s)) chips.push({f:"状态",op:"=",v:"在用"});
+  if(/维修/.test(s)) chips.push({f:"状态",op:"=",v:"维修"});
+  if(/回收中/.test(s)) chips.push({f:"状态",op:"=",v:"回收中"});
+  if(m=s.match(/费用(?:超过|高于|大于|>)(\d+(?:\.\d+)?)(万|千|k|元)?/i)){let n=+m[1];const u=m[2];n=u==="万"?n*1e4:u==="千"||u==="k"||u==="K"?n*1e3:n;chips.push({f:"月费用",op:">",v:n})}
+  if(m=s.match(/利用率(?:低于|小于|<|不到)(\d+)%?/)) chips.push({f:"7 日利用率",op:"<",v:+m[1]});
+  else if(m=s.match(/利用率(?:高于|大于|>)(\d+)%?/)) chips.push({f:"7 日利用率",op:">",v:+m[1]});
+  // 去重（同字段保留最后一个）
+  return chips;
+}
+let chips=[], sure=true, queryText="";
+const OPTS={"型号":MODELS,"部门":DEPTS,"状态":STAT,"周期":["10 月","11 月"],"闲置天数":[3,5,7,10,14,21],"月费用":[20000,30000,40000,50000],"7 日利用率":[5,10,20,30,50]};
+function match(r,c){
+  const mo=chips.find(x=>x.f==="周期"); const idle=r.idle[mo&&mo.v==="11 月"?1:0];
+  const val=c.f==="型号"?r.model:c.f==="部门"?r.dept:c.f==="状态"?r.st:c.f==="闲置天数"?idle:c.f==="月费用"?r.cost:c.f==="7 日利用率"?r.util:null;
+  if(val===null) return true;
+  if(c.op==="=") return val===c.v; if(c.op===">") return val>c.v; return val<c.v;
+}
+const rowsVisible=()=>D.filter(r=>chips.every(c=>match(r,c)));
+/* ---------- AI 列 ---------- */
+const AIDEF={
+ sum:{name:"AI 摘要",prompt:"用一句话概括这台机器的使用情况"},
+ rec:{name:"是否可回收",prompt:"判断这台机器是否可以回收"},
+ act:{name:"建议处理方式",prompt:"给出下一步处理建议"}
+};
+let cols=["sum"];
+const periodIdx=()=>{const m=chips.find(x=>x.f==="周期");return m&&m.v==="11 月"?1:0};
+function ai(key,r){
+  const idle=r.idle[periodIdx()], pn=periodIdx()?"本月":"上月";
+  const base=[`${pn}闲置 ${idle} 天`,`近 7 天利用率 ${r.util}%`,r.queue?`同型号排队申请 ${r.queue} 单`:"同型号无排队申请",`月费用 ¥${r.cost.toLocaleString()}`];
+  if(key==="sum"){
+    const t=r.st==="维修"?`${r.model} 整机维修中，近 7 天无任务，修复前不参与调度。`:r.util>=60?`${r.model} 负载稳定，7 天利用率 ${r.util}%，${r.dept}主力机器。`:r.util>=15?`${r.model} 利用率 ${r.util}%，有空档，${pn}闲置 ${idle} 天。`:`${r.model} 近乎空转，利用率 ${r.util}%，${pn}闲置 ${idle} 天。`;
+    return {text:t,basis:base};
+  }
+  if(key==="rec"){
+    const can=r.st!=="维修"&&idle>=7&&r.util<15&&r.queue===0, trans=r.st!=="维修"&&idle>=7&&r.util<15&&r.queue>0;
+    if(can) return {v:"y",tag:"可回收",text:`闲置 ${idle} 天，无排队`,basis:[...base,"满足回收口径：闲置 ≥ 7 天、利用率 < 15%、无排队"],rec:true};
+    if(trans) return {v:"m",tag:"先转移",text:`有 ${r.queue} 单排队，可转给需求方`,basis:[...base,"闲置达标但存在排队申请，建议转移而非回收"]};
+    return {v:"n",tag:"不回收",text:r.st==="维修"?"维修中":idle>=7?"利用率不低":"在用，负载正常",basis:[...base,r.st==="维修"?"维修中的机器不进入回收":"未达到回收口径"]};
+  }
+  const a=ai("rec",r);
+  const t=a.rec?`回收后每月省 ¥${r.cost.toLocaleString()}，释放 8 卡`:a.v==="m"?`转给排队需求方，预计 ${Math.max(1,r.queue)} 天内完成`:r.st==="维修"?"跟进维修单，修好后回到调度池":r.util<30?"观察一周，仍低则降配":"保持现状";
+  return {text:t,basis:base};
+}
+const prog={}; // prog[key][id]=已显示字数
+function totalLen(key,r){const a=ai(key,r);return ((a.tag?a.tag+" ":"")+a.text).length}
+function tick(){
+  let any=false;
+  cols.forEach(k=>{prog[k]=prog[k]||{};const vis=rowsVisible().filter(r=>prog[k][r.id]===undefined||prog[k][r.id]<totalLen(k,r));
+    vis.slice(0,8).forEach(r=>{any=true;prog[k][r.id]=Math.min(totalLen(k,r),(prog[k][r.id]||0)+3);paintCell(k,r)})});
+  if(!any){clearInterval(timer);timer=null;adoptState()}
+}
+let timer=null; const kick=()=>{if(!timer)timer=setInterval(tick,30)};
+function cellHTML(k,r){
+  const a=ai(k,r),n=prog[k]&&prog[k][r.id]!==undefined?prog[k][r.id]:-1;
+  if(n<0) return `<span class="wait"><i></i>等待生成</span>`;
+  const full=(a.tag?a.tag+" ":"")+a.text, done=n>=full.length;
+  let out=""; if(a.tag){const tn=Math.min(n,a.tag.length);out+=`<span class="vd ${a.v}">${a.tag.slice(0,tn)}</span>`;out+=`<span class="t">${a.text.slice(0,Math.max(0,n-a.tag.length-1))}${done?"":'<span class="caret"></span>'}</span>`}
+  else out=`<span class="t">${a.text.slice(0,n)}${done?"":'<span class="caret"></span>'}</span>`;
+  return out;
+}
+function paintCell(k,r){const el=document.querySelector(`[data-ai="${k}|${r.id}"]`);if(el)el.innerHTML=cellHTML(k,r)}
+/* ---------- 渲染 ---------- */
+const status={"在用":"s1","闲置":"s2","维修":"s3","回收中":"s4"};
+function render(){
+  const vis=rowsVisible(), pi=periodIdx();
+  const fixed="44px 118px 100px 108px 88px 128px 112px 104px";
+  const aic=cols.map(()=>"minmax(280px,1fr)").join(" ");
+  let h=`<div class="g" style="grid-template-columns:${fixed} ${aic}">`;
+  h+=`<div class="c h rn"></div><div class="c h">${ICON.text}编号</div><div class="c h">${ICON.sel}型号</div><div class="c h">${ICON.sel}部门</div><div class="c h">${ICON.tag}状态</div><div class="c h" style="justify-content:flex-end">${ICON.num}${pi?"本月":"上月"}闲置天数</div><div class="c h" style="justify-content:flex-end">${ICON.num}7 日利用率</div><div class="c h" style="justify-content:flex-end">${ICON.num}月费用</div>`;
+  cols.forEach(k=>h+=`<div class="c h ai" title="${AIDEF[k].prompt}">${ICON.ai}${AIDEF[k].name}<button class="rm" data-rm="${k}">${ICON.x}</button></div>`);
+  if(!vis.length) h+=`<div class="empty"><b>没有符合条件的机器</b>改一下上面的条件，或点「清除」</div>`;
+  vis.forEach((r,i)=>{
+    const idle=r.idle[pi];
+    h+=`<div class="r"><div class="c rn">${i+1}</div><div class="c mono" style="font-size:12.5px">${r.id}</div><div class="c">${r.model}</div><div class="c">${r.dept}</div><div class="c"><span class="st ${status[r.st]}"><i></i>${r.st}</span></div><div class="c num ${idle>=7?"bad":idle===0?"dim":""}">${idle||"–"}</div><div class="c num ${r.util<15?"bad":""}">${r.util}%</div><div class="c num">¥${r.cost.toLocaleString()}</div>`;
+    cols.forEach(k=>h+=`<div class="c ac" data-ai="${k}|${r.id}">${cellHTML(k,r)}</div>`);
+    h+=`</div>`;
+  });
+  $("#sheet").innerHTML=h+`</div>`;
+  $("#cnt").innerHTML=`共 ${D.length} 台，命中 <b>${vis.length}</b> 台`;
+  kick(); adoptState();
+}
+function renderChips(){
+  const p=$("#parsed");
+  if(!chips.length&&!queryText){p.innerHTML=`<span class="lab" style="color:var(--mute)">还没有筛选条件，显示全部机器</span>`;return}
+  p.innerHTML=`<span class="lab">AI 理解为</span>`+chips.map((c,i)=>`<div class="chip" style="--d:${i*.07}s"><span class="f">${c.f}</span><span class="op" data-op="${i}">${c.op==="="?"为":c.op===">"?"大于":"小于"}</span><span class="v" data-v="${i}">${c.f==="月费用"?"¥"+c.v.toLocaleString():c.f==="闲置天数"?c.v+" 天":c.f==="7 日利用率"?c.v+"%":c.v}${ICON.dd}</span><span class="x" data-x="${i}">${ICON.x}</span></div>`).join("")
+   +(!sure?`<span class="confirm">这是最接近的解析，请确认条件是否符合你的意思</span>`:"")+(chips.length?`<button class="clearf" id="clr">清除</button>`:"");
+}
+function run(text,confident){
+  queryText=text; chips=parse(text); sure=confident;
+  if(!chips.length){chips=[{f:"状态",op:"=",v:"闲置"}];sure=false}
+  renderChips();render();
+}
+function submit(){const t=$("#q").value.trim();if(!t)return;run(t,PRESETS.some(p=>norm(p)===norm(t)))}
+$("#go").onclick=submit;$("#q").addEventListener("keydown",e=>{if(e.key==="Enter")submit()});
+$("#try").innerHTML=`<span>试试：</span>`+PRESETS.map(p=>`<button>${p}</button>`).join("");
+$("#try").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("#q").value=b.textContent;run(b.textContent,true)};
+function closeMenu(){document.querySelectorAll(".menu").forEach(m=>m.remove())}
+function menuAt(el,html){closeMenu();const m=document.createElement("div");m.className="menu";m.innerHTML=html;document.body.appendChild(m);const r=el.getBoundingClientRect();m.style.left=Math.min(r.left,innerWidth-m.offsetWidth-12)+"px";m.style.top=r.bottom+6+"px";return m}
+$("#parsed").addEventListener("click",e=>{
+  const x=e.target.closest("[data-x]"),v=e.target.closest("[data-v]"),op=e.target.closest("[data-op]");
+  if(e.target.closest("#clr")){chips=[];queryText="";$("#q").value="";sure=true;renderChips();render();return}
+  if(x){chips.splice(+x.dataset.x,1);sure=true;if(!chips.length)queryText="";renderChips();render()}
+  else if(op){const c=chips[+op.dataset.op];if(c.op==="=")return;c.op=c.op===">"?"<":">";renderChips();render()}
+  else if(v){e.stopPropagation();const c=chips[+v.dataset.v];const m=menuAt(v,`<div class="ti">${c.f}</div>`+OPTS[c.f].map(o=>`<button data-o="${o}" class="${o==c.v?"on":""}">${c.f==="月费用"?"¥"+o.toLocaleString():c.f==="闲置天数"?o+" 天":c.f==="7 日利用率"?o+"%":o}</button>`).join(""));
+    m.onclick=ev=>{const b=ev.target.closest("[data-o]");if(!b)return;const o=b.dataset.o;c.v=typeof c.v==="number"?+o:o;sure=true;closeMenu();renderChips();render()}}
+});
+$("#addai").onclick=e=>{e.stopPropagation();const m=menuAt($("#addai"),`<div class="ti">选一个提示，逐行生成</div>`+Object.keys(AIDEF).filter(k=>!cols.includes(k)).map(k=>`<button class="ai" data-k="${k}"><b>${AIDEF[k].name}</b><small>${AIDEF[k].prompt}</small></button>`).join("")||`<div class="ti">三列都已添加</div>`);
+  m.style.left=Math.min(e.currentTarget.getBoundingClientRect().right-m.offsetWidth,innerWidth-m.offsetWidth-12)+"px";
+  m.onclick=ev=>{const b=ev.target.closest("[data-k]");if(!b)return;cols.push(b.dataset.k);closeMenu();render()}};
+document.addEventListener("click",closeMenu);
+$("#sheet").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(b){cols=cols.filter(k=>k!==b.dataset.rm);delete prog[b.dataset.rm];render()}});
+/* 依据气泡 */
+let tipEl=null;
+$("#sheet").addEventListener("mouseover",e=>{const c=e.target.closest("[data-ai]");if(!c){hideTip();return}
+  const [k,id]=c.dataset.ai.split("|");const r=D.find(x=>x.id===id);if(prog[k]&&prog[k][id]<totalLen(k,r))return;
+  const a=ai(k,r);hideTip();tipEl=document.createElement("div");tipEl.className="tip";tipEl.innerHTML=`<h5>${ICON.ai}AI 依据</h5><ul>${a.basis.map(b=>`<li>${b}</li>`).join("")}</ul>`;document.body.appendChild(tipEl);
+  const b=c.getBoundingClientRect();tipEl.style.left=Math.min(b.left+14,innerWidth-290)+"px";tipEl.style.top=(b.bottom+4+tipEl.offsetHeight>innerHeight?b.top-tipEl.offsetHeight-4:b.bottom+4)+"px"});
+function hideTip(){if(tipEl){tipEl.remove();tipEl=null}}
+$("#sheet").addEventListener("mouseleave",hideTip);$("#sheet").addEventListener("scroll",hideTip);
+/* 采纳建议 */
+function adoptable(){return cols.includes("rec")?rowsVisible().filter(r=>ai("rec",r).rec&&r.st!=="回收中"):[]}
+function adoptState(){const b=$("#adopt"),n=adoptable().length,ready=cols.includes("rec")&&rowsVisible().every(r=>prog.rec&&prog.rec[r.id]>=totalLen("rec",r));
+  b.disabled=!(ready&&n>0);$("#adoptT").textContent=!cols.includes("rec")?"采纳建议":ready?`采纳建议（${n}）`:"生成中…";
+  b.title=!cols.includes("rec")?"先添加「是否可回收」列":n===0&&ready?"当前结果里没有可回收的机器":""}
+let last=null;
+$("#adopt").onclick=()=>{const rs=adoptable();if(!rs.length)return;last=rs.map(r=>({r,st:r.st}));rs.forEach(r=>r.st="回收中");render();
+  const t=$("#toast");$("#tm").textContent=`已把 ${rs.length} 台机器标为「回收中」`;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),7000)};
+function toast(){}
+$("#undo").onclick=()=>{if(!last)return;last.forEach(x=>x.r.st=x.st);last=null;$("#toast").classList.remove("show");render()};
+$("#q").value="上个月闲置超过 7 天的机器";run("上个月闲置超过 7 天的机器",true);
+</script>
+</body>
+</html>

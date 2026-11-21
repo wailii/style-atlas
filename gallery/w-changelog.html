@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>栈云控制台 · 更新日志</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#fff;--ink:#0f1115;--ink2:#4b505c;--mute:#8d919d;--line:#e9eaee;--acc:#3326ff;--accbg:#eceaff;
+--new:#3326ff;--newbg:#eceaff;--imp:#b25a00;--impbg:#fff1d9;--fix:#c4264d;--fixbg:#ffe6ec;
+--sans:"Hanken Grotesk","Noto Sans SC",system-ui,sans-serif;--mono:"JetBrains Mono","Noto Sans SC",monospace}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}button,input{font:inherit;color:inherit}button{cursor:pointer;background:none;border:0}
+.wrap{max-width:1240px;margin:0 auto;padding:0 48px}
+.top{display:flex;align-items:center;height:64px;gap:28px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.02em}
+.logo i{width:22px;height:22px;background:var(--ink);border-radius:6px;position:relative;display:block}
+.logo i:after{content:"";position:absolute;left:5px;top:5px;width:12px;height:4px;background:#fff;box-shadow:0 5px 0 #fff,0 10px 0 var(--acc);border-radius:1px;transform:translateY(-1px)}
+.top nav{display:flex;gap:22px;font-size:14px;color:var(--ink2);margin-left:12px}.top nav a.on{color:var(--ink);font-weight:600}.top nav a:hover{color:var(--ink)}
+.top .sp{flex:1}.top .rss{font-family:var(--mono);font-size:12px;color:var(--mute);border:1px solid var(--line);padding:5px 10px;border-radius:6px}
+.head{display:grid;grid-template-columns:240px 1fr;gap:56px;padding:20px 0 26px;border-bottom:1px solid var(--line)}
+.head h1{font-size:66px;line-height:1;font-weight:800;letter-spacing:-.05em;grid-column:1/-1;display:flex;align-items:baseline;gap:20px}
+.head h1 small{font-family:var(--mono);font-size:13px;font-weight:400;letter-spacing:0;color:var(--mute)}
+.head .sub{color:var(--ink2);font-size:15px;max-width:480px;margin-top:2px}
+.hr{display:flex;justify-content:space-between;align-items:center;gap:24px;grid-column:1/-1;margin-top:6px}
+.filters{display:flex;gap:8px}
+.chip{height:34px;padding:0 14px;border-radius:99px;border:1px solid var(--line);font-size:13.5px;color:var(--ink2);display:flex;align-items:center;gap:8px;transition:.18s}
+.chip em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mute)}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}.chip.on em{color:#aab}
+.chip .dot{width:7px;height:7px;border-radius:50%}
+form.sub{display:flex;gap:8px;position:relative;height:40px}
+form.sub input{width:260px;height:40px;border:1px solid #cfd1d8;border-radius:10px;padding:0 14px;font-size:14px;outline:0;background:#fff;transition:.15s}
+form.sub input:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--accbg)}form.sub input.bad{border-color:var(--fix);animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.go{height:40px;min-width:88px;padding:0 18px;border-radius:10px;background:var(--acc);color:#fff;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+.go:hover{background:#1f13e0}.go .sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.okmsg{display:none;align-items:center;gap:10px;height:40px;padding:0 16px;border-radius:10px;background:#e4f7ec;color:#0c7a42;font-size:14px;font-weight:500}
+.okmsg svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.4}
+form.sub.done input,form.sub.done .go{display:none}form.sub.done .okmsg{display:flex;animation:pop .45s cubic-bezier(.3,1.4,.5,1)}
+@keyframes pop{from{opacity:0;transform:scale(.9)}}
+.cols{display:grid;grid-template-columns:240px 1fr;gap:56px;align-items:start}
+/* timeline */
+.tl{position:sticky;top:20px;padding:30px 0 40px;align-self:start}
+.tl ol{list-style:none;position:relative;margin-left:5px}
+.tl ol:before{content:"";position:absolute;left:4px;top:8px;bottom:8px;width:1px;background:var(--line)}
+.tl .ym{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--mute);padding:14px 0 6px 26px;text-transform:uppercase}
+.tl li.ym:first-child{padding-top:0}
+.tl a{display:flex;align-items:baseline;gap:10px;padding:5px 0 5px 26px;position:relative;color:var(--mute);font-size:14px;transition:.2s}
+.tl a:before{content:"";position:absolute;left:0;top:13px;width:9px;height:9px;border-radius:50%;background:#fff;border:1.5px solid #c9cbd3;transition:.25s}
+.tl a b{font-weight:500;font-variant-numeric:tabular-nums}.tl a span{font-family:var(--mono);font-size:11.5px}
+.tl a:hover{color:var(--ink)}
+.tl a.on{color:var(--ink)}.tl a.on b{font-weight:800;font-size:16px}.tl a.on:before{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 4px var(--accbg)}
+.tl li.hide{display:none}
+.tl .cnt{margin:26px 0 0 26px;font-family:var(--mono);font-size:11.5px;color:var(--mute)}
+/* entries */
+.list{padding:30px 0 120px;display:grid;gap:80px}
+article{scroll-margin-top:24px;transition:opacity .3s}
+article.hide{display:none}
+article .meta{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-family:var(--mono);font-size:12px;color:var(--mute)}
+article .ver{color:var(--ink);font-weight:500;background:#f3f4f6;padding:2px 8px;border-radius:5px}
+.tag{font-family:var(--sans);font-size:12px;font-weight:600;padding:1px 8px;border-radius:5px;letter-spacing:.02em}
+.tag.new{background:var(--newbg);color:var(--new)}.tag.imp{background:var(--impbg);color:var(--imp)}.tag.fix{background:var(--fixbg);color:var(--fix)}
+article h2{font-size:34px;line-height:1.2;font-weight:800;letter-spacing:-.035em;max-width:640px}
+article .lead{color:var(--ink2);font-size:16px;margin:12px 0 22px;max-width:620px;line-height:1.75}
+.shot{position:relative;display:block;width:100%;border-radius:14px;overflow:hidden;cursor:zoom-in;box-shadow:0 0 0 1px rgba(0,0,0,.06);aspect-ratio:760/400;background:#eee}
+.shot svg{display:block;width:100%;height:100%;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.shot:hover svg{transform:scale(1.025)}
+.shot .zoom{position:absolute;right:14px;bottom:14px;width:34px;height:34px;border-radius:9px;background:rgba(15,17,21,.82);display:grid;place-items:center;opacity:0;transform:translateY(4px);transition:.25s}
+.shot:hover .zoom{opacity:1;transform:none}.zoom svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;transform:none!important}
+.shot .cap{position:absolute;left:14px;bottom:14px;font-size:11.5px;font-family:var(--mono);color:rgba(15,17,21,.55)}
+ul.items{list-style:none;margin-top:26px;display:grid;gap:0;max-width:680px}
+ul.items li{display:grid;grid-template-columns:54px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:15px;color:var(--ink2);align-items:baseline}
+ul.items li.hide{display:none}ul.items li b{color:var(--ink);font-weight:600}
+ul.items li .tag{justify-self:start;font-size:11.5px}
+.more{display:inline-flex;margin-top:14px;font-size:14px;font-weight:600;color:var(--acc);gap:6px;align-items:center}.more:hover{gap:10px}.more{transition:gap .2s}
+.empty{display:none;color:var(--mute);padding:60px 0}
+/* lightbox */
+.lb{position:fixed;inset:0;z-index:100;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.lb.on{opacity:1;pointer-events:auto}
+.lb .stage{width:min(1120px,86vw);aspect-ratio:760/400;border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 40px 100px -30px rgba(20,20,60,.35);transform:scale(.94);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+.lb.on .stage{transform:none}.lb .stage svg{width:100%;height:100%;display:block}
+.lb .bar{display:flex;align-items:center;gap:18px;margin-top:20px;font-size:14px;color:var(--ink2)}
+.lb .bar b{color:var(--ink)}.lb .bar span{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.lb button.nv{position:absolute;top:50%;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;transform:translateY(-50%);transition:.15s}
+.lb button.nv:hover{border-color:var(--ink)}.lb .nv svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2}
+.lb .p{left:28px}.lb .n{right:28px}.lb .x{position:absolute;top:22px;right:28px;font-family:var(--mono);font-size:12px;color:var(--mute);border:1px solid var(--line);padding:6px 12px;border-radius:8px}.lb .x:hover{color:var(--ink);border-color:var(--ink)}
+.foot{position:fixed;left:12px;bottom:8px;font-size:11px;color:var(--mute)}
+</style></head><body>
+<div class="wrap">
+ <div class="top"><a class="logo" href="#"><i></i>栈云</a><nav><a href="#">产品</a><a href="#">文档</a><a class="on" href="#">更新日志</a><a href="#">状态</a></nav><div class="sp"></div><span class="rss">RSS · /changelog.xml</span></div>
+ <div class="head">
+  <h1>更新日志<small id="lastup"></small></h1>
+  <div class="hr"><div class="filters" id="filters"></div>
+   <form class="sub" id="sub" novalidate><input id="em" type="email" placeholder="your@company.com" aria-label="邮箱"><button class="go" type="submit"><span id="gt">订阅更新</span></button><div class="okmsg"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg><span id="okt">已订阅</span></div></form>
+  </div>
+ </div>
+ <div class="cols">
+  <aside class="tl"><ol id="tl"></ol><div class="cnt" id="cnt"></div></aside>
+  <div class="list" id="list"></div>
+ </div>
+</div>
+<div class="lb" id="lb"><button class="x" id="lx">Esc 关闭</button><button class="nv p" id="lp" aria-label="上一张"><svg viewBox="0 0 20 20"><path d="M12 4l-6 6 6 6"/></svg></button><div class="stage" id="ls"></div><button class="nv n" id="ln" aria-label="下一张"><svg viewBox="0 0 20 20"><path d="M8 4l6 6-6 6"/></svg></button><div class="bar"><b id="lt"></b><span id="lc"></span></div></div>
+<div class="foot">示例数据</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const TN={new:"新功能",imp:"改进",fix:"修复"};
+/* ---------- 示意图（SVG） ---------- */
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const FONT='font-family="Hanken Grotesk,Noto Sans SC,sans-serif"',MONO='font-family="JetBrains Mono,monospace"';
+const frame=(bg,inner)=>`<svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" ${FONT}><rect width="760" height="400" fill="${bg}"/>${inner}</svg>`;
+const card=(x,y,w,h,r=12)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="#fff" stroke="rgba(15,17,21,.07)"/>`;
+const S={
+cost(){seed=11;const cols=["#3326ff","#ff7a3d","#12b886","#c9ccd6"],names=["算法部","推荐组","数据平台","其他"],amt=["¥182,400","¥96,250","¥71,880","¥24,300"];
+ let bars="";for(let i=0;i<16;i++){let y=326;const x=52+i*26;for(let k=0;k<4;k++){const h=[34,22,16,8][k]*(.7+rnd()*.6)*(1+i*.02);y-=h;bars+=`<rect x="${x}" y="${y}" width="18" height="${h-1.5}" rx="2" fill="${cols[k]}"/>`}}
+ let leg="";names.forEach((n,k)=>{leg+=`<g transform="translate(510,${146+k*50})"><rect width="10" height="10" y="-9" rx="2" fill="${cols[k]}"/><text x="20" y="0" font-size="13" fill="#4b505c">${n}</text><text x="20" y="22" font-size="20" font-weight="700" fill="#0f1115" ${MONO}>${amt[k]}</text></g>`});
+ return frame("#e9e7ff",card(32,32,696,336)+`<text x="52" y="72" font-size="13" fill="#8d919d">2026 年 11 月</text><text x="52" y="100" font-size="22" font-weight="800" fill="#0f1115">费用 · 按部门拆分</text><g>${bars}</g><line x1="46" y1="327" x2="470" y2="327" stroke="#e9eaee"/><text x="510" y="76" font-size="12" fill="#8d919d">本月合计</text><text x="510" y="102" font-size="26" font-weight="800" fill="#0f1115" ${MONO} letter-spacing="-1">¥374,830</text><g>${leg}</g><rect x="300" y="82" width="64" height="26" rx="13" fill="#eceaff"/><text x="332" y="99" font-size="12" font-weight="600" fill="#3326ff" text-anchor="middle">导出</text>`)},
+topo(){let g="",lines="";const xs=[170,380,590],Y=190;
+ lines+=`<path d="M380 98V128M170 128H590M170 128V${Y}M380 128V${Y}M590 128V${Y}" stroke="#8fb09f" stroke-width="2" fill="none"/>`;
+ g+=`<g transform="translate(300,54)"><rect width="160" height="44" rx="10" fill="#0f1115"/><text x="80" y="27" font-size="14" fill="#fff" text-anchor="middle" font-weight="700">华东 A 池 · 128 卡</text></g>`;
+ const names=["R03 机架","R07 机架","R12 机架"];
+ xs.forEach((x,i)=>{const y=Y;g+=card(x-90,y,180,124,12);g+=`<text x="${x-74}" y="${y+28}" font-size="13" font-weight="700" fill="#0f1115">${names[i]}</text><text x="${x+74}" y="${y+28}" font-size="11" fill="#8d919d" text-anchor="end" ${MONO}>${[78,93,41][i]}%</text>`;
+  for(let k=0;k<8;k++){const cx=x-62+(k%4)*41,cy=y+62+Math.floor(k/4)*32;const hot=(i===1&&k===5);const used=((k*7+i*3)%5)>1;g+=`<rect x="${cx-15}" y="${cy-11}" width="30" height="22" rx="4" fill="${hot?"#12b886":used?"#9fb8aa":"#e3ede7"}"/>`}});
+ g+=`<path d="M404 308V334" stroke="#12b886" stroke-width="2"/><g transform="translate(400,330)"><rect width="190" height="50" rx="9" fill="#0f1115"/><text x="14" y="21" font-size="11" fill="#9ad9bf" ${MONO}>gpu-a03-r07-5</text><text x="14" y="39" font-size="12" fill="#fff">H800 · 空闲 · 已 3 天</text></g>`;
+ return frame("#dcf3e8",lines+g)},
+flow(){let g="";const steps=[["申请人","李想","#3326ff",50],["部门负责人","周岚","#ff7a3d",230],["转办 · 出差中","陈默","#12b886",410],["资源管理员","吴杰","#0f1115",590]];
+ g+=`<path d="M138 200H232M318 200H412M498 200H592" stroke="#c9ccd6" stroke-width="2" stroke-dasharray="5 5"/><path d="M290 168C320 110 380 110 410 164" stroke="#ff7a3d" stroke-width="2.4" fill="none"/><path d="M404 156l8 10-12 2" stroke="#ff7a3d" stroke-width="2.4" fill="none"/><text x="350" y="104" font-size="12" font-weight="700" fill="#b25a00" text-anchor="middle">转办</text>`;
+ steps.forEach(([t,n,c,x])=>{g+=card(x,150,140,100,12)+`<circle cx="${x+30}" cy="184" r="15" fill="${c}"/><text x="${x+30}" y="189" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">${n[0]}</text><text x="${x+54}" y="188" font-size="14" font-weight="700" fill="#0f1115">${n}</text><text x="${x+16}" y="222" font-size="12" fill="#8d919d">${t}</text>`});
+ g+=`<rect x="50" y="296" width="680" height="52" rx="10" fill="#fff" stroke="rgba(15,17,21,.07)"/><text x="72" y="318" font-size="12" fill="#8d919d">REQ-20261024-017</text><text x="72" y="337" font-size="13.5" fill="#0f1115" font-weight="600">8 × H800，用于 Q4 模型评测，使用 30 天</text><rect x="632" y="310" width="84" height="26" rx="13" fill="#fff1d9"/><text x="674" y="327" font-size="12" font-weight="700" fill="#b25a00" text-anchor="middle">等待转办</text>`;
+ return frame("#ffe9dc",g)},
+table(){let g=card(32,32,696,336)+`<text x="56" y="70" font-size="18" font-weight="800" fill="#0f1115">资源台账</text><rect x="570" y="50" width="130" height="28" rx="14" fill="#ecf9f1"/><circle cx="588" cy="64" r="4" fill="#12b886"/><text x="598" y="69" font-size="12" font-weight="700" fill="#0c7a42" ${MONO}>60 fps · 10 万行</text><line x1="32" y1="94" x2="728" y2="94" stroke="#e9eaee"/>`;
+ seed=5;for(let i=0;i<8;i++){const y=106+i*28;g+=`<rect x="56" y="${y+7}" width="${60+rnd()*30}" height="9" rx="4" fill="${i===2?"#0f1115":"#d4d7de"}"/><rect x="240" y="${y+7}" width="${50+rnd()*50}" height="9" rx="4" fill="#e1e3e8"/><rect x="420" y="${y+7}" width="${30+rnd()*30}" height="9" rx="4" fill="#e1e3e8"/><rect x="590" y="${y+4}" width="${48+rnd()*20}" height="16" rx="8" fill="${["#e4f7ec","#fff1d9","#eceaff"][i%3]}"/>`;if(i===2)g+=`<rect x="40" y="${y-2}" width="680" height="24" rx="6" fill="rgba(51,38,255,.07)"/>`}
+ g+=`<rect x="708" y="108" width="6" height="250" rx="3" fill="#eef0f3"/><rect x="708" y="190" width="6" height="42" rx="3" fill="#8d919d"/>`;
+ return frame("#e1eefe",g)},
+csv(){return frame("#f4ecdc",card(40,40,320,320)+card(400,40,320,320)+`<text x="64" y="82" font-size="12" fill="#c4264d" font-weight="700">修复前</text><text x="424" y="82" font-size="12" fill="#0c7a42" font-weight="700">修复后</text><g font-size="14" ${MONO}><text x="64" y="124" fill="#c4264d">部门,金额,备注</text><text x="64" y="156" fill="#6b6f7b">ç®æ³é¨,182400,è®­ç»</text><text x="64" y="188" fill="#6b6f7b">æ¨èç»,96250,æ¨ç</text><text x="64" y="220" fill="#6b6f7b">æ°æ®å¹³å°,71880,æ¸ç</text></g><g font-size="14" ${MONO}><text x="424" y="124" fill="#0f1115">部门,金额,备注</text><text x="424" y="156" fill="#4b505c">算法部,182400,训练</text><text x="424" y="188" fill="#4b505c">推荐组,96250,推理</text><text x="424" y="220" fill="#4b505c">数据平台,71880,清洗</text></g><rect x="424" y="300" width="130" height="34" rx="9" fill="#0f1115"/><text x="489" y="322" font-size="13" fill="#fff" font-weight="600" text-anchor="middle">UTF-8 + BOM</text><path d="M366 200h28m-8-8l8 8-8 8" stroke="#8d919d" stroke-width="2" fill="none"/>`)},
+api(){const L=[["curl","https://api.zhanyun.example/v1/usage \\"],["  -H","\"Authorization: Bearer $KEY\" \\"],["  -d","'{\"group_by\":\"model\",\"from\":\"2026-09-01\"}'"],["",""],["{","" ],["  \"model\"","\"qy-pro-2\","],["  \"input_tokens\"","18420331,"],["  \"output_tokens\"","3120877,"],["  \"cost\"","\"¥1,284.60\""],["}",""]];
+ let t="";L.forEach(([a,b],i)=>{t+=`<text x="${i<4?60:60}" y="${96+i*26}" font-size="14" ${MONO}><tspan fill="${i<3?"#9ad9bf":"#e9eaee"}">${a.replace(/ /g," ")}</tspan> <tspan fill="${i<3?"#ffd6a8":"#b9c0ff"}">${b.replace(/ /g," ")}</tspan></text>`});
+ return frame("#dfe0f5",`<rect x="32" y="32" width="696" height="336" rx="14" fill="#13151c"/><circle cx="58" cy="56" r="5" fill="#ff6b6b"/><circle cx="76" cy="56" r="5" fill="#ffd166"/><circle cx="94" cy="56" r="5" fill="#4cd6a0"/><text x="700" y="60" font-size="11" fill="#6c7186" text-anchor="end" ${MONO}>POST /v1/usage</text>${t}<rect x="560" y="300" width="140" height="40" rx="10" fill="#3326ff"/><text x="630" y="325" font-size="14" fill="#fff" text-anchor="middle" font-weight="700">200 OK · 84ms</text>`)}
+};
+/* ---------- 数据 ---------- */
+const E=[
+{id:"e1",d:"2026-11-18",v:"v4.12",t:"费用明细按部门拆分",lead:"月度账单现在可以按部门、项目、模型三个维度拆开看，每一块的金额合计始终等于账单总额。支持导出，口径与财务对账表一致。",img:"cost",cap:"费用 · 按部门拆分",items:[["new","<b>部门维度</b>：在「费用」页右上角切换，叠柱图按天展示。"],["new","导出时附带拆分口径说明，可直接发给财务。"],["imp","费用页首屏加载由 2.1 秒缩短到 0.8 秒。"]]},
+{id:"e2",d:"2026-11-06",v:"v4.11",t:"GPU 池拓扑图",lead:"不用再翻表格找哪台机器空着。拓扑图按「资源池 → 机架 → 卡」展开，颜色表示占用，悬停可看到最近一次任务和空闲时长。",img:"topo",cap:"华东 A 池",items:[["new","<b>拓扑视图</b>：资源池详情页新增第三个标签。"],["new","空闲超过 72 小时的卡自动标绿，便于回收。"],["fix","修复池内卡数在迁移中途显示为 0 的问题。"]]},
+{id:"e3",d:"2026-10-24",v:"v4.10",t:"审批支持转办",lead:"负责人出差或休假时，可以把待办转给同部门的同事，流转记录完整保留，申请人能在进度条上看到每一次转办。",img:"flow",cap:"申请单 REQ-20261024-017",items:[["imp","<b>转办</b>：审批卡片右上角「转办」，需填写原因。"],["imp","审批进度条显示每一环节的处理人与耗时。"],["imp","待办提醒合并为每天 9:00 一条，不再逐条推送。"]]},
+{id:"e4",d:"2026-10-09",v:"v4.9",t:"十万行台账不再卡",lead:"资源台账改为虚拟滚动，十万行数据也能保持 60 帧。筛选、排序、选中行的计算移到后台线程，输入框不再有延迟。",img:"table",cap:"资源台账 · 10 万行",items:[["imp","<b>虚拟滚动</b>：只渲染可见的 40 行左右。"],["imp","多选后「已选 N 项」栏固定在底部。"],["fix","修复按住 Shift 连选时偶发多选一行的问题。"]]},
+{id:"e5",d:"2026-09-26",v:"v4.8",t:"导出 CSV 不再乱码",lead:"在 Excel 里直接打开导出的 CSV 时，中文曾显示为乱码。现在默认写入 UTF-8 BOM，同时保留不带 BOM 的下载选项。",img:"csv",cap:"导出编码",items:[["fix","<b>CSV 编码</b>：默认 UTF-8 + BOM。"],["fix","金额列不再被 Excel 转成科学计数法。"],["imp","导出任务超过 5 万行时转为后台生成，完成后站内通知。"]]},
+{id:"e6",d:"2026-09-12",v:"v4.7",t:"用量接口开放",lead:"用量数据可以通过接口读取，按模型、按密钥、按天分组，与控制台里的数字完全一致，方便接进自己的报表。",img:"api",cap:"POST /v1/usage",items:[["new","<b>用量接口</b>：支持 group_by 与时间范围。"],["new","密钥可设置只读用量权限。"],["imp","接口文档增加可直接运行的示例。"]]}
+];
+const ymd=d=>{const [y,m,dd]=d.split("-");return{y,m:+m,d:+dd}};
+/* ---------- 渲染 ---------- */
+$("#lastup").textContent="最近更新 "+E[0].d;
+$("#list").innerHTML=E.map((e,i)=>{const tags=[...new Set(e.items.map(x=>x[0]))];const {y,m,d}=ymd(e.d);
+ return `<article id="${e.id}" data-tags="${tags.join(" ")}"><div class="meta"><span class="ver">${e.v}</span>${tags.map(t=>`<span class="tag ${t}">${TN[t]}</span>`).join("")}<span>${y} 年 ${m} 月 ${d} 日</span></div><h2>${e.t}</h2><p class="lead">${e.lead}</p>
+ <button class="shot" data-i="${i}" aria-label="放大：${e.cap}">${S[e.img]()}<span class="zoom"><svg viewBox="0 0 20 20"><path d="M12 3h5v5M8 17H3v-5M17 3l-5 5M3 17l5-5"/></svg></span></button>
+ <ul class="items">${e.items.map(([t,x])=>`<li data-t="${t}"><span class="tag ${t}">${TN[t]}</span><span>${x}</span></li>`).join("")}</ul><a class="more" href="#">查看完整说明 →</a></article>`}).join("")+`<div class="empty" id="empty">没有符合的更新。</div>`;
+let lastYM="";$("#tl").innerHTML=E.map(e=>{const {y,m,d}=ymd(e.d);const ym=y+" · "+String(m).padStart(2,"0");let h="";if(ym!==lastYM){h=`<li class="ym" data-ym="${ym}">${ym}</li>`;lastYM=ym}
+ return h+`<li data-id="${e.id}"><a href="#${e.id}" data-id="${e.id}"><b>${m} 月 ${d} 日</b><span>${e.v}</span></a></li>`}).join("");
+/* 筛选 */
+const cnt={all:E.length,new:0,imp:0,fix:0};E.forEach(e=>[...new Set(e.items.map(x=>x[0]))].forEach(t=>cnt[t]++));
+$("#filters").innerHTML=[["all","全部"],["new","新功能"],["imp","改进"],["fix","修复"]].map(([k,n],i)=>`<button class="chip${i?"":" on"}" data-k="${k}">${k==="all"?"":`<i class="dot" style="background:var(--${k})"></i>`}${n}<em>${cnt[k]}</em></button>`).join("");
+function filter(k){
+ $$("#filters .chip").forEach(c=>c.classList.toggle("on",c.dataset.k===k));let n=0;
+ $$("article").forEach(a=>{const ok=k==="all"||a.dataset.tags.split(" ").includes(k);a.classList.toggle("hide",!ok);if(ok)n++;
+  a.querySelectorAll("li[data-t]").forEach(li=>li.classList.toggle("hide",k!=="all"&&li.dataset.t!==k));
+  $(`.tl li[data-id=${a.id}]`).classList.toggle("hide",!ok)});
+ $$(".tl .ym").forEach(y=>{let el=y.nextElementSibling,any=false;while(el&&!el.classList.contains("ym")){if(!el.classList.contains("hide"))any=true;el=el.nextElementSibling}y.classList.toggle("hide",!any);y.style.display=any?"":"none"});
+ $("#empty").style.display=n?"none":"block";$("#cnt").textContent=`共 ${n} 条更新`;spy();
+ $$("article:not(.hide)").forEach((a,i)=>a.animate([{opacity:0,transform:"translateY(14px)"},{opacity:1,transform:"none"}],{duration:420,delay:i*50,easing:"cubic-bezier(.2,.8,.2,1)",fill:"backwards"}));
+}
+$$("#filters .chip").forEach(c=>c.onclick=()=>filter(c.dataset.k));
+/* 滚动高亮 */
+function spy(){let cur=null;const line=innerHeight*.38;$$("article:not(.hide)").forEach(a=>{if(a.getBoundingClientRect().top<line)cur=a.id});if(!cur){const f=$("article:not(.hide)");cur=f&&f.id}
+ $$(".tl a").forEach(a=>a.classList.toggle("on",a.dataset.id===cur))}
+addEventListener("scroll",spy,{passive:true});addEventListener("resize",spy);
+$$(".tl a").forEach(a=>a.onclick=ev=>{ev.preventDefault();document.getElementById(a.dataset.id).scrollIntoView({behavior:"smooth",block:"start"})});
+$$("a.more").forEach(a=>a.onclick=e=>e.preventDefault());
+/* 放大浏览 */
+let li=0;
+function show(i){const vis=$$("article:not(.hide) .shot").map(b=>+b.dataset.i);if(!vis.length)return;if(!vis.includes(i))i=vis[0];li=i;const e=E[i];$("#ls").innerHTML=S[e.img]();$("#lt").textContent=e.v+" · "+e.t;$("#lc").textContent=(vis.indexOf(i)+1)+" / "+vis.length}
+function step(d){const vis=$$("article:not(.hide) .shot").map(b=>+b.dataset.i);const k=(vis.indexOf(li)+d+vis.length)%vis.length;show(vis[k])}
+$$(".shot").forEach(b=>b.onclick=()=>{show(+b.dataset.i);$("#lb").classList.add("on")});
+$("#lx").onclick=()=>$("#lb").classList.remove("on");$("#lp").onclick=()=>step(-1);$("#ln").onclick=()=>step(1);
+$("#lb").onclick=e=>{if(e.target.id==="lb")$("#lb").classList.remove("on")};
+addEventListener("keydown",e=>{if(!$("#lb").classList.contains("on"))return;if(e.key==="Escape")$("#lb").classList.remove("on");if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1)});
+/* 订阅 */
+$("#sub").onsubmit=e=>{e.preventDefault();const v=$("#em").value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){$("#em").classList.remove("bad");void $("#em").offsetWidth;$("#em").classList.add("bad");$("#em").focus();return}
+ $("#gt").outerHTML='<span class="sp" id="gt"></span>';setTimeout(()=>{$("#okt").textContent="已订阅 "+v+"，下次发布会邮件通知你";$("#sub").classList.add("done")},800)};
+$("#em").oninput=()=>$("#em").classList.remove("bad");
+filter("all");
+</script></body></html>

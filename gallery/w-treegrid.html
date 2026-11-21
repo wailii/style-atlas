@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>层级表格 · 资源台账</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--paper:#f6f1e5;--paper2:#efe7d4;--paper3:#fbf8f0;--ink:#2a2118;--ink2:#6a5c48;--ink3:#9d8f77;--rule:#d8ccb4;--rule2:#e6dcc7;--red:#8c2f2b;--green:#3c6e52;--amber:#b4842a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font:13px/1.45 "Noto Sans SC",sans-serif;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,select{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.serif{font-family:"Noto Serif SC","Songti SC",serif}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.page{height:100vh;display:flex;flex-direction:column;padding:0 44px}
+.mast{display:flex;align-items:flex-end;gap:36px;padding:26px 0 14px;border-bottom:3px double var(--ink)}
+.mast h1{font:700 30px/1 "Noto Serif SC",serif;letter-spacing:.02em}
+.mast h1 small{display:block;font:400 12px "Noto Sans SC";color:var(--ink2);margin-top:9px;letter-spacing:.14em}
+.mast .st{display:flex;gap:32px;margin-left:auto}
+.mast .st div{text-align:right}
+.mast .st b{display:block;font:500 22px "IBM Plex Mono";letter-spacing:-.02em}
+.mast .st span{font-size:11.5px;color:var(--ink2)}
+.ctl{display:flex;align-items:center;gap:22px;height:50px;border-bottom:1px solid var(--rule)}
+.ctl .lab{font-size:11.5px;color:var(--ink3);letter-spacing:.1em;margin-right:-10px}
+.seg{display:flex;border:1px solid var(--ink);border-radius:3px;overflow:hidden}
+.seg button{height:28px;padding:0 13px;border-right:1px solid var(--rule);font-size:12.5px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:var(--paper2)}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.seg button em{font:normal 11px "IBM Plex Mono";opacity:.65}
+.srch{margin-left:auto;display:flex;align-items:center;gap:8px;height:28px;border-bottom:1px solid var(--ink);width:230px}
+.srch svg{width:14px;height:14px;color:var(--ink2)}
+.srch input{flex:1;cursor:text;font-size:13px}
+.srch input::placeholder{color:var(--ink3)}
+.hint{font-size:11.5px;color:var(--ink3)}
+.grid{flex:1;min-height:0;display:flex;flex-direction:column}
+.hd,.rw,.ft{display:grid;grid-template-columns:minmax(360px,1fr) 78px 78px 200px 250px 126px;align-items:center}
+.hd{height:36px;border-bottom:3px double var(--rule);font-size:11.5px;color:var(--ink2);letter-spacing:.08em}
+.hd div{padding:0 10px}
+.r{text-align:right}
+.body{flex:1;overflow:auto;position:relative}
+.rw{height:40px;border-bottom:1px solid var(--rule2);position:relative;transition:background .12s}
+.rw>div{padding:0 10px;white-space:nowrap}
+.rw:hover{background:rgba(140,47,43,.045)}
+.rw.d0{height:46px;background:var(--paper2);border-bottom:1px solid var(--rule);margin-top:0}
+.rw.d0 .nm{font:700 16px "Noto Serif SC";letter-spacing:.02em}
+.rw.d1 .nm{font:600 14px "Noto Serif SC"}
+.rw.d2 .nm{font:400 13px "Noto Sans SC";color:var(--ink2)}
+.rw.d2 .num,.rw.d2 .cost{color:var(--ink2)}
+.rw.d1 .num,.rw.d1 .cost{color:var(--ink)}
+.rw.d0 .num,.rw.d0 .cost{font-weight:500}
+.nm{display:flex;align-items:center;gap:7px;cursor:pointer;position:relative;height:100%}
+.rw.d2 .nm{cursor:grab}
+.car{width:18px;height:18px;display:grid;place-items:center;border-radius:3px;color:var(--ink2);transition:transform .15s}
+.car svg{width:11px;height:11px;stroke-width:2}
+.car.open{transform:rotate(90deg)}
+.rw .nm:hover .car{background:var(--rule2)}
+.cnt{font:400 11.5px "IBM Plex Mono";color:var(--ink3);margin-left:4px}
+.guide{position:absolute;top:0;bottom:0;width:1px;background:var(--rule);pointer-events:none}
+.elb{position:absolute;top:0;height:50%;width:13px;border-left:1px solid var(--rule);border-bottom:1px solid var(--rule);pointer-events:none}
+.num{font:400 13px "IBM Plex Mono"}
+.ub{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.ub .bar{width:84px;height:5px;background:var(--rule2);position:relative}
+.ub .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink2);transition:width .4s}
+.rw.d0 .bar i{background:var(--ink)}
+.low{color:var(--red);font-weight:500}.ub .low~.bar i,.ub.lw .bar i{background:var(--red)}
+.stk{white-space:nowrap;display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--ink2)}
+.stk .b{display:flex;width:70px;height:7px;gap:1px}
+.stk .b i{height:100%}
+.s-在用{background:var(--green)}.s-空闲{background:var(--amber)}.s-维修中{background:var(--red)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px}
+.dot.s-在用{background:var(--green)}.dot.s-空闲{background:var(--amber)}.dot.s-维修中{background:var(--red)}
+.mid{font:400 12.5px "IBM Plex Mono"}
+.flash{animation:fl 1.4s}
+@keyframes fl{0%,35%{background:#f3d9a0}100%{background:transparent}}
+.rw.sel{background:rgba(140,47,43,.08)}.rw.sel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red)}
+.rw.dragging{opacity:.4}
+.rw.drop{outline:2px dashed var(--red);outline-offset:-2px;background:rgba(140,47,43,.07)}
+.rw.cand .nm::after{content:"可放入";font-size:10.5px;color:var(--red);border:1px solid var(--red);padding:0 5px;margin-left:8px;border-radius:2px;line-height:16px}
+.rw.moved{animation:mv 1.6s}
+@keyframes mv{0%,30%{background:#f3d9a0}100%{background:transparent}}
+.ft{height:50px;border-top:3px double var(--ink);font-weight:500;flex:none}
+.ft .nm{cursor:default;font:700 14px "Noto Serif SC"}
+.empty{padding:80px 0;text-align:center;color:var(--ink2)}
+.empty h3{font:600 17px "Noto Serif SC";margin-bottom:6px}
+.empty button{margin-top:14px;border-bottom:1px solid var(--ink);padding-bottom:1px}
+.foot{height:30px;flex:none;display:flex;align-items:center;font-size:11px;color:var(--ink3);gap:18px}
+/* 抽屉 */
+.mask{position:fixed;inset:0;background:rgba(42,33,24,.18);opacity:0;pointer-events:none;transition:.2s;z-index:20}
+.mask.show{opacity:1;pointer-events:auto}
+.dr{position:fixed;top:0;right:0;bottom:0;width:430px;background:var(--paper3);border-left:1px solid var(--ink);z-index:30;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;box-shadow:-18px 0 40px rgba(42,33,24,.1)}
+.dr.show{transform:none}
+.dr header{padding:24px 28px 16px;border-bottom:3px double var(--ink);display:flex;align-items:flex-start;gap:10px}
+.dr header h2{font:700 22px "IBM Plex Mono";letter-spacing:-.02em}
+.dr header p{font-size:12px;color:var(--ink2);margin-top:6px}
+.dr header .x{margin-left:auto;width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--rule)}
+.dr header .x:hover{background:var(--paper2)}
+.dr header .x svg{width:12px;height:12px;stroke-width:2}
+.dr .bd{padding:6px 28px 28px;overflow:auto;flex:1}
+.kv{display:grid;grid-template-columns:92px 1fr;padding:11px 0;border-bottom:1px solid var(--rule2);font-size:13px}
+.kv label{color:var(--ink3);font-size:12px;letter-spacing:.06em}
+.dr h4{font:600 13px "Noto Serif SC";margin:22px 0 8px}
+.spark{width:100%;height:80px;border-bottom:1px solid var(--ink);display:block}
+.job{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dotted var(--rule);font-size:12.5px}
+.job span{color:var(--ink2)}
+.mvsel{margin-top:6px;width:100%;height:34px;border:1px solid var(--ink);padding:0 10px;background:var(--paper3);cursor:pointer}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,12px);background:var(--ink);color:var(--paper);padding:10px 16px;font-size:12.5px;opacity:0;transition:.2s;z-index:50;pointer-events:none;display:flex;gap:16px;align-items:center}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{color:#f3d9a0;border-bottom:1px solid #f3d9a0}
+.in{animation:in .5s both}@keyframes in{from{opacity:0;transform:translateY(5px)}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mast">
+    <h1>资源台账<small>部门 · 资源组 · 机器　三层汇总</small></h1>
+    <div class="st" id="st"></div>
+  </div>
+  <div class="ctl">
+    <span class="lab">展开到</span>
+    <div class="seg" id="lv"><button data-l="1">第 1 层<em>部门</em></button><button data-l="2">第 2 层<em>资源组</em></button><button data-l="3" class="on">第 3 层<em>机器</em></button></div>
+    <span class="lab">状态</span>
+    <div class="seg" id="sf"></div>
+    <div class="srch"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="机器、负责人、资源组"></div>
+  </div>
+  <div class="grid">
+    <div class="hd"><div>名称</div><div class="r">机器</div><div class="r">卡数</div><div class="r">利用率（按卡数加权）</div><div>状态分布</div><div class="r">月成本（元）</div></div>
+    <div class="body" id="body"></div>
+    <div class="ft" id="ft"></div>
+  </div>
+  <div class="foot"><span>拖动机器行到别的资源组即可移动 · 点机器行看详情 · 筛选时父级汇总只统计命中的机器</span><span style="margin-left:auto">示例数据</span></div>
+</div>
+<div class="mask" id="mask"></div>
+<aside class="dr" id="dr"></aside>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const DEPTS=[["算法一部",["大模型预训练","对齐与评测","推理服务"]],["算法二部",["多模态训练","语音组"]],["平台研发",["调度平台","CI 测试池","公共开发机"]],["数据中台",["清洗与标注","特征工程"]],["基础模型组",["预训练-A","预训练-B","研究预留"]]];
+const GROUPS=[];DEPTS.forEach((d,i)=>d[1].forEach(g=>GROUPS.push({id:GROUPS.length,dept:i,name:g})));
+const MODELS=[["H100",8,18200],["H800",8,16400],["H20",8,9800],["A100",8,7600],["L40S",4,4100],["910B",8,6900]];
+const OWN=["林骁","陈汐","周牧","赵一舟","宋知意","何言","吴桐","郑屿","冯远","许清"],ROOM=["亦庄A","临港B","乌兰察布C"],RC=["yz","lg","wl"];
+const M=(()=>{let s=23;const r=()=>(s=(s*9301+49297)%233280)/233280;const out=[];
+ GROUPS.forEach(g=>{const n=3+Math.floor(r()*4),mi=Math.floor(r()*MODELS.length),mj=Math.floor(r()*MODELS.length);
+  for(let i=0;i<n;i++){const mo=MODELS[r()<.7?mi:mj],q=r(),st=q<.68?"在用":q<.86?"空闲":"维修中",rm=Math.floor(r()*3);
+   const util=st==="在用"?(r()<.2?Math.round(6+r()*12):Math.round(48+r()*46)):st==="空闲"?Math.round(r()*7):0;
+   out.push({id:`gpu-${RC[rm]}-${String(100+out.length*3+Math.floor(r()*3))}`,g:g.id,gpu:mo[0],cnt:mo[1],price:mo[2],st,util,owner:OWN[Math.floor(r()*10)],room:ROOM[rm]})}});
+ return out})();
+const fmt=n=>n.toLocaleString("en-US");
+let collapsed=new Set(),stF="全部",qry="",sel=null,lastMove=null,prevSum={},first=true;
+const costOf=m=>m.cnt*m.price;
+function visibleM(){return M.filter(m=>{if(stF==="低利用率"?!(m.st==="在用"&&m.util<20):stF!=="全部"&&m.st!==stF)return false;
+ if(qry){const g=GROUPS[m.g],t=(m.id+m.owner+g.name+DEPTS[g.dept][0]+m.gpu+m.room).toLowerCase();if(!t.includes(qry.toLowerCase()))return false}return true})}
+function sum(ms){const cards=ms.reduce((s,m)=>s+m.cnt,0);return{n:ms.length,cards,util:cards?Math.round(ms.reduce((s,m)=>s+m.util*m.cnt,0)/cards):0,cost:ms.reduce((s,m)=>s+costOf(m),0),st:{在用:ms.filter(m=>m.st==="在用").length,空闲:ms.filter(m=>m.st==="空闲").length,维修中:ms.filter(m=>m.st==="维修中").length}}}
+function stk(s){const t=s.n||1;return `<div class="stk"><span class="b">${["在用","空闲","维修中"].map(k=>s.st[k]?`<i class="s-${k}" style="width:${s.st[k]/t*100}%"></i>`:"").join("")}</span><span>${s.st.在用} 在用${s.st.空闲?` · ${s.st.空闲} 空闲`:""}${s.st.维修中?` · ${s.st.维修中} 维修`:""}</span></div>`}
+function ub(u,cls){return `<div class="ub ${u<20&&cls?"lw":""}"><span class="num ${u<20&&cls?"low":""}">${u}%</span><span class="bar"><i style="width:${u}%"></i></span></div>`}
+/* 汇总行 */
+function row(kind,id,d,name,s,opts){const fl=(k,v)=>prevSum[id+k]!==undefined&&prevSum[id+k]!==v?"flash":"";
+ const open=!collapsed.has(id);
+ return {id,html:`<div class="rw d${d} ${opts.cls||""}" data-k="${kind}" data-id="${id}" ${kind==="m"?'draggable="true"':""}>
+ <div class="nm" style="padding-left:${16+d*22}px">${opts.guides||""}${kind==="m"?`<span style="width:18px"></span>`:`<span class="car ${open?"open":""}"><svg viewBox="0 0 12 12"><path d="M4 2.5l4 3.5-4 3.5"/></svg></span>`}<span>${name}</span>${kind!=="m"?`<span class="cnt">${s.n}</span>`:""}</div>
+ <div class="r num ${fl("n",s.n)}">${s.n}</div><div class="r num ${fl("c",s.cards)}">${s.cards}</div>
+ <div class="${fl("u",s.util)}">${ub(s.util,kind==="m"&&opts.low)}</div>
+ <div class="${fl("s",JSON.stringify(s.st))}">${kind==="m"?`<span><i class="dot s-${opts.st}"></i>${opts.st}</span>`:stk(s)}</div>
+ <div class="r num cost ${fl("$",s.cost)}">${fmt(s.cost)}</div></div>`}}
+function render(){
+ const vm=visibleM(),all=sum(vm),rows=[],cur={};let idx=0;
+ const nD=DEPTS.map((d,di)=>({di,ms:vm.filter(m=>GROUPS[m.g].dept===di)})).filter(x=>x.ms.length);
+ nD.forEach((D,dn)=>{const dId="d"+D.di,ds=sum(D.ms);cur[dId+"n"]=ds.n;cur[dId+"c"]=ds.cards;cur[dId+"u"]=ds.util;cur[dId+"s"]=JSON.stringify(ds.st);cur[dId+"$"]=ds.cost;
+  rows.push(row("d",dId,0,DEPTS[D.di][0],ds,{}).html);
+  if(collapsed.has(dId))return;
+  const gs=GROUPS.filter(g=>g.dept===D.di&&D.ms.some(m=>m.g===g.id));
+  gs.forEach((g,gn)=>{const gm=D.ms.filter(m=>m.g===g.id),gs_=sum(gm),gId="g"+g.id,lastG=gn===gs.length-1;
+   cur[gId+"n"]=gs_.n;cur[gId+"c"]=gs_.cards;cur[gId+"u"]=gs_.util;cur[gId+"s"]=JSON.stringify(gs_.st);cur[gId+"$"]=gs_.cost;
+   const gg=`<i class="${lastG?"elb":"elb"}" style="left:${16+9}px"></i>${lastG?"":`<i class="guide" style="left:${25}px;top:50%"></i>`}`;
+   rows.push(row("g",gId,1,g.name,gs_,{guides:gg,cls:dragging?"cand":""}).html);
+   if(collapsed.has(gId))return;
+   gm.forEach((m,mn)=>{const lastM=mn===gm.length-1,ms=sum([m]);
+    const gd=(lastG?"":`<i class="guide" style="left:25px"></i>`)+`<i class="elb" style="left:${16+22+9}px"></i>`+(lastM?"":`<i class="guide" style="left:${16+22+9}px;top:50%"></i>`);
+    rows.push(row("m",m.id,2,`<span class="mid">${m.id}</span><span style="color:var(--ink3);font-size:12px;margin-left:6px">${m.gpu} · ${m.owner}</span>`,ms,{guides:gd,st:m.st,low:m.st==="在用",cls:(sel===m.id?"sel ":"")+(movedId===m.id?"moved":"")}).html)})})});
+ const body=$("#body");const sc=body.scrollTop;
+ body.innerHTML=rows.length?rows.map((h,i)=>first?h.replace('class="rw','style="animation-delay:'+Math.min(i,20)*22+'ms" class="in rw'):h).join(""):`<div class="empty"><h3>没有命中的机器</h3><div>换个状态或关键词再试</div><button id="rs">清除筛选</button></div>`;
+ body.scrollTop=sc;first=false;movedId=null;prevSum=cur;
+ const rs=$("#rs");if(rs)rs.onclick=()=>{stF="全部";qry="";$("#q").value="";render()};
+ const st=sum(vm);
+ $("#st").innerHTML=`<div><b>${st.n}</b><span>机器（共 ${M.length}）</span></div><div><b>${st.cards}</b><span>GPU 卡</span></div><div><b>${st.util}%</b><span>加权利用率</span></div><div><b>¥${fmt(Math.round(st.cost/1000))}k</b><span>月成本</span></div>`;
+ $("#ft").innerHTML=`<div class="nm">${stF==="全部"&&!qry?"全公司合计":"筛选合计"}</div><div class="r num">${st.n}</div><div class="r num">${st.cards}</div><div>${ub(st.util,0)}</div><div>${stk(st)}</div><div class="r num">${fmt(st.cost)}</div>`;
+ $("#sf").innerHTML=["全部","在用","空闲","维修中","低利用率"].map(k=>{const n=M.filter(m=>k==="全部"||(k==="低利用率"?m.st==="在用"&&m.util<20:m.st===k)).length;return `<button data-s="${k}" class="${stF===k?"on":""}">${k}<em>${n}</em></button>`}).join("");
+ const lv=!DEPTS.some((_,i)=>collapsed.has("d"+i))&&!GROUPS.some(g=>collapsed.has("g"+g.id))?3:!DEPTS.some((_,i)=>collapsed.has("d"+i))&&GROUPS.every(g=>collapsed.has("g"+g.id))?2:DEPTS.every((_,i)=>collapsed.has("d"+i))?1:0;
+ document.querySelectorAll("#lv button").forEach(b=>b.classList.toggle("on",+b.dataset.l===lv));
+}
+let movedId=null,dragging=false;
+function expandTo(n){collapsed=new Set();if(n<3)GROUPS.forEach(g=>collapsed.add("g"+g.id));if(n<2)DEPTS.forEach((_,i)=>collapsed.add("d"+i));render()}
+/* 事件 */
+$("#lv").onclick=e=>{const b=e.target.closest("button");if(b)expandTo(+b.dataset.l)};
+$("#sf").onclick=e=>{const b=e.target.closest("button");if(b){stF=b.dataset.s;render()}};
+$("#q").oninput=e=>{qry=e.target.value.trim();render()};
+$("#body").addEventListener("click",e=>{const r=e.target.closest(".rw");if(!r)return;const id=r.dataset.id;
+ if(r.dataset.k==="m"){openDr(id);return}
+ collapsed.has(id)?collapsed.delete(id):collapsed.add(id);render()});
+/* 拖动 */
+let dragId=null;
+$("#body").addEventListener("dragstart",e=>{const r=e.target.closest(".rw[data-k=m]");if(!r){e.preventDefault();return}dragId=r.dataset.id;e.dataTransfer.setData("text/plain",dragId);e.dataTransfer.effectAllowed="move";
+ setTimeout(()=>{r.classList.add("dragging");document.querySelectorAll('.rw[data-k=g]').forEach(x=>{if(x.dataset.id!=="g"+M.find(m=>m.id===dragId).g)x.classList.add("cand")})},0)});
+$("#body").addEventListener("dragover",e=>{const r=e.target.closest(".rw");document.querySelectorAll(".rw.drop").forEach(x=>x.classList.remove("drop"));
+ if(!dragId||!r)return;const tg=targetG(r);if(tg!==null){e.preventDefault();r.classList.add("drop")}});
+function targetG(r){let g=r.dataset.k==="g"?+r.dataset.id.slice(1):r.dataset.k==="m"?M.find(m=>m.id===r.dataset.id).g:null;if(g===null)return null;const m=M.find(m=>m.id===dragId);return g===m.g?null:g}
+$("#body").addEventListener("drop",e=>{const r=e.target.closest(".rw");if(!r||!dragId)return;const g=targetG(r);if(g===null)return;e.preventDefault();doMove(dragId,g)});
+document.addEventListener("dragend",()=>{dragId=null;document.querySelectorAll(".rw.dragging,.rw.drop,.rw.cand").forEach(x=>x.classList.remove("dragging","drop","cand"))});
+function doMove(id,g,silent){const m=M.find(x=>x.id===id),from=m.g;m.g=g;lastMove={id,from};collapsed.delete("g"+g);collapsed.delete("d"+GROUPS[g].dept);movedId=id;
+ render();if(sel===id)drDraw();toast(`${id} 已从「${GROUPS[from].name}」移到「${GROUPS[g].name}」，两边汇总已重算`,"撤销",()=>{m.g=from;movedId=id;render();if(sel===id)drDraw();toast("已撤销移动")});
+ const el=document.querySelector(`.rw[data-id="${id}"]`);el&&el.scrollIntoView({block:"nearest"})}
+/* 抽屉 */
+function openDr(id){sel=id;render();drDraw();$("#dr").classList.add("show");$("#mask").classList.add("show")}
+function closeDr(){sel=null;$("#dr").classList.remove("show");$("#mask").classList.remove("show");render()}
+function drDraw(){const m=M.find(x=>x.id===sel);if(!m)return;const g=GROUPS[m.g];let s=m.id.length*7+m.util;const rn=()=>(s=(s*9301+49297)%233280)/233280;
+ const pts=Array.from({length:24},(_,i)=>m.st==="维修中"?0:Math.max(0,Math.min(100,m.util+(rn()-.5)*(m.st==="在用"?26:6)+Math.sin(i/3.8)*(m.st==="在用"?9:0))));
+ const path=pts.map((v,i)=>`${i?"L":"M"}${(i/23*400).toFixed(1)} ${(78-v*.74).toFixed(1)}`).join("");
+ const jobs=m.st==="在用"?["pretrain-qwen-ft-0312","eval-nightly-batch","rlhf-ppo-run7"].slice(0,m.util<20?1:3):[];
+ $("#dr").innerHTML=`<header><div><h2>${m.id}</h2><p>${DEPTS[g.dept][0]} › ${g.name}</p></div><button class="x" id="dx"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button></header>
+ <div class="bd"><div class="kv"><label>型号</label><span>${m.gpu} × ${m.cnt} 卡</span></div><div class="kv"><label>状态</label><span><i class="dot s-${m.st}"></i>${m.st}</span></div><div class="kv"><label>负责人</label><span>${m.owner}</span></div><div class="kv"><label>机房</label><span>${m.room}</span></div><div class="kv"><label>月成本</label><span class="mono">¥ ${fmt(costOf(m))}</span></div><div class="kv"><label>当前利用率</label><span class="mono ${m.st==="在用"&&m.util<20?"low":""}">${m.util}%</span></div>
+ <h4>近 24 小时利用率</h4><svg class="spark" viewBox="0 0 400 80" preserveAspectRatio="none"><path d="${path}" stroke="var(--red)" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>
+ <h4>运行中的作业</h4>${jobs.length?jobs.map((j,i)=>`<div class="job"><b class="mono" style="font-weight:500">${j}</b><span>${[8,4,8][i]||8} 卡</span></div>`).join(""):`<div class="job"><span>当前没有作业</span></div>`}
+ <h4>移到其他资源组</h4><select class="mvsel" id="mv"><option value="">选择资源组…</option>${GROUPS.filter(x=>x.id!==m.g).map(x=>`<option value="${x.id}">${DEPTS[x.dept][0]} › ${x.name}</option>`).join("")}</select></div>`;
+ $("#dx").onclick=closeDr;$("#mv").onchange=e=>{if(e.target.value)doMove(m.id,+e.target.value)}}
+$("#mask").onclick=closeDr;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sel)closeDr()});
+let tt;function toast(m,a,fn){const t=$("#toast");t.innerHTML=`<span>${m}</span>`+(a?`<button>${a}</button>`:"");if(a)t.querySelector("button").onclick=()=>{t.classList.remove("show");fn()};t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),a?6000:1800)}
+document.addEventListener("dragstart",()=>{dragging=false});
+GROUPS.forEach(g=>{if(g.dept>0&&g.id!==3)collapsed.add("g"+g.id)});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>查询栏 · 物理机</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#fbfbf8;--panel:#fff;--ink:#14201e;--ink2:#52605d;--mute:#8d9a96;--line:#dfe5e1;--line2:#eef1ee;--acc:#0a7c6e;--acc2:#e1f2ee;--warn:#b96a00;--bad:#c4390f;--hit:#f1f9f6}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font:13px/1.4 "IBM Plex Sans","Noto Sans SC",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.mono{font-family:"IBM Plex Mono","Noto Sans SC",monospace;font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:232px 1fr;height:100vh}
+/* 左侧视图 */
+.rail{border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:2px;background:var(--bg)}
+.logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;padding:0 6px 18px}
+.logo i{width:24px;height:24px;border:1.5px solid var(--ink);border-radius:6px;display:grid;place-items:center}
+.logo i svg{width:14px;height:14px}
+.rail h6{font-size:11px;font-weight:500;color:var(--mute);letter-spacing:.08em;padding:6px 8px}
+.vw{display:flex;align-items:center;gap:8px;height:34px;padding:0 8px;border-radius:7px;color:var(--ink2);cursor:pointer;position:relative}
+.vw:hover{background:var(--line2)}
+.vw.on{color:var(--ink);font-weight:500;background:var(--acc2)}
+.vw.on::before{content:"";position:absolute;left:-14px;top:7px;bottom:7px;width:3px;border-radius:0 2px 2px 0;background:var(--acc)}
+.vw svg{width:15px;height:15px;color:var(--mute)}.vw.on svg{color:var(--acc)}
+.vw b{font-weight:inherit;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vw em{font:normal 11.5px "IBM Plex Mono";color:var(--mute)}
+.vw .del{display:none;width:18px;height:18px;border-radius:4px;color:var(--mute);place-items:center}
+.vw:hover .del{display:grid}.vw:hover em{display:none}.vw .del:hover{background:#fff;color:var(--bad)}
+.vw input{flex:1;min-width:0;height:26px;border:1.5px solid var(--acc);border-radius:5px;padding:0 6px;background:#fff;cursor:text;font-size:13px}
+.rail .foot{margin-top:auto;padding:8px;font-size:11px;color:var(--mute);line-height:1.7}
+/* 主区 */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.urlbar{height:38px;flex:none;display:flex;align-items:center;gap:10px;padding:0 28px;border-bottom:1px solid var(--line2);font:12px "IBM Plex Mono","Noto Sans SC";color:var(--mute);white-space:nowrap;overflow:hidden}
+.urlbar svg{width:13px;height:13px}
+.urlbar span{overflow:hidden;text-overflow:ellipsis}
+.urlbar b{color:var(--acc);font-weight:500}
+.urlbar .sp{flex:1}.urlbar small{font:11px "IBM Plex Sans","Noto Sans SC"}
+.head{padding:22px 28px 0}
+.head h1{font-size:22px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:baseline;gap:12px}
+.head h1 small{font-size:13px;font-weight:400;color:var(--mute)}
+.qwrap{position:relative;margin-top:16px}
+.qb{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-height:56px;padding:9px 12px 9px 44px;border:1.5px solid var(--ink);border-radius:12px;background:var(--panel);position:relative;font:14px "IBM Plex Mono","Noto Sans SC",monospace;cursor:text;transition:box-shadow .15s}
+.qb.focus{box-shadow:0 0 0 4px var(--acc2);border-color:var(--acc)}
+.qb>svg.s{position:absolute;left:15px;top:19px;width:18px;height:18px;color:var(--ink2)}
+.tk{display:inline-flex;align-items:stretch;height:32px;border:1px solid var(--line);border-radius:7px;overflow:hidden;cursor:pointer;background:#fff;font-size:13.5px;animation:pop .28s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.tk:hover{border-color:var(--acc)}
+.tk .f{display:grid;place-items:center;padding:0 8px;background:var(--line2);color:var(--ink2)}
+.tk .v{display:grid;place-items:center;padding:0 9px;font-weight:600;color:var(--acc)}
+.tk.neg .v{color:var(--bad)}.tk.neg .f::before{content:"非 ";color:var(--bad)}
+.tk .x{width:24px;display:grid;place-items:center;color:var(--mute);border-left:1px solid var(--line2)}
+.tk .x:hover{background:#fbe9e3;color:var(--bad)}
+.tk .x svg{width:11px;height:11px;stroke-width:1.8}
+.tk.text .v{color:var(--ink);font-weight:500}
+.qi{flex:1;min-width:150px;height:32px;cursor:text;font:14px "IBM Plex Mono","Noto Sans SC",monospace}
+.qi::placeholder{color:var(--mute)}
+.qb .clr{margin-left:auto;font:12px "IBM Plex Sans","Noto Sans SC";color:var(--mute);height:28px;padding:0 8px;border-radius:6px;display:none}
+.qb .clr:hover{background:var(--line2);color:var(--ink)}
+.qb.has .clr{display:block}
+.dd{position:absolute;z-index:20;top:calc(100% + 6px);background:#fff;border:1.5px solid var(--ink);border-radius:10px;width:380px;display:none;overflow:hidden;box-shadow:6px 6px 0 rgba(20,32,30,.08)}
+.dd.show{display:block}
+.dd h5{font-size:11px;font-weight:500;color:var(--mute);padding:9px 12px 5px;letter-spacing:.06em}
+.dd .it{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;cursor:pointer;font:13.5px "IBM Plex Mono","Noto Sans SC"}
+.dd .it.on{background:var(--acc2)}
+.dd .it .k{color:var(--acc);font-weight:600}
+.dd .it .sub{color:var(--mute);font:12px "IBM Plex Sans","Noto Sans SC";flex:1;text-align:right}
+.dd .it .n{margin-left:auto;font:12px "IBM Plex Mono";color:var(--ink2)}
+.dd .it .n.z{color:var(--bad)}
+.dd .ft{border-top:1px solid var(--line2);padding:7px 12px;font-size:11.5px;color:var(--mute);background:var(--bg)}
+.tips{display:flex;align-items:center;gap:14px;padding:11px 2px 0;font-size:12px;color:var(--mute);flex-wrap:wrap}
+.tips code{font:12px "IBM Plex Mono","Noto Sans SC";color:var(--ink2);background:var(--line2);padding:2px 6px;border-radius:4px}
+.tips a{cursor:pointer;color:var(--ink2);border-bottom:1px dashed var(--mute)}.tips a:hover{color:var(--acc);border-color:var(--acc)}
+.sum{display:flex;align-items:center;gap:20px;padding:18px 28px 10px;font-size:13px;color:var(--ink2)}
+.sum b{font:600 15px "IBM Plex Mono";color:var(--ink)}
+.sum .sp{flex:1}
+.btn{height:30px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:#fff;display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-size:12.5px}
+.btn:hover{border-color:var(--ink)}.btn svg{width:14px;height:14px}
+.btn[disabled]{opacity:.4;pointer-events:none}
+/* 表格 */
+.tw{flex:1;min-height:0;overflow:auto;padding:0 28px}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th{position:sticky;top:0;z-index:2;background:var(--bg);text-align:left;font-weight:500;font-size:12px;color:var(--mute);height:34px;padding:0 10px 0 0;border-bottom:1.5px solid var(--ink);cursor:pointer;white-space:nowrap;user-select:none}
+th:hover{color:var(--ink)}
+th.r,td.r{text-align:right;padding-right:22px}
+th .ar{display:inline-block;margin-left:4px;color:var(--acc)}
+td{height:41px;padding:0 10px 0 0;border-bottom:1px solid var(--line2);white-space:nowrap}
+tr:hover td{background:#f5f7f4}
+td.c{cursor:pointer}
+td.c span{border-bottom:1px dashed transparent;padding-bottom:1px}
+td.c:hover span{border-color:var(--acc);color:var(--acc)}
+td.hit{background:var(--hit)}tr:hover td.hit{background:#e8f5f0}
+td.id{font:500 13px "IBM Plex Mono";letter-spacing:-.01em}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.d-在用{background:var(--acc)}.d-空闲{border:1.5px solid var(--mute)}.d-维修中{background:var(--warn)}.d-待回收{background:var(--bad)}
+.ub{display:inline-block;width:44px;height:4px;border-radius:2px;background:var(--line);margin-left:10px;vertical-align:middle;overflow:hidden}
+.ub i{display:block;height:100%;background:var(--ink2)}
+.low{color:var(--bad);font-weight:600}.low+.ub i{background:var(--bad)}
+.empty{padding:70px 0;text-align:center;color:var(--ink2)}
+.empty h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.empty p{color:var(--mute);margin-bottom:18px}
+.empty .opts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.empty .opts button{height:32px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:#fff;font:12.5px "IBM Plex Mono","Noto Sans SC"}
+.empty .opts button:hover{border-color:var(--acc);color:var(--acc)}
+.empty .opts em{font-style:normal;color:var(--mute);margin-left:8px;font-family:"IBM Plex Sans","Noto Sans SC"}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,12px);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:12.5px;opacity:0;transition:.2s;pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+tbody tr{animation:ri .4s both}@keyframes ri{from{opacity:0;transform:translateY(4px)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="logo"><i><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="4" rx="1"/><rect x="2.5" y="9.5" width="11" height="4" rx="1"/><path d="M5 4.5h.01M5 11.5h.01"/></svg></i>机架台账</div>
+    <h6>视图</h6>
+    <div id="views" style="display:flex;flex-direction:column;gap:2px"></div>
+    <div class="foot">一行查询 = 全部筛选<br>每个条件都能点开修改<br>示例数据</div>
+  </aside>
+  <section class="main">
+    <div class="urlbar"><svg viewBox="0 0 16 16"><path d="M6.5 9.5a3 3 0 004.2 0l2-2a3 3 0 00-4.2-4.2l-1 1M9.5 6.5a3 3 0 00-4.2 0l-2 2a3 3 0 004.2 4.2l1-1"/></svg><span id="url"></span><i class="sp"></i><small>地址栏同步查询，复制即可分享</small></div>
+    <div class="head">
+      <h1>物理机 <small id="sub"></small></h1>
+      <div class="qwrap">
+        <div class="qb" id="qb"><svg class="s" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input class="qi" id="qi" placeholder="输入条件，如 状态:在用 型号:H100" autocomplete="off" spellcheck="false"><button class="clr" id="clr">清空</button></div>
+        <div class="dd" id="dd"></div>
+      </div>
+      <div class="tips"><span>语法</span><code>字段:值</code><code>型号:H100,H800</code><code>-状态:空闲</code><code>利用率:&lt;20%</code><span>试试</span><a data-q="状态:空闲 机房:临港B">空闲 + 临港B</a><a data-q="状态:在用 利用率:<15% 卡数:8">在用但利用率低于 15%</a><a data-q="-状态:在用 型号:H20,H800">非在用的 H20 / H800</a></div>
+    </div>
+    <div class="sum"><span id="cnt"></span><span id="cards"></span><span id="avg"></span><span class="sp"></span><button class="btn" id="save"><svg viewBox="0 0 16 16"><path d="M3.5 2.5h7l2 2v9h-9z"/><path d="M5.5 2.5v3.5h4V2.5M5.5 13.5v-4h5v4"/></svg>保存为视图</button></div>
+    <div class="tw" id="tw"></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const FIELD={状态:{k:"st"},型号:{k:"gpu"},部门:{k:"dept"},负责人:{k:"owner"},机房:{k:"room"},利用率:{k:"util",n:1,u:"%"},卡数:{k:"cnt",n:1}};
+const FNAMES=Object.keys(FIELD);
+const VALS={状态:["在用","空闲","维修中","待回收"],型号:["H100","H800","H20","A100","L40S","910B"],部门:["算法一部","算法二部","平台研发","数据中台","基础模型组","多模态组"],机房:["亦庄A","临港B","乌兰察布C"],负责人:["林骁","陈汐","周牧","赵一舟","宋知意","何言","吴桐","郑屿","冯远","许清"],利用率:["<20%","<50%",">80%"],卡数:["8","4",">=8"]};
+const COLS=[{k:"id",n:"主机名"},{k:"st",n:"状态",f:"状态"},{k:"gpu",n:"型号",f:"型号"},{k:"cnt",n:"卡数",f:"卡数",r:1},{k:"dept",n:"部门",f:"部门"},{k:"owner",n:"负责人",f:"负责人"},{k:"util",n:"利用率",f:"利用率",r:1},{k:"room",n:"机房",f:"机房"},{k:"up",n:"上线日期"}];
+/* 数据 */
+const D=(()=>{let s=11;const r=()=>(s=(s*9301+49297)%233280)/233280;const pick=a=>a[Math.floor(r()*a.length)];
+ const gp=[["H100",8,.34],["H800",8,.14],["H20",8,.16],["A100",8,.16],["L40S",4,.1],["910B",8,.1]],rm=[["亦庄A","yz"],["临港B","lg"],["乌兰察布C","wl"]];
+ const out=[];for(let i=0;i<168;i++){let x=r(),g;for(g of gp){if((x-=g[2])<0)break}
+  const [room,rc]=pick(rm),q=r(),st=q<.56?"在用":q<.76?"空闲":q<.9?"维修中":"待回收";
+  let util=st==="在用"?(r()<.4?Math.round(4+r()*14):Math.round(42+r()*54)):st==="空闲"?Math.round(r()*6):st==="维修中"?0:Math.round(r()*14);
+  const d=new Date(2023,0,10+Math.floor(r()*1000));
+  out.push({id:`gpu-${rc}-${String(100+Math.floor(r()*40)).padStart(3,"0")}${String.fromCharCode(97+Math.floor(r()*6))}${i%7}`,st,gpu:g[0],cnt:g[1],dept:pick(VALS.部门),owner:pick(VALS.负责人),util,room,up:d.toISOString().slice(0,10)});}
+ return out})();
+/* 查询状态 */
+let Q=[],inPos=0,editBak=null,sortK=null,sortD=1,act=0,items=[],VIEWS=[
+ {n:"在用 H100",q:"状态:在用 型号:H100"},{n:"低利用率告警",q:"状态:在用 利用率:<20%"},{n:"空闲可调配",q:"状态:空闲"},{n:"维修与待回收",q:"状态:维修中,待回收"}],naming=false;
+const ser=t=>(t.neg?"-":"")+(t.f?t.f+":":"")+t.v, qstr=()=>Q.map(ser).join(" ");
+function parse(s){s=s.trim();if(!s)return null;let neg=false;if(s[0]==="-"&&s.length>1){neg=true;s=s.slice(1)}
+ const m=s.match(/^([^:：\s]+)[:：](.+)$/);if(m&&FIELD[m[1]]){let v=m[2];if(FIELD[m[1]].n&&/^\d/.test(v)===false&&!/^(<|>|=)/.test(v))return {f:"",v:s,neg:false};return {f:m[1],v,neg}}return {f:"",v:neg?"-"+s:s,neg:false}}
+function numT(v,x){const m=/^(<=|>=|<|>|=)?(\d+(?:\.\d+)?)%?$/.exec(v.trim());if(!m)return false;const n=+m[2],o=m[1]||"=";return o==="<"?x<n:o==="<="?x<=n:o===">"?x>n:o===">="?x>=n:x===n}
+function hit(r,t){let ok;if(!t.f){const s=t.v.toLowerCase();ok=[r.id,r.st,r.gpu,r.dept,r.owner,r.room].some(x=>String(x).toLowerCase().includes(s))}
+ else{const F=FIELD[t.f];ok=F.n?numT(t.v,r[F.k]):t.v.split(/[,，]/).some(x=>x&&String(r[F.k]).toLowerCase().includes(x.toLowerCase()))}return t.neg?!ok:ok}
+const filt=(qs)=>D.filter(r=>qs.every(t=>hit(r,t)));
+function rowsNow(){let a=filt(Q);if(sortK)a=a.slice().sort((x,y)=>(x[sortK]>y[sortK]?1:x[sortK]<y[sortK]?-1:0)*sortD);return a}
+const cntOf=(f,v)=>filt(Q.concat({f,v,neg:false})).length;
+/* 渲染 */
+const X='<svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg>';
+function drawBar(){const qb=$("#qb"),qi=$("#qi");[...qb.querySelectorAll(".tk")].forEach(e=>e.remove());
+ const mk=(t,i)=>{const e=document.createElement("span");e.className="tk"+(t.neg?" neg":"")+(t.f?"":" text");e.dataset.i=i;e.innerHTML=(t.f?`<span class="f">${t.f}</span>`:`<span class="f">文本</span>`)+`<span class="v">${t.v}</span><span class="x" title="删除">${X}</span>`;return e};
+ Q.forEach((t,i)=>{const e=mk(t,i);if(i===lastAdded){}else e.style.animation="none";qb.insertBefore(e,i<inPos?qi:qi)});
+ // 把输入框放到 inPos
+ const tks=[...qb.querySelectorAll(".tk")];tks.forEach(e=>qb.insertBefore(e,qi));
+ if(inPos<tks.length)qb.insertBefore(qi,tks[inPos]);else qb.insertBefore(qi,$("#clr"));
+ qb.classList.toggle("has",Q.length>0||qi.value!=="");
+ qi.placeholder=Q.length?"继续添加条件…":"输入条件，如 状态:在用 型号:H100";}
+let lastAdded=-1;
+function apply(push=true){drawBar();drawTable();drawViews();
+ const s=qstr();$("#url").innerHTML=`gpu.demo.internal/hosts?q=<b>${s?s.replace(/ /g,"+"):""}</b>`;
+ try{history.replaceState(null,"",s?"#q="+encodeURIComponent(s):location.pathname+location.search)}catch(e){}}
+function drawTable(){const a=rowsNow(),tw=$("#tw");
+ const cards=a.reduce((s,r)=>s+r.cnt,0),av=cards?Math.round(a.reduce((s,r)=>s+r.util*r.cnt,0)/cards):0;
+ $("#cnt").innerHTML=`<b>${a.length}</b> 台 / 共 ${D.length} 台`;$("#cards").innerHTML=`<b>${cards}</b> 卡`;$("#avg").innerHTML=`卡数加权利用率 <b>${av}%</b>`;
+ $("#sub").textContent=Q.length?`${Q.length} 个条件`:"未设条件";
+ $("#save").disabled=!Q.length||VIEWS.some(v=>v.q===qstr());
+ if(!a.length){const opts=Q.map((t,i)=>({i,n:filt(Q.filter((_,j)=>j!==i)).length})).sort((x,y)=>y.n-x.n);
+  tw.innerHTML=`<div class="empty"><h3>没有符合这组条件的机器</h3><p>${Q.length>1?"去掉其中一个条件试试：":"换一个条件试试"}</p><div class="opts">${Q.length>1?opts.map(o=>`<button data-rm="${o.i}">去掉 ${ser(Q[o.i])}<em>得到 ${o.n} 台</em></button>`).join(""):`<button data-clear="1">清空条件</button>`}</div></div>`;return}
+ const ft=Q.filter(t=>t.f&&!t.neg).map(t=>t.f);
+ const cell=(c,r)=>{let v=r[c.k],h;
+  if(c.k==="id")return `<td class="id">${v}</td>`;
+  if(c.k==="st")h=`<span><i class="dot d-${v}"></i>${v}</span>`;
+  else if(c.k==="util")h=`<span class="mono ${v<20&&r.st==="在用"?"low":""}">${v}%</span><i class="ub"><i style="width:${v}%"></i></i>`;
+  else if(c.k==="cnt")h=`<span class="mono">${v}</span>`;
+  else if(c.k==="up")return `<td class="mono" style="color:var(--mute)">${v}</td>`;
+  else h=`<span>${v}</span>`;
+  const tip=c.k==="util"?`利用率:<${(Math.floor(v/10)+1)*10}%`:`${c.f}:${v}`;
+  return `<td class="c ${c.r?"r":""} ${ft.includes(c.f)?"hit":""}" data-f="${c.f}" data-v="${c.k==="util"?"<"+(Math.floor(v/10)+1)*10+"%":v}" title="点击，按「${tip}」筛选">${h}</td>`};
+ tw.innerHTML=`<table><thead><tr>${COLS.map(c=>`<th class="${c.r?"r":""}" data-k="${c.k}">${c.n}${sortK===c.k?`<span class="ar">${sortD>0?"↑":"↓"}</span>`:""}</th>`).join("")}</tr></thead><tbody>${a.map((r,i)=>`<tr style="animation-delay:${Math.min(i,14)*14}ms">${COLS.map(c=>cell(c,r)).join("")}</tr>`).join("")}</tbody></table>`}
+function drawViews(){const cur=qstr();
+ $("#views").innerHTML=VIEWS.map((v,i)=>`<div class="vw ${v.q===cur?"on":""}" data-i="${i}"><svg viewBox="0 0 16 16"><path d="M2.5 3.5h11l-4.2 5v4l-2.6 1v-5z"/></svg><b>${v.n}</b><em>${filt(v.q.split(" ").map(parse).filter(Boolean)).length}</em><span class="del" data-del="${i}"><svg viewBox="0 0 12 12" style="width:11px;height:11px"><path d="M3 3l6 6M9 3l-6 6"/></svg></span></div>`).join("")
+ +`<div class="vw ${!cur?"on":""}" data-i="-1" style="order:-1"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg><b>全部物理机</b><em>${D.length}</em></div>`+(naming?`<div class="vw"><svg viewBox="0 0 16 16"><path d="M2.5 3.5h11l-4.2 5v4l-2.6 1v-5z"/></svg><input id="vn" placeholder="视图名称，回车保存"></div>`:"");
+ if(naming){const i=$("#vn");if(i&&document.activeElement!==i)i.focus()}}
+/* 提交 / 编辑 token */
+function commit(str){const t=parse(str);if(!t)return false;
+ // 同字段同值再次添加 → 忽略；
+ Q.splice(inPos,0,t);lastAdded=inPos;inPos=Q.length;editBak=null;$("#qi").value="";apply();lastAdded=-1;return true}
+function removeTok(i){Q.splice(i,1);if(inPos>i)inPos--;editBak=null;apply();toastS("已去掉条件")}
+function editTok(i){const t=Q[i];Q.splice(i,1);inPos=i;editBak={t,i};const qi=$("#qi");qi.value=ser(t);apply();qi.focus();qi.select();suggest()}
+function toggleCell(f,v){const i=Q.findIndex(t=>t.f===f&&t.v===v&&!t.neg);
+ if(i>=0){Q.splice(i,1);inPos=Q.length;apply();toastS(`已去掉 ${f}:${v}`);return}
+ const j=Q.findIndex(t=>t.f===f&&!t.neg);
+ if(j>=0&&!/[,，]/.test(Q[j].v)&&f!=="利用率"&&f!=="卡数"||(j>=0&&(f==="利用率"||f==="卡数"))){Q[j]={f,v,neg:false};lastAdded=j}else{Q.push({f,v,neg:false});lastAdded=Q.length-1}
+ inPos=Q.length;apply();lastAdded=-1;toastS(`已加入条件 ${f}:${v}`)}
+/* 补全 */
+function suggest(){const qi=$("#qi"),dd=$("#dd"),s=qi.value;items=[];let head="";
+ const body=s.replace(/^-/,""),m=body.match(/^([^:：\s]+)[:：](.*)$/);
+ if(m&&FIELD[m[1]]){const f=m[1],raw=m[2],last=raw.split(/[,，]/).pop(),pre=raw.slice(0,raw.length-last.length),F=FIELD[f];head=`取值 · ${f}`;
+  let vs=VALS[f].filter(v=>!last||v.toLowerCase().includes(last.toLowerCase()));
+  if(F.n&&last&&!VALS[f].includes(last)&&/^(<=|>=|<|>|=)?\d+%?$/.test(last)){let v=last;if(f==="利用率"&&!/%$/.test(v))v+="%";vs=[v,...vs.filter(x=>x!==v)]}
+  items=vs.slice(0,8).map(v=>({t:"v",k:v,ins:(s[0]==="-"?"-":"")+f+":"+pre+v,n:F.n?cntOf(f,v):cntOf(f,pre.split(/[,，]/).filter(Boolean).concat(v).join(","))}));
+ }else{head=s?"字段":"字段 · 输入后按 Tab 补全";const ex={状态:"在用 / 空闲",型号:"H100 / A100",部门:"算法一部",负责人:"林骁",机房:"亦庄A",利用率:"<20%",卡数:"8"};
+  items=FNAMES.filter(f=>!body||f.startsWith(body)||f.includes(body)).map(f=>({t:"f",k:f,ins:(s[0]==="-"?"-":"")+f+":",sub:ex[f]}));
+  if(body)items.push({t:"t",k:`搜索文本「${body}」`,ins:s,n:filt(Q.concat({f:"",v:s.replace(/^-/,""),neg:s[0]==="-"})).length});}
+ if(!items.length){dd.classList.remove("show");return}
+ act=Math.min(act,items.length-1);if(act<0)act=0;
+ dd.style.left=Math.min(Math.max(0,qi.offsetLeft-4),$("#qb").clientWidth-380)+"px";
+ dd.innerHTML=`<h5>${head}</h5>`+items.map((o,i)=>`<div class="it ${i===act?"on":""}" data-i="${i}">${o.t==="v"?`<span class="k">${o.k}</span>`:o.t==="f"?`<span class="k">${o.k}</span><span class="mono" style="color:var(--mute)">:</span><span class="sub">${o.sub}</span>`:`<span>${o.k}</span>`}${o.n!=null?`<span class="n ${o.n===0?"z":""}">${o.n} 条</span>`:""}</div>`).join("")+`<div class="ft">↑↓ 选择 · Tab 补全 · Enter 确认 · Esc 关闭</div>`;
+ dd.classList.add("show")}
+function pick(o,enter){if(!o)return;
+ if(o.t==="f"){$("#qi").value=o.ins;act=0;suggest();return}
+ if(o.t==="t"){commit(o.ins);suggest();return}
+ // 多值：Tab 追加逗号继续选，Enter 完成
+ if(enter===false&&VALS[o.ins.replace(/^-/,"").split(/[:：]/)[0]]&&!FIELD[o.ins.replace(/^-/,"").split(/[:：]/)[0]].n){$("#qi").value=o.ins+",";act=0;suggest();return}
+ commit(o.ins);act=0;suggest()}
+const qi=$("#qi");
+qi.addEventListener("input",()=>{act=0;let v=qi.value;if(/\s$/.test(v)&&v.trim()){qi.value=v.trim();commit(v.trim());suggest();return}$("#qb").classList.toggle("has",Q.length>0||v!=="");suggest()});
+qi.addEventListener("keydown",e=>{const open=$("#dd").classList.contains("show");
+ if(e.key==="ArrowDown"||e.key==="ArrowUp"){if(open){e.preventDefault();act=(act+(e.key==="ArrowDown"?1:-1)+items.length)%items.length;suggest()}}
+ else if(e.key==="Tab"){if(open&&items.length){e.preventDefault();pick(items[act],false)}}
+ else if(e.key==="Enter"){e.preventDefault();const v=qi.value.trim();if(!v){$("#dd").classList.remove("show");return}
+   const o=items[act];if(open&&o&&o.t==="f"&&!/[:：]/.test(v)){pick(o,true)}else if(open&&o&&o.t==="v"){pick(o,true)}else{commit(v);suggest()}}
+ else if(e.key==="Backspace"&&!qi.value&&inPos>0){e.preventDefault();editTok(inPos-1)}
+ else if(e.key==="Escape"){if(editBak){Q.splice(editBak.i,0,editBak.t);inPos=Q.length;editBak=null;qi.value="";apply()}else{qi.value="";apply()}$("#dd").classList.remove("show");qi.blur()}});
+qi.addEventListener("focus",()=>{$("#qb").classList.add("focus");suggest()});
+qi.addEventListener("blur",()=>{$("#qb").classList.remove("focus");setTimeout(()=>$("#dd").classList.remove("show"),120);const v=qi.value.trim();if(v&&editBak){commit(v)}else if(editBak){Q.splice(editBak.i,0,editBak.t);inPos=Q.length;editBak=null;qi.value="";apply()}});
+$("#dd").addEventListener("mousedown",e=>{e.preventDefault();const it=e.target.closest(".it");if(it){act=+it.dataset.i;pick(items[act],true);qi.focus()}});
+$("#qb").addEventListener("mousedown",e=>{const x=e.target.closest(".x"),tk=e.target.closest(".tk");
+ if(x&&tk){e.preventDefault();removeTok(+tk.dataset.i)}else if(tk){e.preventDefault();editTok(+tk.dataset.i)}else if(e.target.id==="clr"){e.preventDefault();Q=[];inPos=0;qi.value="";apply();toastS("已清空条件")}else if(e.target!==qi){e.preventDefault();qi.focus()}});
+/* 表格交互 */
+$("#tw").addEventListener("click",e=>{const td=e.target.closest("td.c");if(td){toggleCell(td.dataset.f,td.dataset.v);return}
+ const th=e.target.closest("th");if(th){const k=th.dataset.k;if(sortK===k){sortD=-sortD}else{sortK=k;sortD=1}drawTable();return}
+ const rm=e.target.closest("[data-rm]");if(rm){removeTok(+rm.dataset.rm);return}if(e.target.closest("[data-clear]")){Q=[];inPos=0;apply()}});
+$(".tips").addEventListener("click",e=>{const a=e.target.closest("a");if(a)setQ(a.dataset.q)});
+function setQ(s){Q=s.split(/\s+/).map(parse).filter(Boolean);inPos=Q.length;qi.value="";lastAdded=Q.length-1;apply();lastAdded=-1}
+/* 视图 */
+$("#views").addEventListener("click",e=>{const d=e.target.closest("[data-del]");if(d){const v=VIEWS.splice(+d.dataset.del,1)[0];drawViews();toastS(`已删除视图「${v.n}」`);e.stopPropagation();return}
+ const v=e.target.closest(".vw[data-i]");if(!v)return;const i=+v.dataset.i;setQ(i<0?"":VIEWS[i].q)});
+$("#save").onclick=()=>{naming=true;drawViews();$("#vn").value="";const i=$("#vn");i.onkeydown=ev=>{ev.stopPropagation();if(ev.key==="Enter"&&i.value.trim()){VIEWS.push({n:i.value.trim(),q:qstr()});naming=false;drawViews();toastS(`已保存视图「${i.value.trim()}」`)}else if(ev.key==="Escape"){naming=false;drawViews()}};i.onblur=()=>{if(naming){naming=false;drawViews()}}};
+document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement.tagName!=="INPUT"){e.preventDefault();qi.focus()}});
+let tt;function toastS(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),1600)}
+/* 初始 */
+(function(){let q="状态:在用 型号:H100,H800 利用率:<20%";try{const m=/#q=(.*)$/.exec(location.hash);if(m)q=decodeURIComponent(m[1])}catch(e){}setQ(q)})();
+</script>
+</body>
+</html>

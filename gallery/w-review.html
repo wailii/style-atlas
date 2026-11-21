@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>代码评审</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#fff;--ink:#1c1b1a;--ink2:#5b5955;--mute:#9c9a94;--line:#e8e6e0;--line2:#f1efea;--soft:#faf9f6;
+--add:#eaf7ee;--addx:#b9e6c7;--del:#fdecec;--delx:#f5bfc0;--hunk:#f4f3ef;--amber:#f0a30a;--amberbg:#fff6df;--ok:#1f8f4e;--warn:#c77a00;--bad:#d0342c;--acc:#1c1b1a;--res:#7b5bd6}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:"Hanken Grotesk","Noto Sans SC",sans-serif;font-size:13px;color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:none}
+button{cursor:pointer}
+.mono{font-family:"Fira Code",monospace;font-variant-numeric:tabular-nums}
+svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{height:100vh;display:grid;grid-template-rows:auto auto 1fr}
+.hd{padding:16px 28px 12px;border-bottom:1px solid var(--line);display:flex;gap:20px;align-items:flex-start}
+.hd .l{flex:1;min-width:0}
+.crumbs{font-size:12px;color:var(--mute);margin-bottom:5px;display:flex;gap:6px;align-items:center}
+h1{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+h1 span{color:var(--mute);font-weight:400}
+.meta{display:flex;gap:10px;align-items:center;margin-top:8px;color:var(--ink2);font-size:12.5px;flex-wrap:wrap}
+.st{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:99px;background:var(--ink);color:#fff;font-weight:600;font-size:12px}
+.br{font:12px "Fira Code";background:var(--line2);padding:2px 7px;border-radius:4px}
+.av{width:20px;height:20px;border-radius:50%;background:#2a5d7a;color:#fff;display:inline-grid;place-items:center;font-size:10px;font-weight:700}
+.r{display:flex;gap:8px;align-items:center}
+.btn{height:34px;padding:0 14px;border:1px solid var(--line);border-radius:7px;font-weight:600;display:flex;align-items:center;gap:7px;background:#fff}
+.btn:hover{border-color:var(--ink)}
+.btn.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.pri:hover{background:#383634}
+.btn.pri:disabled{opacity:.4;cursor:not-allowed}
+.checks{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--line);background:var(--soft);padding:0 28px;height:42px;position:relative}
+.checks .lbl{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--mute);margin-right:16px}
+.ck{height:100%;display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid var(--line);font-weight:500;color:var(--ink2);cursor:pointer;position:relative}
+.ck:last-of-type{border-right:1px solid var(--line)}
+.ck:hover{background:#fff}
+.ck.on{background:#fff;color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.ck .d{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.ck .d svg{width:10px;height:10px;stroke-width:3}
+.ck .d.ok{background:var(--ok)}.ck .d.warn{background:var(--amber)}
+.ck small{color:var(--mute);font:11px "Fira Code"}
+.sp{flex:1}
+.prog{font-size:12px;color:var(--ink2);display:flex;gap:10px;align-items:center}
+.prog i{display:block;width:90px;height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.prog i b{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.log{position:absolute;left:92px;top:42px;width:620px;background:#17171a;color:#d9d7d0;font:12px/1.7 "Fira Code",monospace;padding:14px 16px;z-index:30;border-radius:0 0 10px 10px;display:none;box-shadow:0 14px 40px rgba(0,0,0,.25)}
+.log.on{display:block;animation:dn .18s ease}
+@keyframes dn{from{opacity:0;transform:translateY(-6px)}}
+.log .h{color:#fff;font-family:"Hanken Grotesk","Noto Sans SC";font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between}
+.log .g{color:#6fd493}.log .y{color:#f4c15a}.log .m{color:#7f7d77}
+.main{display:grid;grid-template-columns:272px 1fr;min-height:0}
+.tree{border-right:1px solid var(--line);overflow:auto;padding:14px 10px;background:var(--soft)}
+.tree h6{font-size:11px;letter-spacing:.08em;color:var(--mute);font-weight:700;margin:0 8px 8px;display:flex;justify-content:space-between}
+.dir{font:500 11.5px "Fira Code";color:var(--mute);padding:8px 8px 3px}
+.fi{display:flex;align-items:center;gap:7px;height:32px;padding:0 6px 0 8px;border-radius:6px;cursor:pointer;position:relative}
+.fi:hover{background:var(--line2)}
+.fi.on{background:#fff;box-shadow:0 0 0 1px var(--line)}
+.fi.on:before{content:"";position:absolute;left:-10px;top:6px;bottom:6px;width:3px;background:var(--ink);border-radius:0 2px 2px 0}
+.fi .nm{flex:1;min-width:0;font:12.5px "Fira Code";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi.vw .nm{color:var(--mute);text-decoration:line-through;text-decoration-color:#ccc}
+.fi .cn{font:11px "Fira Code";white-space:nowrap}
+.fi .cn b{color:var(--ok);font-weight:500}.fi .cn s{color:var(--bad);text-decoration:none;margin-left:5px}
+.fi .vb{width:16px;height:16px;border:1.5px solid #c8c6bf;border-radius:4px;display:grid;place-items:center;background:#fff}
+.fi .vb svg{width:11px;height:11px;stroke:#fff;stroke-width:3;opacity:0}
+.fi.vw .vb{background:var(--ok);border-color:var(--ok)}.fi.vw .vb svg{opacity:1}
+.fi .cm{font:600 10.5px "Hanken Grotesk";background:var(--amberbg);color:var(--warn);border-radius:99px;padding:0 6px;border:1px solid #f4d894}
+.diff{overflow:auto;position:relative;scroll-behavior:smooth}
+.dbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:10px 24px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.dbar b{font-weight:600}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{height:28px;padding:0 12px;font-weight:600;color:var(--ink2)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:#fff}
+.file{margin:20px 24px 0;border:1px solid var(--line);border-radius:9px;background:#fff;overflow:clip}
+.fh{display:flex;align-items:center;gap:10px;padding:0 14px;height:40px;background:var(--soft);border-bottom:1px solid var(--line);cursor:pointer;position:sticky;top:48px;z-index:5;border-radius:9px 9px 0 0}
+.fh .p{font:500 12.5px "Fira Code"}
+.fh .p span{color:var(--mute)}
+.fh .cn{font:11.5px "Fira Code";color:var(--ok)}
+.fh .cn s{color:var(--bad);text-decoration:none;margin-left:6px}
+.fh .chev{transition:.15s;color:var(--mute)}
+.file.col .chev{transform:rotate(-90deg)}
+.file.col .code{display:none}
+.fh label{margin-left:auto;display:flex;align-items:center;gap:7px;color:var(--ink2);font-size:12px;cursor:pointer}
+.code{font:12px/20px "Fira Code",monospace;font-feature-settings:"liga" 0}
+.ln{display:grid;grid-template-columns:50px 50px 1fr;min-height:20px;position:relative}
+.sp2 .ln{grid-template-columns:50px 1fr 50px 1fr}
+.ln>*{padding:0 8px;white-space:pre-wrap;word-break:break-all}
+.ln .n{color:#b3b0a8;text-align:right;user-select:none;cursor:pointer;position:relative;padding-right:10px;border-right:1px solid transparent}
+.ln .n:hover{color:var(--ink)}
+.ln .n:hover:after{content:"+";position:absolute;left:3px;top:1px;width:17px;height:17px;border-radius:4px;background:var(--amber);color:#fff;text-align:center;line-height:17px;font:700 13px "Hanken Grotesk"}
+.ln.add{background:var(--add)}.ln.add .n{background:#d6f0de}
+.ln.del{background:var(--del)}.ln.del .n{background:#fadbdb}
+.ln.hk{background:var(--hunk);color:var(--mute);font-size:11.5px}
+.ln.hk>*{padding-top:2px}
+.sp2 .c{border-left:1px solid var(--line)}
+.sp2 .c.add{background:var(--add)}.sp2 .c.del{background:var(--del)}.sp2 .c.emp{background:var(--soft)}
+.sp2 .n.add{background:#d6f0de}.sp2 .n.del{background:#fadbdb}.sp2 .n.emp{background:var(--soft)}
+.ln.has .n{box-shadow:inset 3px 0 0 var(--amber)}
+.tk-k{color:#b04a8b}.tk-s{color:#2c7a4b}.tk-c{color:#9a988f;font-style:italic}.tk-n{color:#b86a0a}.tk-f{color:#2b5fa8}
+.th{grid-column:1/-1;background:var(--soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 14px 12px 114px;font:13px/1.55 "Hanken Grotesk","Noto Sans SC",sans-serif;white-space:normal}
+.thr{max-width:760px;border:1px solid #f0d28a;border-radius:9px;background:#fff;overflow:hidden}
+.thr.res{border-color:var(--line)}
+.cmt{display:flex;gap:10px;padding:10px 12px}
+.cmt+.cmt{border-top:1px solid var(--line2)}
+.cmt .av{width:24px;height:24px;font-size:11px;flex:none}
+.cmt .b{flex:1;min-width:0}
+.cmt .b h{display:flex;gap:8px;align-items:baseline;font-weight:700}
+.cmt .b h span{font-weight:400;color:var(--mute);font-size:11.5px}
+.cmt .b p{margin-top:2px;color:#2d2c2a}
+.cmt .b code{font:12px "Fira Code";background:var(--line2);padding:0 4px;border-radius:3px}
+.tact{display:flex;gap:6px;padding:8px 12px;background:var(--soft);border-top:1px solid var(--line2);align-items:center}
+.tact button{height:26px;padding:0 10px;border:1px solid var(--line);border-radius:6px;font-weight:600;font-size:12px;background:#fff}
+.tact button:hover{border-color:var(--ink)}
+.tact button.ok{color:var(--ok)}
+.tact .sp{flex:1}
+.tact input{flex:1;height:26px;border:1px solid var(--line);border-radius:6px;padding:0 9px;background:#fff;font-size:12.5px}
+.tact input:focus{border-color:var(--ink)}
+.rsum{display:flex;align-items:center;gap:9px;padding:8px 12px;color:var(--ink2);cursor:pointer;font-size:12.5px}
+.rsum:hover{background:var(--soft)}
+.rsum .tick{width:16px;height:16px;border-radius:50%;background:var(--res);display:grid;place-items:center;color:#fff}
+.rsum .tick svg{width:10px;height:10px;stroke-width:3}
+.rsum span{color:var(--mute)}
+.comp textarea{width:100%;height:68px;padding:9px 12px;border:0;resize:none;font:13px/1.5 "Hanken Grotesk","Noto Sans SC",sans-serif}
+.tail{height:60px}
+.note{padding:6px 24px 24px;font-size:11px;color:var(--mute)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.25s;z-index:60;font-weight:500}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hd">
+    <div class="l">
+      <div class="crumbs">算力平台 / 调度服务 / 合并请求</div>
+      <h1>按部门限额的卡时配额，超额后允许突发 <span>#482</span></h1>
+      <div class="meta"><span class="st"><svg viewBox="0 0 16 16"><circle cx="5" cy="4" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="11" cy="8" r="1.6"/><path d="M5 5.6v4.8M6.5 8H9.4"/></svg>评审中</span><span class="av">周</span><b>周博</b> 请求合并 <span class="br">feat/dept-quota</span> → <span class="br">main</span><span>· 4 个文件 · 3 次提交 · 今天 09:12 更新</span></div>
+    </div>
+    <div class="r"><button class="btn" id="bReq"><svg viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 4.5"/></svg>批准</button><button class="btn pri" id="bMerge" disabled>合并（需 1 个批准）</button></div>
+  </header>
+  <div class="checks" id="checks">
+    <span class="lbl">检查</span>
+    <div class="ck" data-k="build"><span class="d ok"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>构建<small>1m 42s</small></div>
+    <div class="ck" data-k="test"><span class="d ok"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>单元测试<small>128 通过</small></div>
+    <div class="ck" data-k="scan"><span class="d warn"><svg viewBox="0 0 16 16"><path d="M8 4v5M8 12v.5"/></svg></span>代码扫描<small>1 个警告</small></div>
+    <div class="sp"></div>
+    <div class="prog"><span id="pgT">已查看 0 / 4</span><i><b id="pgB"></b></i></div>
+    <div class="log" id="log"></div>
+  </div>
+  <div class="main">
+    <aside class="tree" id="tree"></aside>
+    <section class="diff" id="diff"></section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const key=(fi,n)=>fi+":"+n;
+const FILES=[
+{path:"scheduler/quota.py",raw:`@@ -8,10 +8,31 @@
+ from dataclasses import dataclass
+ from datetime import datetime, timedelta
++from typing import Optional
+
+
+ @dataclass
+ class Quota:
+-    gpu_hours: float
+-    used: float = 0.0
++    dept: str
++    gpu_hours: float
++    used: float = 0.0
++    burst_ratio: float = 1.2  # 超额部分允许的突发比例
++    reset_day: int = 1
+
+
+ class QuotaManager:
+@@ -31,8 +52,26 @@ class QuotaManager:
+     def __init__(self, store):
+         self.store = store
+
+-    def check(self, dept, hours):
+-        q = self.store.get(dept)
+-        return q.used + hours <= q.gpu_hours
++    def check(self, dept: str, hours: float) -> "Decision":
++        q = self.store.get(dept)
++        if q is None:
++            return Decision(False, "未配置配额")
++        after = q.used + hours
++        if after <= q.gpu_hours:
++            return Decision(True, "额度内")
++        limit = q.gpu_hours * q.burst_ratio
++        if after <= limit:
++            return Decision(True, "突发区间", preempt=True)
++        return Decision(False, f"超出突发上限 {limit:.0f} 卡时")
++
++    def reset_if_due(self, dept: str, now: Optional[datetime] = None) -> bool:
++        now = now or datetime.now()
++        q = self.store.get(dept)
++        if now.day != q.reset_day:
++            return False
++        q.used = 0.0
++        self.store.save(q)
++        return True
+`},
+{path:"scheduler/policy.py",raw:`@@ -41,12 +41,18 @@ def pick_victims(running, need):
+     """按优先级从低到高挑出需要抢占的任务。"""
+     victims, freed = [], 0
+-    for job in sorted(running, key=lambda j: j.priority):
+-        if freed >= need:
+-            break
+-        victims.append(job)
+-        freed += job.gpus
++    for job in sorted(running, key=lambda j: (j.priority, -j.started_at)):
++        if freed >= need:
++            break
++        if job.dept_burst is False:
++            continue  # 额度内的任务不抢占
++        victims.append(job)
++        freed += job.gpus
+     return victims, freed
+`},
+{path:"api/quota_api.py",raw:`@@ -0,0 +1,22 @@
++from flask import Blueprint, jsonify, request
++from scheduler.quota import QuotaManager
++
++bp = Blueprint("quota", __name__, url_prefix="/api/quota")
++
++
++@bp.get("/<dept>")
++def get_quota(dept):
++    q = manager.store.get(dept)
++    if q is None:
++        return jsonify(error="not found"), 404
++    return jsonify(dept=q.dept, total=q.gpu_hours, used=q.used,
++                   burst=q.gpu_hours * q.burst_ratio)
++
++
++@bp.post("/<dept>/check")
++def check(dept):
++    hours = float(request.json["hours"])
++    d = manager.check(dept, hours)
++    return jsonify(ok=d.ok, reason=d.reason, preempt=d.preempt)
++
++
++manager = QuotaManager(store=None)
+`},
+{path:"tests/test_quota.py",raw:`@@ -0,0 +1,20 @@
++from scheduler.quota import Quota, QuotaManager
++
++
++class FakeStore:
++    def __init__(self, q): self.q = q
++    def get(self, dept): return self.q
++    def save(self, q): self.q = q
++
++
++def mk(used=0.0):
++    return QuotaManager(FakeStore(Quota("算法一部", 1000, used)))
++
++
++def test_within_quota():
++    assert mk(100).check("算法一部", 200).ok
++
++
++def test_burst_marks_preempt():
++    d = mk(900).check("算法一部", 200)
++    assert d.ok and d.preempt
++
++
++def test_over_burst_rejected():
++    assert not mk(1100).check("算法一部", 200).ok
+`}
+];
+// 解析
+function parse(f){
+  const out=[]; let o=0,n=0;
+  f.raw.split("\n").forEach(l=>{
+    if(l==="" ) return;
+    if(l.startsWith("@@")){ const m=/-(\d+)(?:,\d+)? \+(\d+)/.exec(l); o=+m[1]; n=+m[2]; out.push({t:"hk",text:l}); return; }
+    const c=l[0], tx=l.slice(1);
+    if(c==="+") out.push({t:"add",n:n++,text:tx});
+    else if(c==="-") out.push({t:"del",o:o++,text:tx});
+    else out.push({t:"ctx",o:o++,n:n++,text:tx});
+  });
+  f.lines=out; f.add=out.filter(x=>x.t==="add").length; f.del=out.filter(x=>x.t==="del").length;
+}
+FILES.forEach(parse);
+const KW=/\b(def|class|return|if|else|elif|for|in|import|from|not|and|or|is|None|True|False|assert|continue|break|with|as|raise|lambda|self)\b/g;
+function hl(s){
+  const esc=s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const parts=[]; const re=/(#.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|f"(?:[^"\\]|\\.)*")|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_]\w*\b)/g; let last=0,m;
+  while((m=re.exec(esc))){ parts.push(esc.slice(last,m.index)); const t=m[0];
+    if(m[1]) parts.push(`<span class="tk-c">${t}</span>`);
+    else if(m[2]) parts.push(`<span class="tk-s">${t}</span>`);
+    else if(m[3]) parts.push(`<span class="tk-n">${t}</span>`);
+    else if(/^(def|class|return|if|else|elif|for|in|import|from|not|and|or|is|None|True|False|assert|continue|break|with|as|raise|lambda)$/.test(t)) parts.push(`<span class="tk-k">${t}</span>`);
+    else if(/^[A-Z]\w+$/.test(t)) parts.push(`<span class="tk-f">${t}</span>`);
+    else parts.push(t);
+    last=m.index+t.length; }
+  parts.push(esc.slice(last)); return parts.join("");
+}
+// 评论线程：key = 文件序号:新行号
+const at=(fi,sn)=>{ const l=FILES[fi].lines.find(x=>x.t!=="hk"&&x.n!=null&&x.text.includes(sn)); return key(fi,l.n); };
+const T={}; // {key:{c:[{who,av,t,text}], res:false, open:false}}
+T[at(0,"burst_ratio: float")]={c:[{who:"林晓",av:"林",t:"昨天 17:20",text:"<code>burst_ratio</code> 默认 1.2 是怎么定的？不同部门是不是应该能单独配？"},{who:"周博",av:"周",t:"昨天 18:05",text:"先全局 1.2，下一个 PR 做按部门覆盖，已记在 #489。"}],res:false};
+T[at(0,"q.used + hours".replace("q.used + hours","after = q.used + hours"))]={c:[{who:"林晓",av:"林",t:"今天 08:40",text:"<code>q</code> 可能是 None，这里会直接报错。"}],res:false};
+T[at(1,"continue  # 额度内")]={c:[{who:"吴越",av:"吴",t:"今天 09:02",text:"额度内的任务被跳过之后，如果 <code>need</code> 一直凑不够，会返回空列表吗？需要一条测试。"}],res:true};
+let mode="uni", viewed=new Set(), collapsed=new Set(), composing=null, approved=false, cur=0;
+function threadHTML(k){
+  const t=T[k]; if(!t) return "";
+  if(t.res&&!t.open) return `<div class="th"><div class="thr res"><div class="rsum" data-tog="${k}"><span class="tick"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span><b>${t.c[0].who}</b> 的评论已解决 <span>· ${t.c.length} 条 · 点击展开</span></div></div></div>`;
+  return `<div class="th"><div class="thr ${t.res?"res":""}">${t.c.map(c=>`<div class="cmt"><span class="av" style="background:${c.who==="陆遥"?"#1c1b1a":c.who==="周博"?"#2a5d7a":c.who==="吴越"?"#7b5bd6":"#b5562a"}">${c.av}</span><div class="b"><h>${c.who}<span>${c.t}</span></h><p>${c.text}</p></div></div>`).join("")}
+    <div class="tact"><input data-reply="${k}" placeholder="回复…（回车发送）"><button class="ok" data-res="${k}">${t.res?"重新打开":"标记已解决"}</button>${t.res?`<button data-tog="${k}">折叠</button>`:""}</div></div></div>`;
+}
+function compHTML(k){ return `<div class="th comp"><div class="thr"><textarea id="cta" placeholder="写下你的评论，⌘↵ 发送"></textarea><div class="tact"><span class="sp"></span><button data-cx="1">取消</button><button class="ok" data-cs="${k}" style="background:var(--ink);color:#fff;border-color:var(--ink)">评论</button></div></div></div>`; }
+function drawFile(fi){
+  const f=FILES[fi]; const [dir,name]=[f.path.slice(0,f.path.lastIndexOf("/")+1),f.path.slice(f.path.lastIndexOf("/")+1)];
+  let body="";
+  if(mode==="uni"){
+    f.lines.forEach(l=>{
+      if(l.t==="hk"){ body+=`<div class="ln hk"><span></span><span></span><span>${l.text}</span></div>`; return; }
+      const k=l.n!=null?key(fi,l.n):null, has=k&&T[k];
+      body+=`<div class="ln ${l.t} ${has?"has":""}"><span class="n" data-k="${l.n!=null?key(fi,l.n):""}">${l.o??""}</span><span class="n" data-k="${l.n!=null?key(fi,l.n):""}">${l.n??""}</span><span>${l.t==="add"?"+":l.t==="del"?"-":" "} ${hl(l.text)}</span></div>`;
+      if(has) body+=threadHTML(k); if(k&&composing===k) body+=compHTML(k);
+    });
+  } else {
+    const L=f.lines; for(let i=0;i<L.length;i++){
+      const l=L[i];
+      if(l.t==="hk"){ body+=`<div class="ln hk"><span></span><span>${l.text}</span><span></span><span></span></div>`; continue; }
+      if(l.t==="ctx"){ const k=key(fi,l.n); body+=row(l,l,k); if(T[k]) body+=threadHTML(k); if(composing===k) body+=compHTML(k); continue; }
+      if(l.t==="del"){ const dels=[],adds=[]; let j=i; while(L[j]&&L[j].t==="del") dels.push(L[j++]); while(L[j]&&L[j].t==="add") adds.push(L[j++]); i=j-1;
+        const m=Math.max(dels.length,adds.length);
+        for(let q=0;q<m;q++){ const a=dels[q],b=adds[q]; const k=b?key(fi,b.n):null; body+=row(a,b,k); if(k&&T[k]) body+=threadHTML(k); if(k&&composing===k) body+=compHTML(k); }
+        continue; }
+      const k=key(fi,l.n); body+=row(null,l,k); if(T[k]) body+=threadHTML(k); if(composing===k) body+=compHTML(k);
+    }
+  }
+  return `<div class="file ${collapsed.has(fi)?"col":""}" id="f${fi}" data-f="${fi}"><div class="fh" data-fh="${fi}"><svg class="chev" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg><span class="p"><span>${dir}</span>${name}</span><span class="cn">+${f.add}<s>-${f.del}</s></span><label><input type="checkbox" data-vw="${fi}" ${viewed.has(fi)?"checked":""}>已查看</label></div><div class="code ${mode==="split"?"sp2":""}">${body}</div></div>`;
+}
+function row(a,b,k){
+  const has=k&&T[k]; const ac=a?(a.t==="del"?"del":""):"emp", bc=b?(b.t==="add"?"add":""):"emp";
+  return `<div class="ln ${has?"has":""}"><span class="n ${ac}">${a?.o??""}</span><span class="c ${ac}">${a?hl(a.text):""}</span><span class="n ${bc}" data-k="${b?k:""}">${b?.n??""}</span><span class="c ${bc}">${b?hl(b.text):""}</span></div>`;
+}
+function drawDiff(keep){
+  const sc=$("#diff").scrollTop;
+  $("#diff").innerHTML=`<div class="dbar"><b>${FILES.length} 个文件</b><span class="mono" style="color:var(--ok)">+${FILES.reduce((a,f)=>a+f.add,0)}</span><span class="mono" style="color:var(--bad)">-${FILES.reduce((a,f)=>a+f.del,0)}</span><div class="sp"></div><div class="seg" id="seg"><button data-m="uni" class="${mode==="uni"?"on":""}">统一</button><button data-m="split" class="${mode==="split"?"on":""}">并排</button></div></div>`+FILES.map((_,i)=>drawFile(i)).join("")+`<div class="note">示例数据 · 代码与人名均为虚构</div><div class="tail"></div>`;
+  if(keep) $("#diff").scrollTop=sc; drawTree(); progress();
+}
+function drawTree(){
+  const cnt=fi=>Object.keys(T).filter(k=>k.startsWith(fi+":")&&!T[k].res).length;
+  let last="";
+  $("#tree").innerHTML=`<h6>改动文件<span class="mono">${FILES.length}</span></h6>`+FILES.map((f,i)=>{
+    const dir=f.path.slice(0,f.path.lastIndexOf("/")+1), nm=f.path.slice(dir.length); let h="";
+    if(dir!==last){ h=`<div class="dir">${dir}</div>`; last=dir; }
+    const c=cnt(i);
+    return h+`<div class="fi ${cur===i?"on":""} ${viewed.has(i)?"vw":""}" data-go="${i}"><span class="nm">${nm}</span>${c?`<span class="cm">${c}</span>`:""}<span class="cn"><b>+${f.add}</b><s>-${f.del}</s></span><span class="vb" data-vb="${i}" title="标记已查看"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span></div>`;
+  }).join("");
+}
+function progress(){ $("#pgT").textContent=`已查看 ${viewed.size} / ${FILES.length}`; $("#pgB").style.width=viewed.size/FILES.length*100+"%"; }
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),1800); }
+function setViewed(i,v){ v?viewed.add(i):viewed.delete(i); v?collapsed.add(i):collapsed.delete(i); drawDiff(true); }
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-vb]"); if(g){ e.stopPropagation(); const i=+g.dataset.vb; setViewed(i,!viewed.has(i)); return; }
+  const go=e.target.closest("[data-go]"); if(go){ const i=+go.dataset.go; cur=i; drawTree(); const el=$("#f"+i); if(el.classList.contains("col")) el.classList.remove("col"), collapsed.delete(i); $("#diff").scrollTo({top:el.offsetTop-52}); return; }
+  if(e.target.closest("[data-vw]")){ const c=e.target.closest("[data-vw]"); setViewed(+c.dataset.vw,c.checked); return; }
+  const fh=e.target.closest("[data-fh]"); if(fh&&!e.target.closest("label")){ const i=+fh.dataset.fh; collapsed.has(i)?collapsed.delete(i):collapsed.add(i); $("#f"+i).classList.toggle("col"); return; }
+  const m=e.target.closest("#seg button"); if(m){ mode=m.dataset.m; drawDiff(true); return; }
+  const n=e.target.closest(".n[data-k]"); if(n&&n.dataset.k){ const k=n.dataset.k; if(T[k]){ T[k].open=true; } else composing=k; drawDiff(true); const ta=$("#cta"); ta&&ta.focus(); return; }
+  const r=e.target.closest("[data-res]"); if(r){ const k=r.dataset.res; T[k].res=!T[k].res; T[k].open=false; drawDiff(true); toast(T[k].res?"已标记为已解决":"已重新打开"); return; }
+  const tg=e.target.closest("[data-tog]"); if(tg){ const k=tg.dataset.tog; T[k].open=!T[k].open; drawDiff(true); return; }
+  if(e.target.closest("[data-cx]")){ composing=null; drawDiff(true); return; }
+  const cs=e.target.closest("[data-cs]"); if(cs){ submit(cs.dataset.cs); return; }
+  const ck=e.target.closest(".ck"); if(ck){ showLog(ck.dataset.k); return; }
+  if(!e.target.closest("#log")) $("#log").classList.remove("on"),document.querySelectorAll(".ck").forEach(x=>x.classList.remove("on"));
+  if(e.target.closest("#bReq")){ approved=!approved; $("#bReq").innerHTML=approved?'<svg viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 4.5"/></svg>已批准':'<svg viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 4.5"/></svg>批准'; $("#bReq").style.background=approved?"var(--add)":""; const mg=$("#bMerge"); mg.disabled=!approved; mg.textContent=approved?"合并到 main":"合并（需 1 个批准）"; toast(approved?"已批准，可以合并":"已撤回批准"); }
+  if(e.target.closest("#bMerge")&&!$("#bMerge").disabled){ const open=Object.values(T).filter(t=>!t.res).length; toast(open?`还有 ${open} 条未解决的评论`:"已合并到 main"); }
+});
+function submit(k){ const ta=$("#cta"); const v=ta.value.trim(); if(!v) return; T[k]=T[k]||{c:[],res:false}; T[k].c.push({who:"陆遥",av:"陆",t:"刚刚",text:v.replace(/</g,"&lt;")}); composing=null; drawDiff(true); toast("评论已添加"); }
+document.addEventListener("keydown",e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==="Enter"&&composing) submit(composing);
+  if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.reply){ const k=e.target.dataset.reply, v=e.target.value.trim(); if(v){ T[k].c.push({who:"陆遥",av:"陆",t:"刚刚",text:v.replace(/</g,"&lt;")}); drawDiff(true); } }
+});
+function showLog(k){
+  const L={
+   build:`<div class="h"><span>构建 · 成功</span><span class="m">1m 42s</span></div><span class="m">[09:13:02]</span> 拉取依赖 ........ <span class="g">缓存命中</span><br><span class="m">[09:13:11]</span> 编译 scheduler / api ........ <span class="g">ok</span><br><span class="m">[09:14:30]</span> 打包镜像 sched:482-3f9a ........ <span class="g">ok</span><br><span class="m">[09:14:44]</span> 推送镜像 ........ <span class="g">完成 · 212 MB</span>`,
+   test:`<div class="h"><span>单元测试 · 128 通过</span><span class="m">38s</span></div><span class="m">[09:15:01]</span> tests/test_quota.py ........ <span class="g">3 passed</span><br><span class="m">[09:15:09]</span> tests/test_policy.py ........ <span class="g">21 passed</span><br><span class="m">[09:15:30]</span> tests/test_api.py ........ <span class="g">17 passed</span><br><span class="m">[09:15:39]</span> 其余 87 项 ........ <span class="g">passed</span><br><span class="m">覆盖率 87.4%（+1.2%）</span>`,
+   scan:`<div class="h"><span>代码扫描 · 1 个警告 · 3 个提示</span><span class="m">24s</span></div><span class="y">警告</span> api/quota_api.py:23 · <span class="y">manager 以 store=None 初始化，运行时会空引用</span><br><span class="m">提示</span> scheduler/quota.py:71 · 变量可能为 None<br><span class="m">提示</span> scheduler/policy.py:48 · 建议用 is False 以外的显式判断<br><span class="m">提示</span> tests/test_quota.py:5 · 单行定义多个函数`
+  };
+  const lg=$("#log"), was=lg.classList.contains("on")&&lg.dataset.k===k; document.querySelectorAll(".ck").forEach(x=>x.classList.remove("on"));
+  if(was){ lg.classList.remove("on"); return; } lg.innerHTML=L[k]; lg.dataset.k=k; lg.classList.add("on"); document.querySelector(`.ck[data-k=${k}]`).classList.add("on");
+}
+$("#diff").addEventListener("scroll",()=>{ const top=$("#diff").scrollTop+120; let c=0; FILES.forEach((_,i)=>{ if($("#f"+i).offsetTop<=top) c=i; }); if(c!==cur){ cur=c; drawTree(); } });
+drawDiff();
+</script>
+</body>
+</html>

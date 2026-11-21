@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>墨流 API · 定价</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#fbfbf9;--ink:#0c0e13;--ink2:#4a4f5c;--mute:#868b98;--line:#e4e4de;--line2:#efefe9;--acc:#ff4d17;--accbg:#fff0ea;--ok:#0c0e13;
+--sans:"Geist","Noto Sans SC",system-ui,sans-serif;--mono:"Geist Mono","Noto Sans SC",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+svg{display:block}
+.wrap{max-width:1296px;margin:0 auto;padding:0 40px}
+/* nav */
+.nav{position:sticky;top:0;z-index:40;height:60px;background:rgba(251,251,249,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav .wrap{height:100%;display:flex;align-items:center;gap:32px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:17px;letter-spacing:-.01em}
+.nav nav{display:flex;gap:24px;font-size:14px;color:var(--ink2)}.nav nav a:hover,.nav nav a.on{color:var(--ink)}
+.nav .sp{flex:1}.nav .login{font-size:14px;color:var(--ink2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 18px;border-radius:8px;font-size:14px;font-weight:500;transition:.18s;border:1px solid var(--ink);background:var(--ink);color:#fff}
+.btn:hover{background:var(--acc);border-color:var(--acc)}
+.btn.line{background:transparent;color:var(--ink);border-color:#c9c9c0}.btn.line:hover{border-color:var(--ink);background:var(--ink);color:#fff}
+/* hero */
+.hero{display:flex;align-items:flex-end;justify-content:space-between;padding:44px 0 30px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--acc);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.eyebrow:before{content:"";width:22px;height:1px;background:var(--acc)}
+h1{font-size:56px;line-height:1.12;font-weight:500;letter-spacing:-.035em}
+h1 span{color:var(--mute);font-weight:300}
+.tg{display:flex;align-items:center;gap:14px}
+.seg{position:relative;display:flex;padding:3px;border:1px solid var(--line);border-radius:10px;background:#f3f3ee}
+.seg button{position:relative;z-index:1;padding:7px 20px;font-size:14px;color:var(--ink2);border-radius:7px;transition:color .2s}
+.seg button.on{color:var(--ink)}
+.seg i{position:absolute;top:3px;bottom:3px;left:3px;width:70px;border-radius:7px;background:#fff;box-shadow:0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.05);transition:transform .35s cubic-bezier(.3,.9,.3,1),width .35s cubic-bezier(.3,.9,.3,1)}
+.save{font-family:var(--mono);font-size:12px;color:var(--acc);border:1px dashed var(--acc);padding:3px 9px;border-radius:99px;opacity:.55;transition:.3s}.save.on{opacity:1;background:var(--accbg)}
+/* plans */
+.plans{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+.plan{position:relative;padding:26px 26px 24px;border-right:1px solid var(--line);display:flex;flex-direction:column;transition:background .3s}
+.plan:last-child{border-right:0}
+.plan h3{font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px}
+.plan .tag{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:99px;background:var(--accbg);color:var(--acc);letter-spacing:.04em;opacity:0;transform:translateY(3px);transition:.3s}
+.plan.rec .tag{opacity:1;transform:none}
+.plan .sub{font-size:13px;color:var(--mute);margin:4px 0 22px;min-height:40px;line-height:1.55}
+.price{display:flex;align-items:baseline;gap:4px;height:64px;font-size:56px;font-weight:300;letter-spacing:-.045em;line-height:1}
+.price sup{font-size:22px;font-weight:400;letter-spacing:0;color:var(--ink2);align-self:flex-start;margin-top:9px;margin-right:2px}
+.price small{font-size:13px;letter-spacing:0;color:var(--mute);font-weight:400;margin-left:4px}
+.price.txt{font-size:38px;letter-spacing:-.03em}
+.odo{display:inline-flex}.odo .d{display:inline-block;height:1.1em;line-height:1.1;overflow:hidden;vertical-align:top}
+.odo .d i{display:block;font-style:normal;transition:transform .8s cubic-bezier(.2,.85,.25,1)}.odo .d b{display:block;height:1.1em;font-weight:inherit}
+.odo .s{display:inline-block;line-height:1.1}
+.plan .was{font-size:12px;color:var(--mute);height:20px;margin-top:6px;font-family:var(--mono)}
+.plan .was s{margin-right:6px}
+.plan .btn{margin:14px 0 22px;width:100%}
+.plan.feat{background:var(--ink);color:#fff}
+.plan.feat .sub,.plan.feat .was,.plan.feat .price small{color:#9a9fae}.plan.feat .price sup{color:#c9ccd6}
+.plan.feat .btn{background:var(--acc);border-color:var(--acc)}.plan.feat .btn:hover{background:#fff;color:var(--ink);border-color:#fff}
+.plan ul{list-style:none;font-size:13.5px;color:var(--ink2);display:grid;gap:10px;margin-top:auto}
+.plan.feat ul{color:#cfd2dc}
+.plan li{display:flex;gap:10px;line-height:1.45}
+.plan li svg{flex:none;width:15px;height:15px;margin-top:2px;stroke:var(--acc);fill:none;stroke-width:2}
+.plan li b{color:var(--ink);font-weight:500;font-family:var(--mono);font-size:12.5px}.plan.feat li b{color:#fff}
+.plan:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 2px var(--acc);opacity:0;transition:opacity .35s}
+.plan.rec:after{opacity:1}
+/* section */
+section{padding:84px 0 0}
+.sh{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px}
+.sh h2{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+.sh p{color:var(--ink2);max-width:420px;font-size:14px;line-height:1.7}
+/* calc */
+.calc{display:grid;grid-template-columns:1.1fr 1fr;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+.cl{padding:34px 38px 30px;border-right:1px solid var(--line)}
+.ctl{margin-bottom:34px}
+.ctl .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+.ctl label{font-size:13px;color:var(--ink2)}
+.ctl .val{font-size:34px;font-weight:300;letter-spacing:-.03em;font-family:var(--sans)}.ctl .val em{font-style:normal;font-size:14px;color:var(--mute);margin-left:4px;letter-spacing:0}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;--p:30%}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--ink) var(--p),#dcdcd4 var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--ink);margin-top:-8.5px;transition:transform .15s,border-color .15s}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.15);border-color:var(--acc)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--accbg);border-color:var(--acc)}
+.ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:2px}
+.tot{border-top:1px dashed var(--line);padding-top:20px;display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink2)}
+.tot b{font-family:var(--mono);font-weight:500;font-size:15px;color:var(--ink)}
+.presets{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}.presets button{font-size:12.5px;border:1px solid var(--line);padding:4px 12px;border-radius:99px;color:var(--ink2);transition:.15s}.presets button:hover{border-color:var(--ink);color:var(--ink)}
+.cr{padding:34px 38px 30px;background:#f6f6f1;display:flex;flex-direction:column}
+.cr .k{font-size:13px;color:var(--ink2)}
+.rcm{display:flex;align-items:center;gap:12px;margin:6px 0 4px}
+.rcm h4{font-size:26px;font-weight:500;letter-spacing:-.02em}
+.rcm span{font-family:var(--mono);font-size:11px;background:var(--acc);color:#fff;padding:2px 9px;border-radius:99px}
+.big{display:flex;align-items:baseline;font-size:76px;font-weight:300;letter-spacing:-.05em;line-height:1;margin:8px 0 6px;height:84px}
+.big sup{font-size:28px;letter-spacing:0;margin-right:4px;align-self:flex-start;margin-top:12px;color:var(--ink2)}
+.big small{font-size:14px;letter-spacing:0;color:var(--mute);margin-left:8px}
+.brk{font-family:var(--mono);font-size:12px;color:var(--ink2);height:20px}
+.bars{margin-top:auto;padding-top:20px;display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:62px 1fr 92px;gap:12px;align-items:center;font-size:12.5px;color:var(--ink2)}
+.bar .tr{height:8px;background:#e6e6de;border-radius:2px;position:relative;overflow:hidden}
+.bar .fi{position:absolute;left:0;top:0;bottom:0;width:0;background:#a9abb4;transition:width .6s cubic-bezier(.2,.8,.2,1),background .3s}
+.bar.best{color:var(--ink);font-weight:500}.bar.best .fi{background:var(--acc)}
+.bar.na .fi{background:repeating-linear-gradient(90deg,#d5d5cc 0 3px,transparent 3px 6px)}
+.bar .v{font-family:var(--mono);text-align:right;font-size:12px}
+/* compare */
+.cmp{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+.cmp thead th{position:sticky;top:60px;z-index:20;background:rgba(251,251,249,.96);backdrop-filter:blur(8px);text-align:left;padding:16px 14px 14px;font-weight:500;border-bottom:1px solid var(--ink);vertical-align:bottom}
+.cmp thead th:first-child{width:28%}
+.cmp thead th small{display:block;font-family:var(--mono);font-weight:400;font-size:12px;color:var(--mute);margin-top:2px}
+.cmp thead th.f{color:var(--acc)}
+.cmp tbody.g>tr.gh td{padding:30px 14px 10px;border-bottom:1px solid var(--line)}
+.gh button{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;letter-spacing:.02em}
+.gh button svg{width:12px;height:12px;stroke:var(--ink);fill:none;stroke-width:2;transition:transform .25s}
+.gh button em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mute);font-weight:400}
+tbody.shut .gh button svg{transform:rotate(-90deg)}
+.cmp td{padding:13px 14px;border-bottom:1px solid var(--line2);color:var(--ink2);vertical-align:top}
+.cmp td:first-child{color:var(--ink)}.cmp td small{display:block;color:var(--mute);font-size:12px;line-height:1.5;margin-top:1px}
+.cmp tbody tr.r{transition:opacity .2s}
+tbody.shut tr.r{display:none}
+.cmp td.f{background:rgba(255,77,23,.035)}
+.cmp svg{width:16px;height:16px;stroke:var(--ink);fill:none;stroke-width:2}.cmp .no{color:#bdbdb5}
+.cmp td b{font-family:var(--mono);font-weight:500;color:var(--ink);font-size:13px}
+/* faq */
+.faq{display:grid;grid-template-columns:1fr 1.6fr;gap:60px}
+.faq h2{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+.faq .l p{margin-top:14px;color:var(--ink2);font-size:14px}.faq .l a{color:var(--acc);border-bottom:1px solid currentColor}
+.q{border-top:1px solid var(--line)}.q:last-child{border-bottom:1px solid var(--line)}
+.q button{width:100%;display:flex;justify-content:space-between;align-items:center;padding:22px 0;font-size:17px;font-weight:500;text-align:left;gap:20px}
+.q .pm{position:relative;width:14px;height:14px;flex:none}
+.q .pm:before,.q .pm:after{content:"";position:absolute;left:0;right:0;top:6px;height:1.5px;background:var(--ink);transition:transform .3s}
+.q .pm:after{transform:rotate(90deg)}
+.q.open .pm:after{transform:rotate(0)}.q.open button{color:var(--acc)}.q.open .pm:before,.q.open .pm:after{background:var(--acc)}
+.q .a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.3,.8,.3,1)}
+.q.open .a{grid-template-rows:1fr}
+.q .a>div{overflow:hidden}.q .a p{padding:0 40px 24px 0;color:var(--ink2);font-size:14.5px;line-height:1.8}
+footer{margin-top:96px;border-top:1px solid var(--line);padding:30px 0 40px;font-size:12.5px;color:var(--mute)}
+footer .wrap{display:flex;justify-content:space-between}
+</style></head><body>
+<header class="nav"><div class="wrap">
+ <a class="logo" href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0c0e13" stroke-width="2"><path d="M3 15c3 0 3-6 6-6s3 6 6 6 3-6 6-6"/><path d="M3 20c3 0 3-3 6-3s3 3 6 3 3-3 6-3" stroke="#ff4d17"/></svg>墨流 API</a>
+ <nav><a href="#">产品</a><a href="#">模型</a><a href="#">文档</a><a class="on" href="#">定价</a><a href="#">更新日志</a></nav><div class="sp"></div>
+ <a class="login" href="#">登录</a><a class="btn" href="#">进入控制台</a>
+</div></header>
+
+<main class="wrap">
+ <div class="hero">
+  <div><div class="eyebrow">定价</div><h1>用多少，付多少。<br><span>用得越多，单价越低。</span></h1></div>
+  <div class="tg"><span class="save" id="save">年付约 8 折</span><div class="seg" id="seg"><i></i><button class="on" data-b="m">按月</button><button data-b="y">按年</button></div></div>
+ </div>
+
+ <div class="plans" id="plans">
+  <div class="plan" data-p="free"><h3>试用<span class="tag">按你的用量推荐</span></h3><p class="sub">跑通第一个调用，验证效果。额度用完即停，不会产生费用。</p>
+   <div class="price"><sup>¥</sup><span class="odo" data-v="0"></span></div><div class="was">永久免费</div><a class="btn line" href="#">免费开始</a>
+   <ul><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span><b>100 万</b> tokens / 月</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>每分钟 20 次请求</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>基础模型，社区支持</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>1 个密钥</span></li></ul></div>
+  <div class="plan" data-p="dev"><h3>开发者<span class="tag">按你的用量推荐</span></h3><p class="sub">个人和小项目。基础额度之外按量计费，没有最低消费。</p>
+   <div class="price"><sup>¥</sup><span class="odo" data-v="99"></span><small>/ 月</small></div><div class="was" data-was="dev">&nbsp;</div><a class="btn line" href="#">选择开发者</a>
+   <ul><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span><b>5,000 万</b> tokens / 月</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>超出 <b>¥1.2</b> / 百万 tokens</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>每分钟 300 次请求</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>全部公开模型，邮件支持</span></li></ul></div>
+  <div class="plan feat" data-p="team"><h3>团队<span class="tag">按你的用量推荐</span></h3><p class="sub">多人协作的正式业务。含月度额度、子账号与用量报表。</p>
+   <div class="price"><sup>¥</sup><span class="odo" data-v="1299"></span><small>/ 月</small></div><div class="was" data-was="team">&nbsp;</div><a class="btn" href="#">选择团队版</a>
+   <ul><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span><b>10 亿</b> tokens / 月</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>超出 <b>¥0.6</b> / 百万 tokens</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>每分钟 3,000 次请求</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>子账号、预算告警、工单支持</span></li></ul></div>
+  <div class="plan" data-p="ent"><h3>企业<span class="tag">按你的用量推荐</span></h3><p class="sub">承诺用量换更低单价，可选专属实例与私有网络接入。</p>
+   <div class="price txt"><span>联系我们</span></div><div class="was">¥8,000 / 月起，按承诺用量</div><a class="btn line" href="#">预约沟通</a>
+   <ul><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>单价低至 <b>¥0.35</b> / 百万 tokens</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>专属实例，限速可调</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>私有网络接入，审计日志</span></li><li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>99.95% 可用性，7×24 支持</span></li></ul></div>
+ </div>
+
+ <section id="calc">
+  <div class="sh"><h2>估算你的月费</h2><p>拖动两个滑杆，右侧会算出每个套餐的费用，并把最省的一档标出来。</p></div>
+  <div class="calc">
+   <div class="cl">
+    <div class="ctl"><div class="top"><label for="rc">每月调用次数</label><div class="val"><span id="vc"></span><em>次</em></div></div><input type="range" id="rc" min="0" max="100" value="62"><div class="ticks"><span>1 千</span><span>10 万</span><span>1,000 万</span><span>2 亿</span></div></div>
+    <div class="ctl"><div class="top"><label for="rt">平均每次 tokens（输入 + 输出）</label><div class="val"><span id="vt"></span><em>tokens</em></div></div><input type="range" id="rt" min="100" max="8000" step="100" value="1500"><div class="ticks"><span>100</span><span>2,000</span><span>4,000</span><span>8,000</span></div></div>
+    <div class="tot"><span>合计每月用量</span><b id="tot"></b></div>
+    <div class="presets" id="presets"><button data-c="30" data-t="800">客服机器人</button><button data-c="62" data-t="1500">内部知识库</button><button data-c="78" data-t="3200">批量文档处理</button><button data-c="96" data-t="1200">平台级调用</button></div>
+   </div>
+   <div class="cr">
+    <div class="k">推荐套餐</div>
+    <div class="rcm"><h4 id="rn">团队</h4><span>最省</span></div>
+    <div class="big"><sup>¥</sup><span class="odo" id="rp"></span><small>/ 月</small></div>
+    <div class="brk" id="rb"></div>
+    <div class="bars" id="bars"></div>
+   </div>
+  </div>
+ </section>
+
+ <section id="cmp">
+  <div class="sh"><h2>完整对比</h2><p>点分组名称折叠或展开。滚动时表头会固定在顶部。</p></div>
+  <table class="cmp" id="cmpT"><thead><tr><th>&nbsp;</th><th>试用<small>¥0</small></th><th>开发者<small id="h1">¥99 / 月</small></th><th class="f">团队<small id="h2">¥1,299 / 月</small></th><th>企业<small>联系我们</small></th></tr></thead></table>
+ </section>
+
+ <section id="faq">
+  <div class="faq"><div class="l"><h2>常见问题</h2><p>没有找到答案，写信到 <a href="#">billing@moliu.example</a>，一个工作日内回复。</p></div><div id="qs"></div></div>
+ </section>
+</main>
+<footer><div class="wrap"><span>© 2026 墨流科技 · 示例品牌</span><span>示例数据 · 价格仅用于界面演示</span></div></footer>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+/* 滚动数字 */
+function odo(el,text){
+  text=String(text);
+  if(el.dataset.len!==String(text.length)){
+    el.innerHTML="";
+    for(const ch of text){
+      if(/\d/.test(ch)){const d=document.createElement("span");d.className="d";d.innerHTML="<i>"+[0,1,2,3,4,5,6,7,8,9].map(n=>"<b>"+n+"</b>").join("")+"</i>";el.appendChild(d)}
+      else{const s=document.createElement("span");s.className="s";s.textContent=ch;el.appendChild(s)}
+    }
+    el.dataset.len=text.length;
+    el.querySelectorAll(".d i").forEach(i=>{i.style.transition="none";i.style.transform="translateY(0)"});void el.offsetWidth;
+    el.querySelectorAll(".d i").forEach(i=>i.style.transition="");
+  }
+  let k=0;[...el.children].forEach((c,i)=>{const ch=text[i];if(c.className==="d"){c.firstChild.style.transform=`translateY(${-(+ch)*10}%)`}else c.textContent=ch});
+}
+/* 套餐 */
+const PLAN={free:{n:"试用",m:0,y:0,inc:1,over:null},dev:{n:"开发者",m:99,y:79,inc:50,over:1.2},team:{n:"团队",m:1299,y:1039,inc:1000,over:.6},ent:{n:"企业",m:0,y:0,inc:0,over:.35,min:8000}};
+let bill="m";
+const base=k=>PLAN[k][bill];
+function setPrices(first){
+  odo($('[data-p=dev] .odo'),fmt(base("dev")));odo($('[data-p=team] .odo'),fmt(base("team")));
+  $$('[data-was]').forEach(w=>{const k=w.dataset.was;w.innerHTML=bill==="y"?`<s>¥${fmt(PLAN[k].m)}</s>按年付，月均`:"&nbsp;"});
+  $("#h1").textContent="¥"+fmt(base("dev"))+" / 月";$("#h2").textContent="¥"+fmt(base("team"))+" / 月";
+}
+$$("#seg button").forEach(b=>b.onclick=()=>{bill=b.dataset.b;$$("#seg button").forEach(x=>x.classList.toggle("on",x===b));slide();$("#save").classList.toggle("on",bill==="y");setPrices();calc()});
+function slide(){const on=$("#seg .on"),i=$("#seg i");i.style.width=on.offsetWidth+"px";i.style.transform=`translateX(${on.offsetLeft-3}px)`}
+/* 计算器 */
+const callsOf=p=>Math.pow(10,3+p/100*5.3);
+function nice(n){if(n>=1e4)return n>=1e8?(n/1e8).toFixed(n>=1e9?0:1).replace(/\.0$/,"")+" 亿":(n/1e4>=100?Math.round(n/1e4):(n/1e4).toFixed(1).replace(/\.0$/,""))+" 万";return fmt(n)}
+function roundCalls(n){const m=Math.pow(10,Math.floor(Math.log10(n))-1);return Math.round(n/m)*m}
+function costs(T){ // T: 百万 tokens
+  const o={};
+  o.free=T<=PLAN.free.inc?0:null;
+  o.dev=base("dev")+Math.max(0,T-PLAN.dev.inc)*PLAN.dev.over;
+  o.team=base("team")+Math.max(0,T-PLAN.team.inc)*PLAN.team.over;
+  o.ent=Math.max(PLAN.ent.min*(bill==="y"?.9:1),T*PLAN.ent.over);
+  return o;
+}
+function calc(){
+  const rc=$("#rc"),rt=$("#rt");
+  [rc,rt].forEach(r=>r.style.setProperty("--p",((r.value-r.min)/(r.max-r.min)*100)+"%"));
+  const calls=roundCalls(callsOf(+rc.value)),tk=+rt.value,T=calls*tk/1e6;
+  $("#vc").textContent=nice(calls);$("#vt").textContent=fmt(tk);
+  $("#tot").textContent=T>=100?(T/100<10?(T/100).toFixed(1):fmt(T/100))+" 亿 tokens":(T>=1?fmt(T)+" 百万 tokens":"不足 1 百万 tokens");
+  const c=costs(T);let best="dev",bv=1e18;for(const k of ["free","dev","team","ent"]){if(c[k]!=null&&c[k]<bv){bv=c[k];best=k}}
+  $$(".plan").forEach(p=>p.classList.toggle("rec",p.dataset.p===best));
+  $("#rn").textContent=PLAN[best].n;odo($("#rp"),fmt(bv));
+  const incl=PLAN[best].inc,over=Math.max(0,T-incl);
+  $("#rb").textContent=best==="free"?"在免费额度内，不产生费用":best==="ent"?`按 ¥${PLAN.ent.over} / 百万 tokens 计，不足承诺额按 ¥${fmt(PLAN.ent.min*(bill==="y"?.9:1))} 收`:`基础 ¥${fmt(base(best))}　+　超量 ${fmt(over)} 百万 × ¥${PLAN[best].over} = ¥${fmt(over*PLAN[best].over)}`;
+  const mx=Math.max(...["dev","team","ent"].map(k=>c[k]));
+  $("#bars").innerHTML=["free","dev","team","ent"].map(k=>{const v=c[k],ok=v!=null;return `<div class="bar ${k===best?"best":""} ${ok?"":"na"}"><span>${PLAN[k].n}</span><div class="tr"><div class="fi" style="width:${ok?Math.max(2,v/mx*100):100}%"></div></div><span class="v">${ok?"¥"+fmt(v):"额度不足"}</span></div>`}).join("");
+}
+$("#rc").oninput=calc;$("#rt").oninput=calc;
+$$("#presets button").forEach(b=>b.onclick=()=>{$("#rc").value=b.dataset.c;$("#rt").value=b.dataset.t;calc()});
+/* 对比表 */
+const C=(s)=>`<svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>`,X='<span class="no">—</span>';
+const G=[["用量与额度",[["每月包含 tokens","","100 万","5,000 万","10 亿","按承诺"],["超出后单价","每百万 tokens","不可超出","¥1.2","¥0.6","低至 ¥0.35"],["请求速率","每分钟","20","300","3,000","可调"],["上下文长度","","32K","128K","128K","最高 1M"]]],
+["模型与能力",[["公开模型","全部文本模型","基础模型",C(),C(),C()],["多模态输入","图片、音频","—",C(),C(),C()],["函数调用与结构化输出","","<span>"+C()+"</span>",C(),C(),C()],["微调","按训练 tokens 另计",X,X,C(),C()],["批量接口","低优先级，价格 5 折",X,C(),C(),C()]]],
+["稳定性与支持",[["可用性承诺","按月统计",X,"99.5%","99.9%","99.95%"],["支持渠道","","社区","邮件","工单","专属群 + 7×24"],["首次响应","工作日","—","24 小时","4 小时","30 分钟"]]],
+["安全与合规",[["子账号与权限","",X,"3 个","不限","不限"],["用量报表与预算告警","",X,"基础",C(),C()],["审计日志","保留 180 天",X,X,C(),C()],["私有网络接入","VPC 对等连接",X,X,X,C()],["数据不用于训练","默认开启",C(),C(),C(),C()]]]];
+const tb=$("#cmpT");
+G.forEach((g,i)=>{const t=document.createElement("tbody");t.className="g"+(i===3?" shut":"");
+ t.innerHTML=`<tr class="gh"><td colspan="5"><button><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg>${g[0]}<em>${g[1].length} 项</em></button></td></tr>`+g[1].map(r=>`<tr class="r"><td>${r[0]}${r[1]?`<small>${r[1]}</small>`:""}</td>${r.slice(2).map((v,j)=>`<td class="${j===2?"f":""}">${/^[\d¥]|^[一-龥]|^</.test(v)&&/^[\d¥]/.test(v)?`<b>${v}</b>`:v}</td>`).join("")}</tr>`).join("");
+ t.querySelector("button").onclick=()=>t.classList.toggle("shut");tb.appendChild(t)});
+/* FAQ */
+const F=[["超出包含额度后会发生什么？","开发者和团队版会自动按套餐里的超出单价继续计费，不会中断服务，也不会提前通知升级。试用套餐额度用完后请求会返回 429，不扣费。"],["tokens 是怎么计数的？","输入和输出都计数，按模型实际分词结果统计，控制台和账单里能看到每次调用的输入、输出明细。中文大约 1 个汉字对应 1～1.5 个 tokens。"],["年付之后中途可以升级吗？","可以。升级后立即生效，已付年费按剩余天数折算抵扣。降级和退订在当前年度结束后生效。"],["企业版的承诺用量怎么定？","参考近三个月的实际用量，通常取月均的 70% 作为承诺值。承诺值以内享受企业单价，超出部分同价计费，不设惩罚性费率。"],["可以开具发票吗？","可以。支持增值税普通发票和专用发票，按自然月在次月 5 日前开具，也可以按季度合并。"]];
+$("#qs").innerHTML=F.map((f,i)=>`<div class="q${i===0?" open":""}"><button><span>${f[0]}</span><i class="pm"></i></button><div class="a"><div><p>${f[1]}</p></div></div></div>`).join("");
+$$(".q button").forEach(b=>b.onclick=()=>{const q=b.parentNode,o=q.classList.contains("open");$$(".q").forEach(x=>x.classList.remove("open"));if(!o)q.classList.add("open")});
+/* 启动 */
+function boot(){slide();setPrices();odo($('[data-p=free] .odo'),"0");calc()}
+document.fonts&&document.fonts.ready.then(slide);
+boot();addEventListener("resize",slide);
+</script>
+</body></html>

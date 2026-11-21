@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>页内助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14171f;--ink2:#555b68;--mute:#9aa0ac;--line:#e3e6ec;--line2:#eef0f4;--mk:#ffe14d;--mkbg:#fff7c9;--ok:#16915a;--bad:#d4382d}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:Figtree,"Noto Sans SC",sans-serif;font-size:13px;color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none}
+button{cursor:pointer}
+.mono{font-family:"Red Hat Mono",monospace;font-variant-numeric:tabular-nums}
+svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{height:100vh;display:grid;grid-template-columns:1fr 392px}
+.page{display:flex;flex-direction:column;min-width:0;min-height:0}
+.nav{height:52px;display:flex;align-items:center;gap:22px;padding:0 28px;border-bottom:1px solid var(--line);background:var(--card)}
+.logo{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.logo i{width:20px;height:20px;border-radius:6px;background:var(--ink);position:relative}
+.logo i:after{content:"";position:absolute;inset:5px;border:2px solid var(--mk);border-radius:2px}
+.nav a{color:var(--ink2);font-weight:500;cursor:pointer}
+.nav a.on{color:var(--ink);box-shadow:0 2px 0 var(--ink);padding:17px 0 15px}
+.sp{flex:1}
+.hdr{padding:22px 28px 14px}
+.hdr h1{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.hdr .s{color:var(--ink2);margin-top:3px}
+.hdr .s b{font-family:"Red Hat Mono";font-weight:500;color:var(--ink)}
+.filters{display:flex;align-items:center;gap:8px;padding:0 28px 14px;min-height:46px;flex-wrap:wrap}
+.filters .lbl{font-size:12px;color:var(--mute);margin-right:2px}
+.chip{display:flex;align-items:center;gap:7px;height:28px;padding:0 6px 0 11px;border:1px solid var(--line);border-radius:7px;background:var(--card);font-weight:500;position:relative}
+.chip b{font-weight:600}
+.chip button{width:18px;height:18px;display:grid;place-items:center;border-radius:4px;color:var(--mute)}
+.chip button:hover{background:var(--line2);color:var(--ink)}
+.chip.by{background:var(--mkbg);border-color:#ecd24a}
+.chip.by:before{content:"助手";font-size:10px;font-weight:700;background:var(--ink);color:var(--mk);padding:0 5px;border-radius:3px;margin-right:2px;line-height:16px}
+.chip.pop{animation:pop .5s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.none{color:var(--mute);font-size:12.5px}
+.clear{color:var(--ink2);font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.tbwrap{flex:1;min-height:0;margin:0 28px 0;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:var(--card);overflow:auto;position:relative}
+table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+th:nth-child(1){width:17%}th:nth-child(2){width:11%}th:nth-child(3){width:7%}th:nth-child(4){width:15%}th:nth-child(5){width:10%}th:nth-child(6){width:12%}th:nth-child(7){width:17%}
+th{position:sticky;top:0;z-index:2;background:#fbfbfc;text-align:left;font-size:11.5px;font-weight:600;color:var(--ink2);height:36px;padding:0 14px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+th.sorted{color:var(--ink)}
+td{height:41px;padding:0 14px;border-bottom:1px solid var(--line2);white-space:nowrap;position:relative;transition:background .3s}
+tr:hover td{background:#fafbfc}
+td.nm{font:500 12.5px "Red Hat Mono"}
+tr.hl td{background:var(--mkbg)}
+tr.hl td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
+tr.flash td{animation:fl 1.4s ease}
+@keyframes fl{0%,40%{background:var(--mk)}100%{}}
+td.chg{animation:chg 1.8s ease}
+@keyframes chg{0%,30%{background:var(--mk);font-weight:700}100%{}}
+.st{display:inline-flex;align-items:center;gap:6px}
+.st:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.st.run{--c:#16915a}.st.idle{--c:#e59a0a}.st.fix{--c:#d4382d}
+.ub{display:flex;align-items:center;gap:8px}
+.ub i{display:block;width:56px;height:5px;background:var(--line2);border-radius:3px;overflow:hidden}
+.ub i b{display:block;height:100%;background:var(--ink);border-radius:3px}
+.idl{font-family:"Red Hat Mono";font-size:12px}
+.idl.hot{color:#b36b00;font-weight:600}
+.foot{height:34px;border:1px solid var(--line);border-top:0;margin:0 28px 14px;border-radius:0 0 10px 10px;background:var(--card);display:flex;align-items:center;padding:0 14px;color:var(--ink2);font-size:12px;gap:14px}
+.foot .e{margin-left:auto;color:var(--mute);font-size:11px}
+/* 助手 */
+.ai{background:var(--card);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.ai-h{height:52px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid var(--line)}
+.ai-h .ic{width:26px;height:26px;border-radius:8px;background:var(--ink);display:grid;place-items:center;color:var(--mk)}
+.ai-h b{font-weight:700}
+.ai-h small{margin-left:auto;font-size:11px;color:var(--mute);display:flex;gap:6px;align-items:center}
+.ai-h small:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.ctx{margin:12px 16px 0;padding:8px 11px;border:1px dashed #cfd3db;border-radius:8px;color:var(--ink2);font-size:12px;display:flex;gap:8px;align-items:center}
+.ctx svg{color:var(--mute)}
+.ctx b{font-family:"Red Hat Mono";font-weight:500;color:var(--ink)}
+.msgs{flex:1;overflow:auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:14px}
+.u{align-self:flex-end;max-width:85%;background:var(--ink);color:#fff;padding:9px 13px;border-radius:14px 14px 3px 14px;line-height:1.55}
+.a{max-width:96%;line-height:1.7}
+.a p{margin-bottom:6px}
+.mc{display:inline-flex;font:500 11.5px "Red Hat Mono";background:var(--mkbg);border:1px solid #ecd24a;border-radius:5px;padding:0 5px;margin:1px 1px;cursor:pointer;line-height:1.5;color:var(--ink)}
+.mc:hover{background:var(--mk)}
+.nc{font-weight:700;border-bottom:2px solid var(--mk);cursor:pointer}
+.nc:hover{background:var(--mk)}
+.card{border:1px solid var(--line);border-radius:10px;background:#fcfcfd;overflow:hidden;margin-top:4px}
+.card .t{display:flex;align-items:center;gap:8px;padding:8px 12px;font-weight:700;font-size:12.5px;border-bottom:1px solid var(--line2)}
+.card .t span{margin-left:auto;font-weight:500;color:var(--mute);font-size:11.5px}
+.card .t i{font-style:normal;font-size:10.5px;font-weight:700;padding:0 6px;border-radius:3px;line-height:17px}
+.card .t i.ok{background:#dcf5e8;color:var(--ok)}
+.card .t i.pv{background:var(--mk);color:var(--ink)}
+.card .t i.un{background:var(--line2);color:var(--ink2)}
+.card ul{list-style:none;padding:8px 12px}
+.card li{font-size:12.5px;display:flex;gap:8px;padding:2px 0;color:var(--ink2)}
+.card li:before{content:"";width:5px;height:5px;background:var(--ink);margin-top:8px;border-radius:1px;flex:none}
+.card li b{color:var(--ink);font-weight:600}
+.card .ft{display:flex;gap:8px;padding:8px 12px 10px}
+.card .ft button{height:28px;padding:0 13px;border-radius:7px;font-weight:600;border:1px solid var(--line);background:#fff}
+.card .ft button.go{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card .ft button:hover{border-color:var(--ink)}
+.card.done{opacity:.9}
+.card.undone ul{text-decoration:line-through;color:var(--mute)}
+.tbl2{font-size:11.5px;color:var(--ink2);padding:0 12px 8px}
+.caret:after{content:"";display:inline-block;width:7px;height:14px;background:var(--mk);vertical-align:-2px;margin-left:2px;animation:bl .8s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+.sug{display:flex;gap:6px;flex-wrap:wrap;padding:6px 16px 8px}
+.sug button{height:28px;padding:0 11px;border:1px solid var(--line);border-radius:99px;font-size:12px;font-weight:500;color:var(--ink2);background:#fff}
+.sug button:hover{border-color:var(--ink);color:var(--ink)}
+.inp{margin:0 16px 14px;border:1.5px solid var(--ink);border-radius:12px;display:flex;align-items:center;padding:0 6px 0 14px;height:44px;background:#fff}
+.inp input{flex:1;font-size:13.5px}
+.inp button{width:32px;height:32px;border-radius:8px;background:var(--ink);color:var(--mk);display:grid;place-items:center}
+.note{padding:0 16px 10px;font-size:10.5px;color:var(--mute);text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="page">
+    <div class="nav"><div class="logo"><i></i>算盘</div><a>总览</a><a class="on">物理机台账</a><a>申请单</a><a>账单</a><div class="sp"></div><span style="color:var(--mute)">北京一机房 · 陆遥</span></div>
+    <div class="hdr"><h1>物理机台账</h1><div class="s" id="sub"></div></div>
+    <div class="filters" id="filters"></div>
+    <div class="tbwrap" id="tw"><table><thead><tr id="thead"></tr></thead><tbody id="tb"></tbody></table></div>
+    <div class="foot"><span id="ft"></span><span class="e">示例数据 · 机器与部门均为虚构</span></div>
+  </div>
+  <aside class="ai">
+    <div class="ai-h"><span class="ic"><svg viewBox="0 0 16 16"><path d="M8 2l1.4 3.6L13 7l-3.6 1.4L8 12l-1.4-3.6L3 7l3.6-1.4zM12.5 11l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg></span><b>台账助手</b><small>能读取当前页面</small></div>
+    <div class="ctx"><svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M6 6.5v6.5"/></svg><span id="ctx"></span></div>
+    <div class="msgs" id="msgs"></div>
+    <div class="sug" id="sug"></div>
+    <form class="inp" id="form"><input id="q" placeholder="告诉我想找什么，或要改什么" autocomplete="off"><button type="submit"><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></form>
+    <div class="note">助手的每一步操作都会显示在左侧页面上，并可撤销</div>
+  </aside>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const DEPTS=["算法一部","算法二部","数据平台部","视觉组","语音组","基础研究部"], MODELS=["H100","A800","H800","昇腾 910B"];
+let sd=11; const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+const ROWS=Array.from({length:34},(_,i)=>{
+  const m=MODELS[Math.floor(rnd()*4)], st=rnd()<.34?"idle":rnd()<.08?"fix":"run";
+  const idle=st==="idle"?Math.floor(1+rnd()*24):0;
+  return {id:"gn-bj1-"+String(110+i*3+Math.floor(rnd()*3)).padStart(4,"0"),model:m,cards:8,dept:DEPTS[Math.floor(rnd()*6)],st,idle,util:st==="run"?Math.round(35+rnd()*60):st==="idle"?Math.round(rnd()*6):0,owner:["陈默","林晓","周博","吴越","赵一","孙远"][Math.floor(rnd()*6)]};
+});
+// 保证演示：空闲超过 7 天的至少 8 台、其中有 H100
+[[2,"H100",12],[5,"H100",9],[9,"A800",15],[13,"H100",20],[17,"H800",8],[21,"A800",11],[25,"昇腾 910B",18]].forEach(([i,m,d])=>{ Object.assign(ROWS[i],{model:m,st:"idle",idle:d,util:2}); });
+const base=JSON.parse(JSON.stringify(ROWS));
+let F={st:null,minIdle:null,model:null,dept:null}, SORT=null, HL=new Set(), ACTS=[], pending=null;
+const STN={run:"在用",idle:"空闲",fix:"维修"};
+const COLS=[["机器","id"],["型号","model"],["卡数","cards"],["所属部门","dept"],["状态","st"],["闲置天数","idle"],["近 7 天利用率","util"],["负责人","owner"]];
+function visible(){
+  let r=ROWS.filter(x=>(!F.st||x.st===F.st)&&(F.minIdle==null||x.idle>F.minIdle)&&(!F.model||x.model===F.model)&&(!F.dept||x.dept===F.dept));
+  if(SORT){ const [k,d]=SORT; r=r.slice().sort((a,b)=>(a[k]>b[k]?1:a[k]<b[k]?-1:0)*d); } return r;
+}
+function drawFilters(newKeys=[]){
+  const chips=[]; const mk=(k,t,v)=>`<span class="chip ${F._ai&&F._ai[k]?"by":""} ${newKeys.includes(k)?"pop":""}">${t} <b>${v}</b><button data-rm="${k}" title="移除"><svg viewBox="0 0 16 16" style="width:11px;height:11px"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span>`;
+  if(F.st) chips.push(mk("st","状态 =",STN[F.st])); if(F.minIdle!=null) chips.push(mk("minIdle","闲置天数 &gt;",F.minIdle)); if(F.model) chips.push(mk("model","型号 =",F.model)); if(F.dept) chips.push(mk("dept","部门 =",F.dept));
+  $("#filters").innerHTML=`<span class="lbl">筛选</span>`+(chips.join("")||'<span class="none">无筛选条件</span>')+(chips.length?'<button class="clear" id="clr">清除全部</button>':"");
+}
+function drawTable(chg={}){
+  const v=visible();
+  $("#thead").innerHTML=COLS.map(([n,k])=>`<th data-k="${k}" class="${SORT&&SORT[0]===k?"sorted":""}">${n}${SORT&&SORT[0]===k?(SORT[1]>0?" ↑":" ↓"):""}</th>`).join("");
+  $("#tb").innerHTML=v.map(r=>`<tr data-id="${r.id}" class="${HL.has(r.id)?"hl":""}"><td class="nm">${r.id}</td><td>${r.model}</td><td class="mono">${r.cards}</td><td class="${chg[r.id]?"chg":""}">${r.dept}</td><td><span class="st ${r.st}">${STN[r.st]}</span></td><td><span class="idl ${r.idle>7?"hot":""}">${r.idle?r.idle+" 天":"—"}</span></td><td><div class="ub"><i><b style="width:${r.util}%"></b></i><span class="mono" style="font-size:12px;color:var(--ink2)">${r.util}%</span></div></td><td>${r.owner}</td></tr>`).join("")||`<tr><td colspan="8" style="height:120px;text-align:center;color:var(--mute)">没有符合条件的机器</td></tr>`;
+  $("#sub").innerHTML=`共 <b>${ROWS.length}</b> 台 · 当前显示 <b>${v.length}</b> 台 · 空闲 <b>${ROWS.filter(r=>r.st==="idle").length}</b> 台`;
+  $("#ft").textContent=`显示 ${v.length} / ${ROWS.length}`+(HL.size?` · 助手标记 ${[...HL].filter(id=>v.some(x=>x.id===id)).length} 台`:"");
+  $("#ctx").innerHTML=`已读取：物理机台账 · 显示 <b>${v.length}/${ROWS.length}</b> 台`+(Object.values(F).some(x=>x!=null&&x!==false&&typeof x!=="object")?" · 有筛选":"");
+}
+function redraw(newKeys,chg){ drawFilters(newKeys); drawTable(chg); }
+// 操作
+function setFilter(patch,title){
+  const prev={}; Object.keys(patch).forEach(k=>prev[k]=F[k]); const prevAI={...(F._ai||{})}; const prevHL=new Set(HL);
+  Object.assign(F,patch); F._ai={...(F._ai||{})}; Object.keys(patch).forEach(k=>F._ai[k]=true);
+  HL=new Set(visible().map(x=>x.id)); if(!Object.values(patch).some(x=>x!=null)) HL=new Set();
+  redraw(Object.keys(patch).filter(k=>patch[k]!=null));
+  return {prev,prevAI,prevHL};
+}
+function undoFilter(s){ Object.assign(F,s.prev); F._ai=s.prevAI; HL=s.prevHL; redraw(); }
+function scrollTo(id){ const tr=$(`#tb tr[data-id="${id}"]`); if(!tr) return; $("#tw").scrollTo({top:tr.offsetTop-80,behavior:"smooth"}); tr.classList.remove("flash"); void tr.offsetWidth; tr.classList.add("flash"); }
+// 对话
+function addUser(t){ const d=document.createElement("div"); d.className="u"; d.textContent=t; $("#msgs").appendChild(d); down(); }
+function down(){ const m=$("#msgs"); m.scrollTop=m.scrollHeight; }
+function say(parts){ // parts: 字符串 | {ml:[ids]} | {n:"文本"}
+  const d=document.createElement("div"); d.className="a"; const p=document.createElement("p"); d.appendChild(p); $("#msgs").appendChild(d); down();
+  return new Promise(res=>{
+    let i=0; const next=()=>{
+      if(i>=parts.length){ p.classList.remove("caret"); return res(d); }
+      const part=parts[i++];
+      if(typeof part==="string"){ let k=0; const s=document.createTextNode(""); p.appendChild(s); p.classList.add("caret"); const t=setInterval(()=>{ k+=2; s.nodeValue=part.slice(0,k); down(); if(k>=part.length){ clearInterval(t); next(); } },16); }
+      else if(part.ml){ part.ml.forEach(id=>{ const b=document.createElement("span"); b.className="mc"; b.dataset.m=id; b.textContent=id; p.appendChild(b); p.appendChild(document.createTextNode(" ")); }); next(); }
+      else if(part.n){ const b=document.createElement("span"); b.className="nc"; b.dataset.nc=part.n; b.textContent=part.t; p.appendChild(b); next(); }
+    }; next();
+  });
+}
+function actCard(parent,a){
+  const c=document.createElement("div"); c.className="card"+(a.preview?"":" done"); c.id="act"+a.id; parent.appendChild(c); a.el=c; renderCard(a); down();
+}
+function renderCard(a){
+  const tag=a.preview?'<i class="pv">待确认</i>':a.undone?'<i class="un">已撤销</i>':'<i class="ok">已执行</i>';
+  a.el.classList.toggle("undone",!!a.undone);
+  a.el.innerHTML=`<div class="t">${a.title}${tag}<span class="mono">#${a.id}</span></div><ul>${a.lines.map(l=>`<li><span>${l}</span></li>`).join("")}</ul>`+
+   (a.preview?`<div class="ft"><button class="go" data-ok="${a.id}">确认执行</button><button data-cx="${a.id}">取消</button></div>`:a.undone?"":`<div class="ft"><button data-undo="${a.id}"><svg viewBox="0 0 16 16" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px"><path d="M5 3L2.5 6 5 9M3 6h6a4 4 0 010 8H6"/></svg>撤销这一步</button></div>`);
+}
+let aid=0;
+const DEPT_RE=new RegExp(DEPTS.join("|"));
+async function ask(text){
+  addUser(text); $("#sug").innerHTML="";
+  await new Promise(r=>setTimeout(r,350));
+  const mModel=MODELS.find(m=>text.toUpperCase().includes(m.replace(" ","").toUpperCase())||text.includes(m));
+  if(/转给|转移|划给|划拨|调给/.test(text)){
+    const to=(text.match(DEPT_RE)||[])[0]; const cur=visible();
+    if(!to){ await say(["要转给哪个部门？可选：","算法一部、算法二部、数据平台部、视觉组、语音组、基础研究部。"]); return suggest(); }
+    const list=cur.filter(r=>r.dept!==to); if(!list.length){ await say(["当前显示的机器都已经属于 "+to+"，无需调整。"]); return suggest(); }
+    const from={}; list.forEach(r=>from[r.dept]=(from[r.dept]||0)+1);
+    const d=await say(["我准备把当前显示的 ",{n:"list",t:list.length+" 台"}," 转给 "+to+"。这是预览，", "确认后才会执行："]);
+    const a={id:++aid,title:"转移所属部门",preview:true,lines:[`<b>${list.length} 台</b>：${Object.entries(from).map(([k,v])=>k+" "+v).join("、")} → <b>${to}</b>`,`涉及 <b>${new Set(list.map(r=>r.owner)).size} 位</b>负责人，卡数共 <b>${list.length*8}</b>`,`其中在用 ${list.filter(r=>r.st==="run").length} 台`+(list.some(r=>r.st==="run")?"，转移不会中断任务":"")],ids:list.map(r=>r.id),to};
+    ACTS.push(a); actCard(d,a); pending=a; return;
+  }
+  if(/清除|重置|恢复|取消筛选/.test(text)){
+    const s=setFilter({st:null,minIdle:null,model:null,dept:null}); F._ai={}; redraw();
+    const a={id:++aid,title:"清除筛选",lines:["所有筛选条件已清除"],undo(){undoFilter(s)}}; ACTS.push(a);
+    const d=await say(["已清除筛选，现在显示全部 "+ROWS.length+" 台。"]); actCard(d,a); return suggest();
+  }
+  if(/排序|利用率最低|利用率低/.test(text)){
+    const prev=SORT; SORT=["util",1]; redraw();
+    const a={id:++aid,title:"排序",lines:["按 <b>近 7 天利用率</b> 从低到高"],undo(){SORT=prev;redraw();}}; ACTS.push(a);
+    const d=await say(["已按利用率从低到高排序，最闲的在最上面。"]); actCard(d,a); return suggest();
+  }
+  if(/闲置|空闲|没用|找出|只看|筛|H100|A800|H800|昇腾/.test(text)){
+    const n=(text.match(/(\d+)\s*天/)||[])[1]; const patch={};
+    if(/闲置|空闲|没用/.test(text)){ patch.st="idle"; patch.minIdle=n?+n:7; }
+    if(mModel) patch.model=mModel;
+    if(DEPT_RE.test(text)&&!/转/.test(text)) patch.dept=text.match(DEPT_RE)[0];
+    if(!Object.keys(patch).length){ await say(["我没理解要筛什么。可以说「闲置超过 7 天的机器」或「只看 H100」。"]); return suggest(); }
+    const s=setFilter(patch); const v=visible();
+    const a={id:++aid,title:"设置筛选",lines:[patch.st?"状态 = <b>空闲</b>":null,patch.minIdle!=null?`闲置天数 &gt; <b>${patch.minIdle}</b>`:null,patch.model?`型号 = <b>${patch.model}</b>`:null,patch.dept?`部门 = <b>${patch.dept}</b>`:null].filter(Boolean),undo(){undoFilter(s)}}; ACTS.push(a);
+    if(v[0]) setTimeout(()=>scrollTo(v[0].id),250);
+    const byM={}; v.forEach(r=>byM[r.model]=(byM[r.model]||0)+1);
+    const top=v.slice().sort((a,b)=>b.idle-a.idle).slice(0,3);
+    const d=await say(v.length?[`找到 ${v.length} 台，左边已筛选并高亮。其中 `+Object.entries(byM).map(([k,x])=>k+" "+x+" 台").join("、")+`。闲置最久的是 `,{ml:top.map(r=>r.id)},`，点编号可以定位。`]:["按这个条件没有找到机器。"]);
+    actCard(d,a); return suggest(v.length?["把它们转给算法二部","按利用率从低到高排序","清除筛选"]:["清除筛选"]);
+  }
+  await say(["我可以在这个页面上做这些事：","按条件筛选（如「闲置超过 7 天的 H100」）、排序、把当前显示的机器转给某个部门。"]); suggest();
+}
+function suggest(list){ list=list||["找出闲置超过 7 天的机器","只看 H100","按利用率从低到高排序"]; $("#sug").innerHTML=list.map(t=>`<button>${t}</button>`).join(""); }
+document.addEventListener("click",e=>{
+  const mc=e.target.closest(".mc"); if(mc){ const id=mc.dataset.m; if(!visible().some(r=>r.id===id)){ F={st:null,minIdle:null,model:null,dept:null,_ai:{}}; redraw(); } scrollTo(id); return; }
+  const nc=e.target.closest(".nc"); if(nc){ const v=visible(); if(v[0]) scrollTo(v[0].id); v.slice(0,6).forEach((r,i)=>setTimeout(()=>scrollTo(r.id),i*180)); return; }
+  const rm=e.target.closest("[data-rm]"); if(rm){ const k=rm.dataset.rm; F[k]=null; if(k==="st"||k==="minIdle"){} HL=new Set(); redraw(); return; }
+  if(e.target.closest("#clr")){ F={st:null,minIdle:null,model:null,dept:null,_ai:{}}; HL=new Set(); redraw(); return; }
+  const th=e.target.closest("th"); if(th){ const k=th.dataset.k; SORT=(SORT&&SORT[0]===k)?(SORT[1]===1?[k,-1]:null):[k,1]; redraw(); return; }
+  const sg=e.target.closest(".sug button"); if(sg){ ask(sg.textContent); return; }
+  const ok=e.target.closest("[data-ok]"); if(ok){ const a=ACTS.find(x=>x.id==ok.dataset.ok); const prev={}; const chg={};
+    a.ids.forEach(id=>{ const r=ROWS.find(x=>x.id===id); prev[id]=r.dept; r.dept=a.to; chg[id]=1; });
+    a.preview=false; a.undo=()=>{ Object.entries(prev).forEach(([id,d])=>ROWS.find(x=>x.id===id).dept=d); redraw(); }; renderCard(a); drawFilters(); drawTable(chg); toastReply(`已转移 ${a.ids.length} 台到 ${a.to}，左边变化的单元格已标黄。`); return; }
+  const cx=e.target.closest("[data-cx]"); if(cx){ const a=ACTS.find(x=>x.id==cx.dataset.cx); a.preview=false; a.undone=true; a.lines=["已取消，没有改动任何数据"]; renderCard(a); return; }
+  const un=e.target.closest("[data-undo]"); if(un){ const a=ACTS.find(x=>x.id==un.dataset.undo); a.undo(); a.undone=true; renderCard(a); toastReply("已撤销："+a.title+"。"); return; }
+});
+async function toastReply(t){ const d=await say([t]); down(); suggest(["按利用率从低到高排序","清除筛选"]); }
+$("#form").addEventListener("submit",e=>{ e.preventDefault(); const v=$("#q").value.trim(); if(!v) return; $("#q").value=""; ask(v); });
+F._ai={}; redraw(); suggest();
+(async()=>{ await say(["你好，我能读到这一页的机器数据，也能直接帮你筛选、排序和转移部门。每一步都会写在这里，并且可以撤销。"]);
+  await new Promise(r=>setTimeout(r,500)); await ask("找出闲置超过 7 天的机器"); await new Promise(r=>setTimeout(r,1500)); await ask("把它们转给算法二部"); })();
+window.__ask=ask;
+</script>
+</body>
+</html>

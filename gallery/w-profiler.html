@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>列画像表格 · 云账单明细</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#fff;--ink:#17181c;--ink2:#5f636d;--mute:#9a9ea8;--line:#e6e8ec;--line2:#f0f1f4;--head:#fafafb;--base:#e4e6ea;--bar:#4a4e58;--dim:#b4b8c0;--hot:#ff5a36;--hotbg:#fff0ec}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font:12px/1.4 "Spline Sans Mono","Noto Sans SC",ui-monospace,monospace;color:var(--ink);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block}
+.app{height:100vh;display:flex;flex-direction:column}
+.top{flex:none;height:50px;display:flex;align-items:center;gap:14px;padding:0 20px;border-bottom:1px solid var(--line)}
+.top b{font:700 15px "Noto Sans SC";letter-spacing:.2px}
+.top .ds{color:var(--mute)}
+.top .ds i{font-style:normal;color:var(--ink2)}
+.top .sp{flex:1}
+.top .hint{color:var(--mute);font:400 12px "Noto Sans SC"}
+.fb{flex:none;height:42px;display:flex;align-items:center;gap:8px;padding:0 20px;border-bottom:1px solid var(--line)}
+.fb .cnt{font-size:12.5px;margin-right:8px;white-space:nowrap}
+.fb .cnt b{font-weight:600;font-size:14px}
+.fb .cnt s{text-decoration:none;color:var(--mute)}
+.pill{display:flex;align-items:center;height:24px;border:1px solid var(--hot);background:var(--hotbg);color:#b3300f;border-radius:12px;padding:0 4px 0 10px;gap:6px;font-size:11.5px;animation:pin .2s}
+@keyframes pin{from{opacity:0;transform:scale(.9)}}
+.pill button{width:16px;height:16px;border-radius:50%;display:grid;place-items:center}
+.pill button:hover{background:var(--hot);color:#fff}
+.pill svg{width:8px;height:8px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.fb .none{color:var(--mute);font:400 12px "Noto Sans SC"}
+.clr{margin-left:4px;color:var(--ink2);text-decoration:underline;text-underline-offset:3px;font:400 12px "Noto Sans SC"}
+.clr:hover{color:var(--hot)}
+.sheet{flex:1;min-height:0;display:flex;flex-direction:column}
+.gr{display:grid;grid-template-columns:46px minmax(0,1.05fr) minmax(0,.95fr) minmax(0,1.05fr) minmax(0,.95fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.6fr);padding-right:10px}
+.head{flex:none;background:var(--head);border-bottom:1px solid var(--ink)}
+.hc{padding:10px 12px 8px;border-right:1px solid var(--line);min-width:0;user-select:none}
+.hc.rn{padding:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:9px;color:var(--mute);font-size:11px}
+.hc .nr{display:flex;align-items:center;gap:6px;height:20px}
+.hc .ty{font-size:10px;color:var(--mute);border:1px solid var(--line);border-radius:3px;padding:0 3px;line-height:14px;background:#fff}
+.hc .nm{font:600 12.5px "Noto Sans SC";cursor:pointer;display:flex;align-items:center;gap:4px}
+.hc .nm:hover{color:var(--hot)}
+.hc .nm span{color:var(--hot);font-size:10px}
+.hc .xf{margin-left:auto;color:var(--hot);font:500 11px "Noto Sans SC";opacity:.9}
+.hc .xf:hover{text-decoration:underline}
+.cht{margin-top:7px;height:52px;position:relative;cursor:crosshair;touch-action:none}
+.cht svg{width:100%;height:52px;overflow:visible}
+.ax{display:flex;justify-content:space-between;margin-top:3px;font-size:10.5px;color:var(--mute);height:14px;white-space:nowrap}
+.ax .r{color:var(--hot);font-weight:500;width:100%;text-align:center}
+.cat{margin-top:7px;min-height:52px}
+.sg{height:13px;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:0 4px;font:500 10.5px/13px "Noto Sans SC";color:var(--ink);margin-bottom:0}
+.sg i{position:absolute;left:0;top:1px;bottom:1px;background:var(--base);transition:width .25s;z-index:0}
+.sg .t,.sg .p{position:relative;z-index:1}
+.sg .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.sg .p{font:400 10px "Spline Sans Mono";color:var(--ink2);margin-left:6px}
+.sg:hover i{background:var(--dim)}
+.sg.on i{background:var(--hot)}.sg.on{color:#fff}.sg.on .p{color:#ffe3dc}
+.sg.off{color:var(--mute)}.sg.off i{background:var(--line2)}
+.sg.more{color:var(--mute);font-weight:400}.sg.more:hover{color:var(--hot)}
+.st{margin-top:5px;font-size:10.5px;color:var(--mute);white-space:nowrap;height:15px;overflow:hidden}
+.st b{font-weight:500;color:var(--ink2)}
+.body{flex:1;min-height:0;overflow-y:scroll;overflow-x:hidden}
+.body::-webkit-scrollbar{width:10px}.body::-webkit-scrollbar-thumb{background:#d6d8de;border-radius:5px;border:2px solid #fff}
+.body .gr{height:29px;align-items:center;border-bottom:1px solid var(--line2);padding-right:0}
+.body .gr:hover{background:#f6f7f9}
+.body .gr>div{padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.body .rn{color:var(--mute);text-align:center;padding:0;font-size:11px}
+.body .n{text-align:right}
+.body .nu{color:var(--dim)}
+.body .v{font-family:"Noto Sans SC","Spline Sans Mono";font-size:12px}
+.sum{flex:none;border-top:1px solid var(--ink);background:var(--head);height:36px}
+.sum .gr{height:36px;align-items:center}
+.sum>.gr>div{padding:0 12px;font-size:11.5px;white-space:nowrap;overflow:hidden}
+.sum .ag{color:var(--ink2)}
+.sum .ag button{color:var(--mute);border-bottom:1px dotted var(--mute);margin-right:6px;font:400 11px "Noto Sans SC"}
+.sum .ag button:hover{color:var(--hot);border-color:var(--hot)}
+.sum .ag b{font-weight:600;color:var(--ink)}
+.sum .ag.n{text-align:right}
+.demo{position:fixed;right:12px;bottom:40px;font-size:10px;color:var(--mute)}
+.emp{padding:80px 0;text-align:center;color:var(--mute);font:400 13px "Noto Sans SC"}
+.emp b{display:block;font-size:15px;color:var(--ink2);margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><b>云账单明细</b><span class="ds">cloud_bill_detail · <i>2026-09-01 → 2026-11-19</i></span><span class="sp"></span><span class="hint">在列头的图上拖选区间，或点占比条的一段，整张表一起筛选</span></div>
+  <div class="fb" id="fb"></div>
+  <div class="sheet">
+    <div class="head gr" id="head"></div>
+    <div class="body" id="body"></div>
+    <div class="sum"><div class="gr" id="sum"></div></div>
+  </div>
+</div>
+<div class="demo">示例数据</div>
+<script>
+const $=s=>document.querySelector(s);
+/* ---------- 数据 ---------- */
+let seed=20261119;const rnd=()=>(seed=(seed*1664525+1013904223)>>>0)/4294967296;
+const gauss=()=>Math.sqrt(-2*Math.log(rnd()+1e-9))*Math.cos(6.2831853*rnd());
+const wpick=(a)=>{let r=rnd()*a.reduce((s,x)=>s+x[1],0);for(const x of a){r-=x[1];if(r<=0)return x[0]}return a[0][0]};
+const VEN=[["金山云",34],["阿里云",24],["华为云",16],["京东云",12],["腾讯云",8],["自建折算",6]];
+const PRO=[["GPU 云服务器",40],["大模型 API",16],["容器服务",14],["云数据库",12],["对象存储",12],["弹性公网 IP",6]];
+const DEP=[["算法一部",24],["基础模型组",22],["算法二部",18],["平台研发",14],["数据中台",12],["搜索推荐部",10]];
+const PRJ=["推理平台","多模态预训练","搜索重排","客服大模型","数据清洗","评测集群","语音合成","内部工具"];
+const BASE={"GPU 云服务器":15000,"大模型 API":6000,"容器服务":2900,"云数据库":2200,"对象存储":1200,"弹性公网 IP":380};
+const D0=new Date(2026,8,1),NDAY=80;
+const dstr=i=>{const d=new Date(2026,8,1+i);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
+const DATA=[];
+for(let i=0;i<4800;i++){
+  const day=Math.min(NDAY-1,Math.floor(Math.pow(rnd(),.86)*NDAY));
+  const pro=wpick(PRO),ven=wpick(VEN),dept=wpick(DEP);
+  const nullp=pro==="弹性公网 IP"?.4:pro==="对象存储"?.2:.07;
+  const prj=rnd()<nullp?null:PRJ[Math.floor(Math.pow(rnd(),1.4)*PRJ.length)];
+  const r=rnd();const disc=r<.34?100:r<.62?85+Math.floor(rnd()*3):r<.82?70+Math.floor(rnd()*8):60+Math.floor(rnd()*30);
+  const amt=Math.max(12,Math.round(BASE[pro]*Math.exp(gauss()*.85-.3)*(1+day/NDAY*.25)*(disc/100)));
+  DATA.push({date:day,vendor:ven,product:pro,dept,project:prj,disc,amt});
+}
+DATA.sort((a,b)=>a.date-b.date);
+const sortedAmt=DATA.map(x=>x.amt).sort((a,b)=>a-b);
+const CAP=sortedAmt[Math.floor(sortedAmt.length*.97)];
+const COLS=[
+ {k:"date",name:"账单日期",type:"日期",kind:"hist",nb:12,w:7,min:0,max:NDAY-1},
+ {k:"vendor",name:"云厂商",type:"类别",kind:"cat"},
+ {k:"product",name:"产品",type:"类别",kind:"cat"},
+ {k:"dept",name:"部门",type:"类别",kind:"cat"},
+ {k:"project",name:"项目",type:"类别",kind:"cat"},
+ {k:"disc",name:"折扣率",type:"数值",kind:"hist",nb:20,w:2,min:60,max:100},
+ {k:"amt",name:"金额",type:"数值",kind:"hist",nb:28,w:CAP/28,min:0,max:CAP}
+];
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+const CATS={};COLS.filter(c=>c.kind==="cat").forEach(c=>{const m=new Map();DATA.forEach(r=>{const v=r[c.k]==null?"（空）":r[c.k];m.set(v,(m.get(v)||0)+1)});CATS[c.k]=[...m.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0])});
+const binOf=(c,v)=>c.k==="date"?Math.min(c.nb-1,Math.floor(v/c.w)):c.k==="disc"?Math.min(c.nb-1,Math.floor((v-c.min)/c.w)):Math.min(c.nb-1,Math.floor(v/c.w));
+const fval=(c,r)=>c.kind==="cat"?(r[c.k]==null?"（空）":r[c.k]):r[c.k];
+/* ---------- 筛选状态 ---------- */
+const OPEN={};const F={};   // k -> {t:"cat",set:Set} | {t:"rng",a,b} (bin 索引)
+let sortK="date",sortD=1;const AG={};
+function pass(r,except){
+  for(const c of COLS){if(c.k===except)continue;const f=F[c.k];if(!f)continue;
+    if(f.t==="cat"){if(!f.set.has(fval(c,r)))return false}
+    else{const b=binOf(c,r[c.k]);if(b<f.a||b>f.b)return false}}
+  return true;
+}
+const rowsExcept=ex=>DATA.filter(r=>pass(r,ex));
+/* ---------- 列头 ---------- */
+const ST=["#e4e6ea"];
+function rangeLabel(c,f){
+  const lo=f.a*c.w+(c.k==="disc"?c.min:0), hi=(f.b+1)*c.w+(c.k==="disc"?c.min:0)-(c.k==="date"?1:0);
+  const last=f.b===c.nb-1;
+  if(c.k==="date")return `${dstr(Math.min(f.a*7,NDAY-1)).slice(5)} – ${dstr(last?NDAY-1:Math.min((f.b+1)*7-1,NDAY-1)).slice(5)}`;
+  if(c.k==="disc")return `${lo}% – ${last?"100":hi}%`;
+  return `¥${fmt(lo)} – ${last?"最大":"¥"+fmt(hi)}`;
+}
+function histSVG(c,W){
+  const base=new Array(c.nb).fill(0),cur=new Array(c.nb).fill(0);
+  DATA.forEach(r=>base[binOf(c,r[c.k])]++);
+  rowsExcept(c.k).forEach(r=>cur[binOf(c,r[c.k])]++);
+  const mx=Math.max(...base),H=52,bw=W/c.nb,f=F[c.k];
+  let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="${W}" height="${H}">`;
+  for(let i=0;i<c.nb;i++){
+    const hb=base[i]/mx*(H-3),hc=cur[i]/mx*(H-3),inR=!f||(i>=f.a&&i<=f.b);
+    s+=`<rect x="${i*bw+.6}" y="${H-hb}" width="${bw-1.2}" height="${hb}" fill="var(--base)"/>`;
+    s+=`<rect x="${i*bw+.6}" y="${H-hc}" width="${bw-1.2}" height="${hc}" fill="${f?(inR?"var(--hot)":"var(--dim)"):"var(--bar)"}"/>`;
+  }
+  if(f)s+=`<rect x="${f.a*bw}" y="0" width="${(f.b-f.a+1)*bw}" height="${H}" fill="rgba(255,90,54,.08)" stroke="var(--hot)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+  return s+`</svg>`;
+}
+function axisLabels(c){
+  const f=F[c.k];
+  if(f)return `<div class="ax"><span class="r">${rangeLabel(c,f)}</span></div>`;
+  if(c.k==="date")return `<div class="ax"><span>09-01</span><span>11-19</span></div>`;
+  if(c.k==="disc")return `<div class="ax"><span>60%</span><span>100%</span></div>`;
+  return `<div class="ax"><span>¥0</span><span>≥ ¥${fmt(CAP)}</span></div>`;
+}
+function renderHead(){
+  const cur=DATA.filter(r=>pass(r,null));
+  let h=`<div class="hc rn">#</div>`;
+  COLS.forEach(c=>{
+    const f=F[c.k];
+    const nulls=cur.filter(r=>r[c.k]==null).length;
+    const dist=new Set(cur.map(r=>r[c.k]==null?"∅":r[c.k])).size-(nulls?1:0);
+    const sortMark=sortK===c.k?`<span>${sortD>0?"↑":"↓"}</span>`:"";
+    h+=`<div class="hc" data-k="${c.k}"><div class="nr"><span class="ty">${c.type}</span><span class="nm" data-sort="${c.k}">${c.name}${sortMark}</span>${f?`<button class="xf" data-xf="${c.k}">清除</button>`:""}</div>`;
+    if(c.kind==="hist"){h+=`<div class="cht" data-c="${c.k}"></div>${axisLabels(c)}`}
+    else{
+      const ex=rowsExcept(c.k),cnt=new Map();ex.forEach(r=>{const v=fval(c,r);cnt.set(v,(cnt.get(v)||0)+1)});
+      const tot=ex.length||1;
+      let order=CATS[c.k].filter(v=>(cnt.get(v)||0)>0||(f&&f.set.has(v))).sort((a,b)=>(cnt.get(b)||0)-(cnt.get(a)||0));
+      const mxN=Math.max(1,...order.map(v=>cnt.get(v)||0)),lim=OPEN[c.k]?99:4,hid=order.length>lim?order.length-(lim-1):0;
+      const shown=hid?order.slice(0,lim-1):order;
+      h+=`<div class="cat" data-c="${c.k}">`+shown.map(v=>{const n=cnt.get(v)||0,on=f&&f.set.has(v),off=f&&!on;const pct=Math.round(n/tot*100);
+        return `<div class="sg ${on?"on":off?"off":""}" data-v="${v}" title="${v} · ${fmt(n)} 行 · ${(n/tot*100).toFixed(1)}%"><i style="width:${n/mxN*100}%"></i><span class="t">${v}</span><span class="p">${pct<1?"<1":pct}%</span></div>`}).join("")+(hid?`<div class="sg more" data-more="${c.k}"><span class="t">另 ${hid} 类，展开</span></div>`:OPEN[c.k]&&order.length>4?`<div class="sg more" data-more="${c.k}"><span class="t">收起</span></div>`:"")+`</div><div class="ax"><span>${f?`${f.set.size} 项已选`:"点一行筛选"}</span></div>`;
+    }
+    h+=`<div class="st">空值 <b>${cur.length?Math.round(nulls/cur.length*100):0}%</b> · <b>${fmt(dist)}</b> 个不同值</div></div>`;
+  });
+    $("#head").innerHTML=h;
+  document.querySelectorAll(".cht").forEach(el=>{const c=COLS.find(x=>x.k===el.dataset.c);el.innerHTML=histSVG(c,Math.max(40,el.clientWidth))});
+}
+/* ---------- 表体 / 汇总 / 条 ---------- */
+function sorted(rows){
+  if(!sortK)return rows;const c=COLS.find(x=>x.k===sortK);
+  const key=r=>r[sortK]==null?(sortD>0?"￿":""):r[sortK];
+  return [...rows].sort((a,b)=>{const x=key(a),y=key(b);return (x<y?-1:x>y?1:0)*sortD});
+}
+const SHOW=300;
+function renderBody(){
+  const rows=sorted(DATA.filter(r=>pass(r,null)));
+  window.__rows=rows;
+  $("#body").innerHTML=rows.length?rows.slice(0,SHOW).map((r,i)=>`<div class="gr"><div class="rn">${i+1}</div><div class="v mono">${dstr(r.date)}</div><div class="v">${r.vendor}</div><div class="v">${r.product}</div><div class="v">${r.dept}</div><div class="v ${r.project==null?"nu":""}">${r.project==null?"—":r.project}</div><div class="n">${r.disc}%</div><div class="n">¥${fmt(r.amt)}</div></div>`).join("")+(rows.length>SHOW?`<div class="emp" style="padding:16px 0;font-size:11.5px">仅显示前 ${SHOW} 行，共 ${fmt(rows.length)} 行；继续筛选可缩小范围</div>`:""):`<div class="emp"><b>没有符合条件的行</b>放宽某一列的筛选</div>`;
+  renderSum(rows);
+  const act=COLS.filter(c=>F[c.k]);
+  $("#fb").innerHTML=`<span class="cnt"><b>${fmt(rows.length)}</b> 行 <s>/ ${fmt(DATA.length)}</s></span>`+(act.length?act.map(c=>{const f=F[c.k];const lab=f.t==="cat"?[...f.set].join("、"):rangeLabel(c,f);return `<span class="pill">${c.name}：${lab.length>24?lab.slice(0,24)+"…":lab}<button data-xf="${c.k}"><svg viewBox="0 0 8 8"><path d="M1 1l6 6M7 1L1 7"/></svg></button></span>`}).join("")+`<button class="clr" data-clear>清除全部</button>`:`<span class="none">没有筛选条件</span>`);
+}
+const AGM={date:["计数","不同值"],vendor:["计数","不同值"],product:["计数","不同值"],dept:["计数","不同值"],project:["不同值","计数"],disc:["平均","最小","最大"],amt:["求和","平均","最大","计数"]};
+function renderSum(rows){
+  let h=`<div></div>`;
+  COLS.forEach(c=>{
+    const modes=AGM[c.k];const m=modes[(AG[c.k]||0)%modes.length];const vals=rows.map(r=>r[c.k]).filter(v=>v!=null);
+    let v;
+    if(m==="计数")v=fmt(vals.length);else if(m==="不同值")v=fmt(new Set(vals).size);
+    else if(!vals.length)v="—";
+    else{const s=vals.reduce((a,b)=>a+b,0);v=m==="求和"?s:m==="平均"?s/vals.length:m==="最大"?Math.max(...vals):Math.min(...vals);v=c.k==="amt"?"¥"+fmt(v):c.k==="disc"?v.toFixed(1)+"%":fmt(v)}
+    h+=`<div class="ag ${c.kind==="hist"&&c.k!=="date"?"n":""}"><button data-ag="${c.k}">${m}</button><b>${v}</b></div>`;
+  });
+  $("#sum").innerHTML=h;
+  $("#sum").className="gr";
+}
+let raf=0;function refresh(skipHead){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{renderHead();renderBody()})}
+/* ---------- 交互 ---------- */
+$("#head").addEventListener("click",e=>{
+  const mo=e.target.closest("[data-more]");if(mo){OPEN[mo.dataset.more]=!OPEN[mo.dataset.more];refresh();return}
+  const sg=e.target.closest(".sg");
+  if(sg){const k=sg.parentElement.dataset.c,v=sg.dataset.v;let f=F[k];if(!f){f=F[k]={t:"cat",set:new Set()}}
+    f.set.has(v)?f.set.delete(v):f.set.add(v);if(!f.set.size)delete F[k];refresh();return}
+  const s=e.target.closest("[data-sort]");if(s){const k=s.dataset.sort;if(sortK===k){if(sortD>0)sortD=-1;else{sortK=null;sortD=1}}else{sortK=k;sortD=1}refresh();return}
+  const x=e.target.closest("[data-xf]");if(x){delete F[x.dataset.xf];refresh()}
+});
+$("#fb").addEventListener("click",e=>{const x=e.target.closest("[data-xf]");if(x){delete F[x.dataset.xf];refresh();return}if(e.target.closest("[data-clear]")){Object.keys(F).forEach(k=>delete F[k]);refresh()}});
+$("#sum").addEventListener("click",e=>{const b=e.target.closest("[data-ag]");if(b){AG[b.dataset.ag]=(AG[b.dataset.ag]||0)+1;renderSum(window.__rows)}});
+// 拖选
+let br=null;
+$("#head").addEventListener("pointerdown",e=>{
+  const el=e.target.closest(".cht");if(!el)return;e.preventDefault();
+  const c=COLS.find(x=>x.k===el.dataset.c),r=el.getBoundingClientRect();
+  br={c,left:r.left,w:r.width,a:null};
+  const b=Math.max(0,Math.min(c.nb-1,Math.floor((e.clientX-r.left)/r.width*c.nb)));br.a=b;F[c.k]={t:"rng",a:b,b:b};refresh();
+});
+addEventListener("pointermove",e=>{if(!br)return;const c=br.c;const b=Math.max(0,Math.min(c.nb-1,Math.floor((e.clientX-br.left)/br.w*c.nb)));F[c.k]={t:"rng",a:Math.min(br.a,b),b:Math.max(br.a,b)};refresh()});
+addEventListener("pointerup",()=>{br=null});
+$("#head").addEventListener("dblclick",e=>{const el=e.target.closest(".cht");if(el){delete F[el.dataset.c];refresh()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){Object.keys(F).forEach(k=>delete F[k]);refresh()}});
+renderHead();renderBody();
+addEventListener("resize",()=>renderHead());
+</script>
+</body>
+</html>

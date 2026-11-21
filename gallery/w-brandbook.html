@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>格网设计系统 · 规范站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'">
+<style>
+:root,[data-theme=light]{--bg:#fffef9;--surface:#fff;--sunk:#f6f3e8;--ink:#16150f;--ink2:#55524a;--mute:#8f8b80;--line:#e7e3d6;--line2:#f0ede2;--brand:#ffb800;--brand-h:#ffc933;--brand-a:#e09a00;--on-brand:#16150f;--ok:#1f9d55;--bad:#e5484d;--shadow:#16150f;--code:#16150f;--code-ink:#efeadb;--okbg:#e5f6ec;--badbg:#fde9ea}
+[data-theme=dark]{--bg:#14130f;--surface:#1d1c17;--sunk:#0f0e0b;--ink:#f5f1e4;--ink2:#b5b0a0;--mute:#7f7b6f;--line:#32302a;--line2:#26241f;--brand:#ffc933;--brand-h:#ffd762;--brand-a:#e0a800;--on-brand:#16150f;--ok:#4cc27c;--bad:#ff7075;--shadow:#f5f1e4;--code:#0a0907;--code-ink:#efeadb;--okbg:#17291f;--badbg:#321a1b}
+:root{--disp:"Bricolage Grotesque","Noto Sans SC",sans-serif;--sans:"IBM Plex Sans","Noto Sans SC",system-ui,sans-serif;--mono:"IBM Plex Mono","Noto Sans SC",monospace}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14.5px;line-height:1.65;-webkit-font-smoothing:antialiased;transition:background .35s,color .35s}
+button,input{font:inherit;color:inherit}button{cursor:pointer}
+svg{display:block}
+/* shell */
+aside{position:fixed;left:0;top:0;bottom:0;width:268px;border-right:1px solid var(--line);padding:26px 22px;overflow:auto;background:var(--bg);transition:background .35s,border-color .35s;z-index:20}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:34px}
+.mark{width:34px;height:34px;display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.mark i{background:var(--ink);border-radius:2px}.mark i:nth-child(2){background:var(--brand)}
+.brand b{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:-.02em;line-height:1}.brand small{display:block;font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:4px}
+aside h6{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.12em;color:var(--mute);margin:26px 0 8px;text-transform:uppercase}
+aside a{display:flex;align-items:center;gap:10px;padding:6px 10px;margin-left:-10px;border-radius:6px;color:var(--ink2);text-decoration:none;font-size:14px;transition:.15s;position:relative}
+aside a:hover{color:var(--ink);background:var(--sunk)}
+aside a.on{color:var(--ink);font-weight:600}aside a.on:before{content:"";position:absolute;left:-22px;top:6px;bottom:6px;width:4px;background:var(--brand)}
+aside a em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mute);margin-left:auto}
+main{margin-left:268px;min-width:0}
+.bar{position:sticky;top:0;z-index:15;height:56px;display:flex;align-items:center;gap:16px;padding:0 56px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mute);transition:background .35s}
+.bar .sp{flex:1}.bar .ver{border:1px solid var(--line);padding:3px 10px;border-radius:99px}
+.theme{display:flex;border:1.5px solid var(--ink);border-radius:99px;padding:2px}
+.theme button{border:0;background:none;width:30px;height:24px;border-radius:99px;display:grid;place-items:center;color:var(--ink)}
+.theme button.on{background:var(--brand);color:var(--on-brand)}.theme svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+.page{padding:0 56px 140px;max-width:1172px}
+.intro{padding:46px 0 10px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px}
+.intro h1{font-family:var(--disp);font-weight:800;font-size:84px;line-height:.95;letter-spacing:-.045em}
+.intro h1 span{background:var(--brand);color:var(--on-brand);padding:0 .1em;margin-left:.05em}
+.intro p{max-width:360px;color:var(--ink2);font-size:15px;padding-bottom:8px}
+section.s{padding-top:70px;scroll-margin-top:56px}
+.sh{display:flex;align-items:baseline;gap:18px;margin-bottom:8px}
+.sh .n{font-family:var(--disp);font-weight:800;font-size:56px;line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--ink);letter-spacing:-.03em}
+.sh h2{font-family:var(--disp);font-weight:800;font-size:36px;letter-spacing:-.03em;line-height:1}
+.sd{color:var(--ink2);max-width:640px;margin-bottom:24px}
+h3{font-size:12px;font-family:var(--mono);font-weight:500;letter-spacing:.1em;color:var(--mute);text-transform:uppercase;margin:30px 0 12px;display:flex;align-items:center;gap:12px}h3:after{content:"";flex:1;height:1px;background:var(--line)}
+/* 套准标记 */
+.crop{position:relative;padding:26px;background:var(--surface);border:1px solid var(--line);transition:background .35s,border-color .35s}
+.crop:before,.crop:after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--ink);pointer-events:none}
+.crop:before{left:-5px;top:-5px;border-right:0;border-bottom:0}.crop:after{right:-5px;bottom:-5px;border-left:0;border-top:0}
+/* colors */
+.ramp{display:flex;height:150px;border:1px solid var(--ink)}
+.ramp button{flex:1;border:0;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;text-align:left;transition:flex .35s cubic-bezier(.3,.9,.3,1);font-family:var(--mono);font-size:11px;line-height:1.35;background:var(--c);color:var(--t)}
+.ramp button:hover{flex:2.2}.ramp button b{font-size:13px;font-weight:500;display:block}.ramp button span{opacity:.75}
+.ramp.sm{height:84px}.ramp.sm button b{font-size:12px}
+.sem{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sem button{border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;gap:12px;padding:12px;text-align:left;transition:.15s}.sem button:hover{border-color:var(--ink);transform:translateY(-2px)}
+.sem i{width:40px;height:40px;border-radius:6px;background:var(--c);flex:none}.sem b{display:block;font-weight:600;font-size:14px}.sem span{font-family:var(--mono);font-size:11.5px;color:var(--mute)}
+.toktbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.toktbl td,.toktbl th{padding:9px 12px;border-bottom:1px solid var(--line2);text-align:left}
+.toktbl th{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase;border-bottom:1px solid var(--line)}
+.toktbl code{font-family:var(--mono);font-size:12.5px}.toktbl .dot{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:8px;border:1px solid rgba(128,128,128,.35)}
+/* type */
+.ty{border-top:1px solid var(--ink)}
+.ty div{display:grid;grid-template-columns:110px 1fr 160px;align-items:baseline;gap:20px;padding:16px 0;border-bottom:1px solid var(--line)}
+.ty div span:first-child{font-family:var(--mono);font-size:12px;color:var(--mute)}.ty div span:last-child{font-family:var(--mono);font-size:12px;color:var(--ink2);text-align:right}
+.ty .samp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* spacing */
+.spc{display:flex;align-items:flex-end;gap:14px;height:140px}
+.spc div{display:flex;flex-direction:column;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--mute);flex:1}
+.spc i{display:block;width:100%;background:var(--brand);border:1.5px solid var(--ink);transition:.2s}.spc div:hover i{background:var(--ink)}.spc div:hover{color:var(--ink)}
+/* lt components */
+.lt-btn{--h:36px;--px:16px;--fs:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:var(--h);padding:0 var(--px);font-size:var(--fs);font-weight:600;font-family:var(--sans);border:1.5px solid var(--ink);border-radius:6px;background:var(--brand);color:var(--on-brand);box-shadow:3px 3px 0 var(--shadow);transition:transform .12s,box-shadow .12s,background .15s;white-space:nowrap}
+.lt-btn--s{--h:28px;--px:10px;--fs:13px;box-shadow:2px 2px 0 var(--shadow)}.lt-btn--l{--h:44px;--px:22px;--fs:16px;box-shadow:4px 4px 0 var(--shadow)}
+.lt-btn:hover:not([disabled]),.lt-btn.is-hover{background:var(--brand-h);transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+.lt-btn:active:not([disabled]),.lt-btn.is-active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shadow);background:var(--brand-a)}
+.lt-btn--secondary{background:var(--surface);color:var(--ink)}.lt-btn--secondary:hover:not([disabled]),.lt-btn--secondary.is-hover{background:var(--sunk)}
+.lt-btn--ghost{background:transparent;border-color:transparent;box-shadow:none;color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+.lt-btn--ghost:hover:not([disabled]),.lt-btn--ghost.is-hover{background:var(--sunk);transform:none;box-shadow:none}
+.lt-btn--ghost:active:not([disabled]),.lt-btn--ghost.is-active{transform:none;background:var(--line)}
+.lt-btn[disabled]{background:var(--sunk);color:var(--mute);border-color:var(--line);box-shadow:none;cursor:not-allowed}
+.lt-btn.is-loading{pointer-events:none;opacity:.9}
+.lt-btn .sp{width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.lt-field{display:grid;gap:6px;width:280px;font-size:13px}.lt-field label{font-weight:600}
+.lt-input{height:var(--h,36px);padding:0 12px;border:1.5px solid var(--ink);border-radius:6px;background:var(--surface);font-size:var(--fs,14px);width:100%;outline:0;transition:.15s;color:var(--ink)}
+.lt-input.is-focus,.lt-input:focus{box-shadow:0 0 0 3px var(--brand)}
+.lt-input.is-error{border-color:var(--bad);box-shadow:0 0 0 3px var(--badbg)}
+.lt-input[disabled]{background:var(--sunk);border-color:var(--line);color:var(--mute);cursor:not-allowed}
+.lt-field .help{color:var(--mute);font-size:12.5px}.lt-field .help.err{color:var(--bad)}
+/* playground */
+.pg{display:grid;grid-template-columns:1.05fr 1fr;border:1px solid var(--ink);background:var(--surface);transition:background .35s}
+.pg .L{border-right:1px solid var(--ink);display:flex;flex-direction:column}
+.pg .stage{flex:1;min-height:210px;display:grid;place-items:center;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:16px 16px;padding:20px}
+.ctrl{border-top:1px solid var(--ink);padding:14px 16px;display:grid;gap:12px;background:var(--bg)}
+.ctrl .row{display:flex;align-items:center;gap:12px}.ctrl .row>span{width:44px;font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.08em}
+.opts{display:flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+.opts button{border:0;background:var(--surface);padding:5px 12px;font-size:13px;border-right:1px solid var(--line);transition:.12s}.opts button:last-child{border-right:0}
+.opts button:hover{background:var(--sunk)}.opts button.on{background:var(--ink);color:var(--bg)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--ink);margin-bottom:16px}
+.tabs button{border:0;background:none;padding:10px 18px;font-family:var(--disp);font-weight:800;font-size:18px;color:var(--mute);position:relative;letter-spacing:-.02em}.tabs button.on{color:var(--ink)}.tabs button.on:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:4px;background:var(--brand)}
+.code{background:var(--code);color:var(--code-ink);font-family:var(--mono);font-size:12.5px;line-height:1.75;padding:18px 20px;overflow:auto;white-space:pre;position:relative;flex:1}
+.code .t{color:#ffcf5c}.code .a{color:#9fd3ff}.code .v{color:#9be3b0}.code .c{color:#7c7869}
+.code .cp{position:absolute;right:12px;top:12px;border:1px solid #3a382f;background:#1d1c17;color:#c9c4b3;font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:5px}.code .cp:hover{border-color:var(--brand);color:var(--brand)}
+.spec{padding:12px 16px;border-top:1px solid var(--ink);display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--mute);background:var(--bg)}.spec b{display:block;color:var(--ink);font-weight:500;font-size:13px}
+/* dd */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:26px}
+.dd{border:1px solid var(--line);background:var(--surface);transition:background .35s}
+.dd .st{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--line)}
+.dd.do .st{background:var(--okbg);color:var(--ok);border-bottom:3px solid var(--ok)}.dd.dont .st{background:var(--badbg);color:var(--bad);border-bottom:3px solid var(--bad)}
+.dd .st svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.6}
+.dd .dm{min-height:130px;display:grid;place-items:center;padding:20px;gap:14px;align-content:center}
+.dd .cap{padding:12px 14px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink2)}
+.nums{width:230px;font-size:14px}.nums div{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line)}
+.nums.mono div b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}.nums.prop div b{font-weight:400;text-align:left;font-family:var(--sans);font-variant-numeric:proportional-nums}
+.toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:6px;font-family:var(--mono);font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:60;display:flex;align-items:center;gap:10px}
+.toast.on{opacity:1;transform:translate(-50%,0)}.toast i{width:14px;height:14px;border-radius:3px;border:1px solid rgba(128,128,128,.5)}
+.eg{position:fixed;left:12px;bottom:8px;font-size:11px;color:var(--mute);z-index:30}
+</style></head><body>
+<aside>
+ <div class="brand"><div class="mark"><i></i><i></i><i></i><i></i></div><div><b>格网</b><small>Lattice · v3.2</small></div></div>
+ <h6>开始</h6><a href="#top" class="on" data-s="top">概览</a>
+ <h6>基础</h6><a href="#color" data-s="color">颜色<em>01</em></a><a href="#type" data-s="type">字阶<em>02</em></a><a href="#space" data-s="space">间距<em>03</em></a>
+ <h6>组件</h6><a href="#comp" data-s="comp">按钮<em>04</em></a><a href="#comp" data-s="comp2">输入框<em>04</em></a>
+ <h6>实践</h6><a href="#dd" data-s="dd">做与不做<em>05</em></a>
+</aside>
+<main id="top">
+ <div class="bar"><span>design.lattice.example</span><span class="sp"></span><span class="ver">3.2.0</span>
+  <div class="theme" id="theme"><button class="on" data-t="light" aria-label="浅色"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"/></svg></button><button data-t="dark" aria-label="深色"><svg viewBox="0 0 16 16"><path d="M13 9.5A5.5 5.5 0 016.5 3 5.5 5.5 0 108 13.5a5.5 5.5 0 005-4z"/></svg></button></div></div>
+ <div class="page">
+  <div class="intro"><h1>格网<span>设计</span>系统</h1><p>给资源管理、账单与模型平台用的界面规范。一套 token，三十几个组件，深浅两种主题。点任何一块颜色可以复制它。</p></div>
+
+  <section class="s" id="color"><div class="sh"><span class="n">01</span><h2>颜色</h2></div><p class="sd">主色是琥珀黄，只用来标出「这一屏最该点的东西」。其余全部用暖灰，状态色保持克制。</p>
+   <h3>品牌 · 琥珀</h3><div class="ramp" id="r1"></div>
+   <h3>中性 · 暖灰</h3><div class="ramp sm" id="r2"></div>
+   <h3>语义</h3><div class="sem" id="r3"></div>
+   <h3>语义 token · 当前主题</h3>
+   <table class="toktbl" id="tk"><thead><tr><th>Token</th><th>用途</th><th>当前值</th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="s" id="type"><div class="sh"><span class="n">02</span><h2>字阶</h2></div><p class="sd">标题用 Bricolage Grotesque，正文用 IBM Plex Sans，数字与代码用 IBM Plex Mono。中文回落到 Noto Sans SC。</p>
+   <div class="ty" id="ty"></div></section>
+
+  <section class="s" id="space"><div class="sh"><span class="n">03</span><h2>间距</h2></div><p class="sd">以 4 为基数的十档。组件内部用小档，区块之间用大档，不在两档之间取值。</p>
+   <div class="crop"><div class="spc" id="spc"></div></div></section>
+
+  <section class="s" id="comp"><div class="sh"><span class="n">04</span><h2>组件</h2></div><p class="sd">切换状态、尺寸和变体，右侧的代码和规格同步更新。</p>
+   <div class="tabs" id="ctabs"><button class="on" data-c="btn">按钮</button><button data-c="inp">输入框</button></div>
+   <div class="pg"><div class="L"><div class="stage" id="stage"></div><div class="ctrl" id="ctrl"></div></div><div style="display:flex;flex-direction:column"><div class="code" id="code"></div><div class="spec" id="spec"></div></div></div>
+  </section>
+
+  <section class="s" id="dd"><div class="sh"><span class="n">05</span><h2>做与不做</h2></div><p class="sd">三条最常被写错的规则，左边照着做，右边是常见错误。</p>
+   <h3>按钮文案</h3><div class="pair">
+    <div class="dd do"><div class="st"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>做</div><div class="dm"><div style="display:flex;gap:12px"><button class="lt-btn lt-btn--secondary">取消</button><button class="lt-btn">提交申请</button></div></div><div class="cap">用「动词 + 对象」。用户看按钮就知道点了会发生什么。</div></div>
+    <div class="dd dont"><div class="st"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>不要做</div><div class="dm"><div style="display:flex;gap:12px"><button class="lt-btn lt-btn--secondary">否</button><button class="lt-btn">确定</button></div></div><div class="cap">「确定 / 是 / 否」让人回头去读上一句话。</div></div></div>
+   <h3>主按钮数量</h3><div class="pair">
+    <div class="dd do"><div class="st"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>做</div><div class="dm"><div style="display:flex;gap:12px"><button class="lt-btn lt-btn--ghost">稍后处理</button><button class="lt-btn lt-btn--secondary">导出</button><button class="lt-btn">批准</button></div></div><div class="cap">一个区域只放一个主按钮，其余降为次要或文字按钮。</div></div>
+    <div class="dd dont"><div class="st"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>不要做</div><div class="dm"><div style="display:flex;gap:12px"><button class="lt-btn">稍后处理</button><button class="lt-btn">导出</button><button class="lt-btn">批准</button></div></div><div class="cap">三个同样醒目的按钮，等于没有重点。</div></div></div>
+   <h3>数字对齐</h3><div class="pair">
+    <div class="dd do"><div class="st"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>做</div><div class="dm"><div class="nums mono"><div><span>算法部</span><b>182,400.00</b></div><div><span>推荐组</span><b>96,250.50</b></div><div><span>数据平台</span><b>7,188.00</b></div></div></div><div class="cap">金额右对齐，用等宽数字，小数点上下对齐。</div></div>
+    <div class="dd dont"><div class="st"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>不要做</div><div class="dm"><div class="nums prop"><div><span>算法部</span><b>182,400.00</b></div><div><span>推荐组</span><b>96,250.50</b></div><div><span>数据平台</span><b>7,188.00</b></div></div></div><div class="cap">左对齐加比例数字，位数一多就读不出大小。</div></div></div>
+  </section>
+ </div>
+</main>
+<div class="toast" id="toast"><i></i><span></span></div><div class="eg">示例数据</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function toast(t,c){const e=$("#toast");e.querySelector("span").textContent=t;e.querySelector("i").style.background=c||"transparent";e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1700)}
+function copy(t,c){try{navigator.clipboard.writeText(t).catch(()=>{})}catch(e){}toast("已复制 "+t,c)}
+const lum=h=>{const n=parseInt(h.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(.299*r+.587*g+.114*b)/255};
+/* 色 */
+const AM=["#fff8e1","#ffefb8","#ffe38a","#ffd55c","#ffc933","#ffb800","#e09a00","#b87800","#8a5a00","#5c3c00"],AN=[50,100,200,300,400,500,600,700,800,900];
+const NE=["#fffef9","#f6f3e8","#e7e3d6","#d3cfc0","#b5b0a0","#8f8b80","#6e6a5f","#55524a","#3a3832","#24231e","#16150f"],NN=[0,50,100,150,200,300,400,500,600,700,900];
+const ramp=(el,arr,names,pre)=>{el.innerHTML=arr.map((c,i)=>`<button style="--c:${c};--t:${lum(c)>.55?"#16150f":"#fffef9"}" data-c="${c}" title="点击复制"><b>${names[i]}</b><span>${c.toUpperCase()}</span></button>`).join("")};
+ramp($("#r1"),AM,AN);ramp($("#r2"),NE,NN);
+const SEM=[["成功","--lt-green","#1f9d55"],["警告","--lt-orange","#d9480f"],["危险","--lt-red","#e5484d"],["信息","--lt-blue","#3478f6"]];
+$("#r3").innerHTML=SEM.map(s=>`<button data-c="${s[2]}"><i style="--c:${s[2]}"></i><div><b>${s[0]}</b><span>${s[1]} · ${s[2].toUpperCase()}</span></div></button>`).join("");
+document.addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(b&&b.dataset.c[0]==="#")copy(b.dataset.c.toUpperCase(),b.dataset.c)});
+const TOK=[["--bg","页面背景"],["--surface","卡片与输入框底"],["--ink","正文与描边"],["--ink2","次要文字"],["--line","分隔线"],["--brand","主色"],["--brand-h","主色悬停"]];
+function tok(){const cs=getComputedStyle(document.documentElement);$("#tk tbody").innerHTML=TOK.map(([k,u])=>{const v=cs.getPropertyValue(k).trim();return`<tr><td><code>${k.replace("--","--lt-")}</code></td><td>${u}</td><td><span class="dot" style="background:${v}"></span><code>${v.toUpperCase()}</code></td></tr>`}).join("")}
+/* 字阶 */
+const TY=[["display","Bricolage Grotesque",48,56,800,"算力账单一目了然"],["h1","Bricolage Grotesque",32,40,800,"本月资源费用汇总"],["h2","IBM Plex Sans",24,32,600,"GPU 资源池利用率"],["h3","IBM Plex Sans",18,26,600,"待我审批的申请单"],["body","IBM Plex Sans",14,22,400,"华东 A 池本周共新增 24 张 H800，已全部纳管。"],["small","IBM Plex Sans",12,18,400,"最后同步于 2026-11-20 09:30"],["mono","IBM Plex Mono",13,20,500,"REQ-20261120-017  ¥182,400.00"]];
+$("#ty").innerHTML=TY.map(t=>`<div><span>${t[0]}</span><span class="samp" style="font-family:'${t[1]}','Noto Sans SC';font-size:${t[2]}px;line-height:${t[3]}px;font-weight:${t[4]};${t[1].includes("Bric")?"letter-spacing:-.03em":""}">${t[5]}</span><span>${t[2]} / ${t[3]} · ${t[4]}</span></div>`).join("");
+const SP=[4,8,12,16,24,32,40,48,64,96];
+$("#spc").innerHTML=SP.map((p,i)=>`<div><i style="height:${p*1.3}px"></i>sp-${i+1}<br>${p}</div>`).join("");
+/* 组件演示 */
+const S={comp:"btn",state:{btn:"默认",inp:"默认"},size:"M",variant:"主要"};
+const STATES={btn:["默认","悬停","按下","禁用","加载"],inp:["默认","聚焦","错误","禁用"]};
+const VAR={主要:"",次要:" lt-btn--secondary",文字:" lt-btn--ghost"};
+const SZ={S:" lt-btn--s",M:"",L:" lt-btn--l"},H={S:28,M:36,L:44},PX={S:10,M:16,L:22},FS={S:13,M:14,L:16};
+const esc=s=>s.replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function render(){
+ const c=S.comp,st=S.state[c],sz=S.size;
+ let el,cls,attrs="",extra="",inner,html;
+ if(c==="btn"){
+  cls="lt-btn"+(S.variant==="主要"?"":S.variant==="次要"?" lt-btn--secondary":" lt-btn--ghost")+(sz==="S"?" lt-btn--s":sz==="L"?" lt-btn--l":"");
+  const stc=st==="悬停"?" is-hover":st==="按下"?" is-active":st==="加载"?" is-loading":"";
+  const dis=st==="禁用"?" disabled":"";
+  $("#stage").innerHTML=`<button class="${cls}${stc}"${dis}>${st==="加载"?'<span class="sp"></span>':""}提交申请</button>`;
+  const code=`<span class="c">&lt;!-- ${S.variant} · ${sz} · ${st} --&gt;</span>\n<span class="t">&lt;button</span> <span class="a">class</span>=<span class="v">"${cls+stc}"</span>${st==="禁用"?`\n        <span class="a">disabled</span>`:""}${st==="加载"?`\n        <span class="a">aria-busy</span>=<span class="v">"true"</span>`:""}<span class="t">&gt;</span>\n${st==="加载"?'  <span class="t">&lt;span</span> <span class="a">class</span>=<span class="v">"sp"</span><span class="t">&gt;&lt;/span&gt;</span>\n':""}  提交申请\n<span class="t">&lt;/button&gt;</span>\n\n<span class="c">/* 对应 token */</span>\nbackground: var(<span class="v">${S.variant==="主要"?(st==="悬停"?"--lt-brand-h":st==="按下"?"--lt-brand-a":"--lt-brand"):S.variant==="次要"?"--lt-surface":"transparent"}</span>);\nborder: 1.5px solid var(<span class="v">--lt-ink</span>);\nheight: <span class="v">${H[sz]}px</span>;`;
+  $("#code").innerHTML=`<button class="cp" id="cp">复制</button>`+code;
+  $("#spec").innerHTML=`<div>高度<b>${H[sz]}px</b></div><div>左右内边距<b>${PX[sz]}px</b></div><div>字号 / 字重<b>${FS[sz]}px / 600</b></div>`;
+ }else{
+  const h=H[sz],fs=FS[sz];const stc=st==="聚焦"?" is-focus":st==="错误"?" is-error":"";const dis=st==="禁用"?" disabled":"";
+  const help=st==="错误"?'<span class="help err">已超出本月可申请额度 128 卡</span>':'<span class="help">本月剩余可申请 256 卡</span>';
+  $("#stage").innerHTML=`<div class="lt-field"><label>申请卡数</label><input class="lt-input${stc}" style="--h:${h}px;--fs:${fs}px" value="${st==="错误"?"512":"64"}"${dis}>${help}</div>`;
+  $("#code").innerHTML=`<button class="cp" id="cp">复制</button><span class="c">&lt;!-- ${sz} · ${st} --&gt;</span>\n<span class="t">&lt;div</span> <span class="a">class</span>=<span class="v">"lt-field"</span><span class="t">&gt;</span>\n  <span class="t">&lt;label&gt;</span>申请卡数<span class="t">&lt;/label&gt;</span>\n  <span class="t">&lt;input</span> <span class="a">class</span>=<span class="v">"lt-input${stc}"</span>${st==="禁用"?` <span class="a">disabled</span>`:""}${st==="错误"?`\n         <span class="a">aria-invalid</span>=<span class="v">"true"</span>`:""}<span class="t">&gt;</span>\n  <span class="t">&lt;span</span> <span class="a">class</span>=<span class="v">"help${st==="错误"?" err":""}"</span><span class="t">&gt;</span>…<span class="t">&lt;/span&gt;</span>\n<span class="t">&lt;/div&gt;</span>\n\n<span class="c">/* 对应 token */</span>\nborder-color: var(<span class="v">${st==="错误"?"--lt-red":st==="禁用"?"--lt-line":"--lt-ink"}</span>);\nheight: <span class="v">${h}px</span>;`;
+  $("#spec").innerHTML=`<div>高度<b>${h}px</b></div><div>圆角<b>6px</b></div><div>聚焦环<b>3px 主色</b></div>`;
+ }
+ $("#ctrl").innerHTML=`<div class="row"><span>状态</span><div class="opts" data-k="state">${STATES[c].map(x=>`<button class="${x===st?"on":""}">${x}</button>`).join("")}</div></div><div class="row"><span>尺寸</span><div class="opts" data-k="size">${["S","M","L"].map(x=>`<button class="${x===sz?"on":""}">${x}</button>`).join("")}</div></div>`+(c==="btn"?`<div class="row"><span>变体</span><div class="opts" data-k="variant">${["主要","次要","文字"].map(x=>`<button class="${x===S.variant?"on":""}">${x}</button>`).join("")}</div></div>`:"");
+ $$("#ctrl .opts").forEach(o=>o.querySelectorAll("button").forEach(b=>b.onclick=()=>{const k=o.dataset.k;if(k==="state")S.state[c]=b.textContent;else S[k]=b.textContent;render()}));
+ $("#cp").onclick=()=>{copy($("#code").innerText.replace(/^复制\n?/,"").trim().slice(0,400))};
+}
+$$("#ctabs button").forEach(b=>b.onclick=()=>{S.comp=b.dataset.c;$$("#ctabs button").forEach(x=>x.classList.toggle("on",x===b));render()});
+/* 主题 */
+$$("#theme button").forEach(b=>b.onclick=()=>{document.documentElement.dataset.theme=b.dataset.t;$$("#theme button").forEach(x=>x.classList.toggle("on",x===b));setTimeout(tok,60)});
+/* 滚动 */
+const ids=["top","color","type","space","comp","dd"];
+function spy(){let cur="top";ids.forEach(i=>{const e=document.getElementById(i);if(e&&e.getBoundingClientRect().top<innerHeight*.35)cur=i});$$("aside a").forEach(a=>a.classList.toggle("on",a.dataset.s===cur))}
+addEventListener("scroll",spy,{passive:true});
+$$("aside a").forEach(a=>a.addEventListener("click",e=>{const t=a.getAttribute("href");if(t==="#comp"&&a.dataset.s==="comp2"){S.comp="inp";$$("#ctabs button").forEach(x=>x.classList.toggle("on",x.dataset.c==="inp"));render()}}));
+tok();render();spy();
+</script></body></html>
