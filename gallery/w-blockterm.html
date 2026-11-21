@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>块终端 · 栖终端</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0e11; --bg2:#121317; --sel:#16171d; --line:#22242b; --line2:#2d3039; --tx:#d4d7de; --tx2:#8d929e; --tx3:#575c68; --acc:#a98bff; --acc-d:#2a2145; --ok:#59d19a; --er:#ff6b6b; --warn:#f0c15a; --cy:#6fd3e8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font: 13px/1.5 "IBM Plex Sans","Noto Sans SC",sans-serif; color: var(--tx); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "IBM Plex Mono",ui-monospace,Menlo,monospace, ui-monospace, Menlo, monospace; }
+  svg.i { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .app { height: 100vh; display: grid; grid-template-rows: 40px minmax(0,1fr); grid-template-columns: 236px minmax(0,1fr); }
+  .top { grid-column: 1 / 3; display: flex; align-items: center; gap: 14px; padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .lights { display: flex; gap: 8px; } .lights i { width: 11px; height: 11px; border-radius: 50%; background: #2c2f37; }
+  .tab { height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-left: 14px; border-radius: 7px; background: var(--sel); color: #fff; font: 500 12px "IBM Plex Mono",ui-monospace,Menlo,monospace; }
+  .tab i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+  .top .r { margin-left: auto; font-size: 11px; color: var(--tx3); }
+
+  .rail { border-right: 1px solid var(--line); overflow-y: auto; padding: 16px 0; scrollbar-width: none; }
+  .rail h6 { padding: 0 18px 8px; font-size: 11px; letter-spacing: .08em; color: var(--tx3); font-weight: 500; }
+  .wf { display: block; width: 100%; text-align: left; padding: 7px 18px; position: relative; }
+  .wf:hover { background: var(--bg2); }
+  .wf b { display: block; font-weight: 500; font-size: 12.5px; color: var(--tx); }
+  .wf span { display: block; font: 11px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .wf:hover b { color: #fff; }
+  .rail .gap { height: 18px; }
+  .env { margin: 4px 18px 0; padding-top: 14px; border-top: 1px solid var(--line); font: 11.5px/1.9 "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx2); }
+  .env em { font-style: normal; color: var(--tx3); display: inline-block; width: 52px; }
+
+  .stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
+  .blocks { flex: 1; overflow-y: auto; padding: 0 0 8px; scrollbar-width: thin; scrollbar-color: #2a2c33 transparent; }
+  .blk { position: relative; padding: 14px 32px 14px 36px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .blk::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; }
+  .blk.ok::before { background: #1f4d39; } .blk.bad::before { background: #7a2d2d; }
+  .blk:hover { background: #101115; }
+  .blk.sel { background: var(--sel); } .blk.sel::before { background: var(--acc); }
+  .meta { display: flex; align-items: center; gap: 10px; font: 11.5px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx3); margin-bottom: 4px; }
+  .meta .u { color: var(--cy); } .meta .g { color: var(--warn); }
+  .meta .t { margin-left: auto; }
+  .cmd { font: 500 14px/1.5 "IBM Plex Mono",ui-monospace,Menlo,monospace; color: #fff; display: flex; gap: 8px; }
+  .cmd .pr { color: var(--acc); }
+  .out { margin-top: 8px; font: 400 12.5px/1.65 "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx); white-space: pre; overflow-x: auto; scrollbar-width: none; }
+  .out .dm { color: var(--tx3); } .out .ok { color: var(--ok); } .out .er { color: var(--er); } .out .wn { color: var(--warn); } .out .cy { color: var(--cy); } .out .hd { color: var(--tx2); }
+  .blk.fold .out { display: none; }
+  .foldnote { display: none; margin-top: 6px; font: 11.5px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx3); }
+  .blk.fold .foldnote { display: block; }
+  .run { margin-top: 8px; display: flex; align-items: center; gap: 8px; font: 12px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx2); }
+  .run i { width: 12px; height: 12px; border: 2px solid var(--line2); border-top-color: var(--acc); border-radius: 50%; animation: sp .7s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .tools { position: absolute; right: 24px; top: 8px; display: none; gap: 2px; background: #1c1d24; border: 1px solid var(--line2); border-radius: 8px; padding: 2px; z-index: 3; }
+  .blk.sel .tools { display: flex; }
+  .tools button { height: 24px; padding: 0 9px; display: flex; align-items: center; gap: 5px; border-radius: 6px; color: var(--tx2); font-size: 11.5px; }
+  .tools button:hover { background: #2a2c36; color: #fff; }
+  .tools button.done { color: var(--ok); }
+  .explain { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 7px; border: 1px solid #4b3c7d; background: var(--acc-d); color: #d9ccff; font-size: 12px; font-weight: 500; }
+  .explain:hover { background: #352a58; }
+  .explain svg { width: 13px; height: 13px; }
+  .ai { margin-top: 12px; border-left: 2px solid var(--acc); padding: 2px 0 2px 14px; max-width: 760px; font-size: 13px; line-height: 1.75; color: #dcdfe6; cursor: default; }
+  .ai .lb { font-size: 11px; color: var(--acc); letter-spacing: .06em; margin-bottom: 4px; font-weight: 600; }
+  .ai code { font: 12px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--warn); background: #1b1c22; padding: 1px 5px; border-radius: 4px; }
+  .ai .fix { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .ai .fix button { font: 12px "IBM Plex Mono",ui-monospace,Menlo,monospace; padding: 4px 10px; border: 1px solid var(--line2); border-radius: 6px; color: var(--tx); text-align: left; }
+  .ai .fix button:hover { border-color: var(--acc); color: #fff; }
+  .caret::after { content: "▍"; color: var(--acc); animation: bl 1s steps(2) infinite; }
+  @keyframes bl { 50% { opacity: 0; } }
+
+  .editor { flex: none; margin: 0 24px 18px; border: 1px solid var(--line2); border-radius: 10px; background: var(--bg2); position: relative; }
+  .editor:focus-within { border-color: #4a3f78; }
+  .ectx { display: flex; align-items: center; gap: 8px; padding: 9px 14px 0; font: 11.5px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx3); }
+  .ectx .u { color: var(--cy); } .ectx .g { color: var(--warn); }
+  .einp { display: flex; align-items: center; gap: 8px; padding: 6px 14px 11px; font: 500 14px "IBM Plex Mono",ui-monospace,Menlo,monospace; }
+  .einp .pr { color: var(--acc); }
+  .einp input { flex: 1; font: inherit; color: #fff; cursor: text; caret-color: var(--acc); }
+  .einp input::placeholder { color: var(--tx3); font-weight: 400; }
+  .einp .hint { font: 11px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx3); white-space: nowrap; }
+  .comp { position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); background: #181920; border: 1px solid var(--line2); border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,.5); overflow: hidden; display: none; }
+  .comp.on { display: block; }
+  .comp .it { display: flex; align-items: baseline; gap: 14px; padding: 7px 14px; cursor: pointer; }
+  .comp .it.on { background: #251f3d; box-shadow: inset 2px 0 0 var(--acc); }
+  .comp .it .c { font: 500 13px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: #fff; } .comp .it .c b { color: var(--acc); font-weight: 600; }
+  .comp .it .d { margin-left: auto; font-size: 12px; color: var(--tx2); }
+  .comp .ft { display: flex; gap: 14px; padding: 5px 14px; border-top: 1px solid var(--line); font: 11px "IBM Plex Mono",ui-monospace,Menlo,monospace; color: var(--tx3); }
+  .empty { padding: 60px 36px; color: var(--tx3); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="lights"><i></i><i></i><i></i></div><div class="tab"><i></i>gpu-ops</div><span class="r">示例数据</span></div>
+  <aside class="rail">
+    <h6>常用工作流</h6>
+    <div id="wf"></div>
+    <div class="gap"></div>
+    <h6>当前环境</h6>
+    <div class="env"><div><em>集群</em>bj-gpu-02</div><div><em>命名空间</em>llm-serving</div><div><em>节点</em>12 / 12 就绪</div><div><em>GPU</em>96 卡</div></div>
+  </aside>
+  <div class="stage">
+    <div class="blocks" id="blocks"></div>
+    <div class="editor" id="editor">
+      <div class="comp" id="comp"></div>
+      <div class="ectx"><span class="u">ops@bj-gpu-02</span><span>~/infer-deploy</span><span class="g">main</span></div>
+      <div class="einp"><span class="pr">❯</span><input id="inp" spellcheck="false" autocomplete="off" placeholder="输入命令，试试 kubectl get pods"><span class="hint">Tab 补全 · ↑↓ 选择 · ↵ 运行</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- 状态 ---------- */
+let healed = false, seq = 0, selId = null;
+const blocks = [];
+const podsTable = () => healed
+  ? `<span class="hd">NAME                      READY   STATUS    RESTARTS   AGE</span>\nqwen-serve-9b41-a7c2      1/1     <span class="ok">Running</span>   0          12s\nqwen-serve-9b41-k5d8      1/1     <span class="ok">Running</span>   0          12s\nembed-5f6b-q3n7           1/1     <span class="ok">Running</span>   0          2d\ngateway-84d-zr6t          1/1     <span class="ok">Running</span>   0          2d`
+  : `<span class="hd">NAME                      READY   STATUS             RESTARTS   AGE</span>\nqwen-serve-7c9d-x2k4      0/1     <span class="er">CrashLoopBackOff</span>   6          14m\nqwen-serve-7c9d-m8p1      1/1     <span class="ok">Running</span>            0          14m\nembed-5f6b-q3n7           1/1     <span class="ok">Running</span>            0          2d\ngateway-84d-zr6t          1/1     <span class="ok">Running</span>            0          2d`;
+const OOM = `<span class="dm">INFO  loading weights  qwen-72b-int8  (shard 8/8)</span>\n<span class="dm">INFO  kv-cache  gpu_memory_utilization=0.95</span>\n<span class="er">torch.cuda.OutOfMemoryError: CUDA out of memory.</span>\n<span class="er">Tried to allocate 3.40 GiB. GPU 0 has a total capacity of 79.65 GiB</span>\n<span class="er">of which 2.11 GiB is free. 41.20 GiB is allocated by another process.</span>\n<span class="er">exit code 1</span>`;
+const SMI = `<span class="hd">GPU  型号        利用率   显存                    温度   功耗</span>\n  0  A100-80G    <span class="wn">97%</span>   78890MiB / 81920MiB    71C   398W\n  1  A100-80G    62%   41212MiB / 81920MiB    58C   311W\n  2  A100-80G    88%   70144MiB / 81920MiB    67C   372W\n  3  A100-80G     4%    1024MiB / 81920MiB    39C    74W`;
+const DF = `<span class="hd">文件系统      容量   已用   可用   使用率  挂载点</span>\n/dev/nvme0n1  3.5T   2.9T   0.6T   <span class="wn">83%</span>    /\n/dev/nvme1n1  7.0T   3.1T   3.9T   45%    /models`;
+
+/* 命令表：返回 {lines:[[html,delayMs]], code} */
+const CMD = {
+  "nvidia-smi": { d: "查看每张 GPU 的利用率和显存", run: () => ({ lines: [[SMI, 500]] }) },
+  "kubectl get pods": { d: "列出 llm-serving 下的 Pod", run: () => ({ lines: [[podsTable(), 450]] }) },
+  "kubectl logs qwen-serve-7c9d-x2k4": { d: "查看崩溃 Pod 的日志", run: () => ({ lines: [[OOM, 600]], code: 1 }) },
+  "kubectl describe pod qwen-serve-7c9d-x2k4": { d: "查看 Pod 的调度与事件", run: () => ({ lines: [['<span class="hd">Name:</span>         qwen-serve-7c9d-x2k4\n<span class="hd">Node:</span>         gpu-bj-07/172.18.7.17\n<span class="hd">Limits:</span>       nvidia.com/gpu: 1\n<span class="hd">Last State:</span>   Terminated  Reason: <span class="er">OOMKilled</span>  Exit Code: 1\n<span class="hd">Events:</span>\n  <span class="wn">Warning</span>  BackOff  3m  kubelet  Back-off restarting failed container', 700]] }) },
+  "kubectl rollout restart deploy/qwen-serve": { d: "滚动重启 qwen-serve", run: () => { healed = true; return { lines: [["deployment.apps/qwen-serve <span class='ok'>restarted</span>", 400], ["Waiting for rollout to finish: 0 of 2 updated replicas are available...", 700], ["Waiting for rollout to finish: 1 of 2 updated replicas are available...", 700], ["deployment \"qwen-serve\" <span class='ok'>successfully rolled out</span>", 600]] }; } },
+  "df -h": { d: "查看磁盘使用", run: () => ({ lines: [[DF, 300]] }) },
+  "git status": { d: "查看工作区状态", run: () => ({ lines: [["位于分支 main\n您的分支与 'origin/main' 一致。\n\n无文件要提交，工作区干净", 250]] }) },
+  "ls": { d: "列出当前目录", run: () => ({ lines: [['<span class="cy">charts/</span>  <span class="cy">manifests/</span>  Makefile  README.md  values-prod.yaml', 200]] }) },
+};
+const WF = [["查看显存占用", "nvidia-smi"], ["列出推理 Pod", "kubectl get pods"], ["看崩溃日志", "kubectl logs qwen-serve-7c9d-x2k4"], ["滚动重启服务", "kubectl rollout restart deploy/qwen-serve"], ["磁盘使用", "df -h"]];
+$("#wf").innerHTML = WF.map(([n, c]) => `<button class="wf" data-c="${esc(c)}"><b>${n}</b><span>${esc(c)}</span></button>`).join("");
+
+/* ---------- 渲染 ---------- */
+const clock = () => { const d = new Date(Date.UTC(2025, 10, 20, 6, 31, 0) + seq * 47000); return d.toISOString().slice(11, 19); };
+function blockHTML(b) {
+  const st = b.running ? "" : b.code ? "bad" : "ok";
+  const nl = b.out ? b.out.split("\n").length : 0;
+  return `<div class="blk ${st}${b.id === selId ? " sel" : ""}${b.fold ? " fold" : ""}" data-id="${b.id}">
+    <div class="tools"><button data-a="copy"><svg class="i" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg><span>复制输出</span></button><button data-a="fold"><svg class="i" viewBox="0 0 16 16"><path d="M3 6l5 4 5-4"/></svg><span>${b.fold ? "展开" : "折叠"}</span></button><button data-a="share"><svg class="i" viewBox="0 0 16 16"><path d="M8 10V2.5M5 5l3-3 3 3M3 9v3.5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V9"/></svg><span>分享</span></button></div>
+    <div class="meta"><span class="u">ops@bj-gpu-02</span><span>~/infer-deploy</span><span class="g">main</span><span class="t">${b.time}${b.dur ? " · " + b.dur : ""}${b.code ? " · 退出码 " + b.code : ""}</span></div>
+    <div class="cmd"><span class="pr">❯</span><span>${esc(b.cmd)}</span></div>
+    ${b.running && !b.out ? '<div class="run"><i></i>运行中</div>' : `<div class="out">${b.out}</div><div class="foldnote">${nl} 行输出已折叠</div>`}
+    ${b.running && b.out ? '<div class="run"><i></i>运行中</div>' : ""}
+    ${b.code && !b.running && !b.ai ? `<button class="explain" data-a="explain"><svg class="i" viewBox="0 0 16 16"><path d="M8 1.5l1.4 3.6 3.6 1.4-3.6 1.4L8 11.5 6.6 7.9 3 6.5l3.6-1.4z"/></svg>解释这个错误</button>` : ""}
+    ${b.ai ? `<div class="ai"><div class="lb">AI 解释</div><div class="aitxt${b.aiBusy ? " caret" : ""}">${b.aiHTML}</div>${b.aiDone ? `<div class="fix">${b.aiDone.map(c => `<button data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>` : ""}</div>` : ""}
+  </div>`;
+}
+const box = $("#blocks");
+function render(keepScroll) {
+  const top = box.scrollTop, atEnd = box.scrollHeight - box.clientHeight - top < 40;
+  box.innerHTML = blocks.length ? blocks.map(blockHTML).join("") : '<div class="empty">还没有命令。输入命令，或点左侧的工作流。</div>';
+  if (!keepScroll || atEnd) box.scrollTop = box.scrollHeight; else box.scrollTop = top;
+}
+
+/* ---------- 执行 ---------- */
+async function run(cmd) {
+  cmd = cmd.trim(); if (!cmd) return;
+  if (cmd === "clear") { blocks.length = 0; selId = null; render(); return; }
+  const b = { id: ++seq, cmd, out: "", running: true, time: clock(), code: 0 };
+  blocks.push(b); selId = b.id; render();
+  const t0 = performance.now(), spec = CMD[cmd];
+  let res;
+  if (spec) res = spec.run();
+  else { const first = cmd.split(/\s+/)[0]; res = { lines: [[`<span class="er">zsh: command not found: ${esc(first)}</span>`, 250]], code: 127 }; }
+  for (const [html, d] of res.lines) { await sleep(d); b.out += (b.out ? "\n" : "") + html; render(true); }
+  b.running = false; b.code = res.code || 0; b.dur = ((performance.now() - t0) / 1000).toFixed(1) + "s"; render();
+}
+async function explain(b) {
+  b.ai = true; b.aiBusy = true; b.aiHTML = ""; render(true);
+  const bad = b.code === 127;
+  const txt = bad
+    ? `<code>${esc(b.cmd.split(/\s+/)[0])}</code> 不在这台机器的 PATH 里，也不是内置命令。可以输入 <code>help</code> 之外的预置命令，或检查拼写。`
+    : "显存不足。<code>qwen-serve</code> 启动时把 <code>gpu_memory_utilization</code> 设成了 0.95，但这张卡上已有另一个进程占用 41.20 GiB，只剩 2.11 GiB，放不下 3.40 GiB 的 KV 缓存。<br>先用 <code>kubectl describe</code> 确认它被调度到了哪个节点；调低利用率或让调度器换一张空闲卡后重启即可。";
+  const plain = txt.replace(/<br>/g, "\n");
+  let i = 0; await new Promise(res => { const t = setInterval(() => { i += 3; b.aiHTML = txt.slice(0, Math.min(i, txt.length)).replace(/<[^>]*$/, ""); render(true); if (i >= txt.length) { clearInterval(t); res(); } }, 24); });
+  b.aiBusy = false; b.aiHTML = txt; b.aiDone = bad ? ["help", "ls"] : ["kubectl describe pod qwen-serve-7c9d-x2k4", "kubectl rollout restart deploy/qwen-serve"]; render(true);
+}
+box.addEventListener("click", e => {
+  const blkEl = e.target.closest(".blk"); if (!blkEl) return;
+  const b = blocks.find(x => x.id === +blkEl.dataset.id), a = e.target.closest("[data-a]"), fix = e.target.closest("[data-c]");
+  if (fix) { setInput(fix.dataset.c); return; }
+  if (a) {
+    const k = a.dataset.a;
+    if (k === "explain") explain(b);
+    else if (k === "fold") { b.fold = !b.fold; render(true); }
+    else if (k === "copy" || k === "share") {
+      const txt = k === "copy" ? blkEl.querySelector(".out").innerText : "https://term.example/b/" + (1000 + b.id);
+      try { navigator.clipboard.writeText(txt); } catch (_) {}
+      const s = a.querySelector("span"), old = s.textContent; a.classList.add("done"); s.textContent = k === "copy" ? "已复制" : "链接已复制";
+      setTimeout(() => { a.classList.remove("done"); s.textContent = old; }, 1400);
+    }
+    return;
+  }
+  if (getSelection().toString()) return;
+  selId = b.id; render(true);
+});
+$("#wf").addEventListener("click", e => { const w = e.target.closest(".wf"); if (w) setInput(w.dataset.c); });
+
+/* ---------- 输入与补全 ---------- */
+const inp = $("#inp"), comp = $("#comp"); let sugg = [], si = 0, hist = [], hi = 0;
+function setInput(v) { inp.value = v; inp.focus(); updateComp(); }
+function updateComp() {
+  const q = inp.value.trim().toLowerCase();
+  sugg = q ? Object.keys(CMD).filter(c => c.toLowerCase().includes(q) && c.toLowerCase() !== q).sort((a, b) => a.toLowerCase().indexOf(q) - b.toLowerCase().indexOf(q)).slice(0, 6) : [];
+  si = Math.min(si, Math.max(0, sugg.length - 1));
+  if (!sugg.length) { comp.classList.remove("on"); return; }
+  comp.innerHTML = sugg.map((c, i) => { const p = c.toLowerCase().indexOf(q); return `<div class="it${i === si ? " on" : ""}" data-i="${i}"><span class="c">${esc(c.slice(0, p))}<b>${esc(c.slice(p, p + q.length))}</b>${esc(c.slice(p + q.length))}</span><span class="d">${CMD[c].d}</span></div>`; }).join("") + '<div class="ft"><span>↑↓ 选择</span><span>Tab 补全</span><span>Esc 关闭</span></div>';
+  comp.classList.add("on");
+}
+inp.addEventListener("input", () => { si = 0; updateComp(); });
+inp.addEventListener("keydown", e => {
+  const open = comp.classList.contains("on");
+  if (e.key === "ArrowDown" && open) { si = (si + 1) % sugg.length; updateComp(); e.preventDefault(); }
+  else if (e.key === "ArrowUp" && open) { si = (si - 1 + sugg.length) % sugg.length; updateComp(); e.preventDefault(); }
+  else if (e.key === "Tab" && open) { e.preventDefault(); inp.value = sugg[si]; si = 0; updateComp(); }
+  else if (e.key === "Escape") comp.classList.remove("on");
+  else if (e.key === "Enter" && !e.isComposing) { const v = inp.value; if (v.trim()) { hist.push(v); hi = hist.length; } inp.value = ""; updateComp(); run(v); }
+  else if (e.key === "ArrowUp") { if (hi > 0) inp.value = hist[--hi]; e.preventDefault(); }
+  else if (e.key === "ArrowDown") { inp.value = hi < hist.length - 1 ? hist[++hi] : ""; hi = Math.min(hi + 1, hist.length); e.preventDefault(); }
+});
+comp.addEventListener("mousedown", e => { const it = e.target.closest(".it"); if (it) { e.preventDefault(); inp.value = sugg[+it.dataset.i]; si = 0; updateComp(); inp.focus(); } });
+addEventListener("keydown", e => { if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key.length === 1 && document.activeElement !== inp) inp.focus(); });
+
+/* ---------- 预置历史 ---------- */
+const seed = [
+  ["cd ~/infer-deploy && git pull", "Already up to date.", 0, "0.8s"],
+  ["kubectl get pods", podsTable(), 0, "0.4s"],
+  ["kubectl logs qwen-serve-7c9d-x2k4", OOM, 1, "0.6s"],
+  ["nvidia-smi", SMI, 0, "0.5s"],
+];
+seed.forEach(([cmd, out, code, dur]) => blocks.push({ id: ++seq, cmd, out, code, dur, time: clock() }));
+selId = 3;
+render();
+inp.focus();
+if (/demo/.test(location.search)) setTimeout(() => { explain(blocks[2]); setTimeout(() => setInput('kubectl r'), 2600); }, 300);
+</script>
+</body>
+</html>

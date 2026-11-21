@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交易终端 · GPU 算力现货</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#000; --am:#ffb000; --am2:#b07a00; --am3:#3a2a00; --am4:#1a1300; --tx:#f1e9d2; --up:#3ddc6a; --dn:#ff4d4d; --ln:#3a2c00; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; overflow:hidden; background:#000; }
+  body { font-family:"IBM Plex Mono","Noto Sans SC",monospace; font-size:12px; line-height:18px; color:var(--am); -webkit-font-smoothing:antialiased; }
+  button,input { font:inherit; color:inherit; background:none; border:0; outline:none; }
+  .term { height:100vh; display:flex; flex-direction:column; }
+  .cmd { flex:none; background:#0a0700; border-bottom:1px solid var(--am2); padding:6px 10px 5px; position:relative; }
+  .c1 { display:flex; align-items:center; gap:12px; }
+  .tag { background:var(--am); color:#000; font-weight:600; padding:0 8px; letter-spacing:.04em; }
+  .pr { color:var(--am); font-weight:600; }
+  .in { flex:1; position:relative; height:24px; display:flex; align-items:center; border:1px solid var(--am2); background:#000; padding:0 8px; }
+  .in:focus-within { border-color:var(--am); box-shadow:0 0 0 1px var(--am); }
+  .in input { flex:1; font-size:14px; letter-spacing:.04em; text-transform:uppercase; caret-color:var(--am); color:var(--tx); }
+  .in input::placeholder { color:var(--am2); text-transform:none; letter-spacing:0; font-size:12px; }
+  .go { color:#000; background:var(--am); padding:0 7px; font-weight:600; font-size:11px; }
+  .clk { color:var(--tx); font-variant-numeric:tabular-nums; }
+  .dim { color:var(--am2); }
+  .c2 { display:flex; gap:18px; margin-top:4px; font-size:11px; color:var(--am2); }
+  .c2 b { color:var(--am); font-weight:500; }
+  .c2 .st { margin-left:auto; color:var(--tx); margin-right:-6px; }
+  .sug { position:absolute; left:97px; top:36px; width:560px; background:#0a0700; border:1px solid var(--am); z-index:50; display:none; }
+  .sug div { display:flex; gap:14px; padding:1px 8px; cursor:pointer; }
+  .sug div.on, .sug div:hover { background:var(--am); color:#000; }
+  .sug div span:first-child { width:140px; font-weight:600; } .sug div span:last-child { opacity:.75; }
+
+  .wall { flex:1; min-height:0; display:grid; grid-template-columns:600px 1fr; grid-template-rows:1fr; }
+  .col { display:grid; min-height:0; min-width:0; }
+  .col1 { grid-template-rows:minmax(0,1.05fr) minmax(0,1fr); border-right:1px solid var(--ln); }
+  .col2 { grid-template-rows:minmax(0,1.3fr) minmax(0,1fr); }
+  .pane { display:flex; flex-direction:column; min-height:0; min-width:0; border-bottom:1px solid var(--ln); position:relative; background:#000; }
+  .pane:last-child { border-bottom:0; }
+  .pane.f { box-shadow:inset 0 0 0 1px var(--am); z-index:2; }
+  .ph { flex:none; height:20px; display:flex; align-items:center; gap:10px; padding:0 8px; background:var(--am3); color:var(--am); font-weight:500; white-space:nowrap; }
+  .pane.f .ph { background:var(--am); color:#000; }
+  .ph .k { opacity:.7; font-size:11px; } .ph .r { margin-left:auto; font-weight:400; font-size:11px; opacity:.85; }
+  .pb { flex:1; min-height:0; overflow:hidden; position:relative; }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  th { text-align:right; font-weight:400; color:var(--am2); height:20px; padding:0 8px; border-bottom:1px solid var(--ln); }
+  th:first-child, td:first-child { text-align:left; }
+  td { text-align:right; height:20px; padding:0 8px; color:var(--tx); white-space:nowrap; }
+  tr.q { cursor:pointer; }
+  tr.q td:first-child { color:var(--am); font-weight:600; }
+  tr.q:hover td { background:#1a1300; }
+  tr.q.sel td { background:var(--am); color:#000 !important; }
+  tr.q.sel td.u, tr.q.sel td.d { color:#000 !important; }
+  td.u { color:var(--up); } td.d { color:var(--dn); }
+  .fu { animation:fu .75s ease-out; } .fd { animation:fd .75s ease-out; }
+  @keyframes fu { 0% { background:#3ddc6acc; } 100% { background:transparent; } }
+  @keyframes fd { 0% { background:#ff4d4dcc; } 100% { background:transparent; } }
+  .nm { color:var(--am2); font-weight:400; font-family:"Noto Sans SC"; font-size:11px; }
+  tr.q.sel .nm { color:#000; }
+  .best { background:var(--am3); color:var(--am) !important; font-weight:600; }
+  .tape td { height:18px; }
+  .tape tr.new td { animation:nw 1s ease-out; }
+  @keyframes nw { 0% { background:#3a2a00; } 100% { background:transparent; } }
+  .news { overflow:hidden; }
+  .nw { display:grid; grid-template-columns:48px 50px 1fr; gap:8px; padding:2px 8px; cursor:pointer; }
+  .nw:hover { background:#1a1300; }
+  .nw .t { color:var(--am2); } .nw .s { color:var(--am); font-weight:600; } .nw .h { color:var(--tx); font-family:"Noto Sans SC"; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nw.hot .h { color:#fff; font-weight:500; }
+  #cv { width:100%; height:100%; display:block; }
+  .ax { fill:var(--am2); font-size:10.5px; font-family:"IBM Plex Mono"; }
+  .vend { position:absolute; left:0; right:0; bottom:0; border-top:1px solid var(--ln); background:#000; }
+  .stat { display:flex; gap:22px; padding:3px 8px; color:var(--am2); border-bottom:1px solid var(--ln); }
+  .stat b { color:var(--tx); font-weight:500; margin-left:6px; }
+  .help { position:fixed; inset:0; background:#000c; z-index:90; display:none; align-items:center; justify-content:center; }
+  .help.on { display:flex; }
+  .hb { width:640px; background:#000; border:1px solid var(--am); }
+  .hb .ph { background:var(--am); color:#000; }
+  .hb div.r { display:flex; gap:16px; padding:2px 12px; } .hb div.r span:first-child { width:170px; color:var(--am); font-weight:600; } .hb div.r span:last-child { color:var(--tx); font-family:"Noto Sans SC"; }
+  .hb p { padding:8px 12px; color:var(--am2); }
+  .note { position:fixed; right:10px; bottom:4px; font-size:10px; color:var(--am2); z-index:5; }
+</style>
+</head>
+<body>
+<div class="term">
+  <div class="cmd">
+    <div class="c1"><span class="tag">算力现货</span><span class="pr">›</span>
+      <label class="in"><input id="ci" placeholder="输入功能码，例如 PX H100 后按 Enter" autocomplete="off" spellcheck="false"><span class="go">GO</span></label>
+      <span class="clk" id="clk">14:32:08</span></div>
+    <div class="c2"><span><b>F1</b> 报价板</span><span><b>F2</b> 分时</span><span><b>F3</b> 成交</span><span><b>F4</b> 新闻</span><span><b>TAB</b> 切换窗格</span><span><b>↑ ↓</b> 选标的</span><span><b>HELP</b> 功能码</span><span class="st" id="st">就绪</span><span>示例数据</span></div>
+    <div class="sug" id="sug"></div>
+  </div>
+  <div class="wall">
+    <div class="col col1">
+      <section class="pane" id="p0"><div class="ph"><span class="k">F1</span>报价板<span class="r" id="p0r">¥ / 卡·小时</span></div><div class="pb"><table id="qt"></table><table id="it" style="margin-top:8px"></table></div></section>
+      <section class="pane" id="p3"><div class="ph"><span class="k">F4</span>新闻<span class="r" id="p3r">全部</span></div><div class="pb news" id="nws"></div></section>
+    </div>
+    <div class="col col2">
+      <section class="pane" id="p1"><div class="ph"><span class="k">F2</span><span id="p1t">分时</span><span class="r" id="p1r"></span></div><div class="pb"><div class="stat" id="stat"></div><div style="position:absolute;left:0;right:0;top:25px;bottom:128px"><svg id="cv"></svg></div><div class="vend"><table id="vt"></table></div></div></section>
+      <section class="pane" id="p2"><div class="ph"><span class="k">F3</span>成交流水<span class="r" id="p2r">全部</span></div><div class="pb"><table class="tape" id="tp"></table></div></section>
+    </div>
+  </div>
+</div>
+<div class="help" id="help"><div class="hb"><div class="ph">功能码 <span class="r">Esc 关闭</span></div><div id="hl" style="padding:6px 0"></div></div></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+const R = rng(77), rr = (a, b) => a + R() * (b - a);
+const SY = [["H100", "H100 80G SXM", 21.5], ["H200", "H200 141G SXM", 29.8], ["A100", "A100 80G SXM", 9.6], ["A800", "A800 80G", 8.2], ["L40S", "L40S 48G", 6.1], ["4090", "RTX 4090 24G", 2.9], ["910B", "昇腾 910B 64G", 7.4], ["MI300", "MI300X 192G", 17.9], ["B200", "B200 192G", 38.5], ["H20", "H20 96G", 12.4], ["L20", "L20 48G", 5.2], ["V100", "V100 32G", 4.1], ["A10", "A10 24G", 3.4], ["T4", "T4 16G", 1.6]].map(([c, name, base], i) => {
+  const open = +(base * (1 + rr(-.03, .03))).toFixed(2), N = 151, hist = []; let v = open;
+  for (let k = 0; k < N; k++) { v += (base - v) * .03 + (R() - .5) * base * .008; hist.push(+v.toFixed(3)); }
+  const px = +hist[N - 1].toFixed(2); hist[N - 1] = px;
+  return { c, name, base, open, px, hi: Math.max(...hist, px), lo: Math.min(...hist, px), hist, vol: Math.round(rr(8000, 60000) * (base > 15 ? .6 : 1)), vol1: hist.map(() => Math.round(rr(20, 220))), tick: base > 15 ? .02 : .01 };
+});
+const VEND = [["穹云", "华北"], ["澜海云", "华东"], ["北辰算力", "华北"], ["星河租赁", "西南"], ["迅帆", "华东"], ["自建共享池", "华北"]];
+const NEWS = [["14:31", "H200", "H200 现货供给收紧，华东机房 8 卡整机报价较昨日上调", 1], ["14:28", "H100", "H100 长约客户集中续签，现货流动性下降", 0], ["14:25", "910B", "昇腾 910B 西南节点新增 640 卡上架，报价小幅走低", 0], ["14:19", "4090", "RTX 4090 夜间闲置时段折扣扩大到 35%", 0], ["14:12", "A100", "A100 二手整机回收价连续三日企稳", 0], ["14:05", "MI300", "MI300X 首批集群完成交付验收，开放现货", 1], ["13:58", "L40S", "L40S 推理需求回升，成交量放大 2 倍", 0], ["13:47", "A800", "A800 部分机房因机柜改造暂停 120 卡供给", 0], ["13:40", "H100", "H100 八卡机包月价较按量价折价 18%", 0], ["13:33", "H200", "H200 华北新增两家供给方入场", 0], ["13:21", "910B", "昇腾 910B 软件栈升级，部分任务需重新适配", 0], ["13:10", "A100", "A100 40G 退出主力报价，仅保留 80G", 0], ["12:55", "4090", "RTX 4090 周末价格走势偏弱", 0], ["12:40", "MI300", "MI300X 现货询价量升至本周最高", 0], ["12:22", "L40S", "L40S 与 A800 的价差收窄到 2 元以内", 0]];
+const TRADES = [];
+const S = { sel: 0, sort: "def", focus: 0, trdF: null, newsF: null };
+const fix = (v, d = 2) => v.toFixed(d);
+const pad = (n) => String(n).padStart(2, "0");
+const t0 = Date.now(), base = 14 * 3600 + 32 * 60 + 8;
+const clock = () => { const s = base + Math.floor((Date.now() - t0) / 1000); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`; };
+
+/* ---------- 报价板 ---------- */
+let order = SY.map((_, i) => i);
+function sortOrder() { order = SY.map((_, i) => i); if (S.sort === "top") order.sort((a, b) => (SY[b].px / SY[b].open) - (SY[a].px / SY[a].open)); }
+function buildQuotes() {
+  sortOrder();
+  $("#qt").innerHTML = `<thead><tr><th>代码</th><th>现价</th><th>涨跌</th><th>涨跌幅</th><th>买一</th><th>卖一</th><th>成交量</th></tr></thead><tbody>${order.map((i) => `<tr class="q" data-i="${i}"><td>${SY[i].c} <span class="nm">${SY[i].name.replace(SY[i].c + " ", "")}</span></td><td class="px"></td><td class="ch"></td><td class="pc"></td><td class="bd"></td><td class="ak"></td><td class="vl"></td></tr>`).join("")}</tbody>`;
+  $("#qt").querySelectorAll("tr.q").forEach((tr) => tr.onclick = () => { S.sel = +tr.dataset.i; setFocus(0); selChange(); });
+  SY.forEach((_, i) => fillRow(i)); markSel();
+  $("#p0r").textContent = S.sort === "top" ? "涨幅榜 · ¥ / 卡·小时" : "¥ / 卡·小时";
+}
+function fillRow(i, dir) {
+  const s = SY[i], tr = $(`tr.q[data-i="${i}"]`); if (!tr) return; const ch = s.px - s.open, cl = ch >= 0 ? "u" : "d";
+  const set = (sel, txt, cls) => { const c = $(sel, tr); c.textContent = txt; if (cls !== undefined) c.className = cls.replace(/\s+/g, " ").trim() + (c.classList.contains("fu") ? " fu" : c.classList.contains("fd") ? " fd" : ""); };
+  const px = $(".px", tr); px.textContent = fix(s.px); 
+  if (dir) { px.classList.remove("fu", "fd"); void px.offsetWidth; px.classList.add(dir > 0 ? "fu" : "fd"); }
+  set(".ch", (ch >= 0 ? "+" : "") + fix(ch), "ch " + cl); set(".pc", (ch >= 0 ? "+" : "") + fix(ch / s.open * 100) + "%", "pc " + cl);
+  $(".bd", tr).textContent = fix(s.px - s.tick); $(".ak", tr).textContent = fix(s.px + s.tick); $(".vl", tr).textContent = s.vol.toLocaleString("en-US");
+}
+function markSel() { $("#qt").querySelectorAll("tr.q").forEach((tr) => tr.classList.toggle("sel", +tr.dataset.i === S.sel)); }
+
+const IDX = [["GPU 综合指数", () => SY.map((_, i) => i)], ["训练卡指数", () => [0, 1, 2, 3, 7, 8, 9, 12]], ["推理卡指数", () => [4, 5, 6, 10, 11, 13]]];
+function drawIdx() {
+  $("#it").innerHTML = `<thead><tr><th>指数</th><th>点位</th><th>涨跌幅</th><th style="width:150px">日内走势</th></tr></thead><tbody>${IDX.map(([n, f]) => { const m = f(), cur = m.reduce((a, i) => a + SY[i].px / SY[i].open, 0) / m.length * 1000, pct = (cur / 1000 - 1) * 100, ser = SY[0].hist.map((_, k) => m.reduce((a, i) => a + SY[i].hist[k] / SY[i].open, 0) / m.length), lo = Math.min(...ser), hi = Math.max(...ser), pts = ser.filter((_, k) => k % 3 === 0).map((v, k, a) => `${k / (a.length - 1) * 140},${16 - (v - lo) / (hi - lo || 1) * 14}`).join(" ");
+    return `<tr><td style="color:var(--am);font-family:'Noto Sans SC'">${n}</td><td>${cur.toFixed(2)}</td><td class="${pct >= 0 ? "u" : "d"}">${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%</td><td><svg width="140" height="18" style="display:inline-block;vertical-align:middle"><polyline points="${pts}" fill="none" stroke="#b07a00" stroke-width="1"/></svg></td></tr>`; }).join("")}</tbody>`;
+}
+
+/* ---------- 分时 + 厂商 ---------- */
+let geo = null;
+function drawChart() {
+  const s = SY[S.sel], svg = $("#cv"), W = svg.clientWidth, H = svg.clientHeight, L = 8, Rt = 56, T = 8, B = 20, pw = W - L - Rt, ph = (H - T - B) * .78, vh = (H - T - B) * .2, N = s.hist.length;
+  const lo = Math.min(...s.hist, s.open) - s.base * .004, hi = Math.max(...s.hist, s.open) + s.base * .004, X = (i) => L + i / (N - 1) * pw, Y = (v) => T + ph - (v - lo) / (hi - lo) * ph;
+  let g = "";
+  for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4, y = Y(v); g += `<line x1="${L}" x2="${L + pw}" y1="${y}" y2="${y}" stroke="#2a2000" stroke-dasharray="2 3"/><text class="ax" x="${L + pw + 6}" y="${y + 3}">${fix(v)}</text>`; }
+  ["09:30", "11:00", "12:30", "14:00"].forEach((t, k) => { g += `<text class="ax" x="${L + [0, .3, .6, .9][k] * pw}" y="${H - 4}">${t}</text>`; });
+  const yo = Y(s.open); g += `<line x1="${L}" x2="${L + pw}" y1="${yo}" y2="${yo}" stroke="#7a5600" stroke-width="1"/><text class="ax" x="${L + 2}" y="${yo - 3}">开 ${fix(s.open)}</text>`;
+  const mv = Math.max(...s.vol1), vb = pw / N;
+  s.vol1.forEach((v, i) => { const h = v / mv * vh; g += `<rect x="${X(i) - vb * .35}" y="${T + ph + (H - T - B - ph) - h}" width="${Math.max(1, vb * .7)}" height="${h}" fill="#7a5600"/>`; });
+  g += `<path d="${s.hist.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join("")}" fill="none" stroke="#ffb000" stroke-width="1.5"/>`;
+  const ly = Y(s.px), up = s.px >= s.open; g += `<line x1="${L}" x2="${L + pw}" y1="${ly}" y2="${ly}" stroke="${up ? "#3ddc6a" : "#ff4d4d"}" stroke-width=".8" stroke-dasharray="1 2"/><rect x="${L + pw + 1}" y="${ly - 8}" width="${Rt - 4}" height="16" fill="${up ? "#3ddc6a" : "#ff4d4d"}"/><text x="${L + pw + 4}" y="${ly + 4}" fill="#000" style="font:600 11px 'IBM Plex Mono'">${fix(s.px)}</text>`;
+  g += `<line id="xl" y1="${T}" y2="${T + ph + vh + 4}" stroke="#ffb000" opacity="0"/><circle id="xc" r="3.5" fill="#ffb000" opacity="0"/><rect id="xh" x="${L}" y="${T}" width="${pw}" height="${H - T - B}" fill="transparent"/>`;
+  svg.innerHTML = g; geo = { L, pw, N, X, Y, s };
+  const xh = $("#xh");
+  xh.onmousemove = (e) => { const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(N - 1, Math.round((e.clientX - r.left - L) / pw * (N - 1)))), x = X(i), mins = 9 * 60 + 30 + Math.round(i / (N - 1) * 302);
+    $("#xl").setAttribute("x1", x); $("#xl").setAttribute("x2", x); $("#xl").setAttribute("opacity", .6); $("#xc").setAttribute("cx", x); $("#xc").setAttribute("cy", Y(s.hist[i])); $("#xc").setAttribute("opacity", 1);
+    $("#p1r").textContent = `${pad(Math.floor(mins / 60))}:${pad(mins % 60)}  ${fix(s.hist[i])}  量 ${s.vol1[i]}`; };
+  xh.onmouseleave = () => { $("#xl").setAttribute("opacity", 0); $("#xc").setAttribute("opacity", 0); $("#p1r").textContent = "光标读数"; };
+}
+function drawVend() {
+  const s = SY[S.sel], R2 = rng(s.c.charCodeAt(0) * 31 + s.c.length), rows = VEND.map(([v, rg]) => ({ v, rg, off: .02 + R2() * .2, n: Math.round(40 + R2() * 600), j: R2() }));
+  const bids = rows.map((r) => s.px - r.off * s.base / 10 - (Math.sin(Date.now() / 3000 + r.j * 9) + 1) * .01), asks = rows.map((r) => s.px + r.off * s.base / 10 + (Math.cos(Date.now() / 3000 + r.j * 9) + 1) * .01);
+  const bb = Math.max(...bids), ba = Math.min(...asks);
+  $("#vt").innerHTML = `<thead><tr><th>供给方</th><th>区域</th><th>买价</th><th>卖价</th><th>可用卡数</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td style="color:var(--am);font-family:'Noto Sans SC'">${r.v}</td><td style="color:var(--am2);font-family:'Noto Sans SC'">${r.rg}</td><td class="${bids[i] === bb ? "best" : ""}">${fix(bids[i])}</td><td class="${asks[i] === ba ? "best" : ""}">${fix(asks[i])}</td><td>${r.n}</td></tr>`).join("")}</tbody>`;
+}
+function drawStat() {
+  const s = SY[S.sel], ch = s.px - s.open;
+  $("#stat").innerHTML = `<span>${s.name}</span><span>现价<b>${fix(s.px)}</b></span><span>涨跌<b style="color:${ch >= 0 ? "var(--up)" : "var(--dn)"}">${ch >= 0 ? "+" : ""}${fix(ch)} (${fix(ch / s.open * 100)}%)</b></span><span>高<b>${fix(s.hi)}</b></span><span>低<b>${fix(s.lo)}</b></span><span>量<b>${s.vol.toLocaleString("en-US")}</b></span>`;
+  $("#p1t").textContent = `分时 · ${s.c}`;
+}
+function selChange() { markSel(); drawStat(); drawChart(); drawVend(); $("#st").textContent = `PX ${SY[S.sel].c}  ${SY[S.sel].name}`; }
+
+/* ---------- 成交流水 / 新闻 ---------- */
+function addTrade(i) {
+  const s = SY[i], v = VEND[Math.floor(R() * VEND.length)][0], up = R() < .5;
+  TRADES.unshift({ t: clock(), c: s.c, v, p: s.px + (R() - .5) * s.tick * 2, q: Math.round(rr(8, 80)) * 8, up, fresh: true }); if (TRADES.length > 40) TRADES.pop();
+}
+function drawTape() {
+  const rows = TRADES.filter((x) => !S.trdF || x.c === S.trdF).slice(0, 22);
+  $("#tp").innerHTML = `<thead><tr><th>时间</th><th>代码</th><th>供给方</th><th>成交价</th><th>卡·小时</th><th>方向</th></tr></thead><tbody>${rows.map((x) => `<tr class="${x.fresh ? "new" : ""}"><td style="color:var(--am2)">${x.t}</td><td style="color:var(--am);font-weight:600">${x.c}</td><td style="font-family:'Noto Sans SC';color:var(--am2)">${x.v}</td><td>${fix(x.p)}</td><td>${x.q.toLocaleString("en-US")}</td><td class="${x.up ? "u" : "d"}">${x.up ? "买入 ▲" : "卖出 ▼"}</td></tr>`).join("")}</tbody>`;
+  TRADES.forEach((x) => x.fresh = false);
+  $("#p2r").textContent = S.trdF ? S.trdF : "全部";
+}
+function drawNews() {
+  const rows = NEWS.filter((n) => !S.newsF || n[1] === S.newsF);
+  $("#nws").innerHTML = rows.map((n) => `<div class="nw ${n[3] ? "hot" : ""}" data-s="${n[1]}"><span class="t">${n[0]}</span><span class="s">${n[1]}</span><span class="h">${n[2]}</span></div>`).join("") || '<div style="padding:12px;color:var(--am2)">暂无相关新闻</div>';
+  $("#nws").querySelectorAll(".nw").forEach((d) => d.onclick = () => { S.sel = SY.findIndex((x) => x.c === d.dataset.s); setFocus(3); selChange(); });
+  $("#p3r").textContent = S.newsF || "全部";
+}
+
+/* ---------- 实时跳动 ---------- */
+function tick() {
+  const n = 1 + Math.floor(R() * 3);
+  for (let k = 0; k < n; k++) {
+    const i = Math.floor(R() * SY.length), s = SY[i], d = (R() < .5 ? -1 : 1) * s.tick * Math.ceil(R() * 3), old = s.px;
+    s.px = +Math.max(.5, s.px + d).toFixed(2); if (s.px === old) continue;
+    s.hi = Math.max(s.hi, s.px); s.lo = Math.min(s.lo, s.px); s.vol += Math.round(rr(40, 300)); s.hist[s.hist.length - 1] = s.px; s.vol1[s.vol1.length - 1] += Math.round(rr(2, 14));
+    fillRow(i, s.px > old ? 1 : -1);
+    if (R() < .75) addTrade(i);
+    if (i === S.sel) { drawStat(); drawChart(); }
+  }
+  if (S.sort === "top") { const cur = order.join(), tmp = SY.map((_, i) => i).sort((a, b) => (SY[b].px / SY[b].open) - (SY[a].px / SY[a].open)).join(); if (cur !== tmp) { buildQuotes(); } }
+  drawTape(); drawVend(); drawIdx(); $("#clk").textContent = clock();
+}
+
+/* ---------- 命令行 ---------- */
+const CMDS = [["PX <代码>", "查看该标的报价与分时", "PX "], ["TOP", "按涨跌幅排序", "TOP"], ["ALL", "还原排序与筛选", "ALL"], ["NEWS <代码>", "新闻窗格只看该标的", "NEWS "], ["TRD <代码>", "成交窗格只看该标的", "TRD "], ["HELP", "功能码列表", "HELP"]];
+function sugs(txt) {
+  const t = txt.trim().toUpperCase(), parts = t.split(/\s+/), out = [];
+  if (!t) return CMDS.map((c) => ({ k: c[0], d: c[1], fill: c[2] }));
+  if (parts.length === 1 && !txt.endsWith(" ")) CMDS.filter((c) => c[2].trim().startsWith(parts[0])).forEach((c) => out.push({ k: c[0], d: c[1], fill: c[2] }));
+  else if (["PX", "NEWS", "TRD"].includes(parts[0])) SY.filter((s) => !parts[1] || s.c.startsWith(parts[1])).forEach((s) => out.push({ k: `${parts[0]} ${s.c}`, d: s.name, fill: `${parts[0]} ${s.c}`, run: true }));
+  return out.slice(0, 8);
+}
+let sg = [], si = -1;
+function showSug() { const ci = $("#ci"); sg = sugs(ci.value); const el = $("#sug"); if (!sg.length || document.activeElement !== ci) { el.style.display = "none"; return; } if (si >= sg.length) si = -1; el.style.display = "block"; el.innerHTML = sg.map((s, i) => `<div class="${i === si ? "on" : ""}" data-i="${i}"><span>${s.k}</span><span>${s.d}</span></div>`).join(""); el.querySelectorAll("div").forEach((d) => d.onmousedown = (e) => { e.preventDefault(); pick(+d.dataset.i); }); }
+function pick(i) { const s = sg[i], ci = $("#ci"); ci.value = s.fill; si = -1; if (s.run) run(); else showSug(); }
+function run() {
+  const ci = $("#ci"), t = ci.value.trim().toUpperCase().replace(/\s*(<GO>|GO)$/, ""), p = t.split(/\s+/), st = $("#st"); if (!t) return;
+  const sym = (c) => SY.findIndex((s) => s.c === c);
+  if (p[0] === "PX" && sym(p[1]) >= 0) { S.sel = sym(p[1]); selChange(); setFocus(1); st.textContent = `PX ${p[1]}  ${SY[S.sel].name}`; }
+  else if (p[0] === "TOP") { S.sort = "top"; buildQuotes(); setFocus(0); st.textContent = "TOP  涨幅榜"; }
+  else if (p[0] === "ALL") { S.sort = "def"; S.trdF = S.newsF = null; buildQuotes(); drawTape(); drawNews(); st.textContent = "ALL  已还原"; }
+  else if (p[0] === "NEWS" && sym(p[1]) >= 0) { S.newsF = p[1]; drawNews(); setFocus(3); st.textContent = `NEWS ${p[1]}`; }
+  else if (p[0] === "TRD" && sym(p[1]) >= 0) { S.trdF = p[1]; drawTape(); setFocus(2); st.textContent = `TRD ${p[1]}`; }
+  else if (p[0] === "HELP") { $("#hl").innerHTML = CMDS.map((c) => `<div class="r"><span>${c[0]}</span><span>${c[1]}</span></div>`).join("") + `<p>代码：${SY.map((s) => s.c).join("  ")}</p><p>F1–F4 切窗格，Tab 轮换，↑ ↓ 在报价板选标的。</p>`; $("#help").classList.add("on"); st.textContent = "HELP"; }
+  else { st.textContent = `未识别的功能码：${t}，输入 HELP 查看`; return; }
+  ci.value = ""; si = -1; $("#sug").style.display = "none"; ci.blur();
+}
+const ci = $("#ci");
+ci.addEventListener("input", () => { si = -1; showSug(); }); ci.addEventListener("focus", showSug); ci.addEventListener("blur", () => setTimeout(() => $("#sug").style.display = "none", 100));
+ci.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown") { e.preventDefault(); si = Math.min(sg.length - 1, si + 1); showSug(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); si = Math.max(-1, si - 1); showSug(); }
+  else if (e.key === "Enter") { e.preventDefault(); if (si >= 0) pick(si); else run(); }
+  else if (e.key === "Escape") { ci.value = ""; ci.blur(); }
+  else if (e.key === "Tab") { e.preventDefault(); ci.blur(); setFocus((S.focus + (e.shiftKey ? 3 : 1)) % 4); }
+});
+
+/* ---------- 焦点与键盘 ---------- */
+const PANES = ["p0", "p1", "p2", "p3"];
+function setFocus(i) { S.focus = i; PANES.forEach((p, k) => $("#" + p).classList.toggle("f", k === i)); }
+PANES.forEach((p, i) => $("#" + p).addEventListener("mousedown", () => setFocus(i)));
+document.addEventListener("keydown", (e) => {
+  if (e.target === ci) return;
+  if ($("#help").classList.contains("on")) { if (e.key === "Escape") $("#help").classList.remove("on"); return; }
+  if (/^F[1-4]$/.test(e.key)) { e.preventDefault(); setFocus(+e.key[1] - 1); return; }
+  if (e.key === "Tab") { e.preventDefault(); setFocus((S.focus + (e.shiftKey ? 3 : 1)) % 4); return; }
+  if (S.focus === 0 && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const pos = order.indexOf(S.sel), np = Math.max(0, Math.min(order.length - 1, pos + (e.key === "ArrowDown" ? 1 : -1))); S.sel = order[np]; selChange(); return; }
+  if (e.key === "Escape") { S.newsF = S.trdF = null; drawNews(); drawTape(); return; }
+  if (e.key === "/" || (e.key.length === 1 && /[a-z0-9]/i.test(e.key) && !e.metaKey && !e.ctrlKey)) { ci.focus(); if (e.key === "/") e.preventDefault(); }
+});
+$("#help").onclick = () => $("#help").classList.remove("on");
+
+/* ---------- 启动 ---------- */
+for (let k = 17; k >= 0; k--) { addTrade(Math.floor(R() * SY.length)); TRADES[0].t = `14:${pad(31 - Math.floor(k / 3))}:${pad(59 - k * 3 - Math.floor(R() * 3))}`; TRADES[0].fresh = false; }
+buildQuotes(); drawIdx(); drawNews(); drawTape(); setFocus(0); selChange(); $("#p1r").textContent = "光标读数";
+setInterval(tick, 700);
+window.addEventListener("resize", () => drawChart());
+</script>
+</body>
+</html>

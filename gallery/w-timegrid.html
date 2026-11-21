@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日程网格 · 算力排期</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fcfcfb; --side: #f7f6f3; --line: #ebe9e4; --line2: #f3f2ee; --ink: #1d1c1a; --ink2: #5f5c56; --mute: #a29f97;
+    --now: #ef4a3c; --sel: #1d1c1a;
+    --c-train: #6a5ae0; --c-meet: #0e9a86; --c-review: #d98a07; --c-ops: #d5436b;
+    --hh: 52px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Inter", "Noto Sans SC", sans-serif; font-size: 13px; color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; }
+  button, input, select { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+  input { cursor: text; }
+  svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .num { font-variant-numeric: tabular-nums; }
+  .app { height: 100vh; display: grid; grid-template-columns: 244px 1fr; min-width: 1100px; }
+
+  /* 侧栏 */
+  .side { background: var(--side); border-right: 1px solid var(--line); padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 22px; overflow: hidden; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; letter-spacing: .02em; }
+  .brand i { width: 22px; height: 22px; border-radius: 6px; background: var(--ink); display: grid; place-items: center; }
+  .brand i svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 1.8; }
+  .brand small { margin-left: auto; font-weight: 400; font-size: 11px; color: var(--mute); }
+  .mini .mh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 2px; }
+  .mini .mh b { font-weight: 600; font-size: 13px; }
+  .mini .mh span { display: flex; gap: 2px; }
+  .ib { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; color: var(--ink2); transition: background .12s; }
+  .ib:hover { background: rgba(0,0,0,.06); }
+  .mg { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 1px; }
+  .mg .w { font-size: 10.5px; color: var(--mute); text-align: center; padding: 2px 0 5px; }
+  .mg .d { position: relative; height: 28px; display: grid; place-items: center; font-size: 12px; cursor: pointer; }
+  .mg .d span { position: relative; z-index: 1; width: 25px; height: 25px; border-radius: 50%; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .mg .d.out { color: var(--mute); }
+  .mg .d.inwk::before { content: ""; position: absolute; inset: 1px 0; background: rgba(29,28,26,.065); }
+  .mg .d.wk0::before { border-radius: 8px 0 0 8px; } .mg .d.wk6::before { border-radius: 0 8px 8px 0; }
+  .mg .d.today span { background: var(--ink); color: #fff; font-weight: 600; }
+  .mg .d:hover span { background: rgba(0,0,0,.08); } .mg .d.today:hover span { background: var(--ink); }
+  .mg .d.has::after { content: ""; position: absolute; bottom: 1px; width: 3px; height: 3px; border-radius: 50%; background: var(--mute); }
+  .sec h6 { font-size: 11px; font-weight: 600; color: var(--mute); letter-spacing: .06em; margin-bottom: 6px; padding: 0 2px; }
+  .cal { display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 6px; border-radius: 7px; cursor: pointer; transition: background .12s; }
+  .cal:hover { background: rgba(0,0,0,.05); }
+  .cal .bx { width: 15px; height: 15px; border-radius: 4.5px; border: 1.5px solid var(--c); display: grid; place-items: center; transition: background .12s; }
+  .cal.on .bx { background: var(--c); }
+  .cal .bx svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 2.4; opacity: 0; } .cal.on .bx svg { opacity: 1; }
+  .cal .nm { flex: 1; } .cal:not(.on) .nm { color: var(--mute); }
+  .cal .ct { font-size: 11px; color: var(--mute); }
+  .use { margin-top: auto; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  .use .t { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink2); }
+  .use .t b { color: var(--ink); font-weight: 600; }
+  .use .bar { height: 4px; border-radius: 2px; background: var(--line); margin: 9px 0 7px; overflow: hidden; }
+  .use .bar i { display: block; height: 100%; width: 0; background: var(--c-train); border-radius: 2px; transition: width .5s cubic-bezier(.3,.9,.3,1); }
+  .use p { font-size: 11px; color: var(--mute); line-height: 1.5; }
+  .demo { font-size: 10px; color: var(--mute); padding: 8px 2px 0; }
+
+  /* 主区 */
+  .main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+  .top { flex: none; height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid var(--line); }
+  .top h1 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 10px; min-width: 210px; }
+  .top h1 small { font-size: 12.5px; color: var(--mute); font-weight: 400; }
+  .btn { height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-weight: 500; font-size: 12.5px; transition: background .12s; }
+  .btn:hover { background: var(--side); }
+  .nav { display: flex; gap: 2px; }
+  .nl { margin-left: auto; position: relative; width: 460px; }
+  .nl .in { display: flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+  .nl.f .in { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(29,28,26,.07); }
+  .nl .in svg { color: var(--ink2); }
+  .nl input { flex: 1; min-width: 0; font-size: 13.5px; user-select: text; }
+  .nl input::placeholder { color: var(--mute); }
+  .nl kbd { font: 500 10.5px "Inter"; color: var(--mute); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  .pv { position: absolute; right: 0; top: 42px; width: 100%; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(30,25,15,.1); display: none; z-index: 30; }
+  .nl.f .pv { display: block; }
+  .pv .row { display: flex; gap: 10px; align-items: center; }
+  .pv .sw { width: 4px; align-self: stretch; border-radius: 2px; background: var(--c, var(--mute)); }
+  .pv .tt { font-weight: 600; font-size: 14px; }
+  .pv .tm { color: var(--ink2); font-size: 12.5px; margin-top: 2px; }
+  .pv .hint { font-size: 11.5px; color: var(--mute); margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line2); line-height: 1.7; }
+  .pv .hint code { font-family: inherit; color: var(--ink2); background: var(--side); border-radius: 4px; padding: 1px 5px; cursor: pointer; }
+  .pv .err { color: var(--c-ops); font-size: 12.5px; }
+
+  .heads { flex: none; display: grid; grid-template-columns: 58px repeat(7, 1fr); border-bottom: 1px solid var(--line); }
+  .heads .g { display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 8px 8px 0; font-size: 10px; color: var(--mute); }
+  .dh { padding: 10px 0 9px 10px; display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--line2); }
+  .dh .wd { font-size: 12px; color: var(--ink2); }
+  .dh .dn { font-size: 20px; font-weight: 500; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .dh.today .dn { background: var(--now); color: #fff; font-weight: 600; }
+  .dh.today .wd { color: var(--now); font-weight: 600; }
+  .dh.we .dn, .dh.we .wd { color: var(--mute); }
+  .dh.we.today .dn { color: #fff; }
+  .allday { flex: none; display: grid; grid-template-columns: 58px repeat(7, 1fr); border-bottom: 1px solid var(--line); min-height: 28px; }
+  .allday .ad { border-left: 1px solid var(--line2); padding: 3px 4px; }
+  .allday .ad span { display: block; font-size: 11px; padding: 2px 7px; border-radius: 5px; background: color-mix(in srgb, var(--c) 14%, #fff); color: color-mix(in srgb, var(--c) 75%, #000); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .allday .g { font-size: 10px; color: var(--mute); text-align: right; padding: 8px 8px 0 0; }
+
+  .scroll { flex: 1; overflow-y: scroll; overflow-x: hidden; position: relative; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .grid { display: grid; grid-template-columns: 58px repeat(7, 1fr); position: relative; height: calc(var(--hh) * 24); }
+  .gut { position: relative; }
+  .gut span { position: absolute; right: 8px; font-size: 10.5px; color: var(--mute); transform: translateY(-50%); font-variant-numeric: tabular-nums; }
+  .col { position: relative; border-left: 1px solid var(--line2); cursor: crosshair;
+    background-image: linear-gradient(to bottom, var(--line) 0 1px, transparent 1px); background-size: 100% var(--hh); }
+  .col::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(to bottom, transparent calc(var(--hh)/2 - .5px), var(--line2) calc(var(--hh)/2 - .5px), var(--line2) calc(var(--hh)/2 + .5px), transparent calc(var(--hh)/2 + .5px)); background-size: 100% var(--hh); }
+  .col.today { background-color: rgba(239,74,60,.02); }
+  .col.we { background-color: rgba(29,28,26,.018); }
+  .ev { position: absolute; z-index: 2; border-radius: 7px; padding: 4px 8px 4px 11px; overflow: hidden; cursor: grab; font-size: 12px; line-height: 1.3;
+    background: color-mix(in srgb, var(--c) 13%, #fff); color: color-mix(in srgb, var(--c) 72%, #000); border: 1px solid color-mix(in srgb, var(--c) 22%, #fff);
+    animation: rise .45s cubic-bezier(.2,.9,.3,1) both; animation-delay: var(--dl, 0ms); transition: box-shadow .15s, transform .15s; }
+  .ev::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3.5px; background: var(--c); }
+  .ev:hover { box-shadow: 0 4px 14px rgba(40,30,10,.12); z-index: 4; }
+  .ev.drag { cursor: grabbing; z-index: 8; box-shadow: 0 10px 26px rgba(40,30,10,.2); transition: none; animation: none; }
+  .ev.sel { box-shadow: 0 0 0 2px var(--c), 0 6px 18px rgba(40,30,10,.16); z-index: 6; }
+  .ev.new { animation: flash 1.2s ease both; }
+  .ev.past { opacity: .62; }
+  .ev .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ev .m { font-size: 11px; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .ev.s .t { display: inline; } .ev.s .m { display: inline; margin-left: 6px; } .ev.s { padding-top: 2px; padding-bottom: 0; white-space: nowrap; }
+  .ev .rz { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; cursor: ns-resize; }
+  .ev.ghost { background: color-mix(in srgb, var(--c) 22%, #fff); pointer-events: none; animation: none; box-shadow: none; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes flash { 0% { transform: scale(.94); opacity: 0; box-shadow: 0 0 0 0 var(--c); } 30% { transform: scale(1.02); opacity: 1; box-shadow: 0 0 0 6px color-mix(in srgb, var(--c) 30%, transparent); } 100% { transform: none; box-shadow: 0 0 0 0 transparent; } }
+  .now { position: absolute; left: 0; right: 0; height: 0; z-index: 7; pointer-events: none; border-top: 1.5px solid var(--now); }
+  .now::before { content: ""; position: absolute; left: -5px; top: -5.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--now); }
+  .nowlab { position: absolute; left: 0; width: 58px; z-index: 7; text-align: right; padding-right: 6px; transform: translateY(-50%); pointer-events: none; }
+  .nowlab span { font-size: 10px; font-weight: 600; color: #fff; background: var(--now); border-radius: 4px; padding: 1px 4px; font-variant-numeric: tabular-nums; }
+
+  /* 浮层 */
+  .pop { position: fixed; z-index: 50; width: 288px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 40px rgba(30,25,15,.16); padding: 14px; display: none; user-select: text; }
+  .pop.on { display: block; animation: rise .2s both; }
+  .pop .ti { width: 100%; font-size: 16px; font-weight: 600; border-bottom: 1px solid transparent; padding: 2px 0 4px; }
+  .pop .ti:focus { border-bottom-color: var(--line); }
+  .pop .tm { margin-top: 6px; color: var(--ink2); font-size: 12.5px; display: flex; align-items: center; gap: 8px; }
+  .pop .tm svg { color: var(--mute); }
+  .pop .cs { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .pop .cs button { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px 0 7px; border-radius: 13px; border: 1px solid var(--line); font-size: 11.5px; color: var(--ink2); }
+  .pop .cs button i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .pop .cs button.on { border-color: var(--c); color: var(--ink); background: color-mix(in srgb, var(--c) 10%, #fff); }
+  .pop .ft { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line2); font-size: 11.5px; color: var(--mute); }
+  .pop .del { display: flex; align-items: center; gap: 5px; color: var(--c-ops); font-size: 12px; padding: 4px 6px; border-radius: 6px; }
+  .pop .del:hover { background: rgba(213,67,107,.08); }
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 12.5px; opacity: 0; pointer-events: none; transition: .3s; z-index: 60; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><i><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5.5 1.5v3M10.5 1.5v3"/></svg></i>排期<small>算力日程</small></div>
+    <div class="mini">
+      <div class="mh"><b id="mTitle"></b><span><button class="ib" id="mPrev" aria-label="上月"><svg viewBox="0 0 16 16"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg></button><button class="ib" id="mNext" aria-label="下月"><svg viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button></span></div>
+      <div class="mg" id="mg"></div>
+    </div>
+    <div class="sec"><h6>日历</h6><div id="cals"></div></div>
+    <div class="use">
+      <div class="t"><span>本周 GPU 预约</span><b class="num" id="uh">0 h</b></div>
+      <div class="bar"><i id="ub"></i></div>
+      <p id="ut">H100-A 池 · 8 卡节点 × 3</p>
+    </div>
+    <div class="demo">示例数据</div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="nav"><button class="ib" id="prev" aria-label="上一周"><svg viewBox="0 0 16 16"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg></button><button class="ib" id="next" aria-label="下一周"><svg viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button></div>
+      <button class="btn" id="today">今天</button>
+      <h1 id="title"></h1>
+      <div class="nl" id="nl">
+        <div class="in"><svg viewBox="0 0 16 16"><path d="M8 2v3M8 11v3M2 8h3M11 8h3M4 4l2 2M10 10l2 2M12 4l-2 2M6 10l-2 2"/></svg>
+          <input id="nli" placeholder="快速新建：周四下午 3 点 训练 4 小时" autocomplete="off" spellcheck="false"><kbd>/</kbd></div>
+        <div class="pv" id="pv"></div>
+      </div>
+    </div>
+    <div class="heads" id="heads"></div>
+    <div class="allday" id="allday"></div>
+    <div class="scroll" id="scroll"><div class="grid" id="grid"></div></div>
+  </main>
+</div>
+<div class="pop" id="pop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const HH = 52, $ = (s, r = document) => r.querySelector(s);
+const CALS = { train: { n: "训练集群", c: "var(--c-train)" }, meet: { n: "会议", c: "var(--c-meet)" }, review: { n: "评审", c: "var(--c-review)" }, ops: { n: "机房维保", c: "var(--c-ops)" } };
+const ICON = {
+  chk: '<svg viewBox="0 0 12 12"><path d="M2.5 6.3 5 8.8 9.5 3.5"/></svg>',
+  clock: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.8V8l2.2 1.4"/></svg>',
+  trash: '<svg viewBox="0 0 16 16"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5"/></svg>'
+};
+const WD = ["日", "一", "二", "三", "四", "五", "六"];
+const pad = (n) => String(n).padStart(2, "0");
+const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const monday = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const hm = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+const isoWeek = (d) => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y0) / 864e5 + 1) / 7); };
+
+/* 虚拟时钟：从 2026-11-18（周三）14:26 起走，保证页面永远有「现在」红线 */
+const T0 = Date.now(), BASE = new Date(2026, 10, 18, 14, 26).getTime();
+const nowDate = () => new Date(BASE + (Date.now() - T0));
+const todayISO = () => iso(nowDate());
+
+let seq = 1;
+const E = [];
+const add = (d, s, e, cal, t, sub) => E.push({ id: seq++, d, s: s * 60, e: e * 60, cal, t, sub: sub || "" });
+add("2026-11-16", 14, 18, "train", "H100-A 预训练 baseline", "8 卡 × 1 节点");
+add("2026-11-17", 10, 11.5, "review", "Q4 预算评审", "3 号会议室");
+add("2026-11-17", 19, 23, "train", "70B 继续预训练", "8 卡 × 2 节点");
+add("2026-11-18", 9.5, 10.5, "review", "GPU 配额评审", "资源组");
+add("2026-11-18", 11, 12, "meet", "厂商对接", "视频会议");
+add("2026-11-18", 13.5, 17.5, "train", "A800 微调 · 客服模型", "8 卡 × 1 节点");
+add("2026-11-18", 15, 16, "ops", "机房巡检", "B2 机房");
+add("2026-11-19", 2, 6, "ops", "IB 交换机固件升级", "变更窗口");
+add("2026-11-19", 10, 12, "review", "资源申请评审", "本周 14 单");
+add("2026-11-19", 14, 15, "meet", "一对一", "");
+add("2026-11-20", 13, 18, "train", "H100-B 评测任务", "8 卡 × 1 节点");
+add("2026-11-20", 16, 17, "review", "季度验收", "供应商");
+add("2026-11-21", 8, 14, "ops", "机房搬迁演练", "B1 → B2");
+for (let w = -1; w <= 3; w++) {
+  const mon = addD(new Date(2026, 10, 16), w * 7);
+  add(iso(mon), 9.5, 10, "meet", "算力周会", "固定");
+  add(iso(addD(mon, 4)), 10, 11, "meet", "周例会", "固定");
+}
+const ALLDAY = { "2026-11-18": ["H100-B 池封网", "ops"], "2026-11-21": ["B1 机房停电演练", "ops"] };
+const vis = { train: true, meet: true, review: true, ops: true };
+
+let weekStart = monday(nowDate()), mMonth = new Date(2026, 10, 1), selId = null, popId = null, drag = null;
+const gridEl = $("#grid"), scrollEl = $("#scroll");
+
+/* ---- 构建网格 ---- */
+function buildGrid() {
+  let h = '<div class="gut">';
+  for (let i = 1; i < 24; i++) h += `<span style="top:${i * HH}px">${pad(i)}:00</span>`;
+  h += '<div class="nowlab" id="nowlab"></div></div>';
+  for (let i = 0; i < 7; i++) h += `<div class="col" data-i="${i}"></div>`;
+  gridEl.innerHTML = h;
+}
+function layout(list) {
+  const arr = list.slice().sort((a, b) => a.s - b.s || b.e - a.e), res = [];
+  let cluster = [], end = 0;
+  const flush = () => {
+    const cols = [];
+    cluster.forEach((ev) => { let k = cols.findIndex((c) => c[c.length - 1].e <= ev.s); if (k < 0) { cols.push([ev]); k = cols.length - 1; } else cols[k].push(ev); ev._k = k; });
+    cluster.forEach((ev) => res.push({ ev, k: ev._k, n: cols.length }));
+    cluster = []; end = 0;
+  };
+  arr.forEach((ev) => { if (cluster.length && ev.s >= end) flush(); cluster.push(ev); end = Math.max(end, ev.e); });
+  if (cluster.length) flush();
+  return res;
+}
+let firstRender = true;
+function render() {
+  const days = [...Array(7)].map((_, i) => addD(weekStart, i)), tdy = todayISO();
+  const hd = $("#heads");
+  hd.innerHTML = '<div class="g">GMT+8</div>' + days.map((d, i) => `<div class="dh${iso(d) === tdy ? " today" : ""}${i > 4 ? " we" : ""}"><span class="wd">周${WD[d.getDay()]}</span><span class="dn">${d.getDate()}</span></div>`).join("") + "<div></div>";
+  $("#allday").innerHTML = '<div class="g">全天</div>' + days.map((d) => { const a = ALLDAY[iso(d)]; return `<div class="ad">${a ? `<span style="--c:${CALS[a[1]].c}">${a[0]}</span>` : ""}</div>`; }).join("") + "<div></div>";
+  const m1 = weekStart, m2 = addD(weekStart, 6);
+  $("#title").innerHTML = `${m1.getFullYear()} 年 ${m1.getMonth() + 1} 月${m1.getMonth() !== m2.getMonth() ? " – " + (m2.getMonth() + 1) + " 月" : ""}<small>第 ${isoWeek(m1)} 周</small>`;
+  gridEl.querySelectorAll(".col").forEach((col, i) => {
+    const di = iso(days[i]);
+    col.className = "col" + (di === tdy ? " today" : "") + (i > 4 ? " we" : "");
+    col.dataset.d = di;
+    col.querySelectorAll(".ev:not(.ghost), .now").forEach((n) => n.remove());
+    const list = E.filter((e) => e.d === di && vis[e.cal]);
+    layout(list).forEach(({ ev, k, n }, j) => {
+      const el = document.createElement("div");
+      const hgt = Math.max((ev.e - ev.s) / 60 * HH - 2, 18);
+      el.className = "ev" + (hgt < 40 ? " s" : "") + (selId === ev.id ? " sel" : "") + (drag && drag.ev === ev && drag.moved ? " drag" : "") + (ev._new ? " new" : "") + (!firstRender || (ev.e <= minsNow() && di < tdy) ? "" : "") ;
+      el.dataset.id = ev.id;
+      el.style.cssText = `--c:${CALS[ev.cal].c};top:${ev.s / 60 * HH + 1}px;height:${hgt}px;left:calc(${k / n * 100}% + 2px);width:calc(${100 / n}% - ${k === n - 1 ? 6 : 3}px);--dl:${firstRender ? (i * 40 + j * 30) : 0}ms`;
+      el.innerHTML = `<div class="t">${esc(ev.t)}</div><div class="m">${hm(ev.s)}–${hm(ev.e === 1440 ? 1440 : ev.e)}${ev.sub ? " · " + esc(ev.sub) : ""}</div><div class="rz"></div>`;
+      if (di < tdy || (di === tdy && ev.e <= minsNow())) el.classList.add("past");
+      col.appendChild(el);
+      delete ev._new;
+    });
+    if (di === tdy) { const ln = document.createElement("div"); ln.className = "now"; ln.style.top = minsNow() / 60 * HH + "px"; col.appendChild(ln); }
+  });
+  const nl = $("#nowlab");
+  if (nl) { const inWeek = days.some((d) => iso(d) === tdy); nl.style.display = inWeek ? "" : "none"; nl.style.top = minsNow() / 60 * HH + "px"; nl.innerHTML = `<span>${hm(minsNow())}</span>`; }
+  firstRender = false;
+  renderMini(); renderCals(); renderUse();
+  if (popId) placePop();
+}
+const minsNow = () => { const n = nowDate(); return n.getHours() * 60 + n.getMinutes(); };
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function renderMini() {
+  const y = mMonth.getFullYear(), m = mMonth.getMonth();
+  $("#mTitle").textContent = `${y} 年 ${m + 1} 月`;
+  const st = monday(new Date(y, m, 1)), tdy = todayISO(), ws = iso(weekStart);
+  let h = ["一", "二", "三", "四", "五", "六", "日"].map((w) => `<div class="w">${w}</div>`).join("");
+  const has = new Set(E.filter((e) => vis[e.cal]).map((e) => e.d));
+  for (let i = 0; i < 42; i++) {
+    const d = addD(st, i), di = iso(d), inwk = iso(monday(d)) === ws, c = i % 7;
+    h += `<div class="d${d.getMonth() !== m ? " out" : ""}${inwk ? " inwk" : ""}${c === 0 ? " wk0" : ""}${c === 6 ? " wk6" : ""}${di === tdy ? " today" : ""}${has.has(di) ? " has" : ""}" data-d="${di}"><span>${d.getDate()}</span></div>`;
+  }
+  $("#mg").innerHTML = h;
+}
+function renderCals() {
+  const ws = iso(weekStart), we = iso(addD(weekStart, 6));
+  $("#cals").innerHTML = Object.entries(CALS).map(([k, v]) => {
+    const n = E.filter((e) => e.cal === k && e.d >= ws && e.d <= we).length;
+    return `<div class="cal${vis[k] ? " on" : ""}" data-k="${k}" style="--c:${v.c}"><span class="bx">${ICON.chk}</span><span class="nm">${v.n}</span><span class="ct num">${n}</span></div>`;
+  }).join("");
+}
+function renderUse() {
+  const ws = iso(weekStart), we = iso(addD(weekStart, 6));
+  const h = E.filter((e) => e.cal === "train" && e.d >= ws && e.d <= we).reduce((a, e) => a + (e.e - e.s) / 60, 0);
+  $("#uh").textContent = (Math.round(h * 10) / 10) + " h";
+  $("#ub").style.width = Math.min(100, h / (7 * 24) * 100 * 3) + "%";
+  $("#ut").textContent = `占 H100-A 池 ${Math.round(h / (7 * 24) * 100)}% · 8 卡节点 × 3`;
+}
+
+/* ---- 交互：拖拽新建 / 移动 / 改时长 ---- */
+const snap = (m) => Math.round(m / 15) * 15;
+function yMin(e) { const r = gridEl.getBoundingClientRect(); return Math.max(0, Math.min(1440, (e.clientY - r.top) / HH * 60)); }
+function colAt(x) { const cs = [...gridEl.querySelectorAll(".col")]; for (const c of cs) { const r = c.getBoundingClientRect(); if (x >= r.left && x < r.right) return c; } return x < cs[0].getBoundingClientRect().left ? cs[0] : cs[6]; }
+
+gridEl.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  const evEl = e.target.closest(".ev"), col = e.target.closest(".col");
+  closePop();
+  if (evEl) {
+    const ev = E.find((x) => x.id == evEl.dataset.id);
+    drag = { mode: e.target.classList.contains("rz") ? "resize" : "move", ev, x0: e.clientX, y0: e.clientY, s0: ev.s, e0: ev.e, d0: ev.d, moved: false };
+    selId = ev.id; document.body.style.cursor = drag.mode === "resize" ? "ns-resize" : "grabbing";
+  } else if (col) {
+    const a = Math.floor(yMin(e) / 15) * 15;
+    drag = { mode: "create", col, a, b: a, x0: e.clientX, y0: e.clientY, moved: false };
+    selId = null;
+    ghost();
+  }
+  e.preventDefault();
+});
+window.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 4) return;
+  drag.moved = true;
+  if (drag.mode === "create") { drag.col = colAt(e.clientX); drag.b = Math.floor(yMin(e) / 15) * 15; ghost(); return; }
+  const ev = drag.ev;
+  if (drag.mode === "move") {
+    const dy = snap((e.clientY - drag.y0) / HH * 60), len = drag.e0 - drag.s0;
+    ev.s = Math.max(0, Math.min(1440 - len, drag.s0 + dy)); ev.e = ev.s + len;
+    ev.d = colAt(e.clientX).dataset.d;
+  } else ev.e = Math.max(drag.s0 + 15, Math.min(1440, snap(yMin(e))));
+  render();
+});
+window.addEventListener("pointerup", (e) => {
+  if (!drag) return;
+  const d = drag; drag = null; document.body.style.cursor = "";
+  $$(".ghost").forEach((g) => g.remove());
+  if (d.mode === "create") {
+    let s = Math.min(d.a, d.b), en = Math.max(d.a, d.b) + 15;
+    if (!d.moved) en = s + 60;
+    en = Math.min(en, 1440);
+    const ev = { id: seq++, d: d.col.dataset.d, s, e: en, cal: "meet", t: "新日程", sub: "", _new: true };
+    E.push(ev); selId = ev.id; render(); openPop(ev.id, true);
+  } else if (d.moved) render();
+  else { render(); openPop(d.ev.id); }
+});
+const $$ = (s) => [...document.querySelectorAll(s)];
+function ghost() {
+  $$(".ghost").forEach((g) => g.remove());
+  const s = Math.min(drag.a, drag.b), en = Math.max(drag.a, drag.b) + 15, g = document.createElement("div");
+  g.className = "ev ghost" + ((en - s) / 60 * HH < 40 ? " s" : ""); g.style.cssText = `--c:var(--c-meet);top:${s / 60 * HH + 1}px;height:${(en - s) / 60 * HH - 2}px;left:2px;right:4px`;
+  g.innerHTML = `<div class="t">新日程</div><div class="m">${hm(s)}–${hm(en)}</div>`;
+  drag.col.appendChild(g);
+}
+
+/* ---- 事件浮层 ---- */
+const pop = $("#pop");
+function openPop(id, focus) {
+  popId = id; const ev = E.find((x) => x.id === id);
+  pop.innerHTML = `<input class="ti" value="${esc(ev.t)}" maxlength="40" spellcheck="false">
+    <div class="tm">${ICON.clock}<span class="num" id="pt"></span></div>
+    <div class="cs">${Object.entries(CALS).map(([k, v]) => `<button data-k="${k}" class="${ev.cal === k ? "on" : ""}" style="--c:${v.c}"><i></i>${v.n}</button>`).join("")}</div>
+    <div class="ft"><span>拖动改时间 · 拖下沿改时长</span><button class="del" id="pdel">${ICON.trash}删除</button></div>`;
+  pop.classList.add("on"); placePop();
+  const ti = $(".ti", pop);
+  ti.oninput = () => { ev.t = ti.value; $$(`.ev[data-id="${id}"] .t`).forEach((n) => (n.textContent = ti.value)); };
+  ti.onkeydown = (k) => { if (k.key === "Enter") { closePop(); } k.stopPropagation(); };
+  $$(".cs button", pop).forEach((b) => (b.onclick = () => { ev.cal = b.dataset.k; render(); openPop(id); }));
+  $("#pdel", pop).onclick = () => { E.splice(E.indexOf(ev), 1); closePop(); selId = null; render(); toast("已删除「" + ev.t + "」"); };
+  if (focus) { ti.focus(); ti.select(); }
+}
+function placePop() {
+  const ev = E.find((x) => x.id === popId), el = $(`.ev[data-id="${popId}"]`);
+  if (!ev || !el) { pop.classList.remove("on"); return; }
+  $("#pt", pop).textContent = `周${WD[parse(ev.d).getDay()]} ${parse(ev.d).getMonth() + 1} 月 ${parse(ev.d).getDate()} 日 · ${hm(ev.s)}–${hm(ev.e)}`;
+  const r = el.getBoundingClientRect(), ph = pop.offsetHeight || 180;
+  let x = r.right + 10; if (x + 288 > innerWidth - 10) x = r.left - 298;
+  pop.style.left = x + "px"; pop.style.top = Math.max(70, Math.min(innerHeight - ph - 12, r.top)) + "px";
+}
+function closePop() { popId = null; pop.classList.remove("on"); }
+document.addEventListener("pointerdown", (e) => { if (popId && !e.target.closest("#pop") && !e.target.closest("#grid")) { closePop(); selId = null; render(); } });
+scrollEl.addEventListener("scroll", () => { if (popId) placePop(); });
+
+/* ---- 侧栏 / 导航 ---- */
+$("#cals").addEventListener("click", (e) => { const c = e.target.closest(".cal"); if (!c) return; vis[c.dataset.k] = !vis[c.dataset.k]; if (popId && !vis[E.find((x) => x.id === popId)?.cal]) closePop(); render(); });
+$("#mg").addEventListener("click", (e) => { const d = e.target.closest(".d"); if (!d) return; weekStart = monday(parse(d.dataset.d)); closePop(); render(); });
+const go = (n) => { weekStart = addD(weekStart, n * 7); mMonth = new Date(weekStart.getFullYear(), weekStart.getMonth() + (weekStart.getDate() > 20 ? 1 : 0), 1); closePop(); render(); };
+$("#prev").onclick = () => go(-1); $("#next").onclick = () => go(1);
+$("#today").onclick = () => { weekStart = monday(nowDate()); mMonth = new Date(nowDate().getFullYear(), nowDate().getMonth(), 1); closePop(); render(); scrollEl.scrollTo({ top: Math.max(0, minsNow() / 60 * HH - 220), behavior: "smooth" }); };
+$("#mPrev").onclick = () => { mMonth = new Date(mMonth.getFullYear(), mMonth.getMonth() - 1, 1); renderMini(); };
+$("#mNext").onclick = () => { mMonth = new Date(mMonth.getFullYear(), mMonth.getMonth() + 1, 1); renderMini(); };
+
+/* ---- 自然语言新建 ---- */
+const CN = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10, 十一: 11, 十二: 12 };
+const num = (s) => (/^\d+(\.\d+)?$/.test(s) ? parseFloat(s) : s === "半" ? 0.5 : CN[s] ?? NaN);
+function parseNL(raw) {
+  let t = raw.trim(); if (!t) return null;
+  const now = nowDate(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let day = null, m;
+  if ((m = t.match(/大后天|后天|明天|今天/))) { day = addD(today, { 今天: 0, 明天: 1, 后天: 2, 大后天: 3 }[m[0]]); t = t.replace(m[0], " "); }
+  else if ((m = t.match(/(下周|下个星期|本周|这周)?(?:周|星期)([一二三四五六日天])/))) {
+    const w = "日一二三四五六".indexOf(m[2] === "天" ? "日" : m[2]), mon = monday(today);
+    if (m[1] && /下/.test(m[1])) day = addD(mon, 7 + ((w + 6) % 7));
+    else if (m[1]) day = addD(mon, (w + 6) % 7);
+    else { let d = addD(today, ((w - today.getDay()) + 7) % 7); day = d; }
+    t = t.replace(m[0], " ");
+  } else if ((m = t.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/))) { day = new Date(now.getFullYear(), +m[1] - 1, +m[2]); t = t.replace(m[0], " "); }
+  let per = null; if ((m = t.match(/凌晨|早上|早晨|上午|中午|下午|傍晚|晚上|晚间/))) { per = m[0]; t = t.replace(m[0], " "); }
+  let start = null;
+  if ((m = t.match(/(\d{1,2}|[一二两三四五六七八九十]{1,2})\s*(?:[:：点时])\s*(半|\d{1,2})?\s*(?:分)?/))) {
+    let h = num(m[1]), mi = m[2] === "半" ? 30 : m[2] ? +m[2] : 0;
+    if (!isNaN(h) && h <= 24) {
+      if (per && /下午|傍晚|晚上|晚间/.test(per) && h < 12) h += 12;
+      else if (per === "中午" && h < 11) h += 12;
+      else if (!per && h >= 1 && h <= 6) h += 12;
+      start = h * 60 + mi; t = t.replace(m[0], " ");
+    }
+  }
+  let dur = null;
+  if ((m = t.match(/(半|\d+(?:\.\d+)?|[一二两三四五六七八九十]{1,2})\s*个?\s*(小时|钟头|h|分钟|分)/i))) {
+    const v = num(m[1]); if (!isNaN(v)) { dur = /分/.test(m[2]) ? v : v * 60; t = t.replace(m[0], " "); }
+  } else if (/半小时/.test(t)) { dur = 30; t = t.replace("半小时", " "); }
+  const title = t.replace(/[，,。的]/g, " ").replace(/\s+/g, " ").trim();
+  if (start == null && per) start = { 凌晨: 2, 早上: 8, 早晨: 8, 上午: 9, 中午: 12, 下午: 14, 傍晚: 18, 晚上: 19, 晚间: 19 }[per] * 60;
+  const cal = /训练|微调|评测|推理|预训练|跑/.test(title) ? "train" : /评审|验收|审批/.test(title) ? "review" : /维保|巡检|升级|搬迁|检修|割接/.test(title) ? "ops" : "meet";
+  return { day: day || today, start, dur, title: title || "新日程", cal, noDay: !day };
+}
+const nli = $("#nli"), pv = $("#pv");
+const EX = ["周四下午 3 点 训练 4 小时", "明天上午 10 点半 资源评审 1 小时", "周六 9 点 机房巡检 2 小时"];
+function pvRender() {
+  const r = parseNL(nli.value);
+  if (!r) { pv.innerHTML = `<div class="tm" style="color:var(--ink2)">用一句话新建日程，按 ↵ 生成</div><div class="hint">试试：${EX.map((x) => `<code>${x}</code>`).join(" ")}</div>`; $$(".code").length; bindEx(); return; }
+  if (r.start == null) { pv.innerHTML = `<div class="err">还缺一个时间，例如「下午 3 点」</div>`; return; }
+  const dur = r.dur || 60, e = Math.min(1440, r.start + dur), d = r.day;
+  pv.innerHTML = `<div class="row" style="--c:${CALS[r.cal].c}"><div class="sw"></div><div><div class="tt">${esc(r.title)}</div><div class="tm num">周${WD[d.getDay()]} ${d.getMonth() + 1} 月 ${d.getDate()} 日 · ${hm(r.start)}–${hm(e)} · ${CALS[r.cal].n}</div></div></div>`;
+}
+function bindEx() { $$(".pv code").forEach((c) => (c.onmousedown = (e) => { e.preventDefault(); nli.value = c.textContent; pvRender(); })); }
+nli.addEventListener("focus", () => { $("#nl").classList.add("f"); pvRender(); });
+nli.addEventListener("blur", () => $("#nl").classList.remove("f"));
+nli.addEventListener("input", pvRender);
+nli.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { nli.blur(); return; }
+  if (e.key !== "Enter") return;
+  const r = parseNL(nli.value); if (!r || r.start == null) return;
+  const dur = r.dur || 60, ev = { id: seq++, d: iso(r.day), s: r.start, e: Math.min(1440, r.start + dur), cal: r.cal, t: r.title, sub: "", _new: true };
+  E.push(ev); vis[r.cal] = true; weekStart = monday(r.day); mMonth = new Date(r.day.getFullYear(), r.day.getMonth(), 1); selId = ev.id;
+  nli.value = ""; nli.blur(); render();
+  scrollEl.scrollTo({ top: Math.max(0, ev.s / 60 * HH - 160), behavior: "smooth" });
+  toast(`已创建「${ev.t}」 周${WD[r.day.getDay()]} ${hm(ev.s)}–${hm(ev.e)}`);
+});
+document.addEventListener("keydown", (e) => {
+  const tag = (document.activeElement || {}).tagName;
+  if (tag === "INPUT") return;
+  if (e.key === "/") { e.preventDefault(); nli.focus(); }
+  else if ((e.key === "Delete" || e.key === "Backspace") && selId) { const ev = E.find((x) => x.id === selId); if (ev) { E.splice(E.indexOf(ev), 1); selId = null; closePop(); render(); toast("已删除「" + ev.t + "」"); } }
+  else if (e.key === "Escape") { closePop(); selId = null; render(); }
+  else if (e.key === "ArrowLeft") go(-1); else if (e.key === "ArrowRight") go(1);
+  else if (e.key === "t") $("#today").click();
+});
+let tt; function toast(s) { const t = $("#toast"); t.textContent = s; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 2200); }
+
+buildGrid(); render();
+scrollEl.scrollTop = 7.6 * HH;
+setInterval(() => { if (!drag) render(); }, 30000);
+</script>
+</body>
+</html>

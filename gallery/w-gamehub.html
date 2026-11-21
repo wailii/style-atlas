@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>星港 · 游戏库</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#090b10;--p:#141822;--p2:#1c2230;--ln:rgba(255,255,255,.09);--tx:#eef2fa;--mu:#8d97ab;--ac:#c6ff4a;--f:"Noto Sans SC",sans-serif;--n:"Barlow Condensed","Noto Sans SC",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{font:400 14px/1.5 var(--f);color:var(--tx);min-width:1100px;overflow-x:hidden}
+#bk{position:fixed;inset:-40px;z-index:0}
+#bk div{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) saturate(1.25);opacity:0;transition:opacity .7s;transform:scale(1.1)}
+#bk div.on{opacity:.7}
+#bk::after{content:"";position:absolute;inset:0;background:rgba(5,7,11,.8)}
+.wrap{position:relative;z-index:2;max-width:1440px;margin:0 auto;padding:0 56px 70px}
+header{height:64px;display:flex;align-items:center;gap:30px}
+.lg{display:flex;align-items:center;gap:10px;font:700 22px var(--n);letter-spacing:.1em}
+.lg svg{width:26px;height:26px}
+.tabs{display:flex;gap:6px}
+.tabs a{padding:6px 16px;border-radius:99px;color:var(--mu);font-weight:500;text-decoration:none;cursor:pointer}
+.tabs a.on{background:rgba(255,255,255,.1);color:var(--tx)}
+.tabs a:hover{color:var(--tx)}
+.sr{margin-left:auto;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid var(--ln);border-radius:99px;padding:6px 16px;width:260px;color:var(--mu)}
+.sr svg{width:16px;height:16px}
+.sr input{background:none;border:0;outline:0;color:var(--tx);font:inherit;width:100%}
+.av{width:36px;height:36px;border-radius:50%;background:var(--ac);color:#0b0d12;display:grid;place-items:center;font:700 15px var(--n)}
+/* hero */
+.hero{position:relative;height:496px;border-radius:20px;overflow:hidden;border:1px solid var(--ln);background:#000}
+.sl{position:absolute;inset:0;opacity:0;transition:opacity .8s;pointer-events:none}
+.sl.on{opacity:1;pointer-events:auto}
+.sl .im{position:absolute;inset:0;background-size:cover;background-position:center;transform-origin:var(--o,50% 50%)}
+.sl.on .im{animation:kb 9s ease-out forwards}
+@keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.14) translate(var(--tx,-1.2%),var(--ty,-0.8%))}}
+.sl::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,8,12,.92) 0,rgba(6,8,12,.62) 38%,rgba(6,8,12,.0) 70%),linear-gradient(0deg,rgba(6,8,12,.6),transparent 40%)}
+.tx{position:absolute;left:48px;bottom:58px;width:520px;z-index:3}
+.tx>*{opacity:0;transform:translateY(14px)}
+.sl.on .tx>*{animation:up .6s cubic-bezier(.2,.8,.2,1) forwards}
+.sl.on .tx>*:nth-child(2){animation-delay:.08s}.sl.on .tx>*:nth-child(3){animation-delay:.16s}.sl.on .tx>*:nth-child(4){animation-delay:.24s}.sl.on .tx>*:nth-child(5){animation-delay:.32s}
+@keyframes up{to{opacity:1;transform:none}}
+.tg{display:flex;gap:8px;margin-bottom:12px}
+.tg span{font:600 12px var(--n);letter-spacing:.14em;padding:3px 10px;border:1px solid rgba(255,255,255,.35);border-radius:4px;text-transform:uppercase}
+.tg span.h{background:var(--ac);color:#0b0d12;border-color:var(--ac)}
+.tx h1{font:900 64px/1.05 var(--f);letter-spacing:.02em}
+.tx .en{font:600 18px var(--n);letter-spacing:.3em;color:var(--ac);margin:6px 0 14px}
+.tx p{color:#c8d0df;font-size:15px;line-height:1.7;max-width:460px}
+.bt{display:flex;gap:12px;margin-top:22px;align-items:center}
+.b1{background:var(--ac);color:#0b0d12;font:900 16px var(--f);padding:12px 34px;border-radius:10px;border:0;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .15s,filter .15s}
+.b1:hover{transform:scale(1.05);filter:brightness(1.08)}
+.b1 svg{width:16px;height:16px}
+.b2{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:var(--tx);font:500 15px var(--f);padding:11px 22px;border-radius:10px;cursor:pointer;display:flex;gap:8px;align-items:center;transition:background .15s}
+.b2:hover{background:rgba(255,255,255,.18)}
+.b2 svg{width:16px;height:16px}
+.b2.on{border-color:var(--ac);color:var(--ac)}
+.pr{font:600 22px var(--n);margin-left:8px;color:#dfe6f5}
+.cr{position:absolute;left:48px;bottom:16px;font-size:11px;color:rgba(255,255,255,.5);z-index:3}
+.arr{position:absolute;top:50%;margin-top:-22px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);display:grid;place-items:center;cursor:pointer;z-index:6;color:#fff;transition:background .15s}
+.arr:hover{background:rgba(255,255,255,.2)}
+.arr svg{width:18px;height:18px}
+#pv{left:14px}
+.rl{position:absolute;right:20px;top:20px;bottom:20px;width:268px;display:flex;flex-direction:column;gap:8px;z-index:5}
+.th{position:relative;flex:1;border-radius:12px;overflow:hidden;cursor:pointer;background:rgba(7,9,14,.72);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;padding:0 10px;backdrop-filter:blur(10px);transition:background .2s,transform .2s}
+.th:hover{background:rgba(30,36,50,.8);transform:translateX(-4px)}
+.th img{width:62px;height:44px;border-radius:6px;object-fit:cover;flex:none}
+.th b{font:700 14px var(--f);display:block;line-height:1.3}
+.th small{color:var(--mu);font-size:12px}
+.th i{position:absolute;left:0;bottom:0;height:3px;background:var(--ac);width:0}
+.th.on{background:rgba(24,30,18,.82);border-color:var(--ac)}
+.th.on i{animation:fill 7s linear forwards}
+.hero.pa .th.on i{animation-play-state:paused}
+@keyframes fill{to{width:100%}}
+#nx{right:304px}
+/* library */
+.lh{display:flex;align-items:center;gap:22px;margin:22px 0 14px}
+.lh h2{font:900 22px var(--f)}
+.fl{display:flex;gap:6px}
+.fl a{padding:5px 14px;border-radius:99px;font-size:13px;color:var(--mu);cursor:pointer;border:1px solid transparent;font-weight:500}
+.fl a:hover{color:var(--tx)}
+.fl a.on{border-color:var(--ac);color:var(--ac)}
+.fl a em{font-style:normal;margin-left:5px;font:600 13px var(--n);opacity:.8}
+.tot{margin-left:auto;display:flex;align-items:center;gap:12px;color:var(--mu);font-size:13px}
+.tot b{color:var(--tx);font:700 18px var(--n)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;padding-bottom:20px}
+.cd{position:relative;cursor:pointer;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .3s;z-index:1}
+.cd.hide{display:none}
+.cd.fin{animation:fin .4s both}
+@keyframes fin{from{opacity:0;transform:scale(.92)}to{opacity:1}}
+.cd .ph{position:relative;aspect-ratio:3/2;border-radius:12px;overflow:hidden;border:1px solid var(--ln);background:var(--p)}
+.cd .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .3s}
+.cd.un .ph img{filter:grayscale(.85) brightness(.7)}
+.cd:hover{transform:scale(1.13);z-index:20}
+.cd:hover .ph{box-shadow:0 22px 50px rgba(0,0,0,.65);border-color:rgba(255,255,255,.35)}
+.cd:hover .ph img{animation:kb2 6s ease-out forwards;filter:none}
+@keyframes kb2{from{transform:scale(1)}to{transform:scale(1.18) translate(-3%,-2%)}}
+.cd .ov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:9px 10px;background:linear-gradient(0deg,rgba(6,8,12,.9),rgba(6,8,12,.1) 65%);opacity:0;transition:opacity .25s}
+.cd:hover .ov{opacity:1}
+.ov .r{display:flex;align-items:center;gap:8px;font-size:11px;color:#cfd7e6}
+.ov .r b{font:700 15px var(--n);color:var(--ac)}
+.ov .go{position:absolute;right:9px;top:9px;background:var(--ac);color:#0b0d12;border-radius:99px;padding:2px 12px 2px 9px;font:900 12px var(--f);display:flex;align-items:center;gap:4px}
+.ov .go svg{width:10px;height:10px}
+.cd .nm{display:flex;align-items:center;gap:8px;margin-top:9px;font-weight:700;font-size:13.5px}
+.cd .nm span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd .nm svg{flex:none;width:26px;height:26px}
+.cd .sb{font-size:12px;color:var(--mu);margin-top:1px}
+.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:30;display:flex;align-items:center;gap:16px;background:rgba(20,24,34,.86);backdrop-filter:blur(14px);border:1px solid var(--ln);border-radius:99px;padding:8px 20px 8px 10px;font-size:12.5px;color:var(--mu)}
+.bar img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.bar .p{width:200px;height:4px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+.bar .p i{display:block;height:100%;background:var(--ac);width:62%}
+.bar b{color:var(--tx);font-weight:500}
+.toast{position:fixed;left:50%;top:80px;transform:translate(-50%,-14px);background:var(--ac);color:#0b0d12;font-weight:700;padding:9px 22px;border-radius:99px;opacity:0;transition:.25s;z-index:60;pointer-events:none}
+.toast.s{opacity:1;transform:translate(-50%,0)}
+.note{position:absolute;right:56px;bottom:4px;font-size:11px;color:rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+<div id="bk"></div>
+<div class="wrap">
+ <header>
+  <div class="lg"><svg viewBox="0 0 26 26"><path d="M13 2 24 8v10l-11 6L2 18V8z" fill="none" stroke="#c6ff4a" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 8v10M8 11l5-3 5 3" fill="none" stroke="#c6ff4a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>星港</div>
+  <div class="tabs"><a>主页</a><a>商店</a><a class="on">游戏库</a><a>好友</a><a>社区</a></div>
+  <div class="sr"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg><input id="q" placeholder="搜索游戏" autocomplete="off"></div>
+  <div class="av">小</div>
+ </header>
+ <section class="hero" id="hero">
+  <div id="slides"></div>
+  <div class="arr" id="pv"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 3-6 6 6 6"/></svg></div>
+  <div class="arr" id="nx"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 3 6 6-6 6"/></svg></div>
+  <div class="rl" id="rl"></div>
+ </section>
+ <div class="lh"><h2>我的游戏库</h2>
+  <div class="fl" id="fl"><a data-f="all" class="on">全部<em id="c0"></em></a><a data-f="inst">已安装<em id="c1"></em></a><a data-f="recent">最近玩<em id="c2"></em></a><a data-f="un">未安装<em id="c3"></em></a></div>
+  <div class="tot"><svg width="40" height="40" viewBox="0 0 40 40" id="tr"></svg><div>总成就<br><b id="tt">0 / 0</b></div></div></div>
+ <div class="grid" id="gd"></div>
+ <div class="note">示例数据 · 游戏均为虚构 · 左右方向键切换主视觉</div>
+</div>
+<div class="bar" id="bar"><img id="bi" src="img/real/satellite-harbor.jpg" alt=""><div><b id="bt">《港湾日志》正在更新</b><br><span>1.8 GB / 2.9 GB · 18 MB/s</span></div><div class="p"><i></i></div></div>
+<div class="toast" id="ts"></div>
+
+<script>
+window.__e=[];addEventListener("error",e=>__e.push(e.message+" @"+e.lineno));
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const R="img/real/";
+const G=[
+ {id:"desert",n:"荒原行者",en:"WASTELAND WALKER",img:"filmstill-desert",by:"MontyLov",tag:"开放世界 · 生存",inst:1,rec:2,hr:86,a:[41,60],price:"已拥有",d:"一个人，一只水壶，一座没有地图的沙海。走到哪算哪，天黑之前找到下一口水。",o:"60% 60%"},
+ {id:"rain",n:"雨夜接单",en:"MIDNIGHT FARE",img:"filmstill-rain",by:"Suhyeon Choi",tag:"都市模拟 · 叙事",inst:1,rec:0,hr:112,a:[28,45],price:"已拥有",d:"开着旧三轮在雨夜的城里跑单，每一位乘客都有一句没讲完的话。",o:"50% 40%"},
+ {id:"rocket",n:"星海回收",en:"ORBITAL SALVAGE",img:"flatlay-rocket",by:"SpaceX",tag:"太空经营 · 即将发售",inst:0,rec:99,hr:0,a:[0,52],price:"¥98 · 12.05 发售",d:"在轨道上捡回被丢掉的火箭残骸，拆开、修好、再卖掉。每一块碎片都有故事。",o:"50% 60%",soon:1},
+ {id:"harbor",n:"港湾日志",en:"HARBOR LOG",img:"satellite-harbor",by:"Michael Olsen",tag:"航海 · 经营",inst:1,rec:1,hr:64,a:[19,38],price:"已拥有",d:"管理一座小港，调度渔船和渡轮，记下每天的潮汐和天气。",o:"50% 50%"},
+ {id:"shore",n:"金色海岸",en:"GOLDEN SHORE",img:"documentary-shore",by:"Dana Cristea",tag:"休闲 · 治愈",inst:1,rec:5,hr:23,a:[12,30],price:"已拥有",d:"傍晚的沙滩，没有任务。堆沙堡，追浪花，看夕阳落下去。",o:"50% 70%"},
+ {id:"plane",n:"云上航线",en:"SKYLINE ROUTE",img:"filmstill-plane",by:"LOGAN WEAVER",tag:"模拟 · 飞行",inst:0,rec:30,hr:9,a:[3,40],price:"已拥有",d:"靠窗的座位，一杯凉掉的咖啡，窗外是整片云海。",o:"70% 50%"},
+ {id:"clouds",n:"云海漫游",en:"CLOUD DRIFT",img:"flatlay-clouds",by:"Luke Pamer",tag:"休闲 · 探索",inst:1,rec:9,hr:31,a:[22,26],price:"已拥有",d:"驾一只小气球，在云层之间慢慢漂。",o:"50% 50%"},
+ {id:"city",n:"微光街区",en:"GLOW BLOCK",img:"satellite-downtown",by:"Alexander Pidgeon",tag:"城市建造",inst:0,rec:45,hr:5,a:[2,50],price:"已拥有",d:"从一个路口开始，把一整片街区建起来。",o:"50% 50%"},
+ {id:"arena",n:"绿茵之夜",en:"PITCH NIGHT",img:"satellite-stadium",by:"Alexander Londoño",tag:"体育 · 多人",inst:1,rec:3,hr:140,a:[55,80],price:"已拥有",d:"夜场、灯光、观众席。十一对十一，只有一个球。",o:"50% 50%"},
+ {id:"lighter",n:"打火机",en:"ONE LIGHT",img:"filmstill-lighter",by:"Christian Allard",tag:"解谜 · 短篇",inst:1,rec:14,hr:4,a:[8,8],price:"已拥有",d:"一小团火，一个黑屋子，三十分钟的谜题。",o:"45% 50%"},
+ {id:"cross",n:"十字路口",en:"CROSSING",img:"documentary-crossing",by:"Mak",tag:"叙事 · 步行",inst:0,rec:60,hr:7,a:[5,18],price:"已拥有",d:"一条空无一人的街，一个等红灯的人，一整天的故事。",o:"50% 60%"},
+ {id:"sun",n:"向阳而生",en:"SUNWARD",img:"campaign-sun",by:"Baylee Gramling",tag:"休闲 · 换装",inst:1,rec:7,hr:17,a:[10,24],price:"已拥有",d:"午后的光，一件旧衬衫，一个不想出门的周末。",o:"50% 40%"}
+];
+const FEAT=["desert","rain","rocket","harbor","shore"];
+const ico={play:'<svg viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z" fill="currentColor"/></svg>',heart:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M8 14C2 10 1.5 6.5 3.5 4.7c1.6-1.4 3.5-.8 4.5.8 1-1.6 2.9-2.2 4.5-.8 2 1.8 1.500 5.300-4.500 9.300z"/></svg>',dl:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.500 7 8 10.500 11.500 7M3 13.500h10"/></svg>'};
+// ---- 成就环
+function ring(a,t,s,w,col){const r=s/2-w/2-1,c=2*Math.PI*r,p=t?a/t:0;return `<circle cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="${w}"/><circle cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke="${col||"#c6ff4a"}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}" transform="rotate(-90 ${s/2} ${s/2})" style="transition:stroke-dashoffset 1s"/>`}
+// ---- 背景
+const bk=$("#bk");G.forEach(g=>{const d=document.createElement("div");d.style.backgroundImage=`url(${R}${g.img}.jpg)`;d.id="bk_"+g.id;bk.appendChild(d)});
+let heroId=FEAT[0],hoverId=null;
+function setBk(){const id=hoverId||heroId;$$("#bk div").forEach(d=>d.classList.toggle("on",d.id=="bk_"+id))}
+// ---- 轮播
+const by=id=>G.find(g=>g.id==id);
+const sl=$("#slides"),rl=$("#rl");
+FEAT.forEach((id,i)=>{const g=by(id);
+ const s=document.createElement("div");s.className="sl";s.dataset.i=i;s.innerHTML=`<div class="im" style="background-image:url(${R}${g.img}.jpg);--o:${g.o};--tx:${i%2?"1.2%":"-1.2%"}"></div>
+  <div class="tx"><div class="tg">${g.soon?'<span class="h">即将发售</span>':i==0?'<span class="h">继续游玩</span>':'<span class="h">已拥有</span>'}<span>${g.tag}</span></div><h1>${g.n}</h1><div class="en">${g.en}</div><p>${g.d}</p>
+  <div class="bt"><button class="b1" data-act="play">${g.soon?ico.dl+"预购":g.inst?ico.play+"开始游戏":ico.dl+"安装"}</button><button class="b2" data-act="wish">${ico.heart}心愿单</button><span class="pr">${g.price}</span></div></div>
+  <div class="cr">示意图 · ${g.by}</div>`;sl.appendChild(s);
+ const t=document.createElement("div");t.className="th";t.innerHTML=`<img src="${R}${g.img}.jpg" alt=""><div><b>${g.n}</b><small>${g.tag.split(" · ")[0]}</small></div><i></i>`;t.onclick=()=>go(i,true);rl.appendChild(t)});
+let cur=-1,timer=null;
+function go(i,manual){i=(i+FEAT.length)%FEAT.length;if(i===cur&&!manual)return;
+ $$(".sl").forEach((s,k)=>s.classList.toggle("on",k==i));
+ $$(".th").forEach((t,k)=>{t.classList.remove("on");if(k==i){void t.offsetWidth;t.classList.add("on")}});
+ cur=i;heroId=FEAT[i];setBk();clearTimeout(timer);timer=setTimeout(()=>go(cur+1),7000)}
+$("#nx").onclick=()=>go(cur+1,true);$("#pv").onclick=()=>go(cur-1,true);
+addEventListener("keydown",e=>{if(e.target.id=="q")return;if(e.key=="ArrowRight")go(cur+1,true);if(e.key=="ArrowLeft")go(cur-1,true)});
+const hero=$("#hero");
+hero.addEventListener("mouseenter",()=>{hero.classList.add("pa");clearTimeout(timer)});
+hero.addEventListener("mouseleave",()=>{hero.classList.remove("pa");const cs=$$(".th.on i")[0];timer=setTimeout(()=>go(cur+1),3500)});
+sl.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const g=by(FEAT[cur]);
+ if(b.dataset.act=="wish"){b.classList.toggle("on");toast(b.classList.contains("on")?"已加入心愿单":"已移出心愿单")}else toast(g.soon?`已预购《${g.n}》`:g.inst?`正在启动《${g.n}》…`:`《${g.n}》已加入下载队列`)});
+function toast(t){const e=$("#ts");e.textContent=t;e.classList.add("s");clearTimeout(e._h);e._h=setTimeout(()=>e.classList.remove("s"),1700)}
+// ---- 库
+const gd=$("#gd");
+function sub(g){return g.soon?"即将发售":g.hr?(g.rec<=7?"最近玩过 · ":"")+g.hr+" 小时":"尚未游玩"}
+G.forEach(g=>{const c=document.createElement("div");c.className="cd"+(g.inst?"":" un");c.dataset.id=g.id;
+ c.innerHTML=`<div class="ph"><img src="${R}${g.img}.jpg" alt=""><div class="ov"><div class="go">${g.inst?ico.play+"开始":ico.dl+"安装"}</div><div class="r"><svg width="30" height="30" viewBox="0 0 30 30">${ring(g.a[0],g.a[1],30,4)}</svg><div>成就 <b>${g.a[0]}</b>/${g.a[1]}<br>${g.hr?g.hr+" 小时":"尚未游玩"}</div></div></div></div>
+ <div class="nm"><span>${g.n}</span><svg viewBox="0 0 26 26">${ring(g.a[0],g.a[1],26,3.5)}</svg></div><div class="sb">${g.tag.split(" · ")[0]} · ${sub(g)}</div>`;
+ c.addEventListener("mouseenter",()=>{hoverId=g.id;setBk()});c.addEventListener("mouseleave",()=>{hoverId=null;setBk()});
+ c.onclick=()=>toast(g.soon?`《${g.n}》12 月 5 日发售`:g.inst?`正在启动《${g.n}》…`:`《${g.n}》已加入下载队列`);gd.appendChild(c)});
+const FL={all:g=>1,inst:g=>g.inst,recent:g=>g.rec<=7&&!g.soon,un:g=>!g.inst};
+let ft="all",qs="";
+function applyF(){let n=0;$$(".cd").forEach(c=>{const g=by(c.dataset.id);const ok=FL[ft](g)&&(!qs||g.n.includes(qs)||g.en.toLowerCase().includes(qs));const was=c.classList.contains("hide");c.classList.toggle("hide",!ok);if(ok){n++;if(was){c.classList.remove("fin");void c.offsetWidth;c.classList.add("fin")}}})}
+function counts(){Object.keys(FL).forEach((k,i)=>$("#c"+i).textContent=G.filter(FL[k]).length)}
+counts();
+$("#fl").addEventListener("click",e=>{const a=e.target.closest("a");if(!a)return;$$("#fl a").forEach(x=>x.classList.toggle("on",x===a));ft=a.dataset.f;applyF()});
+$("#q").addEventListener("input",e=>{qs=e.target.value.trim().toLowerCase();applyF()});
+// 总成就环
+(function(){const A=G.reduce((s,g)=>s+g.a[0],0),T=G.reduce((s,g)=>s+g.a[1],0);$("#tr").innerHTML=ring(A,T,40,5);$("#tt").textContent=A+" / "+T})();
+// 底部下载条（缓慢推进）
+let pg=62;setInterval(()=>{pg=Math.min(99,pg+.3);$(".bar .p i").style.width=pg+"%"},900);
+go(0,true);
+</script>
+</body>
+</html>

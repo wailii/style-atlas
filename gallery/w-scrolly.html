@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>一张 GPU 卡的一年 · 滚动叙事</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;500;700&family=Inter:wght@400;600;800&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14151a;--ink2:#4b4f5c;--mute:#8d92a0;--line:#e6e7ec;--tr:#ff4d2e;--inf:#0e8f86;--idle:#c3c6d0;--flt:#15151a;--hi:#fff0a8}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#fff;color:var(--ink);font-family:"Noto Serif SC",serif;overflow-x:hidden}
+#prog{position:fixed;top:0;left:0;height:4px;width:100%;background:var(--ink);transform-origin:0 0;transform:scaleX(0);z-index:60}
+#prog:after{content:"";position:absolute;right:0;top:0;height:4px;width:60px;background:var(--tr)}
+header{position:fixed;top:4px;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);font:600 13px "Noto Sans SC",sans-serif;border-bottom:1px solid var(--line)}
+header .l{display:flex;gap:14px;align-items:center;letter-spacing:.04em}
+header .l i{width:10px;height:10px;background:var(--tr);display:inline-block;border-radius:50%}
+header .r{display:flex;gap:6px;align-items:center}
+header .r a{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--mute);font:600 12px Inter;text-decoration:none;border:1px solid var(--line);transition:.2s}
+header .r a.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.wrap{display:grid;grid-template-columns:minmax(440px,540px) 1fr;gap:20px;max-width:1440px;margin:0 auto;padding:0 40px 0 72px}
+.steps{padding-top:56px}
+.step{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0;max-width:500px}
+.step.first{padding-top:110px;min-height:calc(100vh - 20px)}
+.kick{font:700 12px "Noto Sans SC";letter-spacing:.24em;color:var(--tr);margin-bottom:22px}
+h1{font:900 76px/1.08 "Noto Serif SC";letter-spacing:-.02em;margin-bottom:28px}
+h1 span{box-shadow:inset 0 -.36em var(--hi)}
+.dek{font-size:20px;line-height:1.85;color:var(--ink2);margin-bottom:18px}
+.by{font:500 13px "Noto Sans SC";color:var(--mute);margin-top:10px;display:flex;gap:18px}
+.step p{font-size:19px;line-height:1.95;margin-bottom:20px;color:#23252d}
+.step h2{font:900 34px/1.3 "Noto Serif SC";margin-bottom:22px;letter-spacing:-.01em}
+.big{font:800 64px/1 Inter;letter-spacing:-.04em;display:block;margin:6px 0 2px}
+.num{font-weight:700;border-bottom:2px solid currentColor;cursor:pointer;padding:0 1px;transition:background .15s}
+.num:hover{background:var(--hi)}
+.num[data-st=train]{color:#d63a1c}.num[data-st=infer]{color:#0b7770}.num[data-st=idle]{color:#6d7282}.num[data-st=fault]{color:#000}.num[data-mo]{color:var(--ink)}
+.hint{font:500 12.5px "Noto Sans SC";color:var(--mute);margin-top:-4px}
+.scroll{display:flex;align-items:center;gap:10px;font:500 13px "Noto Sans SC";color:var(--mute);margin-top:34px}
+.scroll svg{width:16px;height:22px;animation:bob 1.6s ease-in-out infinite}@keyframes bob{50%{transform:translateY(5px)}}
+.chart{position:sticky;top:64px;height:calc(100vh - 80px);align-self:start;display:flex;flex-direction:column;justify-content:center}
+.chart .ttl{font:700 14px "Noto Sans SC";margin:0 0 2px 56px}.chart .ttl small{font-weight:400;color:var(--mute);margin-left:8px}
+svg#c{width:100%;height:calc(100% - 64px);max-height:760px;display:block;overflow:visible}
+.dot{transition:fill .6s,opacity .3s}
+.dim .dot{opacity:.09}
+.dim.d-train .s-train,.dim.d-infer .s-infer,.dim.d-idle .s-idle,.dim.d-fault .s-fault{opacity:1}
+.dim.d-mo .dot{opacity:.09}.dim.d-mo .dot.mo{opacity:1}
+.ax text{font:500 11.5px Inter,"Noto Sans SC";fill:var(--mute)}
+.ax line,.ax path{stroke:var(--line);stroke-width:1;fill:none}
+.ax .big{font:800 15px "Noto Sans SC";fill:var(--ink)}.ax .sm{font:500 12px "Noto Sans SC";fill:var(--mute)}
+.layer{opacity:0;transition:opacity .5s;pointer-events:none}.layer.on{opacity:1}
+.note{opacity:0;transition:opacity .4s .5s}.note.on{opacity:1}
+.note text{font:400 25px "Ma Shan Zheng",cursive;fill:#c4310f}
+.note path{fill:none;stroke:#c4310f;stroke-width:2;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .8s .6s}
+.note.on path{stroke-dashoffset:0}
+.legend{display:flex;gap:18px;margin:0 0 0 56px;font:500 12.5px "Noto Sans SC";color:var(--ink2);height:22px;align-items:center;transition:opacity .4s}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.src{position:fixed;right:14px;bottom:8px;font:400 11px "Noto Sans SC";color:var(--mute);z-index:40;background:rgba(255,255,255,.85);padding:2px 6px}
+.end{max-width:1440px;margin:0 auto;padding:0 72px 120px;font:500 13px "Noto Sans SC";color:var(--mute)}
+</style></head><body>
+<div id="prog"></div>
+<header><div class="l"><i></i>算力档案 · 数据报道</div><div class="r" id="dots"></div></header>
+<div class="wrap">
+ <div class="steps" id="steps">
+  <section class="step first" data-i="0">
+    <div class="kick">数据报道 · 算力档案</div>
+    <h1>一张 GPU 卡<br>的<span>一年</span></h1>
+    <p class="dek">编号 GN7-0412，一块 80GB 的训练卡，2025 年在机房 B 区第 3 排运转。我们把它每一天的利用率画了出来，一天一个点。</p>
+    <p class="dek" style="font-size:17px">右边一共 <b id="n365">365</b> 个点。横轴是日期，纵轴是当天的平均利用率。</p>
+    <div class="by"><span>文 / 图 · 算力运营组</span><span>2025 年度</span></div>
+    <div class="scroll"><svg viewBox="0 0 16 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="1" y="1" width="14" height="20" rx="7"/><path d="M8 5v4"/></svg>向下滚动</div>
+  </section>
+  <section class="step" data-i="1">
+    <h2>每个点有一种状态</h2>
+    <p>把当天主要在做的事染上颜色。<b class="num" data-st="train">训练 <span class="v" data-k="train"></span> 天</b>是橙红色，利用率大多在 70% 以上；<b class="num" data-st="infer">推理 <span class="v" data-k="infer"></span> 天</b>是青绿色，在 35% 到 70% 之间起伏。</p>
+    <p><b class="num" data-st="idle">空闲 <span class="v" data-k="idle"></span> 天</b>是灰色，几乎贴着底线；<b class="num" data-st="fault">故障与维护 <span class="v" data-k="fault"></span> 天</b>是黑色，利用率为零。</p>
+    <p class="hint">把鼠标放到带下划线的数字上，图里对应的点会亮起来。</p>
+  </section>
+  <section class="step" data-i="2">
+    <h2>按状态把日子归到一起</h2>
+    <p>同一种状态的日子堆在一起，一年的结构就清楚了。训练和推理加起来占了 <b class="num" data-st="train"><span class="v" data-k="busyPct"></span>%</b> 的日子。</p>
+    <p>剩下的，有将近四分之一的日子，这块卡什么也没跑。</p>
+  </section>
+  <section class="step" data-i="3">
+    <h2>换成按月来看</h2>
+    <p>每个月一列，一天一颗珠子。<b class="num" data-mo="5">5 月</b>是最满的一个月：<span class="v" data-k="may"></span> 天在训练。<b class="num" data-mo="2">2 月</b>最清闲，一半的日子是空闲的。</p>
+    <p><b class="num" data-mo="8">8 月</b>最特别：中旬连续 <span class="v" data-k="augFault"></span> 天故障，顶上那一段黑色就是。</p>
+  </section>
+  <section class="step" data-i="4">
+    <h2>全年的起伏</h2>
+    <p>把每天的利用率取 7 天滑动平均，连成一条线。全年平均是 <span class="big v" data-k="avg"></span></p>
+    <p>线在 <b class="num" data-mo="5">5 月</b>爬到最高，<span class="v" data-k="peak"></span>；在 <b class="num" data-mo="8">8 月</b>跌到谷底。年初和年末的利用率都不到全年平均。</p>
+  </section>
+  <section class="step" data-i="5">
+    <h2>如果一天算一格</h2>
+    <p>365 格排成一张表。灰色的那一片，是这块卡 <b class="num" data-st="idle"><span class="v" data-k="idle"></span> 天</b>没有干活的日子。</p>
+    <p>按示例单价每卡每小时 18 元算，这些空闲日合计 <b>¥<span class="v" data-k="idleCost"></span></b>，只是这一张卡。机房里还有 <b>312</b> 张。</p>
+    <div class="scroll" style="margin-top:20px">示例数据 · 单价为举例</div>
+  </section>
+ </div>
+ <div class="chart"><div class="ttl" id="ttl"></div><div class="legend" id="legend"></div>
+  <svg id="c" viewBox="0 0 820 680" preserveAspectRatio="xMidYMid meet"></svg></div>
+</div>
+<div class="end">示例数据，仅用于展示版式。全部 365 个点由固定随机种子生成，刷新不变。</div>
+<div class="src">示例数据</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg',$=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const W=820,H=680,L=56,R=800,T=30,B=610; // 绘图区
+// ---------- 数据（固定种子，月度表保证合计） ----------
+let seed=42;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const MD=[31,28,31,30,31,30,31,31,30,31,30,31],MN=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const TAB=[[6,10,15,0],[4,9,15,0],[14,9,8,0],[17,7,6,0],[19,8,4,0],[18,8,4,0],[15,10,6,0],[5,6,11,9],[12,10,8,0],[14,12,5,0],[11,14,5,0],[7,15,5,4]];
+const ST=['train','infer','idle','fault'],COL={train:'#ff4d2e',infer:'#0e8f86',idle:'#c3c6d0',fault:'#15151a'},NAME={train:'训练',infer:'推理',idle:'空闲',fault:'故障与维护'};
+const days=[];let doy=0;
+TAB.forEach((row,m)=>{ // 每月：把状态切成 2~5 天的连续段再洗牌，故障段保持连续放在中旬
+  const runs=[];row.forEach((n,k)=>{if(ST[k]==='fault')return;while(n>0){const r=Math.min(n,2+Math.floor(rnd()*4));runs.push([k,r]);n-=r}});
+  for(let i=runs.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[runs[i],runs[j]]=[runs[j],runs[i]]}
+  if(row[3])runs.splice(Math.floor(runs.length/2),0,[3,row[3]]);
+  let d=0;runs.forEach(([k,r])=>{for(let i=0;i<r;i++){const s=ST[k];let u=s==='train'?72+rnd()*26:s==='infer'?34+rnd()*34:s==='idle'?rnd()*9:0;days.push({i:doy++,m,d:d++,s,u})}})
+});
+const N=days.length;
+const cnt=k=>days.filter(x=>x.s===k).length;
+const avg=days.reduce((a,x)=>a+x.u,0)/N;
+const ma=days.map((_,i)=>{let a=0,n=0;for(let j=Math.max(0,i-3);j<=Math.min(N-1,i+3);j++){a+=days[j].u;n++}return a/n});
+const mAvg=TAB.map((_,m)=>{const dd=days.filter(x=>x.m===m);return dd.reduce((a,x)=>a+x.u,0)/dd.length});
+const peakM=mAvg.indexOf(Math.max(...mAvg));
+// 文中的数字全部取自数据
+const V={train:cnt('train'),infer:cnt('infer'),idle:cnt('idle'),fault:cnt('fault'),busyPct:Math.round((cnt('train')+cnt('infer'))/N*100),may:TAB[4][0],augFault:TAB[7][3],avg:avg.toFixed(0)+'%',peak:'月均 '+mAvg[peakM].toFixed(0)+'%',idleCost:(cnt('idle')*24*18).toLocaleString('en-US')};
+$$('.v').forEach(e=>e.textContent=V[e.dataset.k]);$('#n365').textContent=N;
+// ---------- 各视图下每个点的目标位置 ----------
+const xDay=i=>L+(i+.5)/N*(R-L),yU=u=>B-u/100*(B-T);
+const P={};
+P[0]=days.map(d=>({x:xDay(d.i),y:yU(d.u),r:4.6}));P[1]=P[0];
+// 2: 按状态的蜂群
+{const cx=k=>L+(k+.5)*(R-L)/4,placed=[];const out=new Array(N);
+ ST.forEach((s,k)=>{const idx=days.map((d,i)=>i).filter(i=>days[i].s===s).sort((a,b)=>days[b].u-days[a].u);const pl=[];
+  idx.forEach(i=>{const ty=s==='train'?B-(days[i].u-60)/40*320-40:s==='infer'?B-(days[i].u-30)/40*220-60:B-40-(i%7)*3;let found=null;
+   for(let rad=0;rad<200&&!found;rad+=1.2){for(let a=0;a<12;a++){const ang=a/12*6.283+rad;const x=cx(k)+Math.cos(ang)*rad,y=ty+Math.sin(ang)*rad*.9;if(pl.every(p=>(p.x-x)**2+(p.y-y)**2>(10.6)**2)){found={x,y};break}}}
+   found=found||{x:cx(k),y:ty};pl.push(found);out[i]={x:found.x,y:found.y,r:4.6}})});
+ P[2]=out}
+// 3: 按月堆珠子
+{const w=(R-L)/12,cnts=new Array(12).fill(0);const out=new Array(N);
+ const order={train:0,infer:1,idle:2,fault:3};
+ days.map((d,i)=>i).sort((a,b)=>days[a].m-days[b].m||order[days[a].s]-order[days[b].s]).forEach(i=>{const d=days[i];const k=cnts[d.m]++;out[i]={x:L+(d.m+.5)*w,y:B-14-k*17,r:5.2}});P[3]=out}
+// 4: 7 日滑动平均
+P[4]=days.map((d,i)=>({x:xDay(i),y:yU(ma[i]),r:3.4}));
+// 5: 华夫格 25×15
+{const order={train:0,infer:1,idle:2,fault:3},cols=25,dx=(R-L)/cols,dy=(B-T-20)/15;const out=new Array(N);
+ days.map((d,i)=>i).sort((a,b)=>order[days[a].s]-order[days[b].s]||a-b).forEach((i,n)=>{out[i]={x:L+(n%cols+.5)*dx,y:T+20+(Math.floor(n/cols)+.5)*dy,r:Math.min(dx,dy)*.34}});P[5]=out}
+// ---------- 画布 ----------
+const svg=$('#c');const mk=(t,a={},p=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+const layers=[];
+function layer(i,fn){const g=mk('g',{class:'ax layer'});fn(g);layers[i]=g;return g}
+const axX=(g)=>{MN.forEach((n,m)=>{const x=L+(days.findIndex(d=>d.m===m)+(MD[m]/2))/N*(R-L);const t=mk('text',{x,y:B+30,'text-anchor':'middle'},g);t.textContent=n})};
+const axY=(g)=>{[0,25,50,75,100].forEach(v=>{mk('line',{x1:L,x2:R,y1:yU(v),y2:yU(v)},g);const t=mk('text',{x:L-10,y:yU(v)+4,'text-anchor':'end'},g);t.textContent=v+'%'})};
+// 底层：所有视图共用的轴按视图分组，淡入淡出
+const gScatter=layer(0,g=>{axY(g);axX(g);const t=mk('text',{x:L-10,y:T-14,'text-anchor':'start'},g);t.textContent='当日平均利用率'});
+const gStrip=layer(2,g=>{ST.forEach((s,k)=>{const x=L+(k+.5)*(R-L)/4;mk('line',{x1:x-70,x2:x+70,y1:B+2,y2:B+2,style:'stroke:#14151a'},g);let t=mk('text',{x,y:B+26,'text-anchor':'middle',class:'big'},g);t.textContent=NAME[s];t=mk('text',{x,y:B+46,'text-anchor':'middle',class:'sm'},g);t.textContent=cnt(s)+' 天 · '+(cnt(s)/N*100).toFixed(0)+'%'})});
+const gMonth=layer(3,g=>{const w=(R-L)/12;MN.forEach((n,m)=>{const t=mk('text',{x:L+(m+.5)*w,y:B+30,'text-anchor':'middle'},g);t.textContent=n});[10,20,30].forEach(v=>{const y=B-14-(v-1)*17-0;mk('line',{x1:L,x2:R,y1:y-8,y2:y-8},g);const t=mk('text',{x:L-10,y:y-4,'text-anchor':'end'},g);t.textContent=v+' 天'});mk('line',{x1:L,x2:R,y1:B+2,y2:B+2,style:'stroke:#14151a'},g)});
+const gLine=layer(4,g=>{axY(g);axX(g);const y=yU(avg);const l=mk('line',{x1:L,x2:R,y1:y,y2:y,style:'stroke:#14151a;stroke-dasharray:5 4'},g);const t=mk('text',{x:R,y:y-8,'text-anchor':'end',style:'fill:#14151a;font-weight:700'},g);t.textContent='全年平均 '+V.avg;
+ const p=mk('path',{d:'M'+days.map((d,i)=>xDay(i).toFixed(1)+' '+yU(ma[i]).toFixed(1)).join('L'),style:'stroke:#14151a;stroke-width:2;fill:none;opacity:.55'},g)});
+const gWaffle=layer(5,g=>{const cols=25,dx=(R-L)/cols;const t=mk('text',{x:L,y:T,class:'sm','text-anchor':'start'},g);t.textContent='每格 1 天，按状态排列';});
+const VIEWSHOW=[[0],[0],[2],[3],[4],[5]];
+// 点
+const dots=days.map((d,i)=>{const c=mk('circle',{class:'dot s-'+d.s+' m'+d.m,cx:P[0][i].x,cy:P[0][i].y,r:4.6});c.style.fill='#b9bdc9';return c});
+dots.forEach((c,i)=>{if(days[i].m===4)c.classList.add('m5'),0});
+// 手写批注
+const notes=[];
+function note(step,x,y,tx,ty,text,anchor='start'){const g=mk('g',{class:'note'});const t=mk('text',{x:tx,y:ty,'text-anchor':anchor},g);t.textContent=text;
+ const est=[...text].length*24;const sx=anchor==='start'?tx+est+8:tx-8,sy=ty-8;const mx=(sx+x)/2+(y>sy?-24:24),my=(sy+y)/2+(x>sx?24:-24);
+ mk('path',{d:`M${sx} ${sy}Q${mx} ${my} ${x} ${y}`,pathLength:1},g);
+ const a=Math.atan2(y-my,x-mx);[.5,-.5].forEach(o=>mk('path',{d:`M${x} ${y}l${-Math.cos(a+o)*11} ${-Math.sin(a+o)*11}`,pathLength:1},g));notes[step]=g}
+const aug=days.findIndex(d=>d.m===7&&d.s==='fault');
+note(1,P[0][days.findIndex(d=>d.m===4&&d.s==='train')].x,P[0][days.findIndex(d=>d.m===4&&d.s==='train')].y-8,360,T+10,'训练日集中在 3 到 7 月');
+note(2,P[2][days.findIndex(d=>d.s==='idle')].x+26,P[2][days.findIndex(d=>d.s==='idle')].y-30,520,B-250,'空闲日贴着 0%','start');
+const topAug=P[3][days.map((d,i)=>i).filter(i=>days[i].m===7&&days[i].s==='fault').pop()];
+note(3,topAug.x+6,topAug.y-6,topAug.x-210,topAug.y-70,'8 月连着 '+V.augFault+' 天故障');
+note(4,xDay(aug+4),yU(ma[aug+4])+8,xDay(aug)-250,yU(ma[aug+4])+100,'8 月的谷底','start');
+const wp=P[5][days.findIndex(d=>d.s==='idle')];
+{const ip=P[5][days.map((d,i)=>i).filter(i=>days[i].s==='idle')[50]];note(5,ip.x,ip.y+12,300,B+46,'这一片，是花了钱没干活的日子')}
+// ---------- 视图切换（逐点补间，按 x 错开） ----------
+const TTL=['全年每日利用率','按状态着色','按状态归类','按月份堆叠','7 日滑动平均','一天一格'];
+let view=-1,anim=[];
+const cur=days.map((_,i)=>({...P[0][i]}));
+function setView(v){if(v===view)return;view=v;
+  const t0=performance.now();anim=days.map((d,i)=>({from:{...cur[i]},to:P[v][i],delay:(v===5||v===3?(i%97)/97*350:P[v][i].x/W*350),i}));animStart=t0;
+  layers.forEach((g,i)=>g&&g.classList.toggle('on',VIEWSHOW[v].includes(i)));
+  dots.forEach((c,i)=>{c.style.fill=v===0?'#b9bdc9':COL[days[i].s]});
+  notes.forEach((g,i)=>g&&g.classList.toggle('on',i===v));
+  $('#ttl').innerHTML=TTL[v]+'<small>GN7-0412 · 2025</small>';
+  $$('#dots a').forEach((a,i)=>a.classList.toggle('on',i===v));
+  $('#legend').style.opacity=v===0?0:1;
+  svg.classList.toggle('line',v===4);
+}
+let animStart=0;
+const ease=u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+function frame(now){let moving=false;anim.forEach(a=>{const u=Math.min(1,Math.max(0,(now-animStart-a.delay)/850));if(u<1)moving=true;const e=ease(u);const c=cur[a.i];c.x=a.from.x+(a.to.x-a.from.x)*e;c.y=a.from.y+(a.to.y-a.from.y)*e;c.r=a.from.r+(a.to.r-a.from.r)*e;const el=dots[a.i];el.setAttribute('cx',c.x.toFixed(1));el.setAttribute('cy',c.y.toFixed(1));el.setAttribute('r',c.r.toFixed(2))});
+  requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+// 图例
+$('#legend').innerHTML=ST.map(s=>`<span><i style="background:${COL[s]}"></i>${NAME[s]}</span>`).join('');
+$('#dots').innerHTML=TTL.map((t,i)=>`<a href="#" title="${t}">${i+1}</a>`).join('');
+$$('#dots a').forEach((a,i)=>a.addEventListener('click',e=>{e.preventDefault();$$('.step')[i].scrollIntoView({behavior:'smooth',block:'center'})}));
+// ---------- 滚动：进度条 + 当前段落 ----------
+const steps=$$('.step');
+function onScroll(){const h=document.documentElement.scrollHeight-innerHeight;$('#prog').style.transform=`scaleX(${h>0?scrollY/h:0})`;
+  let best=0,bd=1e9;steps.forEach((s,i)=>{const r=s.getBoundingClientRect(),d=Math.abs(r.top+r.height/2-innerHeight*.5);if(d<bd){bd=d;best=i}});setView(best)}
+addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);
+// ---------- 悬停数字：对应的点亮起来 ----------
+$$('.num').forEach(n=>{n.addEventListener('mouseenter',()=>{svg.classList.remove('d-train','d-infer','d-idle','d-fault','d-mo');
+  if(n.dataset.st){svg.classList.add('dim','d-'+n.dataset.st)}else{const m=+n.dataset.mo-1;dots.forEach((c,i)=>c.classList.toggle('mo',days[i].m===m));svg.classList.add('dim','d-mo')}});
+  n.addEventListener('mouseleave',()=>svg.classList.remove('dim','d-train','d-infer','d-idle','d-fault','d-mo'))});
+view=-1;onScroll();setTimeout(onScroll,50);
+</script></body></html>

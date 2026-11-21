@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拓扑图 · 服务依赖与健康</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f3f1ec; --paper:#fffefb; --line:#e0dcd1; --ink:#1c2127; --ink2:#5b6268; --mute:#9a9a92; --ring:#2a3a40; --track:#e4e0d5; --ok:#2a3a40; --warn:#d9951a; --bad:#d4402c; --acc:#0e7c6b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Manrope", "Noto Sans SC", sans-serif; font-size: 13px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .node { cursor: grab; transition: opacity .25s; }
+  .node.drag { cursor: grabbing; }
+  .edge { transition: opacity .25s; }
+  .dim { opacity: .13; }
+  .flow { stroke-dasharray: 3 9; animation: flow 1.1s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -12; } }
+  .lbl { font-size: 11.5px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+  .lbl2 { font-size: 10px; font-weight: 400; fill: var(--ink2); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; font-family: "JetBrains Mono"; pointer-events: none; }
+  .float { position: fixed; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 0 rgba(28,33,39,.04), 0 8px 28px -12px rgba(28,33,39,.18); }
+  #top { left: 20px; top: 20px; display: flex; align-items: center; gap: 4px; padding: 6px 8px 6px 12px; height: 46px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14px; padding-right: 12px; border-right: 1px solid var(--line); margin-right: 6px; height: 28px; }
+  .brand svg { width: 20px; height: 20px; }
+  .brand small { font-weight: 500; color: var(--mute); font-size: 12px; }
+  .seg { display: flex; gap: 2px; }
+  .seg button { height: 28px; padding: 0 10px; border-radius: 7px; color: var(--ink2); font-size: 12.5px; }
+  .seg button:hover { background: #f1eee6; }
+  .seg button.on { background: var(--ink); color: #fff; }
+  #q { width: 150px; height: 28px; margin-left: 6px; padding: 0 10px 0 28px; border-radius: 7px; background: #f4f1e9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a92' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4 4'/%3E%3C/svg%3E") 9px 7px/14px no-repeat; cursor: text; }
+  #q::placeholder { color: var(--mute); }
+  #sum { left: 20px; top: 78px; display: flex; padding: 0; overflow: hidden; }
+  #sum div { padding: 9px 16px 9px 14px; min-width: 96px; }
+  #sum div + div { border-left: 1px solid var(--line); }
+  #sum small { display: block; color: var(--mute); font-size: 11px; }
+  #sum b { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+  #sum b em { font-style: normal; font-size: 11px; color: var(--mute); font-weight: 500; margin-left: 2px; }
+  #sum .bad b { color: var(--bad); }
+  #legend { left: 20px; bottom: 20px; padding: 12px 14px; width: 262px; font-size: 11.5px; color: var(--ink2); }
+  #legend h4 { font-size: 11px; font-weight: 600; color: var(--mute); letter-spacing: .06em; margin-bottom: 8px; }
+  #legend .r { display: flex; align-items: center; gap: 9px; margin-top: 7px; }
+  #legend .r svg { flex: none; width: 52px; height: 18px; overflow: visible; }
+  #legend .hint { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); color: var(--mute); font-size: 11px; line-height: 1.6; }
+  #replay { left: 50%; transform: translateX(-50%); bottom: 22px; display: flex; align-items: center; gap: 12px; padding: 7px 8px 7px 16px; height: 46px; margin-left: -190px; }
+  #replay .t { font-size: 12.5px; color: var(--ink2); max-width: 230px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #replay .t b { color: var(--ink); font-weight: 600; }
+  #go { height: 32px; padding: 0 14px 0 11px; border-radius: 8px; background: var(--ink); color: #fff; font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 7px; }
+  #go:hover { background: #000; }
+  #go svg { width: 12px; height: 12px; }
+  #go.run { background: var(--bad); }
+  #log { left: 306px; bottom: 80px; width: 330px; max-height: 0; padding: 0 14px; overflow: hidden; opacity: 0; transition: all .3s; font-size: 11.5px; }
+  #log.on { max-height: 190px; padding: 10px 14px; opacity: 1; }
+  #log h4 { font-size: 11px; color: var(--mute); font-weight: 600; letter-spacing: .06em; margin-bottom: 6px; }
+  #log p { display: flex; gap: 8px; line-height: 1.7; color: var(--ink2); animation: in .3s; }
+  #log p b { color: var(--bad); font-weight: 600; flex: none; }
+  @keyframes in { from { opacity: 0; transform: translateY(4px); } }
+  #panel { right: 20px; top: 20px; bottom: 20px; width: 340px; display: flex; flex-direction: column; overflow: hidden; transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .25s; }
+  #panel.off { transform: translateX(380px); opacity: 0; pointer-events: none; }
+  #panel header { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); position: relative; }
+  #panel header h2 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  #panel header .sub { font-size: 11.5px; color: var(--mute); margin-top: 3px; }
+  #panel header .x { position: absolute; right: 12px; top: 12px; width: 26px; height: 26px; border-radius: 7px; color: var(--mute); display: grid; place-items: center; }
+  #panel header .x:hover { background: #f1eee6; color: var(--ink); }
+  .state { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; font-weight: 600; }
+  .state i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .state.bad { color: var(--bad); } .state.bad i { background: var(--bad); }
+  .state.warn { color: #a56b00; } .state.warn i { background: var(--warn); }
+  #pbody { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 4px 18px 18px; }
+  .red { padding: 12px 0 10px; border-bottom: 1px dashed var(--line); }
+  .red .hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .red .hd span { font-size: 11px; color: var(--mute); letter-spacing: .04em; }
+  .red .hd b { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+  .red .hd b em { font-style: normal; font-size: 11px; color: var(--mute); margin-left: 2px; font-weight: 500; }
+  .red svg { display: block; width: 100%; height: 54px; overflow: visible; }
+  .rel h5 { font-size: 11px; color: var(--mute); font-weight: 600; letter-spacing: .06em; margin: 14px 0 4px; }
+  .rel button { display: flex; width: 100%; align-items: center; gap: 8px; height: 30px; font-size: 12.5px; text-align: left; border-radius: 6px; padding: 0 6px; margin: 0 -6px; width: calc(100% + 12px); }
+  .rel button:hover { background: #f4f1e9; }
+  .rel button span:first-of-type { flex: 1; }
+  .rel button em { font-style: normal; font-size: 11.5px; color: var(--mute); }
+  .rel button em.bad { color: var(--bad); font-weight: 500; }
+  .rel button svg { width: 12px; height: 12px; color: var(--mute); }
+  .tip { position: fixed; pointer-events: none; padding: 6px 9px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 11.5px; line-height: 1.55; opacity: 0; transition: opacity .12s; z-index: 9; white-space: nowrap; }
+  .tip.on { opacity: 1; }
+  .tip span { color: #b9c0c4; }
+  .foot { position: fixed; right: 380px; bottom: 6px; font-size: 10px; color: var(--mute); }
+</style>
+</head>
+<body>
+<svg id="stage"></svg>
+
+<div class="float" id="top">
+  <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="#1c2127" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="8" r="2.4"/><circle cx="11" cy="18" r="2.4"/><path d="M7.2 7l9.4 1M6.4 8l3.6 8.2M17.6 10l-5 6.4"/></svg>织网<small>服务拓扑</small></div>
+  <div class="seg" id="env"><button class="on">生产</button><button>预发</button></div>
+  <div class="seg" id="win" style="margin-left:6px"><button>5 分钟</button><button class="on">15 分钟</button><button>1 小时</button></div>
+  <input id="q" placeholder="找服务  /" spellcheck="false">
+</div>
+
+<div class="float" id="sum">
+  <div><small>服务</small><b class="mono" id="s1">18</b></div>
+  <div><small>总请求</small><b class="mono" id="s2">—<em>rps</em></b></div>
+  <div id="s3w"><small>平均错误率</small><b class="mono" id="s3">—</b></div>
+  <div id="s4w"><small>异常服务</small><b class="mono" id="s4">—</b></div>
+</div>
+
+<div class="float" id="legend">
+  <h4>图例</h4>
+  <div class="r"><svg viewBox="0 0 52 18"><circle cx="9" cy="9" r="5" fill="#fffefb" stroke="#e4e0d5" stroke-width="3"/><circle cx="9" cy="9" r="5" fill="none" stroke="#2a3a40" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="0" transform="rotate(-90 9 9)"/><circle cx="37" cy="9" r="7" fill="#fffefb" stroke="#2a3a40" stroke-width="3" stroke-dasharray="30 14" transform="rotate(-90 37 9)"/><circle cx="37" cy="9" r="7" fill="none" stroke="#d4402c" stroke-width="3" stroke-dasharray="14 100" transform="rotate(-90 37 9)"/></svg><span>环：深色为正常，红弧为出错率</span></div>
+  <div class="r"><svg viewBox="0 0 52 18"><path d="M0 14L52 14" stroke="#cfcabc" stroke-width="2"/><path d="M0 6L52 6" stroke="#cfcabc" stroke-width="6" transform="translate(0 0)"/></svg><span>线宽：请求量</span></div>
+  <div class="r"><svg viewBox="0 0 52 18"><path d="M0 9L16 9" stroke="#cfcabc" stroke-width="4"/><path d="M18 9L34 9" stroke="#d9951a" stroke-width="4"/><path d="M36 9L52 9" stroke="#d4402c" stroke-width="4"/></svg><span>线色：灰 / 出错率 &gt;1% / &gt;3%</span></div>
+  <div class="hint">悬停看上下游，拖动节点调整位置，点击查看详情。</div>
+</div>
+
+<div class="float" id="replay">
+  <span class="t" id="rt"><b>故障回放</b>　元数据库连接池耗尽</span>
+  <button id="go"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1l9 5-9 5z"/></svg><span>回放</span></button>
+</div>
+<div class="float" id="log"><h4>传播过程</h4><div id="logb"></div></div>
+
+<aside class="float off" id="panel">
+  <header><button class="x" id="px"><svg width="12" height="12" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>
+    <h2 id="pn"></h2><div class="sub mono" id="ps"></div><div class="state" id="pst"><i></i><span></span></div></header>
+  <div id="pbody"></div>
+</aside>
+<div class="tip" id="tip"></div>
+<div class="foot">示例数据</div>
+
+<script>
+window.__err=[];addEventListener("error",e=>__err.push(e.message));
+const NS = "http://www.w3.org/2000/svg";
+const $ = (s) => document.querySelector(s);
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+// ---- 数据 ----
+const T = { gw: "网关", svc: "服务", model: "推理", db: "存储", cache: "缓存", mq: "队列" };
+const N = [
+  ["gateway","接入网关","gw",1850,.002,38,12,"v2.18.3",0,2],
+  ["auth","鉴权服务","svc",1850,.001,9,6,"v1.42.0",1,0],
+  ["chat","对话服务","svc",1240,.009,820,24,"v3.7.1",1,2],
+  ["embed","向量化服务","svc",420,.003,64,8,"v1.9.4",1,4],
+  ["router","模型路由","svc",1240,.011,780,10,"v2.5.0",2,2],
+  ["quota","配额服务","svc",1240,.001,6,4,"v1.12.2",2,0],
+  ["sched","调度器","svc",980,.002,21,6,"v1.30.1",3,3],
+  ["qwen","Qwen3-72B 推理","model",610,.004,1380,16,"vllm 0.9.2",3,1],
+  ["llama","Llama-70B 推理","model",430,.032,2410,12,"vllm 0.9.2",3,2],
+  ["small","8B 小模型推理","model",640,.002,310,20,"vllm 0.9.2",3,5],
+  ["kv","前缀缓存","cache",1040,.001,3,6,"redis 7.2",4,1],
+  ["redis","会话缓存","cache",3100,.0005,1.2,6,"redis 7.2",2,0],
+  ["vdb","向量库","db",420,.002,18,5,"milvus 2.4",2,5],
+  ["pg","元数据库","db",2650,.001,7,3,"pg 16.4",3,0],
+  ["kafka","事件总线","mq",1240,.001,4,5,"kafka 3.7",2,3],
+  ["bill","计量计费","svc",1240,.001,35,4,"v2.2.0",3,4],
+  ["pool","算力池管理","svc",1180,.002,14,3,"v1.18.6",4,3],
+  ["obj","对象存储","db",90,.001,48,4,"minio",5,4],
+].map(([id,name,type,rps,err,p95,inst,ver,col,row]) => ({ id, name, type, rps, err, p95, inst, ver, col, row }));
+const E = [
+  ["gateway","auth",1850],["gateway","chat",1240],["gateway","embed",420],["auth","redis",1850],["auth","pg",800],
+  ["chat","router",1240],["chat","redis",1240],["chat","quota",1240],["chat","kafka",1240],
+  ["router","qwen",610],["router","llama",430],["router","small",200],["router","sched",980],
+  ["qwen","kv",420],["llama","kv",300],["small","kv",320],["qwen","pool",610],["llama","pool",430],["sched","pool",980],
+  ["embed","vdb",420],["embed","small",420],["quota","pg",600],["kafka","bill",1240],["bill","pg",1240],["vdb","obj",90],["qwen","obj",20],
+].map(([s,t,rps]) => ({ s, t, rps }));
+const byId = Object.fromEntries(N.map((n) => [n.id, n]));
+E.forEach((e) => { e.src = byId[e.s]; e.tgt = byId[e.t]; });
+const out = {}, inn = {}; N.forEach((n) => { out[n.id] = []; inn[n.id] = []; });
+E.forEach((e) => { out[e.s].push(e); inn[e.t].push(e); });
+const R = (n) => 13 + Math.sqrt(n.rps) * .42;
+const ew = (e) => 1 + Math.sqrt(e.rps) * .085;
+let override = {};                       // 回放时覆盖出错率
+const errOf = (n) => override[n.id] ?? n.err;
+const eclr = (e) => { const r = errOf(e.tgt); return r > .03 ? "#d4402c" : r > .01 ? "#d9951a" : "#cfcabc"; };
+const mk = (r) => r > .03 ? "bad" : r > .01 ? "warn" : "ok";
+
+// ---- 画布 ----
+const svg = $("#stage");
+let W = innerWidth, H = innerHeight;
+const defs = el("defs", {}, svg);
+const pat = el("pattern", { id: "dots", width: 24, height: 24, patternUnits: "userSpaceOnUse" }, defs);
+el("circle", { cx: 1, cy: 1, r: 1, fill: "#d9d5c9" }, pat);
+el("rect", { width: "100%", height: "100%", fill: "url(#dots)" }, svg);
+const gE = el("g", {}, svg), gP = el("g", {}, svg), gN = el("g", {}, svg);
+["ok:#cfcabc", "warn:#d9951a", "bad:#d4402c"].forEach((s) => {
+  const [k, c] = s.split(":");
+  const m = el("marker", { id: "ar-" + k, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 5, markerHeight: 5, orient: "auto" }, defs);
+  el("path", { d: "M0 1l9 4-9 4z", fill: c }, m);
+});
+const ICON = {
+  gw: "M4 12h16M12 4v16M7 7l10 10M17 7L7 17",
+  svc: "M5 7h14v10H5zM9 11h6",
+  model: "M8 8h8v8H8zM4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3",
+  db: "M6 7c0-1.4 2.7-2.5 6-2.5s6 1.1 6 2.5-2.7 2.5-6 2.5S6 8.4 6 7zM6 7v10c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V7M6 12c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5",
+  cache: "M13 4L6 13h5l-1 7 7-9h-5z",
+  mq: "M5 7h10M5 12h14M5 17h10",
+};
+
+N.forEach((n) => {
+  n.x = 160 + n.col * 190 + (Math.random() - .5) * 20; n.y = 140 + n.row * 110 + (Math.random() - .5) * 20; n.vx = n.vy = 0;
+  n.r = R(n);
+  const g = el("g", { class: "node" }, gN); n.g = g;
+  n.halo = el("circle", { r: n.r + 12, fill: "none", stroke: "#0e7c6b", "stroke-width": 1.5, opacity: 0 }, g);
+  n.track = el("circle", { r: n.r + 6, fill: "#fffefb", stroke: "#e4e0d5", "stroke-width": 3.5 }, g);
+  n.ok = el("circle", { r: n.r + 6, fill: "none", stroke: "#2a3a40", "stroke-width": 3.5, transform: "rotate(-90)" }, g);
+  n.bad = el("circle", { r: n.r + 6, fill: "none", stroke: "#d4402c", "stroke-width": 3.5, transform: "rotate(-90)" }, g);
+  n.disc = el("circle", { r: n.r, fill: "#fffefb", stroke: "#e4e0d5", "stroke-width": 1 }, g);
+  const ic = el("g", { transform: `scale(${n.r > 24 ? 1.1 : .9}) translate(-12 -12)`, fill: "none", stroke: "#1c2127", "stroke-width": 1.7, "stroke-linecap": "round", "stroke-linejoin": "round" }, g); n.icon = ic;
+  el("path", { d: ICON[n.type] }, ic);
+  n.t1 = el("text", { class: "lbl", "text-anchor": "middle", y: n.r + 24 }, g); n.t1.textContent = n.name;
+  n.t2 = el("text", { class: "lbl2", "text-anchor": "middle", y: n.r + 37 }, g);
+  g.addEventListener("mouseenter", () => { hover = n; applyFocus(); showTip(n); });
+  g.addEventListener("mouseleave", () => { hover = null; applyFocus(); $("#tip").classList.remove("on"); });
+  g.addEventListener("pointerdown", (ev) => startDrag(ev, n));
+});
+E.forEach((e) => {
+  e.p = el("path", { class: "edge", fill: "none", "stroke-linecap": "round" }, gE);
+  e.f = el("path", { class: "edge flow", fill: "none", stroke: "#fffefb", "stroke-opacity": .9, "stroke-width": 1 }, gE);
+});
+
+// ---- 力导向 ----
+let CX = 0, CY = 0, X0 = 120, X1 = 900, alpha = 1, drag = null;
+function resize() { W = innerWidth; H = innerHeight; svg.setAttribute("viewBox", `0 0 ${W} ${H}`); CX = (W - 360 - 330) / 2 + 330 - 20; CY = H / 2 + 14; X0 = 110; X1 = W - 340 - 90; alpha = Math.max(alpha, .3); kick(); }
+function step() {
+  const k = alpha;
+  for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
+    const a = N[i], b = N[j]; let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy || 1, d = Math.sqrt(d2);
+    const f = 12000 / d2 * k, fx = dx / d * f, fy = dy / d * f; a.vx -= fx; a.vy -= fy; b.vx += fx; b.vy += fy;
+    const m = a.r + b.r + 52; if (d < m) { const o = (m - d) / d * .5 * .5; a.vx -= dx * o; a.vy -= dy * o; b.vx += dx * o; b.vy += dy * o; }
+  }
+  E.forEach((e) => {
+    const a = e.src, b = e.tgt; let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, L = 110 + a.r + b.r;
+    const f = (d - L) * .022 * k; const fx = dx / d * f, fy = dy / d * f; a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
+  });
+  N.forEach((n) => {
+    n.vy += (CY - n.y) * .004 * k;
+    n.vx += (X0 + n.col / 5 * (X1 - X0) - n.x) * .05 * k;          // 分层：上游在左，下游在右
+    n.vy += (215 + n.row * 100 - n.y) * .008 * k;
+    if (n === drag) { n.vx = n.vy = 0; return; }
+    n.vx *= .78; n.vy *= .78; n.x += n.vx; n.y += n.vy;
+    n.x = Math.max(60, Math.min(W - 400 + (panelOpen ? 0 : 340), n.x)); n.y = Math.max(200, Math.min(H - 90, n.y));
+  });
+}
+let hover = null, sel = null, panelOpen = false, qset = null;
+function draw() {
+  N.forEach((n) => {
+    n.g.setAttribute("transform", `translate(${n.x.toFixed(1)} ${n.y.toFixed(1)})`);
+  });
+  E.forEach((e) => {
+    const a = e.src, b = e.tgt, dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+    const bend = Math.min(30, d * .12), nx = -uy, ny = ux;
+    const x1 = a.x + ux * (a.r + 9), y1 = a.y + uy * (a.r + 9), x2 = b.x - ux * (b.r + 11), y2 = b.y - uy * (b.r + 11);
+    const mx = (x1 + x2) / 2 + nx * bend, my = (y1 + y2) / 2 + ny * bend;
+    const dd = `M${x1.toFixed(1)} ${y1.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+    e.p.setAttribute("d", dd); e.f.setAttribute("d", dd); e.d = dd;
+    e.mid = [(x1 + 2 * mx + x2) / 4, (y1 + 2 * my + y2) / 4];
+  });
+}
+function paintStyle() {
+  N.forEach((n) => {
+    const er = errOf(n), c = 2 * Math.PI * (n.r + 6), arc = er >= .005 ? Math.min(1, er * 12) : 0;
+    n.ok.setAttribute("stroke-dasharray", `${(c * (1 - arc)).toFixed(1)} ${c}`);
+    n.bad.setAttribute("stroke-dasharray", `${(c * arc).toFixed(1)} ${c}`);
+    n.bad.setAttribute("stroke-dashoffset", (-c * (1 - arc)).toFixed(1));
+    n.t2.textContent = n.rps >= 1000 ? (n.rps / 1000).toFixed(2) + "k rps" : n.rps + " rps";
+    const s = sel === n; n.disc.setAttribute("fill", s ? "#1c2127" : "#fffefb"); n.icon.setAttribute("stroke", s ? "#fff" : "#1c2127");
+    n.halo.setAttribute("opacity", s ? 1 : 0);
+  });
+  E.forEach((e) => {
+    const c = eclr(e); e.p.setAttribute("stroke", c); e.p.setAttribute("stroke-width", ew(e).toFixed(1));
+    e.p.setAttribute("marker-end", `url(#ar-${c === "#d4402c" ? "bad" : c === "#d9951a" ? "warn" : "ok"})`);
+    e.p.setAttribute("stroke-opacity", c === "#cfcabc" ? 1 : .85); e.f.setAttribute("stroke-opacity", c === "#cfcabc" ? .9 : .7);
+  });
+  summary();
+}
+function related(n) {                      // 全部上游 + 全部下游
+  const s = new Set([n.id]), es = new Set();
+  (function up(x) { inn[x.id].forEach((e) => { es.add(e); if (!s.has(e.s)) { s.add(e.s); up(e.src); } }); })(n);
+  (function dn(x) { out[x.id].forEach((e) => { es.add(e); if (!s.has(e.t)) { s.add(e.t); dn(e.tgt); } }); })(n);
+  return { s, es };
+}
+function applyFocus() {
+  const f = hover || null, rel = f ? related(f) : null;
+  N.forEach((n) => { const hit = qset ? qset.has(n.id) : true; n.g.classList.toggle("dim", (rel ? !rel.s.has(n.id) : false) || !hit); });
+  E.forEach((e) => { const on = rel ? rel.es.has(e) : true; const hit = qset ? qset.has(e.s) && qset.has(e.t) : true; e.p.classList.toggle("dim", !on || !hit); e.f.classList.toggle("dim", !on || !hit); });
+}
+let raf = 0;
+function kick() { if (!raf) raf = requestAnimationFrame(loop); }
+function loop() {
+  raf = 0;
+  if (alpha > .004 || drag) { step(); alpha *= drag ? 1 : .985; if (drag) alpha = Math.max(alpha, .25); draw(); raf = requestAnimationFrame(loop); } else draw();
+}
+const fmt = (v) => v >= 1000 ? (v / 1000).toFixed(2) + "k" : String(Math.round(v));
+function summary() {
+  const tot = N.reduce((s, n) => s + 0, 0), top = byId.gateway;
+  $("#s2").innerHTML = fmt(top.rps) + "<em>rps</em>";
+  const avg = E.reduce((s, e) => s + errOf(e.tgt) * e.rps, 0) / E.reduce((s, e) => s + e.rps, 0);
+  $("#s3").textContent = (avg * 100).toFixed(2) + "%";
+  const bad = N.filter((n) => errOf(n) > .01).length;
+  $("#s4").textContent = bad + " / " + N.length; $("#s3w").className = avg > .01 ? "bad" : ""; $("#s4w").className = bad ? "bad" : "";
+}
+// ---- 拖动 ----
+function startDrag(ev, n) {
+  ev.preventDefault(); const sx = ev.clientX, sy = ev.clientY; let moved = false;
+  n.g.classList.add("drag"); drag = n; kick();
+  const mv = (e) => { if (Math.hypot(e.clientX - sx, e.clientY - sy) > 3) moved = true; n.x = e.clientX; n.y = e.clientY; };
+  const up = () => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); n.g.classList.remove("drag"); drag = null; alpha = .3; kick(); if (!moved) select(n); };
+  addEventListener("pointermove", mv); addEventListener("pointerup", up);
+}
+// ---- 提示 ----
+function showTip(n) {
+  const t = $("#tip"), er = errOf(n);
+  t.innerHTML = `<b>${n.name}</b>　<span>${T[n.type]}</span><br><span>请求</span> ${fmt(n.rps)} rps　<span>错误</span> ${(er * 100).toFixed(2)}%`;
+  t.classList.add("on"); const mv = () => { t.style.left = (n.x + n.r + 18) + "px"; t.style.top = (n.y - 22) + "px"; }; mv();
+}
+// ---- 右侧面板 ----
+function rng(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+function series(n, key) {
+  const r = rng(n.id.split("").reduce((a, c) => a * 31 + c.charCodeAt(0), 7) + key.charCodeAt(0) * 13), out = [];
+  const base = key === "r" ? n.rps : key === "e" ? errOf(n) : n.p95;
+  for (let i = 0; i < 60; i++) {
+    const wave = 1 + .12 * Math.sin(i / 7 + n.rps) + (r() - .5) * (key === "e" ? .9 : .22);
+    out.push(Math.max(0, base * wave * (key === "e" && i > 46 && n.err > .02 ? 1.5 : 1)));
+  }
+  out[59] = base; return out;
+}
+function chart(vals, color, unit, dec) {
+  const w = 304, h = 54, mx = Math.max(...vals) * 1.15 || 1, pts = vals.map((v, i) => [i / 59 * w, h - v / mx * (h - 4) - 2]);
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" data-v='${JSON.stringify(vals.map((v) => +v.toFixed(5)))}' data-u="${unit}" data-d="${dec}" data-c="${color}">
+    <path d="M0 ${h - .5}H${w}" stroke="#e0dcd1"/><path d="${d}L${w} ${h}L0 ${h}Z" fill="${color}" opacity=".08"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>
+    <line class="cx" y1="0" y2="${h}" stroke="#1c2127" stroke-width="1" opacity="0"/><circle class="cd" r="3.2" fill="${color}" stroke="#fff" stroke-width="1.5" opacity="0"/><circle cx="${pts[59][0]}" cy="${pts[59][1]}" r="2.6" fill="${color}"/></svg>`;
+}
+function select(n) {
+  sel = n; panelOpen = !!n; $("#panel").classList.toggle("off", !n); paintStyle(); if (!n) return;
+  const er = errOf(n), st = mk(er);
+  $("#pn").textContent = n.name; $("#ps").textContent = `${T[n.type]} · ${n.ver} · ${n.inst} 个实例`;
+  const stEl = $("#pst"); stEl.className = "state " + (st === "ok" ? "" : st); stEl.querySelector("span").textContent = st === "ok" ? "运行正常" : st === "warn" ? "错误率偏高" : "严重异常";
+  const rel = (list, key) => list.length ? list.map((e) => { const o = e[key]; const eo = errOf(o); return `<button data-go="${o.id}"><span>${o.name}</span><em class="mono ${eo > .01 ? "bad" : ""}">${(eo * 100).toFixed(2)}%</em><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 2l4 4-4 4"/></svg></button>`; }).join("") : `<button style="cursor:default"><span style="color:var(--mute)">无</span></button>`;
+  $("#pbody").innerHTML = `
+    <div class="red"><div class="hd"><span>请求数 RATE</span><b class="mono">${fmt(n.rps)}<em>rps</em></b></div>${chart(series(n, "r"), "#2a3a40", " rps", 0)}</div>
+    <div class="red"><div class="hd"><span>错误率 ERRORS</span><b class="mono" style="color:${er > .01 ? "var(--bad)" : "var(--ink)"}">${(er * 100).toFixed(2)}<em>%</em></b></div>${chart(series(n, "e").map((v) => v * 100), "#d4402c", "%", 2)}</div>
+    <div class="red" style="border:0"><div class="hd"><span>P95 耗时 DURATION</span><b class="mono">${n.p95 >= 1000 ? (n.p95 / 1000).toFixed(2) + "<em>s</em>" : n.p95 + "<em>ms</em>"}</b></div>${chart(series(n, "d"), "#2a3a40", " ms", 0)}</div>
+    <div class="rel"><h5>上游 · 谁在调用它</h5>${rel(inn[n.id], "src")}<h5>下游 · 它在调用谁</h5>${rel(out[n.id], "tgt")}</div>`;
+  $("#pbody").querySelectorAll("button[data-go]").forEach((b) => b.onclick = () => select(byId[b.dataset.go]));
+  $("#pbody").querySelectorAll(".red svg").forEach((s) => {
+    const v = JSON.parse(s.dataset.v), line = s.querySelector(".cx"), dot = s.querySelector(".cd"), hd = s.parentNode.querySelector("b");
+    const orig = hd.innerHTML;
+    s.onmousemove = (ev) => { const r = s.getBoundingClientRect(), i = Math.max(0, Math.min(59, Math.round((ev.clientX - r.left) / r.width * 59)));
+      const x = i / 59 * 304; line.setAttribute("x1", x); line.setAttribute("x2", x); line.setAttribute("opacity", .25);
+      const mx = Math.max(...v) * 1.15 || 1; dot.setAttribute("cx", x); dot.setAttribute("cy", 54 - v[i] / mx * 50 - 2); dot.setAttribute("opacity", 1);
+      hd.innerHTML = `${v[i].toFixed(+s.dataset.d)}<em>${s.dataset.u}</em><em style="margin-left:8px">${59 - i} 分钟前</em>`; };
+    s.onmouseleave = () => { line.setAttribute("opacity", 0); dot.setAttribute("opacity", 0); hd.innerHTML = orig; };
+  });
+  kick();
+}
+$("#px").onclick = () => select(null);
+// ---- 顶栏 ----
+document.querySelectorAll(".seg").forEach((s) => s.addEventListener("click", (e) => { if (e.target.tagName === "BUTTON") { s.querySelectorAll("button").forEach((b) => b.classList.remove("on")); e.target.classList.add("on");} }));
+$("#q").addEventListener("input", (e) => { const v = e.target.value.trim().toLowerCase(); qset = v ? new Set(N.filter((n) => (n.name + n.id).toLowerCase().includes(v)).map((n) => n.id)) : null; applyFocus(); });
+addEventListener("keydown", (e) => { if (e.key === "/" && document.activeElement !== $("#q")) { e.preventDefault(); $("#q").focus(); } if (e.key === "Escape") { $("#q").blur(); select(null); } });
+
+// ---- 故障回放 ----
+let playing = false, token = 0;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function resetReplay() { token++; override = {}; playing = false; gP.innerHTML = ""; $("#go").className = ""; $("#go").innerHTML = '<svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1l9 5-9 5z"/></svg><span>回放</span>'; $("#log").classList.remove("on"); $("#logb").innerHTML = ""; $("#rt").innerHTML = "<b>故障回放</b>　元数据库连接池耗尽"; paintStyle(); if (sel) select(sel); }
+function sendDot(e, ms, tk) {            // 错误从被调用方沿连线回传给调用方
+  return new Promise((ok) => {
+    const p = el("path", { d: e.d, fill: "none" }), len = p.getTotalLength ? 0 : 0;
+    const c = el("circle", { r: 5, fill: "#d4402c", stroke: "#fff", "stroke-width": 2 }, gP);
+    const path = el("path", { d: e.d }, gP); path.setAttribute("stroke", "none"); const L = path.getTotalLength(); const t0 = performance.now();
+    (function f(now) {
+      if (tk !== token) { c.remove(); path.remove(); return ok(); }
+      const k = Math.min(1, (now - t0) / ms), pt = path.getPointAtLength(L * (1 - k)); c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y); c.setAttribute("r", 5 + 3 * Math.sin(k * Math.PI));
+      if (k < 1) requestAnimationFrame(f); else { c.remove(); path.remove(); ok(); }
+    })(t0);
+  });
+}
+async function replay() {
+  if (playing) return; if (Object.keys(override).length) return resetReplay();
+  playing = true; const tk = ++token; const go = $("#go"); go.className = "run"; go.querySelector("span").textContent = "回放中"; $("#log").classList.add("on");
+  const root = byId.pg, lvl = { pg: 0 }, order = [root]; const clock = [14, 2, 7];
+  for (let i = 0; i < order.length; i++) inn[order[i].id].forEach((e) => { if (!(e.s in lvl)) { lvl[e.s] = lvl[order[i].id] + 1; order.push(e.src); } });
+  const peak = [0.96, .58, .36, .2], say = (t, msg) => { const p = document.createElement("p"); p.innerHTML = `<b class="mono">14:02:${String(7 + t).padStart(2, "0")}</b><span>${msg}</span>`; $("#logb").appendChild(p); };
+  const tm = () => { };
+  override.pg = peak[0]; paintStyle(); say(0, "元数据库连接数打满，开始拒绝新连接"); $("#rt").innerHTML = "<b>第 0 跳</b>　元数据库出错";
+  if (sel) select(sel); hover = null;
+  for (let L = 1; L <= 3; L++) {
+    const edges = E.filter((e) => lvl[e.s] === L && lvl[e.t] === L - 1 && lvl[e.t] !== undefined);
+    if (!edges.length) continue; await Promise.all(edges.map((e) => sendDot(e, 900, tk))); if (tk !== token) return;
+    const names = [...new Set(edges.map((e) => e.src.name))];
+    edges.forEach((e) => { override[e.s] = Math.max(override[e.s] || 0, peak[L]); });
+    paintStyle(); say(L * 2, `${names.join("、")} 的调用超时，出错率升到 ${(peak[L] * 100).toFixed(0)}%`); $("#rt").innerHTML = `<b>第 ${L} 跳</b>　${names.join("、")}`;
+    if (sel) select(sel); await sleep(250); if (tk !== token) return;
+  }
+  say(9, "用户侧请求失败率升至 20%，触发告警"); $("#rt").innerHTML = "<b>回放结束</b>　受影响 7 个服务";
+  playing = false; go.className = ""; go.innerHTML = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6a4 4 0 107-2.6M9 1.2v2.6H6.4"/></svg><span>重置</span>';
+}
+$("#go").onclick = replay;
+
+addEventListener("resize", resize);
+resize(); alpha = 1; for (let i = 0; i < 420; i++) { step(); alpha *= .992; } alpha = .02; draw(); paintStyle(); kick();
+setTimeout(() => select(byId.chat), 600);
+</script>
+</body>
+</html>

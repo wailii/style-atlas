@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机房立面 · 机柜 U 位图</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700&family=Chivo+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#f7f6f1; --card:#fdfcf9; --ink:#14171a; --ink2:#50565c; --mute:#8d9296; --rule:#d5d3ca; --rule2:#e6e4dc; --run:#3f8a68; --idle:#c3cbcf; --alarm:#c8372d; --maint:#d6a021; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Chivo", "Noto Sans SC", sans-serif; font-size: 13px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "Chivo Mono", monospace; font-variant-numeric: tabular-nums; }
+  .app { height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) 330px; grid-template-rows: 58px 46px minmax(0, 1fr); }
+  .top { grid-column: 1 / 3; display: flex; align-items: stretch; border-bottom: 1px solid var(--ink); padding: 0 28px; gap: 28px; }
+  .title { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 16px; letter-spacing: .01em; }
+  .title svg { width: 22px; height: 22px; }
+  .title small { font-weight: 400; color: var(--mute); font-size: 12px; font-family: "Chivo Mono"; letter-spacing: 0; }
+  .tabs { display: flex; gap: 22px; align-items: stretch; }
+  .tabs button { position: relative; color: var(--mute); font-weight: 500; font-size: 13.5px; padding: 0 2px; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button.on { color: var(--ink); font-weight: 700; }
+  .tabs button.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--ink); }
+  .mode { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .mode > span { font-size: 11.5px; color: var(--mute); letter-spacing: .08em; }
+  .seg { display: flex; border: 1px solid var(--ink); }
+  .seg button { height: 30px; padding: 0 14px; font-size: 12.5px; font-weight: 500; border-right: 1px solid var(--ink); }
+  .seg button:last-child { border-right: 0; }
+  .seg button:hover { background: #ebe9e0; }
+  .seg button.on { background: var(--ink); color: var(--paper); }
+  .sub { grid-column: 1 / 3; display: flex; align-items: center; gap: 28px; padding: 0 28px; border-bottom: 1px solid var(--rule); font-size: 12px; color: var(--ink2); }
+  .rows { display: flex; gap: 6px; }
+  .rows button { height: 26px; min-width: 62px; padding: 0 12px; border: 1px solid var(--rule); font-size: 12.5px; font-weight: 500; }
+  .rows button:hover { border-color: var(--ink); }
+  .rows button.on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+  .stat { display: flex; gap: 22px; }
+  .stat span { white-space: nowrap; } .stat b { font-family: "Chivo Mono"; font-weight: 600; color: var(--ink); margin-left: 5px; }
+  .legend { margin-left: auto; display: flex; gap: 16px; align-items: center; }
+  .legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -2px; border: 1px solid rgba(20,23,26,.35); }
+  .legend .ramp { width: 120px; height: 10px; margin: 0 8px; border: 1px solid rgba(20,23,26,.35); vertical-align: -1px; }
+  .stage { position: relative; overflow: hidden; }
+  #rack { display: block; width: 100%; height: 100%; }
+  .panel { border-left: 1px solid var(--ink); background: var(--card); overflow-y: auto; scrollbar-width: none; }
+  .panel .empty { padding: 40px 28px; color: var(--mute); line-height: 1.8; }
+  .ph { padding: 18px 22px 14px; border-bottom: 1px solid var(--rule); }
+  .ph small { font-size: 11px; color: var(--mute); letter-spacing: .08em; display: block; margin-bottom: 4px; }
+  .ph h2 { font-family: "Chivo Mono"; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+  .ph .st { display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 12px; font-weight: 600; }
+  .ph .st i { width: 9px; height: 9px; border: 1px solid rgba(20,23,26,.4); }
+  dl { display: grid; grid-template-columns: 62px 1fr; gap: 0; padding: 6px 22px 10px; border-bottom: 1px solid var(--rule); }
+  dt, dd { padding: 6px 0; border-bottom: 1px dotted var(--rule); font-size: 12px; }
+  dt { color: var(--mute); } dd { font-family: "Chivo Mono"; font-size: 11.5px; text-align: right; }
+  dl > *:nth-last-child(-n+2) { border-bottom: 0; }
+  .cards { padding: 14px 22px 8px; }
+  .cards h4 { display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; color: var(--mute); letter-spacing: .08em; margin-bottom: 10px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .cell { height: 74px; padding: 6px 7px; border: 1px solid rgba(20,23,26,.3); display: flex; flex-direction: column; justify-content: space-between; transition: background .3s; }
+  .cell small { font-family: "Chivo Mono"; font-size: 9.5px; color: rgba(20,23,26,.6); }
+  .cell b { font-family: "Chivo Mono"; font-size: 15px; font-weight: 600; letter-spacing: -.02em; }
+  .cell b em { font-style: normal; font-size: 9px; font-weight: 400; margin-left: 1px; }
+  .cell span { font-family: "Chivo Mono"; font-size: 10px; }
+  .cell.off { background: repeating-linear-gradient(135deg, #e9e7df 0 3px, #f5f4ee 3px 6px); }
+  .spark { padding: 6px 22px 22px; } .spark h4 { font-size: 11px; font-weight: 500; color: var(--mute); letter-spacing: .08em; margin-bottom: 6px; }
+  .spark svg { display: block; width: 100%; height: 54px; }
+  .tip { position: fixed; z-index: 9; pointer-events: none; background: var(--ink); color: var(--paper); padding: 8px 11px; font-size: 11.5px; line-height: 1.7; opacity: 0; transition: opacity .1s; white-space: nowrap; }
+  .tip.on { opacity: 1; } .tip b { font-family: "Chivo Mono"; font-weight: 600; } .tip span { color: #a7adb1; }
+  .foot { position: fixed; left: 28px; bottom: 8px; font-size: 10px; color: var(--mute); }
+  svg text { font-family: "Chivo Mono", monospace; }
+  .srv rect.body { transition: fill .35s; cursor: pointer; }
+  .srv:hover rect.body { stroke-width: 1.6; stroke: #14171a; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title"><svg viewBox="0 0 24 24" fill="none" stroke="#14171a" stroke-width="1.6" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18"/><path d="M8 7h8M8 10h8M8 13h8M8 16.5h3"/></svg>机房立面<small>RACK ELEVATION</small></div>
+    <nav class="tabs" id="rooms"></nav>
+    <div class="mode"><span>着色依据</span><div class="seg" id="mode"><button class="on" data-m="status">状态</button><button data-m="util">利用率</button><button data-m="temp">温度</button><button data-m="dept">部门</button></div></div>
+  </header>
+  <div class="sub">
+    <div class="rows" id="rowsel"></div>
+    <div class="stat" id="stat"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <main class="stage"><svg id="rack"></svg></main>
+  <aside class="panel" id="panel"></aside>
+</div>
+<div class="tip" id="tip"></div>
+<div class="foot">示例数据</div>
+
+<script>
+window.__err = []; addEventListener("error", (e) => __err.push(e.message));
+const $ = (s) => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+const svg = $("#rack");
+const sv = (t, a = {}, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+
+// ---- 数据 ----
+const ROOMS = [["yz-a", "亦庄 A 机房", "YZA"], ["yz-b", "亦庄 B 机房", "YZB"], ["wl-c", "乌兰察布 C 机房", "WLC"]];
+const ROWS = ["A", "B", "C"];
+const DEPTS = [["算法研究部", "#4c6a92"], ["推理平台部", "#b0643c"], ["多模态组", "#5f8f6b"], ["数据工程部", "#8a5a9a"], ["公共池", "#b39b3d"]];
+const OWNERS = ["周启明", "吴静", "陈立", "李沐阳", "郑可", "孙雨桐", "韩磊", "许晴", "赵一鸣", "何嘉怡"];
+const GPUS = [["NVIDIA H800 80G", "8×H800"], ["NVIDIA A100 80G", "8×A100"], ["昇腾 910B 64G", "8×910B"]];
+const STATUS = [["run", "运行", "#3f8a68"], ["idle", "空闲", "#c3cbcf"], ["alarm", "告警", "#c8372d"], ["maint", "维护", "#d6a021"], ["off", "离线", null]];
+const rng = (seed) => { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
+const hash = (str) => [...str].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+const cache = {};
+function build(room, row) {
+  const key = room + row; if (cache[key]) return cache[key];
+  const R = rng(hash(key)), rc = ROOMS.find((r) => r[0] === room)[2], racks = [];
+  for (let k = 1; k <= 6; k++) {
+    const rid = `${row}${String(k).padStart(2, "0")}`, items = []; let u = 1;
+    const dept = Math.floor(R() * DEPTS.length);
+    while (u <= 38) {
+      const x = R();
+      let size, type;
+      if (x < .62) { size = 4; type = "gpu"; } else if (x < .76) { size = 2; type = "cpu"; } else if (x < .84) { size = 2; type = "sto"; } else { u += 1 + Math.floor(R() * 2); continue; }
+      if (u + size - 1 > 38) { u++; continue; }
+      const sx = R(); let st = sx < .72 ? "run" : sx < .87 ? "idle" : sx < .91 ? "alarm" : sx < .96 ? "maint" : "off";
+      const util = st === "run" ? 52 + R() * 46 : st === "alarm" ? 40 + R() * 58 : st === "idle" ? R() * 7 : 0;
+      const temp = st === "off" ? 0 : st === "maint" ? 31 + R() * 4 : st === "alarm" ? 77 + R() * 10 : 33 + util * .26 + R() * 4;
+      const g = GPUS[R() < .7 ? 0 : R() < .6 ? 1 : 2];
+      const d = R() < .8 ? dept : Math.floor(R() * DEPTS.length);
+      const s = { id: `${type === "gpu" ? "gpu" : type === "cpu" ? "cpu" : "sto"}-${rc.toLowerCase()}-${rid.toLowerCase()}-${String(u).padStart(2, "0")}`, type, u, size, st, util, temp, dept: d, owner: OWNERS[Math.floor(R() * OWNERS.length)], gpu: g, ip: `10.${hash(room) % 200 + 20}.${k * 8 + ROWS.indexOf(row)}.${10 + u}`, sn: `SN${(hash(key + u) % 9000000 + 1000000)}`, power: type === "gpu" ? (st === "off" ? 0 : 2.4 + util / 100 * 4.2) : .5 };
+      if (type === "gpu") s.cards = Array.from({ length: 8 }, (_, i) => { const dead = st === "off" || (st === "maint" && i > 5); const cu = dead ? 0 : Math.max(0, Math.min(100, util + (R() - .5) * 26 - (st === "run" && i === 7 ? 30 : 0))); return { u: cu, t: dead ? 0 : Math.round(Math.max(30, temp + (R() - .5) * 9 + cu * .04)) }; });
+      s.u = u; items.push(s); u += size;
+    }
+    racks.push({ id: rid, items, kw: items.reduce((a, s) => a + s.power, 0) });
+  }
+  return (cache[key] = racks);
+}
+// ---- 颜色 ----
+const lerp = (a, b, t) => a.map((x, i) => Math.round(x + (b[i] - x) * t));
+const ramp = (stops, t) => { t = Math.max(0, Math.min(1, t)); const n = stops.length - 1, i = Math.min(n - 1, Math.floor(t * n)), k = t * n - i; return `rgb(${lerp(stops[i], stops[i + 1], k)})`; };
+const UTIL = [[232, 238, 238], [150, 196, 196], [38, 128, 138], [10, 72, 90]];
+const TEMP = [[226, 236, 232], [236, 222, 150], [232, 150, 84], [188, 42, 40]];
+let mode = "status", room = "yz-a", row = "A", sel = null;
+function fillOf(s) {
+  if (s.type !== "gpu" && mode !== "status") return "#e8e6de";
+  if (mode === "status") return s.st === "run" ? "#bfdccb" : s.st === "idle" ? "#e6eaec" : s.st === "alarm" ? "#ee9a92" : s.st === "maint" ? "#f1d58a" : "url(#hatch)";
+  if (mode === "util") return s.st === "off" ? "url(#hatch)" : ramp(UTIL, s.util / 100);
+  if (mode === "temp") return s.st === "off" ? "url(#hatch)" : ramp(TEMP, (s.temp - 30) / 62);
+  return DEPTS[s.dept][1] + "cc";
+}
+const inkOn = (s) => (mode === "util" && s.util > 62) || (mode === "dept" && s.type === "gpu") || (mode === "temp" && s.temp > 78) ? "#fff" : "#14171a";
+
+// ---- 绘制 ----
+const UH = 14, RW = 148, GAP = 26, X0 = 56, TOP = 70;
+function draw() {
+  svg.innerHTML = ""; const racks = build(room, row);
+  const W = X0 + 6 * RW + 5 * GAP + 30, H = TOP + 42 * UH + 70;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
+  const defs = sv("defs", {}, svg);
+  const hp = sv("pattern", { id: "hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+  sv("rect", { width: 6, height: 6, fill: "#f4f3ee" }, hp); sv("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: "#c4c2b8", "stroke-width": 2 }, hp);
+  // U 标尺
+  const ruler = sv("g", {}, svg);
+  for (let n = 1; n <= 42; n++) { const y = TOP + (42 - n) * UH; if (n % 2 === 1 || n === 42) { const t = sv("text", { x: X0 - 10, y: y + 10, "text-anchor": "end", "font-size": 9, fill: n % 6 === 1 ? "#14171a" : "#9a9e9f" }, ruler); t.textContent = n; } sv("line", { x1: X0 - 6, x2: X0, y1: y + UH, y2: y + UH, stroke: "#14171a", "stroke-width": n % 6 === 0 ? 1 : .5 }, ruler); }
+  sv("line", { x1: X0, x2: X0, y1: TOP, y2: TOP + 42 * UH, stroke: "#14171a", "stroke-width": 1 }, ruler);
+  racks.forEach((rk, i) => {
+    const x = X0 + 14 + i * (RW + GAP), g = sv("g", {}, svg);
+    // 头部
+    const hd = sv("text", { x, y: TOP - 34, "font-size": 15, "font-weight": 600, fill: "#14171a" }, g); hd.textContent = rk.id;
+    const hs = sv("text", { x: x + RW, y: TOP - 34, "font-size": 10, fill: "#8d9296", "text-anchor": "end" }, g); hs.textContent = `${rk.items.filter((s) => s.type === "gpu").length} GPU 机 · ${rk.kw.toFixed(1)} kW`;
+    const used = rk.items.reduce((a, s) => a + s.size, 0);
+    sv("rect", { x, y: TOP - 22, width: RW, height: 5, fill: "none", stroke: "#14171a", "stroke-width": .8 }, g);
+    sv("rect", { x, y: TOP - 22, width: RW * (used + 4) / 42, height: 5, fill: "#14171a" }, g);
+    const ut = sv("text", { x, y: TOP - 8, "font-size": 9, fill: "#8d9296" }, g); ut.textContent = `已用 ${used + 4}U / 42U`;
+    // 机柜框和 U 刻度孔
+    sv("rect", { x, y: TOP, width: RW, height: 42 * UH, fill: "#fdfcf9", stroke: "#14171a", "stroke-width": 1.4 }, g);
+    for (let n = 0; n < 42; n++) { const y = TOP + n * UH; sv("line", { x1: x, x2: x + 6, y1: y, y2: y, stroke: "#c9c7bd", "stroke-width": .6 }, g); sv("line", { x1: x + RW - 6, x2: x + RW, y1: y, y2: y, stroke: "#c9c7bd", "stroke-width": .6 }, g); }
+    sv("rect", { x: x - 1, y: TOP + 42 * UH, width: RW + 2, height: 6, fill: "#14171a" }, g);
+    // 顶部交换机 2×1U
+    for (let t = 0; t < 2; t++) {
+      const y = TOP + t * UH, e = sv("g", {}, g);
+      sv("rect", { x: x + 8, y: y + 1.5, width: RW - 16, height: UH - 3, fill: "#e8e6de", stroke: "#5c6165", "stroke-width": .8 }, e);
+      for (let p = 0; p < 16; p++) sv("rect", { x: x + 40 + p * 6, y: y + 5, width: 3.6, height: 4, fill: "#14171a", opacity: .75 }, e);
+      const tt = sv("text", { x: x + 12, y: y + 10, "font-size": 7.5, fill: "#50565c" }, e); tt.textContent = t ? "TOR-B" : "TOR-A";
+    }
+    // 服务器
+    rk.items.forEach((s) => {
+      const y = TOP + (42 - (s.u + s.size - 1)) * UH, h = s.size * UH, e = sv("g", { class: "srv" }, g); s.el = e;
+      s.body = sv("rect", { class: "body", x: x + 8, y: y + 1.5, width: RW - 16, height: h - 3, fill: fillOf(s), stroke: sel === s ? "#14171a" : "#5c6165", "stroke-width": sel === s ? 2.4 : .9 }, e);
+      const nm = sv("text", { x: x + 14, y: y + 12.5, "font-size": 8.5, "font-weight": 500, fill: inkOn(s) }, e); nm.textContent = s.id.split("-").slice(2).join("-"); s.nm = nm;
+      sv("circle", { cx: x + RW - 15, cy: y + 8, r: 2, fill: s.st === "run" ? "#2f7d5b" : s.st === "alarm" ? "#c8372d" : s.st === "maint" ? "#d6a021" : "#9ea4a7" }, e);
+      if (s.type === "gpu") {
+        const tx = sv("text", { x: x + 14, y: y + h - 8, "font-size": 7.5, fill: inkOn(s), opacity: .75 }, e); tx.textContent = s.gpu[1]; s.tx = tx;
+        const gx = x + RW - 54; s.cells = [];
+        s.cards.forEach((c, k) => { const cx = gx + (k % 4) * 9, cy = y + h - 22 + Math.floor(k / 4) * 9; s.cells.push(sv("rect", { x: cx, y: cy, width: 7, height: 7, fill: s.st === "off" || c.u === 0 && s.st !== "idle" ? "#f4f3ee" : ramp(UTIL, c.u / 100), stroke: "#14171a", "stroke-width": .5, opacity: .9 }, e)); });
+      } else { const tx = sv("text", { x: x + 14, y: y + h - 6, "font-size": 7.5, fill: "#6b7176" }, e); tx.textContent = s.type === "cpu" ? "通用计算 2U" : "存储节点 2U"; }
+      e.addEventListener("mouseenter", () => tip(s)); e.addEventListener("mousemove", moveTip); e.addEventListener("mouseleave", () => $("#tip").classList.remove("on"));
+      e.addEventListener("click", () => pick(s));
+    });
+  });
+  const cap = sv("text", { x: X0 + 14, y: H - 20, "font-size": 10, fill: "#8d9296" }, svg); cap.textContent = `${ROOMS.find((r) => r[0] === room)[1]} · ${row} 排 · 正面视图 · 每格 1U`;
+  stats(racks);
+}
+function recolor() {
+  build(room, row).forEach((rk) => rk.items.forEach((s) => { s.body.setAttribute("fill", fillOf(s)); s.nm.setAttribute("fill", inkOn(s)); if (s.tx) s.tx.setAttribute("fill", inkOn(s)); }));
+  legend(); if (sel) panel(sel);
+}
+function stats(racks) {
+  const all = racks.flatMap((r) => r.items), g = all.filter((s) => s.type === "gpu"), on = g.filter((s) => s.st !== "off" && s.st !== "maint");
+  const avg = on.reduce((a, s) => a + s.util, 0) / (on.length || 1);
+  $("#stat").innerHTML = `<span>服务器<b>${all.length}</b></span><span>GPU 卡<b>${g.length * 8}</b></span><span>平均利用率<b>${avg.toFixed(1)}%</b></span><span>告警<b style="color:#c8372d">${all.filter((s) => s.st === "alarm").length}</b></span><span>功率<b>${racks.reduce((a, r) => a + r.kw, 0).toFixed(1)} kW</b></span>`;
+}
+function legend() {
+  const L = $("#legend");
+  const sw = (c, t) => `<span><i style="background:${c}"></i>${t}</span>`;
+  const rp = (st, a, b) => `<span>${a}<i class="ramp" style="background:linear-gradient(90deg,${st.map((c) => `rgb(${c})`).join(",")})"></i>${b}</span>`;
+  L.innerHTML = mode === "status" ? STATUS.map(([k, t]) => sw(k === "off" ? "repeating-linear-gradient(135deg,#c4c2b8 0 2px,#f4f3ee 2px 4px)" : { run: "#bfdccb", idle: "#e6eaec", alarm: "#ee9a92", maint: "#f1d58a" }[k], t)).join("")
+    : mode === "util" ? rp(UTIL, "0%", "100% 利用率") : mode === "temp" ? rp(TEMP, "30°C", "90°C 温度") : DEPTS.map(([t, c]) => sw(c + "cc", t)).join("");
+}
+// ---- 悬停、选中 ----
+function tip(s) { const t = $("#tip"); t.innerHTML = `<b>${s.id}</b><br><span>型号</span> ${s.type === "gpu" ? s.gpu[0] : s.type === "cpu" ? "通用计算服务器" : "存储服务器"}<br><span>IP</span> ${s.ip}　<span>U 位</span> U${s.u}–U${s.u + s.size - 1}<br><span>负责人</span> ${s.owner}　<span>部门</span> ${DEPTS[s.dept][0]}`; t.classList.add("on"); }
+function moveTip(e) { const t = $("#tip"); let x = e.clientX + 16, y = e.clientY + 14; if (x + t.offsetWidth > innerWidth - 8) x = e.clientX - t.offsetWidth - 16; t.style.left = x + "px"; t.style.top = y + "px"; }
+function pick(s) {
+  if (sel && sel.body) { sel.body.setAttribute("stroke", "#5c6165"); sel.body.setAttribute("stroke-width", .9); }
+  sel = s; if (s.body) { s.body.setAttribute("stroke", "#14171a"); s.body.setAttribute("stroke-width", 2.4); s.el.parentNode.appendChild(s.el); } panel(s);
+}
+function panel(s) {
+  const P = $("#panel"), st = STATUS.find((x) => x[0] === s.st);
+  const spark = Array.from({ length: 48 }, (_, i) => Math.max(0, Math.min(100, s.util * (1 + .18 * Math.sin(i / 5 + s.u) + (rng(hash(s.id) + i)() - .5) * .2)))); spark[47] = s.util;
+  const pts = spark.map((v, i) => `${(i / 47 * 286).toFixed(1)},${(52 - v / 100 * 48).toFixed(1)}`).join(" ");
+  P.innerHTML = `<div class="ph"><small>${ROOMS.find((r) => r[0] === room)[1]} · ${s.id.split("-")[2].toUpperCase()} 柜 · U${s.u}–U${s.u + s.size - 1}</small><h2>${s.id}</h2><div class="st"><i style="background:${st[2] || "repeating-linear-gradient(135deg,#aaa 0 2px,#fff 2px 4px)"}"></i>${st[1]}</div></div>
+  <dl><dt>型号</dt><dd>${s.type === "gpu" ? s.gpu[0] : s.type === "cpu" ? "通用计算 2U" : "存储节点 2U"}</dd><dt>IP</dt><dd>${s.ip}</dd><dt>序列号</dt><dd>${s.sn}</dd><dt>负责人</dt><dd style="font-family:Chivo">${s.owner}</dd><dt>部门</dt><dd style="font-family:Chivo">${DEPTS[s.dept][0]}</dd><dt>功率</dt><dd>${s.power.toFixed(1)} kW</dd></dl>
+  ${s.type === "gpu" ? `<div class="cards"><h4><span>8 张 GPU 卡</span><span>${mode === "temp" ? "按温度着色" : "按利用率着色"}</span></h4><div class="grid">${s.cards.map((c, i) => { const off = s.st === "off" || (!c.t); return `<div class="cell ${off ? "off" : ""}" style="${off ? "" : `background:${mode === "temp" ? ramp(TEMP, (c.t - 30) / 62) : ramp(UTIL, c.u / 100)};color:${(mode === "temp" ? c.t > 78 : c.u > 62) ? "#fff" : "#14171a"}`}"><small style="${!off && ((mode === "temp" ? c.t > 78 : c.u > 62)) ? "color:rgba(255,255,255,.7)" : ""}">GPU ${i}</small>${off ? '<b style="color:#9a9e9f">—</b>' : mode === "temp" ? `<b>${c.t}<em>°C</em></b><span>${Math.round(c.u)}%</span>` : `<b>${Math.round(c.u)}<em>%</em></b><span>${c.t}°C</span>`}</div>`; }).join("")}</div></div>
+  <div class="spark"><h4>近 24 小时利用率</h4><svg viewBox="0 0 286 54" preserveAspectRatio="none"><path d="M0 52H286" stroke="#d5d3ca"/><polyline points="${pts}" fill="none" stroke="#14171a" stroke-width="1.3"/></svg></div>` : `<div class="empty">通用服务器没有 GPU 卡明细。</div>`}`;
+}
+// ---- 顶部切换 ----
+function renderRooms() { $("#rooms").innerHTML = ROOMS.map(([k, n]) => `<button data-k="${k}" class="${k === room ? "on" : ""}">${n}</button>`).join(""); $("#rowsel").innerHTML = ROWS.map((r) => `<button data-r="${r}" class="${r === row ? "on" : ""}">${r} 排</button>`).join(""); }
+$("#rooms").onclick = (e) => { const k = e.target.dataset.k; if (!k) return; room = k; sel = null; renderRooms(); draw(); legend(); autoPick(); };
+$("#rowsel").onclick = (e) => { const r = e.target.dataset.r; if (!r) return; row = r; sel = null; renderRooms(); draw(); legend(); autoPick(); };
+$("#mode").onclick = (e) => { const m = e.target.dataset.m; if (!m) return; mode = m; document.querySelectorAll("#mode button").forEach((b) => b.classList.toggle("on", b === e.target)); recolor(); };
+function autoPick() { const racks = build(room, row), all = racks.flatMap((r) => r.items).filter((s) => s.type === "gpu"); const s = all.find((x) => x.st === "alarm") || all[0]; if (s) pick(s); else $("#panel").innerHTML = '<div class="empty">点选一台服务器查看详情。</div>'; }
+renderRooms(); draw(); legend(); autoPick();
+</script>
+</body>
+</html>

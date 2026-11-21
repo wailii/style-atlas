@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>云岫工作台 · 网页桌面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c1c1e; --ink2: #5b5b62; --mute: #8e8e96; --line: rgba(0,0,0,.09);
+    --acc: #e2582a; --acc-soft: rgba(226,88,42,.14);
+    --glass: rgba(250,250,252,.88); --glass-in: rgba(255,255,255,.55);
+    --ok: #2f9e6b; --warn: #d9962b; --bad: #d64545;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font: 13px/1.4 Inter, "Noto Sans SC", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; background: #2a4a72; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  /* 壁纸：真照片 + 暗角 */
+  #wall { position: fixed; inset: 0; background: url(img/real/flatlay-clouds.jpg) center/cover no-repeat; transform: scale(1.04); }
+  #wall::after { content: ""; position: absolute; inset: 0; background: rgba(8,20,40,.12); }
+
+  /* 菜单栏 */
+  #mb { position: fixed; left: 0; right: 0; top: 0; height: 28px; z-index: 9000; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 12.5px; color: #fff; background: rgba(20,28,44,.32); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); }
+  #mb .l, #mb .r { display: flex; align-items: center; gap: 18px; }
+  #mb b { font-weight: 600; }
+  #mb .menu { position: relative; }
+  #mb .menu > button { padding: 3px 8px; border-radius: 5px; color: #fff; }
+  #mb .menu > button:hover, #mb .menu.open > button { background: rgba(255,255,255,.22); }
+  #mb .drop { position: absolute; top: 26px; left: 0; min-width: 210px; padding: 5px; border-radius: 9px; background: var(--glass); -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%); box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 14px 36px rgba(0,0,0,.28); color: var(--ink); display: none; }
+  #mb .menu.open .drop { display: block; }
+  #mb .drop button { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 16px; padding: 4px 10px; border-radius: 5px; text-align: left; font-size: 12.5px; }
+  #mb .drop button:hover { background: var(--acc); color: #fff; }
+  #mb .drop hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px; }
+  #mb .drop .k { color: var(--mute); font-size: 11px; }
+  #mb .drop button:hover .k { color: rgba(255,255,255,.8); }
+  #mb svg { display: block; }
+  #clock { font-variant-numeric: tabular-nums; }
+
+  /* 桌面图标 */
+  #icons { position: fixed; right: 26px; top: 52px; z-index: 1; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .di { width: 92px; padding: 6px 4px 5px; border-radius: 8px; text-align: center; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.55); font-size: 12px; cursor: default; }
+  .di .ico { margin: 0 auto 5px; }
+  .di.sel { background: rgba(255,255,255,.26); outline: 1px solid rgba(255,255,255,.35); }
+  .ico { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 5px 14px rgba(0,0,0,.28); }
+  .ico svg { width: 60%; height: 60%; stroke: #fff; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .c-led { background: #2f8f6c; } .c-bill { background: #e0803a; } .c-mon { background: #4f58d6; } .c-desk { background: #2b2f3a; }
+
+  /* 窗口 */
+  .win { position: fixed; display: flex; flex-direction: column; border-radius: 12px; background: var(--glass); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); box-shadow: 0 0 0 .5px rgba(0,0,0,.28), 0 8px 22px rgba(0,0,0,.18); overflow: hidden; transition: transform .52s cubic-bezier(.5,0,.2,1), opacity .4s, box-shadow .2s; min-width: 360px; min-height: 240px; }
+  .win.opening { animation: pop .38s cubic-bezier(.2,.8,.3,1); }
+  @keyframes pop { from { transform: scale(.92); opacity: 0; } }
+  .win.focus { box-shadow: 0 0 0 .5px rgba(0,0,0,.34), 0 26px 64px rgba(0,0,0,.36); }
+  .win.dragging, .win.resizing { transition: box-shadow .2s; }
+  .win.gone { display: none; }
+  .win.min { transform: translate(var(--dx), var(--dy)) scale(.06); opacity: 0; pointer-events: none; }
+  .win.max { border-radius: 0; }
+  .tb { height: 40px; flex: none; display: flex; align-items: center; padding: 0 14px; gap: 8px; cursor: default; border-bottom: 1px solid var(--line); position: relative; }
+  .tl { display: flex; gap: 8px; }
+  .tl button { width: 12px; height: 12px; border-radius: 50%; background: #c9c9ce; position: relative; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.2); }
+  .win.focus .tl .x { background: #ff5f57; } .win.focus .tl .m { background: #febc2e; } .win.focus .tl .z { background: #28c840; }
+  .tl button svg { position: absolute; inset: 1.5px; width: 9px; height: 9px; stroke: rgba(0,0,0,.55); stroke-width: 1.6; fill: none; opacity: 0; stroke-linecap: round; }
+  .tl:hover button svg { opacity: 1; }
+  .tt { position: absolute; left: 0; right: 0; text-align: center; font-weight: 600; font-size: 13px; pointer-events: none; color: var(--ink); opacity: .75; }
+  .win.focus .tt { opacity: 1; }
+  .body { flex: 1; min-height: 0; position: relative; display: flex; }
+  .rz { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; z-index: 5; }
+  .rz::after { content: ""; position: absolute; right: 4px; bottom: 4px; width: 8px; height: 8px; border-right: 1.5px solid rgba(0,0,0,.28); border-bottom: 1.5px solid rgba(0,0,0,.28); border-radius: 0 0 3px 0; }
+
+  /* 台账 */
+  .side { width: 150px; flex: none; padding: 12px 8px; border-right: 1px solid var(--line); background: rgba(240,240,244,.45); font-size: 12.5px; overflow: auto; }
+  .side h6 { font: 600 10.5px Inter; color: var(--mute); padding: 4px 8px 6px; letter-spacing: .04em; }
+  .side button { display: flex; width: 100%; justify-content: space-between; padding: 4px 8px; border-radius: 6px; text-align: left; }
+  .side button:hover { background: rgba(0,0,0,.05); }
+  .side button.on { background: var(--acc-soft); color: #a63a14; font-weight: 600; }
+  .side button i { font-style: normal; color: var(--mute); font-size: 11.5px; }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .bar { flex: none; display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  .seg { display: flex; padding: 2px; border-radius: 8px; background: rgba(0,0,0,.06); }
+  .seg button { padding: 3px 11px; border-radius: 6px; font-size: 12px; color: var(--ink2); }
+  .seg button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.16); }
+  .srch { margin-left: auto; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,.06); border-radius: 7px; padding: 0 9px; height: 26px; width: 160px; }
+  .srch svg { width: 13px; height: 13px; stroke: var(--mute); fill: none; stroke-width: 2; flex: none; }
+  .srch input { border: 0; outline: 0; background: none; font: inherit; width: 100%; user-select: text; }
+  .tbl { flex: 1; overflow: auto; min-height: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { position: sticky; top: 0; text-align: left; font-weight: 500; font-size: 11.5px; color: var(--mute); padding: 7px 10px; background: rgba(248,248,250,.92); border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; }
+  th:hover { color: var(--ink); }
+  th.on { color: var(--ink); }
+  th .ar { display: inline-block; width: 8px; margin-left: 3px; color: var(--acc); }
+  td { padding: 0 10px; height: 31px; white-space: nowrap; border-bottom: 1px solid rgba(0,0,0,.045); }
+  tbody tr:nth-child(even) td { background: rgba(0,0,0,.022); }
+  tbody tr:hover td { background: var(--acc-soft); }
+  .st { display: inline-flex; align-items: center; gap: 6px; }
+  .st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+  .foot { flex: none; padding: 6px 12px; font-size: 11.5px; color: var(--mute); border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
+
+  /* 账单 */
+  .bill { flex: 1; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
+  .bill .hd { display: flex; align-items: flex-end; justify-content: space-between; }
+  .bill .sm { font-size: 11.5px; color: var(--mute); }
+  .bill .big { font: 600 36px/1.05 Inter; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .bill .big small { font-size: 15px; font-weight: 500; color: var(--mute); margin-right: 3px; letter-spacing: 0; }
+  .bill .chg { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 118px; padding-top: 8px; border-bottom: 1px solid var(--line); flex: none; }
+  .bars button { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; position: relative; }
+  .bars button i { display: block; width: 100%; max-width: 46px; border-radius: 5px 5px 0 0; background: #c9ccd6; transition: height .5s cubic-bezier(.2,.7,.2,1), background .2s; }
+  .bars button:hover i { background: #aeb3c3; }
+  .bars button.on i { background: var(--acc); }
+  .bars button em { position: absolute; top: -6px; font: 500 10.5px "JetBrains Mono", ui-monospace, Menlo, monospace; font-style: normal; color: var(--ink2); opacity: 0; transition: opacity .15s; }
+  .bars button:hover em, .bars button.on em { opacity: 1; }
+  .mlab { display: flex; gap: 10px; margin-top: -8px; }
+  .mlab span { flex: 1; text-align: center; font-size: 11px; color: var(--mute); }
+  .dep { display: flex; flex-direction: column; gap: 9px; }
+  .dep div { display: grid; grid-template-columns: 60px 1fr 86px; align-items: center; gap: 10px; font-size: 12.5px; }
+  .dep .tr { height: 8px; border-radius: 4px; background: rgba(0,0,0,.06); overflow: hidden; }
+  .dep .tr i { display: block; height: 100%; border-radius: 4px; transition: width .5s cubic-bezier(.2,.7,.2,1); }
+  .dep b { text-align: right; font: 500 12.5px "JetBrains Mono", ui-monospace, Menlo, monospace; }
+
+  /* 监控 */
+  .mon { flex: 1; display: flex; flex-direction: column; min-width: 0; background: rgba(18,22,34,.9); color: #e6e8f0; }
+  .mon .top { display: flex; gap: 1px; background: rgba(255,255,255,.08); flex: none; }
+  .mon .top div { flex: 1; padding: 10px 14px; background: rgba(18,22,34,.92); }
+  .mon .top small { display: block; font-size: 11px; color: #8b91a6; }
+  .mon .top b { font: 500 19px "JetBrains Mono", ui-monospace, Menlo, monospace; letter-spacing: -.02em; }
+  .mon .top b u { text-decoration: none; font-size: 12px; color: #8b91a6; margin-left: 2px; }
+  .mon .cv { flex: 1; position: relative; min-height: 0; }
+  .mon canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mon .lg { position: absolute; left: 14px; top: 8px; display: flex; gap: 14px; font-size: 11.5px; color: #aab0c4; }
+  .mon .lg span::before { content: ""; display: inline-block; width: 8px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+
+  /* Dock */
+  #dock { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 8000; display: flex; align-items: flex-end; gap: 8px; padding: 7px 10px; border-radius: 22px; background: rgba(255,255,255,.26); -webkit-backdrop-filter: blur(28px) saturate(170%); backdrop-filter: blur(28px) saturate(170%); box-shadow: 0 0 0 .5px rgba(255,255,255,.5) inset, 0 0 0 .5px rgba(0,0,0,.15), 0 12px 30px rgba(0,0,0,.25); }
+  #dock .sep { width: 1px; align-self: stretch; margin: 6px 2px; background: rgba(255,255,255,.45); }
+  .dk { position: relative; width: 54px; height: 54px; display: flex; align-items: flex-end; justify-content: center; transition: width .14s, height .14s; }
+  .dk .ico { width: 100%; height: 100%; border-radius: 24%; }
+  .dk.run::after { content: ""; position: absolute; bottom: -6px; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,.95); box-shadow: 0 0 4px rgba(0,0,0,.4); }
+  .dk .tip { position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 3px 10px; border-radius: 6px; font-size: 12px; background: rgba(40,42,52,.86); color: #fff; opacity: 0; pointer-events: none; transition: opacity .12s; }
+  .dk:hover .tip { opacity: 1; }
+  .dk.bounce .ico { animation: bnc .5s ease; }
+  @keyframes bnc { 30% { transform: translateY(-18px); } 60% { transform: translateY(0); } 78% { transform: translateY(-6px); } }
+  #credit { position: fixed; left: 12px; bottom: 6px; font-size: 10px; color: rgba(255,255,255,.7); z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+</style>
+</head>
+<body>
+<div id="wall"></div>
+
+<div id="mb">
+  <div class="l">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c2-5 5-8 9-8s7 3 9 8"/><path d="M7 17c1-3 3-4.5 5-4.5s4 1.5 5 4.5"/></svg>
+    <b id="appname">云岫工作台</b>
+    <div class="menu" id="menuWin"><button>窗口</button>
+      <div class="drop" id="dropWin"></div></div>
+  </div>
+  <div class="r">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M5 12.5a10 10 0 0114 0M8 16a5.5 5.5 0 018 0"/><circle cx="12" cy="19" r="1" fill="#fff"/></svg>
+    <svg width="22" height="14" viewBox="0 0 26 14" fill="none" stroke="#fff" stroke-width="1.4"><rect x="1" y="1.5" width="21" height="11" rx="3"/><rect x="3.5" y="4" width="14" height="6" rx="1.4" fill="#fff" stroke="none"/><path d="M24 5v4" stroke-linecap="round"/></svg>
+    <span id="clock"></span>
+  </div>
+</div>
+
+<div id="icons"></div>
+<div id="credit">示意图 · Luke Pamer / Unsplash　示例数据</div>
+
+<div id="dock"></div>
+
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+const SV = {
+  led: '<svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M9.5 10v9.5M3.5 15h17"/></svg>',
+  bill: '<svg viewBox="0 0 24 24"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></svg>',
+  mon: '<svg viewBox="0 0 24 24"><path d="M2.5 12h4l2.5-6.5 4 13 2.7-6.5h5.8"/></svg>',
+  desk: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8.5 20.5h7M12 17v3.5"/></svg>',
+};
+const APPS = [
+  { id: 'led', name: '资源台账', cls: 'c-led', w: 700, h: 410, x: 96, y: 56 },
+  { id: 'bill', name: '月度账单', cls: 'c-bill', w: 520, h: 452, x: 800, y: 64 },
+  { id: 'mon', name: '集群监控', cls: 'c-mon', w: 540, h: 300, x: 236, y: 496 },
+];
+
+/* ---------- 桌面图标 ---------- */
+const icons = $('#icons');
+APPS.forEach(a => {
+  const d = document.createElement('div'); d.className = 'di'; d.dataset.id = a.id;
+  d.innerHTML = `<div class="ico ${a.cls}">${SV[a.id]}</div>${a.name}`;
+  d.onclick = e => { e.stopPropagation(); document.querySelectorAll('.di').forEach(x => x.classList.remove('sel')); d.classList.add('sel'); };
+  d.ondblclick = () => openApp(a.id);
+  icons.appendChild(d);
+});
+document.addEventListener('mousedown', e => { if (!e.target.closest('.di')) document.querySelectorAll('.di').forEach(x => x.classList.remove('sel')); if (!e.target.closest('.menu')) $('#menuWin').classList.remove('open'); });
+
+/* ---------- 窗口管理 ---------- */
+let zTop = 100, focused = null;
+const wins = {};
+function mkWin(a) {
+  const el = document.createElement('div');
+  el.className = 'win gone'; el.id = 'w-' + a.id;
+  Object.assign(el.style, { left: a.x + 'px', top: a.y + 'px', width: a.w + 'px', height: a.h + 'px' });
+  el.innerHTML = `<div class="tb"><div class="tl"><button class="x" title="关闭"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button><button class="m" title="最小化"><svg viewBox="0 0 12 12"><path d="M2.5 6h7"/></svg></button><button class="z" title="缩放"><svg viewBox="0 0 12 12"><path d="M3 9V3h6M9 3L3 9"/></svg></button></div><div class="tt">${a.name}</div></div><div class="body"></div><div class="rz"></div>`;
+  document.body.appendChild(el);
+  wins[a.id] = { el, a, open: false, min: false, max: false, prev: null };
+  const tb = $('.tb', el);
+  tb.addEventListener('mousedown', e => {
+    if (e.target.closest('.tl')) return;
+    focus(a.id);
+    const w = wins[a.id]; if (w.max) return;
+    const sx = e.clientX, sy = e.clientY, ox = el.offsetLeft, oy = el.offsetTop;
+    el.classList.add('dragging');
+    const mv = ev => { el.style.left = Math.min(innerWidth - 80, Math.max(-el.offsetWidth + 120, ox + ev.clientX - sx)) + 'px'; el.style.top = Math.min(innerHeight - 60, Math.max(28, oy + ev.clientY - sy)) + 'px'; };
+    const up = () => { el.classList.remove('dragging'); removeEventListener('mousemove', mv); removeEventListener('mouseup', up); };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+  });
+  tb.addEventListener('dblclick', e => { if (!e.target.closest('.tl')) toggleMax(a.id); });
+  el.addEventListener('mousedown', () => focus(a.id));
+  $('.x', el).onclick = e => { e.stopPropagation(); closeApp(a.id); };
+  $('.m', el).onclick = e => { e.stopPropagation(); minimize(a.id); };
+  $('.z', el).onclick = e => { e.stopPropagation(); toggleMax(a.id); };
+  $('.rz', el).addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation(); focus(a.id);
+    const sx = e.clientX, sy = e.clientY, ow = el.offsetWidth, oh = el.offsetHeight;
+    el.classList.add('resizing');
+    const mv = ev => { el.style.width = Math.max(360, ow + ev.clientX - sx) + 'px'; el.style.height = Math.max(240, oh + ev.clientY - sy) + 'px'; };
+    const up = () => { el.classList.remove('resizing'); removeEventListener('mousemove', mv); removeEventListener('mouseup', up); };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+  });
+  return wins[a.id];
+}
+function focus(id) {
+  const w = wins[id]; if (!w) return;
+  Object.values(wins).forEach(x => x.el.classList.remove('focus'));
+  w.el.classList.add('focus'); w.el.style.zIndex = ++zTop; focused = id;
+  $('#appname').textContent = w.a.name; refreshMenu();
+}
+function dockRect(id) { return $(`.dk[data-id="${id}"] .ico`).getBoundingClientRect(); }
+function openApp(id) {
+  const w = wins[id];
+  if (!w.open) {
+    w.open = true; w.min = false; w.el.classList.remove('gone');
+    w.el.classList.remove('opening'); void w.el.offsetWidth; w.el.classList.add('opening');
+    w.onOpen && w.onOpen();
+  } else if (w.min) restore(id);
+  const dk = $(`.dk[data-id="${id}"]`); dk.classList.remove('bounce'); void dk.offsetWidth; dk.classList.add('bounce');
+  focus(id); refreshDock();
+}
+function closeApp(id) { const w = wins[id]; w.open = false; w.min = false; w.el.classList.add('gone'); w.el.classList.remove('min', 'focus'); w.onClose && w.onClose(); nextFocus(); refreshDock(); }
+function nextFocus() {
+  const vis = Object.values(wins).filter(w => w.open && !w.min).sort((a, b) => b.el.style.zIndex - a.el.style.zIndex)[0];
+  if (vis) focus(vis.a.id); else { focused = null; $('#appname').textContent = '云岫工作台'; Object.values(wins).forEach(x => x.el.classList.remove('focus')); refreshMenu(); }
+}
+function minimize(id) {
+  const w = wins[id]; if (w.min) return;
+  const r = w.el.getBoundingClientRect(), d = dockRect(id);
+  w.el.style.setProperty('--dx', (d.left + d.width / 2 - (r.left + r.width / 2)) + 'px');
+  w.el.style.setProperty('--dy', (d.top + d.height / 2 - (r.top + r.height / 2)) + 'px');
+  w.el.classList.add('min'); w.min = true; w.el.classList.remove('focus');
+  nextFocus(); refreshDock();
+}
+function restore(id) {
+  const w = wins[id]; if (!w.min) return;
+  const r = w.el.getBoundingClientRect(), d = dockRect(id);
+  w.el.style.setProperty('--dx', (d.left + d.width / 2 - (r.left + r.width / 2)) + 'px');
+  w.el.style.setProperty('--dy', (d.top + d.height / 2 - (r.top + r.height / 2)) + 'px');
+  w.el.classList.remove('min'); w.min = false; focus(id); refreshDock();
+}
+function toggleMax(id) {
+  const w = wins[id], el = w.el;
+  if (!w.max) { w.prev = [el.style.left, el.style.top, el.style.width, el.style.height]; Object.assign(el.style, { left: '0px', top: '28px', width: innerWidth + 'px', height: innerHeight - 28 + 'px' }); w.max = true; el.classList.add('max'); }
+  else { [el.style.left, el.style.top, el.style.width, el.style.height] = w.prev; w.max = false; el.classList.remove('max'); }
+}
+
+/* ---------- Dock ---------- */
+const dock = $('#dock');
+APPS.forEach(a => {
+  const b = document.createElement('button'); b.className = 'dk'; b.dataset.id = a.id;
+  b.innerHTML = `<span class="tip">${a.name}</span><div class="ico ${a.cls}">${SV[a.id]}</div>`;
+  b.onclick = () => { const w = wins[a.id]; if (!w.open || w.min) openApp(a.id); else if (focused === a.id) minimize(a.id); else focus(a.id); };
+  dock.appendChild(b);
+});
+dock.insertAdjacentHTML('beforeend', '<i class="sep"></i>');
+{
+  const b = document.createElement('button'); b.className = 'dk'; b.dataset.id = 'desk';
+  b.innerHTML = `<span class="tip">显示桌面</span><div class="ico c-desk">${SV.desk}</div>`;
+  b.onclick = () => { const op = Object.values(wins).filter(w => w.open); if (op.some(w => !w.min)) op.forEach(w => minimize(w.a.id)); else op.forEach(w => restore(w.a.id)); };
+  dock.appendChild(b);
+}
+function refreshDock() { Object.values(wins).forEach(w => $(`.dk[data-id="${w.a.id}"]`).classList.toggle('run', w.open)); }
+const BASE = 54, MAXS = 86;
+dock.addEventListener('mousemove', e => {
+  dock.querySelectorAll('.dk').forEach(k => {
+    const r = k.getBoundingClientRect(), d = Math.abs(e.clientX - (r.left + r.width / 2));
+    const s = BASE + (MAXS - BASE) * Math.exp(-(d * d) / (2 * 62 * 62));
+    k.style.width = k.style.height = s + 'px';
+  });
+});
+dock.addEventListener('mouseleave', () => dock.querySelectorAll('.dk').forEach(k => { k.style.width = k.style.height = ''; }));
+
+/* ---------- 菜单栏：窗口菜单 ---------- */
+$('#menuWin > button').onclick = () => { $('#menuWin').classList.toggle('open'); refreshMenu(); };
+function refreshMenu() {
+  const d = $('#dropWin');
+  d.innerHTML = '';
+  APPS.forEach((a, i) => {
+    const w = wins[a.id]; if (!w) return;
+    const b = document.createElement('button');
+    b.innerHTML = `<span>${w.open ? (w.min ? '◦ ' : '• ') : '　'}${a.name}</span><span class="k">${w.open ? (w.min ? '已最小化' : '') : '未打开'}</span>`;
+    b.onclick = () => { $('#menuWin').classList.remove('open'); openApp(a.id); };
+    d.appendChild(b);
+  });
+  d.insertAdjacentHTML('beforeend', '<hr>');
+  const all = document.createElement('button'); all.innerHTML = '<span>全部最小化</span>';
+  all.onclick = () => { $('#menuWin').classList.remove('open'); Object.values(wins).filter(w => w.open).forEach(w => minimize(w.a.id)); };
+  const rs = document.createElement('button'); rs.innerHTML = '<span>全部恢复</span>';
+  rs.onclick = () => { $('#menuWin').classList.remove('open'); Object.values(wins).filter(w => w.open).forEach(w => restore(w.a.id)); };
+  d.append(all, rs);
+}
+
+/* ---------- 时钟 ---------- */
+const clk = () => { const n = new Date(); $('#clock').textContent = `${n.getMonth() + 1}月${n.getDate()}日 周${'日一二三四五六'[n.getDay()]}  ${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`; };
+clk(); setInterval(clk, 10000);
+
+/* ======== 应用 1：资源台账 ======== */
+const ROWS = [
+  ['GPU-0142', 'A100 80G × 8', '算法部', '运行中', '2027-03-18'],
+  ['GPU-0143', 'A100 80G × 8', '算法部', '运行中', '2027-03-18'],
+  ['GPU-0207', 'H100 80G × 8', '平台部', '运行中', '2028-01-09'],
+  ['GPU-0208', 'H100 80G × 8', '平台部', '空闲', '2028-01-09'],
+  ['GPU-0211', 'H100 80G × 8', '搜索部', '运行中', '2028-02-26'],
+  ['GPU-0319', 'L40S 48G × 4', '数据部', '运行中', '2027-08-04'],
+  ['GPU-0320', 'L40S 48G × 4', '数据部', '空闲', '2027-08-04'],
+  ['GPU-0415', 'A800 80G × 8', '搜索部', '维保', '2026-12-30'],
+  ['GPU-0416', 'A800 80G × 8', '算法部', '维保', '2026-12-30'],
+  ['GPU-0522', 'V100 32G × 8', '数据部', '待回收', '2026-11-30'],
+  ['GPU-0523', 'V100 32G × 8', '平台部', '待回收', '2026-11-30'],
+  ['GPU-0610', 'H200 141G × 8', '算法部', '运行中', '2028-06-12'],
+  ['GPU-0611', 'H200 141G × 8', '算法部', '运行中', '2028-06-12'],
+  ['GPU-0612', 'H200 141G × 8', '搜索部', '空闲', '2028-06-12'],
+];
+const STC = { '运行中': '#2f9e6b', '空闲': '#9aa0ae', '维保': '#d9962b', '待回收': '#d64545' };
+const L = { dep: '全部', st: '全部', q: '', sort: 0, dir: 1 };
+function buildLedger(body) {
+  body.innerHTML = `<div class="side"></div><div class="main"><div class="bar"><div class="seg"></div><label class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input placeholder="搜索编号 / 型号"></label></div><div class="tbl"><table><thead></thead><tbody></tbody></table></div><div class="foot"><span class="cnt"></span><span>示例数据</span></div></div>`;
+  const side = $('.side', body), seg = $('.seg', body), thead = $('thead', body), tbody = $('tbody', body);
+  const heads = ['资产编号', '型号', '部门', '状态', '到期日'];
+  const draw = () => {
+    const deps = ['全部', ...new Set(ROWS.map(r => r[2]))];
+    side.innerHTML = '<h6>部门</h6>' + deps.map(d => `<button class="${L.dep === d ? 'on' : ''}" data-d="${d}">${d}<i>${ROWS.filter(r => d === '全部' || r[2] === d).length}</i></button>`).join('');
+    const sts = ['全部', '运行中', '空闲', '维保', '待回收'];
+    seg.innerHTML = sts.map(s => `<button class="${L.st === s ? 'on' : ''}" data-s="${s}">${s}</button>`).join('');
+    thead.innerHTML = '<tr>' + heads.map((h, i) => `<th data-i="${i}" class="${L.sort === i ? 'on' : ''}">${h}<span class="ar">${L.sort === i ? (L.dir > 0 ? '↑' : '↓') : ''}</span></th>`).join('') + '</tr>';
+    let rs = ROWS.filter(r => (L.dep === '全部' || r[2] === L.dep) && (L.st === '全部' || r[3] === L.st) && (!L.q || (r[0] + r[1]).toLowerCase().includes(L.q)));
+    rs = rs.slice().sort((a, b) => L.dir * a[L.sort].localeCompare(b[L.sort], 'zh'));
+    tbody.innerHTML = rs.map(r => `<tr><td class="mono">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><span class="st" style="--c:${STC[r[3]]}">${r[3]}</span></td><td class="mono">${r[4]}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#8e8e96;height:80px">没有符合条件的资产</td></tr>';
+    $('.cnt', body).textContent = `共 ${rs.length} 台，合计 ${rs.reduce((s, r) => s + parseInt(r[1].split('×')[1]), 0)} 张卡`;
+  };
+  side.onclick = e => { const b = e.target.closest('button'); if (b) { L.dep = b.dataset.d; draw(); } };
+  seg.onclick = e => { const b = e.target.closest('button'); if (b) { L.st = b.dataset.s; draw(); } };
+  thead.onclick = e => { const t = e.target.closest('th'); if (!t) return; const i = +t.dataset.i; L.dir = L.sort === i ? -L.dir : 1; L.sort = i; draw(); };
+  $('input', body).oninput = e => { L.q = e.target.value.trim().toLowerCase(); draw(); };
+  draw();
+}
+
+/* ======== 应用 2：月度账单 ======== */
+const DEPN = ['算法部', '平台部', '搜索部', '数据部', '其他'], DEPC = ['#e2582a', '#4f58d6', '#2f9e8a', '#d9a03a', '#9aa0ae'];
+const BM = {
+  '6月': [388400, 256300, 194100, 142700, 81000],
+  '7月': [401900, 262800, 203500, 150200, 84600],
+  '8月': [427600, 281400, 211200, 158900, 88300],
+  '9月': [449800, 297500, 219800, 163100, 91400],
+  '10月': [466200, 304100, 221900, 165500, 94200],
+  '11月': [482300, 311900, 226400, 168000, 96000],
+};
+const sum = a => a.reduce((x, y) => x + y, 0);
+function buildBill(body) {
+  const ms = Object.keys(BM); let cur = '11月';
+  body.innerHTML = `<div class="bill"><div class="hd"><div><div class="sm"><span class="mm"></span> 算力费用合计</div><div class="big mono"></div></div><span class="chg"></span></div><div class="bars"></div><div class="mlab"></div><div class="dep"></div><div class="sm" style="margin-top:auto">点柱子切换月份　示例数据</div></div>`;
+  const big = $('.big', body), chg = $('.chg', body), bars = $('.bars', body), dep = $('.dep', body);
+  const mx = Math.max(...ms.map(m => sum(BM[m])));
+  bars.innerHTML = ms.map(m => `<button data-m="${m}"><em>${(sum(BM[m]) / 10000).toFixed(1)}万</em><i style="height:0"></i></button>`).join('');
+  $('.mlab', body).innerHTML = ms.map(m => `<span>${m}</span>`).join('');
+  dep.innerHTML = DEPN.map((n, i) => `<div><span>${n}</span><span class="tr"><i style="background:${DEPC[i]};width:0"></i></span><b></b></div>`).join('');
+  let shown = 0;
+  const count = (to) => { const from = shown, t0 = performance.now(); const f = n => { const k = Math.min(1, (n - t0) / 600), e = 1 - Math.pow(1 - k, 3); shown = Math.round(from + (to - from) * e); big.innerHTML = `<small>¥</small>${shown.toLocaleString('en-US')}`; if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); };
+  const show = () => {
+    const v = BM[cur], t = sum(v), i = ms.indexOf(cur);
+    $('.mm', body).textContent = '2026 年 ' + cur; count(t);
+    if (i > 0) { const p = sum(BM[ms[i - 1]]), pc = (t - p) / p * 100; chg.textContent = `${pc >= 0 ? '+' : ''}${pc.toFixed(1)}% 环比`; chg.style.cssText = `background:${pc >= 0 ? 'rgba(214,69,69,.12)' : 'rgba(47,158,107,.14)'};color:${pc >= 0 ? '#b83232' : '#23785a'}`; } else { chg.textContent = '起始月'; chg.style.cssText = 'background:rgba(0,0,0,.06);color:#5b5b62'; }
+    bars.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.m === cur); $('i', b).style.height = (sum(BM[b.dataset.m]) / mx * 82) + '%'; });
+    dep.querySelectorAll('div').forEach((r, k) => { $('.tr i', r).style.width = (v[k] / Math.max(...v) * 100) + '%'; $('b', r).textContent = '¥ ' + v[k].toLocaleString('en-US'); });
+  };
+  bars.onclick = e => { const b = e.target.closest('button'); if (b) { cur = b.dataset.m; show(); } };
+  wins.bill.onOpen = () => { shown = 0; setTimeout(show, 60); };
+  show();
+}
+
+/* ======== 应用 3：集群监控 ======== */
+function buildMon(body) {
+  body.innerHTML = `<div class="mon"><div class="top"><div><small>平均利用率</small><b id="m1">--</b></div><div><small>显存占用</small><b id="m2">--</b></div><div><small>平均温度</small><b id="m3">--</b></div><div><small>总功耗</small><b id="m4">--</b></div></div><div class="cv"><canvas></canvas><div class="lg"><span style="--c:#ff8a5c">算法集群</span><span style="--c:#7f8bff">平台集群</span><span style="--c:#4fd1b0">搜索集群</span></div></div></div>`;
+  const cv = $('canvas', body), cx = cv.getContext('2d');
+  const N = 90, S = [{ c: '#ff8a5c', v: .74 }, { c: '#7f8bff', v: .58 }, { c: '#4fd1b0', v: .66 }].map(s => ({ ...s, d: Array.from({ length: N }, () => s.v) }));
+  let t = 0, run = true;
+  S.forEach((s, k) => { for (let i = 1; i < N; i++) s.d[i] = Math.min(.97, Math.max(.2, s.d[i - 1] + (Math.random() - .5) * .08 + (s.v - s.d[i - 1]) * .08)); });
+  const step = () => {
+    S.forEach(s => { const l = s.d[N - 1]; s.d.push(Math.min(.97, Math.max(.2, l + (Math.random() - .5) * .08 + (s.v - l) * .08))); s.d.shift(); });
+    const avg = S.reduce((a, s) => a + s.d[N - 1], 0) / 3;
+    $('#m1').innerHTML = `${(avg * 100).toFixed(1)}<u>%</u>`; $('#m2').innerHTML = `${(avg * 61.2 + 14).toFixed(1)}<u>GB</u>`; $('#m3').innerHTML = `${(avg * 30 + 41).toFixed(0)}<u>℃</u>`; $('#m4').innerHTML = `${(avg * 72 + 118).toFixed(1)}<u>kW</u>`;
+  };
+  const draw = () => {
+    const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
+    if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, w, h);
+    const pl = 38, pr = 12, pt = 34, pb = 10, W = w - pl - pr, H = h - pt - pb;
+    cx.font = '10.5px "JetBrains Mono", ui-monospace, Menlo, monospace'; cx.fillStyle = '#7b8199'; cx.strokeStyle = 'rgba(255,255,255,.07)'; cx.lineWidth = 1; cx.textAlign = 'right';
+    [0, .25, .5, .75, 1].forEach(g => { const y = pt + H * (1 - g); cx.beginPath(); cx.moveTo(pl, y); cx.lineTo(w - pr, y); cx.stroke(); cx.fillText(Math.round(g * 100) + '%', pl - 6, y + 3.5); });
+    S.forEach(s => {
+      cx.beginPath(); s.d.forEach((v, i) => { const x = pl + W * i / (N - 1), y = pt + H * (1 - v); i ? cx.lineTo(x, y) : cx.moveTo(x, y); });
+      cx.strokeStyle = s.c; cx.lineWidth = 1.8; cx.lineJoin = 'round'; cx.stroke();
+      const lx = pl + W, ly = pt + H * (1 - s.d[N - 1]); cx.fillStyle = s.c; cx.beginPath(); cx.arc(lx, ly, 3, 0, 7); cx.fill();
+    });
+  };
+  step();
+  const ro = new ResizeObserver(draw); ro.observe(cv);
+  setInterval(() => { if (!wins.mon.open || wins.mon.min) return; step(); draw(); }, 1000);
+  wins.mon.onOpen = draw;
+}
+
+/* ---------- 初始化 ---------- */
+APPS.forEach(a => mkWin(a));
+buildLedger($('.body', wins.led.el)); buildBill($('.body', wins.bill.el)); buildMon($('.body', wins.mon.el));
+openApp('led'); setTimeout(() => openApp('bill'), 140); setTimeout(() => openApp('mon'), 280);
+setTimeout(() => focus('bill'), 900);
+refreshMenu();
+window.__os = { openApp, minimize, restore, closeApp, focus };
+})();
+</script>
+</body>
+</html>

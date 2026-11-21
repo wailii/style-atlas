@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>泳道看板 · 资源交付</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9edf2;--lane:#f6f8fa;--ink:#15202e;--ink2:#566174;--mute:#8b95a6;--line:#d5dbe4;--card:#fff;--acc:#e8542e;--accbg:#fde8e1;--ok:#1f8a5b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:Manrope,"Noto Sans SC",sans-serif;font-size:13px;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none}
+.app{height:100vh;display:flex;flex-direction:column}
+.top{flex:none;display:flex;align-items:center;gap:16px;padding:12px 20px 10px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.logo svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top h1{font-size:17px;font-weight:800;letter-spacing:.2px}
+.top .sub{color:var(--mute);font-size:12px;margin-top:1px}
+.tabs{display:flex;gap:2px;margin-left:18px;background:#eef1f5;border-radius:9px;padding:3px}
+.tabs button{height:28px;padding:0 14px;border-radius:7px;color:var(--ink2);font-weight:600}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(20,30,50,.15)}
+.sp{flex:1}
+.stat{display:flex;gap:18px}
+.stat div{display:flex;flex-direction:column;align-items:flex-end}
+.stat b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat small{font-size:11px;color:var(--mute)}
+.stat .w b{color:var(--acc)}
+.bar2{flex:none;display:flex;align-items:center;gap:8px;padding:8px 20px;background:#fff;border-bottom:1px solid var(--line)}
+.bar2 span.l{color:var(--mute);font-size:12px;margin-right:2px}
+.chip{display:flex;align-items:center;gap:6px;height:26px;padding:0 10px 0 4px;border-radius:13px;border:1px solid var(--line);color:var(--ink2);font-weight:600;font-size:12px}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip .a{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;color:#fff}
+.chip.all{padding:0 12px}
+.legend{margin-left:auto;display:flex;gap:16px;color:var(--mute);font-size:11.5px;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.scroll{flex:1;overflow:auto;padding:0 20px 20px}
+.board{display:grid;grid-template-columns:168px repeat(5,minmax(236px,1fr));min-width:1400px}
+.hcell{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 10px 10px;border-bottom:2px solid var(--ink)}
+.hcell.corner{z-index:7;left:0}
+.col-h{display:flex;flex-direction:column;gap:7px}
+.col-h .r1{display:flex;align-items:center;gap:8px}
+.col-h b{font-size:13px;font-weight:800;letter-spacing:.5px}
+.col-h .cnt{font-family:"IBM Plex Mono";font-size:12px;font-weight:500;padding:1px 7px;border-radius:10px;background:#dfe4eb;color:var(--ink2)}
+.col-h .lim{margin-left:auto;font-size:11px;color:var(--mute);display:flex;gap:4px;align-items:center;border-radius:5px;padding:2px 5px}
+.col-h .lim:hover{background:#dfe4eb}
+.col-h .lim input{width:30px;border:1px solid var(--ink);border-radius:4px;padding:0 3px;text-align:center;font-family:"IBM Plex Mono";cursor:text;background:#fff}
+.col-h .bar{height:4px;border-radius:2px;background:#d3d9e2;overflow:hidden}
+.col-h .bar i{display:block;height:100%;background:var(--ink);transition:width .3s,background .3s}
+.hcell.over{background:var(--accbg);border-bottom-color:var(--acc)}
+.hcell.over .cnt{background:var(--acc);color:#fff}
+.hcell.over .bar i{background:var(--acc)}
+.hcell.over b{color:var(--acc)}
+.warn{font-size:11px;color:var(--acc);font-weight:700;display:flex;align-items:center;gap:4px}
+.warn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.lh{position:sticky;left:0;z-index:4;background:var(--lane);border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:6px;cursor:pointer;user-select:none;border-radius:0}
+.lh:hover{background:#eef2f6}
+.lh .r{display:flex;align-items:center;gap:8px}
+.lh .chev{width:12px;height:12px;stroke:var(--mute);fill:none;stroke-width:2;transition:transform .2s}
+.lane.fold .lh .chev{transform:rotate(-90deg)}
+.lh .av{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px}
+.lh b{font-size:13.5px;font-weight:700}
+.lh small{color:var(--mute);font-size:11.5px;padding-left:20px}
+.cell{border-bottom:1px solid var(--line);border-right:1px dashed #d9dee6;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:92px;background:var(--lane);transition:background .15s;position:relative}
+.cell.dragover{background:#e3ecf8;outline:2px solid #3d6fd9;outline-offset:-2px}
+.cell.dragover.willover{background:var(--accbg);outline:2px dashed var(--acc)}
+.lane.fold .cell{min-height:0;padding:6px 8px;flex-direction:row;align-items:center}
+.lane.fold .cell .card{display:none}
+.mini{font-family:"IBM Plex Mono";font-size:12px;color:var(--ink2);background:#e5e9f0;border-radius:10px;padding:1px 9px}
+.card{background:var(--card);border-radius:9px;padding:10px 11px 9px;box-shadow:0 1px 0 rgba(20,30,50,.12),0 0 0 1px rgba(20,30,50,.05);cursor:grab;transition:opacity .25s,box-shadow .15s,transform .15s;position:relative;overflow:hidden}
+.card:hover{box-shadow:0 4px 12px rgba(20,30,50,.16),0 0 0 1px rgba(20,30,50,.08);transform:translateY(-1px)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--p,#c6cdd8)}
+.card.dragging{opacity:.35}
+.card .id{font-family:"IBM Plex Mono";font-size:11px;color:var(--mute)}
+.card .tt{font-weight:600;line-height:1.4;margin:3px 0 8px;font-size:13px}
+.card .meta{display:flex;align-items:center;gap:6px}
+.tag{font-size:11px;font-weight:600;padding:1px 7px;border-radius:5px;background:#eaeef4;color:#3c4a60}
+.tag.g{background:#e3f3ea;color:#176b47}
+.tag.u{background:#fde8e1;color:#b53a18}
+.card .av{margin-left:auto;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
+.card .age{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mute);font-family:"IBM Plex Mono"}
+.card .age svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+.card.stale{opacity:.55}
+.card.stale:hover{opacity:1}
+.card.stale .age{color:var(--acc);font-weight:600}
+.card.stale .tt{color:var(--ink2)}
+.done-m{color:var(--ok)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,10px);background:var(--ink);color:#fff;padding:9px 16px;border-radius:10px;font-weight:600;opacity:0;transition:.2s;z-index:50;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.w{background:var(--acc)}
+.demo{position:fixed;right:20px;bottom:6px;font-size:10px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="logo"><svg viewBox="0 0 16 16"><path d="M2.5 4h4M2.5 8h7M2.5 12h5M9.5 4h4M12 12h1.5"/></svg></div>
+    <div><h1>资源交付看板</h1><div class="sub">GPU 算力交付 · 2026 年第 47 周</div></div>
+    <div class="tabs"><button class="on">看板</button><button>时间线</button><button>列表</button></div>
+    <span class="sp"></span>
+    <div class="stat"><div><b id="sTotal">0</b><small>进行中交付</small></div><div class="w"><b id="sOver">0</b><small>超上限的列</small></div><div class="w"><b id="sStale">0</b><small>停滞 ≥ 5 天</small></div></div>
+  </div>
+  <div class="bar2"><span class="l">负责人</span><div id="chips" style="display:flex;gap:6px"></div>
+    <div class="legend"><span><i style="background:#e8542e"></i>紧急</span><span><i style="background:#e0a21a"></i>高</span><span><i style="background:#c6cdd8"></i>普通</span><span>变淡 = 停留超过 5 天</span><span>点列头的「上限」可修改</span></div></div>
+  <div class="scroll"><div class="board" id="board"></div></div>
+</div>
+<div class="toast" id="toast"></div><div class="demo">示例数据</div>
+<script>
+const $=s=>document.querySelector(s);
+const COLS=[{k:"wait",n:"待审批",lim:6},{k:"rev",n:"审批中",lim:4},{k:"ready",n:"待交付",lim:5},{k:"doing",n:"交付中",lim:4},{k:"done",n:"已完成",lim:0}];
+const PEOPLE=[{k:"沈昭",c:"#2f6fdb"},{k:"顾晴",c:"#1f8a5b"},{k:"陆远",c:"#8a5bd6"},{k:"周屿",c:"#d9822b"}];
+const PC={u:"#e8542e",h:"#e0a21a",n:"#c6cdd8"};
+let nid=300;
+let K=[
+ ["沐曦 64 卡集群首批交付","算法一部",64,"沈昭","wait",1,"h"],["推理服务扩容 16 卡 A100","平台研发",16,"沈昭","wait",6,"n"],["多模态训练 32 卡申请","基础模型组",32,"顾晴","wait",2,"n"],["评测集群临时借用 8 卡","数据中台",8,"陆远","wait",1,"n"],["年终压测专用 128 卡","基础模型组",128,"周屿","wait",3,"u"],
+ ["昇腾 910B 24 卡迁移","算法二部",24,"沈昭","rev",2,"n"],["语音模型续训 48 卡","算法二部",48,"顾晴","rev",8,"h"],["数据清洗 CPU 节点 20 台","数据中台",0,"顾晴","rev",3,"n"],["长文本微调 16 卡","基础模型组",16,"陆远","rev",1,"n"],["代码模型评测 8 卡","平台研发",8,"陆远","rev",6,"n"],["视频生成预研 32 卡","算法一部",32,"周屿","rev",2,"h"],
+ ["H20 推理池扩 24 卡","平台研发",24,"沈昭","ready",1,"n"],["离线批量推理 64 卡","数据中台",64,"顾晴","ready",5,"h"],["RAG 服务压测 8 卡","算法二部",8,"周屿","ready",7,"n"],["强化学习实验 40 卡","基础模型组",40,"周屿","ready",2,"n"],
+ ["对话模型 SFT 32 卡","算法一部",32,"沈昭","doing",3,"n"],["推理网关灰度 8 卡","平台研发",8,"顾晴","doing",1,"u"],["图像理解训练 64 卡","算法二部",64,"陆远","doing",4,"h"],["特征平台升级 12 台","数据中台",0,"陆远","doing",9,"n"],
+ ["Embedding 重训 16 卡","算法一部",16,"沈昭","done",0,"n"],["小模型蒸馏 8 卡","算法二部",8,"顾晴","done",0,"n"],["数据标注平台 GPU 4 卡","数据中台",4,"周屿","done",0,"n"],["日志分析节点 6 台","平台研发",0,"陆远","done",0,"n"]
+].map((a,i)=>({id:"DL-"+(231+i),t:a[0],d:a[1],g:a[2],o:a[3],s:a[4],age:a[5],p:a[6]}));
+const fold={}; let filter=null, dragId=null;
+const pc=n=>PEOPLE.find(p=>p.k===n).c;
+const inc=(a,b)=>`<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3l2 1.5"/></svg>`;
+function cardHTML(c){
+  const stale=c.s!=="done"&&c.age>=5;
+  return `<div class="card ${stale?"stale":""}" draggable="true" data-id="${c.id}" style="--p:${PC[c.p]}"><div class="id">${c.id}${c.p==="u"?" · 紧急":""}</div><div class="tt">${c.t}</div><div class="meta"><span class="tag">${c.d}</span>${c.g?`<span class="tag g">${c.g} 卡</span>`:`<span class="tag">CPU</span>`}${c.s==="done"?`<span class="age done-m">已交付</span>`:`<span class="age">${inc()}${stale?"停留 "+c.age+" 天":c.age+" 天"}</span>`}<span class="av" style="background:${pc(c.o)}">${c.o[0]}</span></div></div>`;
+}
+let editLim=null;
+function render(){
+  const vis=K.filter(c=>!filter||c.o===filter);
+  let h=`<div class="hcell corner"></div>`;
+  COLS.forEach((col,i)=>{ const n=vis.filter(c=>c.s===col.k).length, over=col.lim&&n>col.lim; const pct=col.lim?Math.min(100,n/col.lim*100):100;
+    h+=`<div class="hcell ${over?"over":""}" data-col="${col.k}"><div class="col-h"><div class="r1"><b>${col.n}</b><span class="cnt">${n}</span>${col.lim||editLim===col.k?`<span class="lim" data-lim="${col.k}">${editLim===col.k?`<input value="${col.lim}" data-li="${col.k}">`:`上限 ${col.lim}`}</span>`:`<span class="lim" data-lim="${col.k}">无上限</span>`}</div><div class="bar"><i style="width:${pct}%"></i></div>${over?`<div class="warn"><svg viewBox="0 0 12 12"><path d="M6 2v5M6 9.5v.2"/></svg>超出上限 ${n-col.lim} 项</div>`:""}</div></div>`; });
+  PEOPLE.forEach(p=>{ const mine=vis.filter(c=>c.o===p.k); if(filter&&filter!==p.k) return;
+    h+=`<div class="lane ${fold[p.k]?"fold":""}" style="display:contents"><div class="lh" data-lane="${p.k}"><div class="r"><svg class="chev" viewBox="0 0 12 12"><path d="M2.5 4.5l3.5 3.5 3.5-3.5"/></svg><span class="av" style="background:${p.c}">${p.k[0]}</span><b>${p.k}</b></div><small>${mine.length} 项 · ${mine.reduce((s,c)=>s+c.g,0)} 卡</small></div>`;
+    COLS.forEach(col=>{ const cs=mine.filter(c=>c.s===col.k); h+=`<div class="cell" data-lane="${p.k}" data-col="${col.k}">${fold[p.k]?`<span class="mini">${cs.length}</span>`:""}${cs.map(cardHTML).join("")}</div>`; });
+    h+=`</div>`; });
+  $("#board").innerHTML=h;
+  // 注意：fold 的 lane 用 display:contents，需把 .fold 样式作用到子元素
+  document.querySelectorAll(".lane.fold .cell").forEach(c=>c.classList.add("f"));
+  stats(); chips();
+  const inp=document.querySelector(".lim input"); if(inp){inp.focus();inp.select()}
+}
+function stats(){ const vis=K; $("#sTotal").textContent=K.filter(c=>c.s!=="done").length; $("#sOver").textContent=COLS.filter(c=>c.lim&&K.filter(x=>x.s===c.k).length>c.lim).length; $("#sStale").textContent=K.filter(c=>c.s!=="done"&&c.age>=5).length; }
+function chips(){ $("#chips").innerHTML=`<button class="chip all ${!filter?"on":""}" data-f="">全部</button>`+PEOPLE.map(p=>`<button class="chip ${filter===p.k?"on":""}" data-f="${p.k}"><span class="a" style="background:${p.c}">${p.k[0]}</span>${p.k}</button>`).join(""); }
+$("#chips").onclick=e=>{const b=e.target.closest(".chip");if(b){filter=b.dataset.f||null;render()}};
+/* 折叠、上限 */
+$("#board").addEventListener("click",e=>{
+  const l=e.target.closest(".lh"); if(l){fold[l.dataset.lane]=!fold[l.dataset.lane];render();return}
+  const li=e.target.closest(".lim"); if(li&&!e.target.closest("input")){editLim=li.dataset.lim;render()}
+});
+$("#board").addEventListener("keydown",e=>{ const i=e.target.closest("input[data-li]"); if(!i) return; if(e.key==="Enter"){const col=COLS.find(c=>c.k===i.dataset.li);col.lim=Math.max(0,+i.value||0);editLim=null;render();toast(`「${col.n}」上限已设为 ${col.lim||"无"}`)} if(e.key==="Escape"){editLim=null;render()} });
+$("#board").addEventListener("focusout",e=>{ if(e.target.matches&&e.target.matches("input[data-li]")&&editLim){const col=COLS.find(c=>c.k===e.target.dataset.li);col.lim=Math.max(0,+e.target.value||0);editLim=null;render()} });
+/* 拖放 */
+const bd=$("#board");
+bd.addEventListener("dragstart",e=>{const c=e.target.closest(".card");if(!c)return;dragId=c.dataset.id;e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",dragId);setTimeout(()=>c.classList.add("dragging"),0)});
+bd.addEventListener("dragend",()=>{dragId=null;clear()});
+function clear(){document.querySelectorAll(".cell.dragover").forEach(x=>x.classList.remove("dragover","willover"))}
+bd.addEventListener("dragover",e=>{ if(!dragId) return; const cell=e.target.closest(".cell"); if(!cell) return; e.preventDefault(); clear(); cell.classList.add("dragover");
+  const col=COLS.find(c=>c.k===cell.dataset.col), cur=K.find(c=>c.id===dragId); const n=K.filter(c=>c.s===col.k&&(!filter||c.o===filter)).length+(cur.s===col.k?0:1);
+  if(col.lim&&n>col.lim) cell.classList.add("willover"); });
+bd.addEventListener("drop",e=>{ if(!dragId) return; const cell=e.target.closest(".cell"); if(!cell) return; e.preventDefault();
+  const c=K.find(x=>x.id===dragId), col=COLS.find(x=>x.k===cell.dataset.col), lane=cell.dataset.lane;
+  const changed=c.s!==col.k, laneChg=c.o!==lane; c.s=col.k; c.o=lane; if(changed) c.age=0;
+  // 放到鼠标所在位置：插到第一张中线在鼠标下方的卡片前
+  K=K.filter(x=>x!==c); const sib=[...cell.querySelectorAll(".card:not(.dragging)")].find(el=>e.clientY<el.getBoundingClientRect().top+el.offsetHeight/2);
+  if(sib){K.splice(K.findIndex(x=>x.id===sib.dataset.id),0,c)} else K.push(c);
+  dragId=null; render();
+  const n=K.filter(x=>x.s===col.k).length; const over=col.lim&&n>col.lim;
+  toast(`${c.id} 已移到「${col.n}」${laneChg?`，负责人改为 ${lane}`:""}${over?`，该列超出上限 ${n-col.lim} 项`:""}`,over);
+});
+function toast(m,w){const t=$("#toast");t.textContent=m;t.className="toast show"+(w?" w":"");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2600)}
+render();
+</script>
+<style>
+/* 折叠泳道：display:contents 的容器无法直接承载样式，改在单元格上控制 */
+.cell.f{min-height:0;padding:6px 8px;flex-direction:row;align-items:center}
+.cell.f .card{display:none}
+.lane.fold .lh small{display:none}
+</style>
+</body>
+</html>

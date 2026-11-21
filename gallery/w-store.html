@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orla R2 轻跑鞋 · 商品页</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--stage:#e8ebf1;--ink:#1d1d1f;--ink2:#6e6e73;--line:#d2d2d7;--soft:#f5f5f7;--sel:#1d1d1f}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font:15px/1.55 Inter,"Noto Sans SC",system-ui,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;min-width:1100px}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+.top{position:sticky;top:0;z-index:20;height:52px;background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(18px);border-bottom:1px solid #e5e5ea;display:flex;align-items:center;padding:0 40px;gap:34px;font-size:13px}
+.top .brand{font-weight:700;letter-spacing:.2em;font-size:15px}
+.top a{color:#424245;text-decoration:none}.top a:hover{color:#000}
+.top .r{margin-left:auto;display:flex;gap:22px;align-items:center}
+.bag{position:relative;display:flex;align-items:center;gap:6px}
+.bag svg{width:18px;height:18px}
+.bag b{font-size:11px;background:var(--ink);color:#fff;border-radius:9px;min-width:17px;height:17px;display:grid;place-items:center;padding:0 5px;font-weight:600}
+.crumb{padding:16px 40px 0;font-size:12px;color:var(--ink2)}
+.wrap{display:grid;grid-template-columns:minmax(0,1.38fr) minmax(420px,.9fr);gap:0;padding:12px 40px 0;max-width:1440px;margin:0 auto}
+.gal{position:sticky;top:64px;align-self:start;height:calc(100vh - 118px);min-height:600px;display:flex;flex-direction:column;gap:14px;padding-right:44px}
+.stage{position:relative;flex:1;border-radius:22px;background:var(--stage);transition:background .6s;overflow:hidden;min-height:0}
+#gl{position:absolute;inset:0;width:100%;height:100%;cursor:grab;display:block;touch-action:none}
+#gl.zoomed{cursor:move}
+.stage .tag{position:absolute;left:22px;top:20px;font-size:12px;letter-spacing:.08em;color:var(--ink2);display:flex;gap:10px;align-items:center}
+.stage .tag i{font-style:normal;border:1px solid rgba(0,0,0,.25);border-radius:20px;padding:1px 9px;color:#333}
+.zbtn{position:absolute;right:18px;bottom:18px;width:40px;height:40px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 1px 0 rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.1);transition:transform .2s}
+.zbtn:hover{transform:scale(1.08)}
+.zbtn svg{width:19px;height:19px}
+.hintd{position:absolute;left:22px;bottom:20px;font-size:12px;color:var(--ink2);transition:opacity .5s}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;height:96px}
+.th{border-radius:14px;background:var(--stage);border:2px solid transparent;position:relative;overflow:hidden;transition:border-color .2s,background .6s}
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:6px}
+.th span{position:absolute;left:10px;bottom:6px;font-size:11px;color:var(--ink2)}
+.th:hover{border-color:#b5b5ba}.th.on{border-color:var(--sel)}
+.info{padding:6px 0 80px 8px}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:#b3450f;font-weight:600}
+h1{font-family:"Noto Serif SC",serif;font-size:36px;line-height:1.2;font-weight:700;margin:8px 0 6px;letter-spacing:.01em}
+.sub{color:var(--ink2);font-size:14.5px;max-width:460px}
+.rate{display:flex;align-items:center;gap:8px;margin:14px 0 4px;font-size:13px;color:var(--ink2)}
+.stars{display:flex;gap:1px;color:var(--ink)}.stars svg{width:13px;height:13px;fill:currentColor}
+.price{display:flex;align-items:baseline;gap:12px;margin:18px 0 6px}
+.price b{font-size:34px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.price s{color:var(--ink2);font-size:15px;font-variant-numeric:tabular-nums}
+.price em{font-style:normal;font-size:12px;border-radius:5px;background:#fff1e8;color:#b3450f;padding:2px 8px;font-weight:600}
+.inst{font-size:13px;color:var(--ink2)}
+.grp{margin-top:28px}
+.gh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.gh b{font-size:17px;font-weight:600}
+.gh span{font-size:13px;color:var(--ink2)}
+.gh button{font-size:13px;color:#0a58ca;text-decoration:underline;text-underline-offset:3px}
+.opts{display:grid;gap:10px}
+.opts.c3{grid-template-columns:repeat(3,1fr)}
+.opts.s{grid-template-columns:repeat(5,1fr);gap:8px}
+.opt{position:relative;text-align:left;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff;transition:border-color .18s,box-shadow .18s}
+.opt:hover{border-color:#86868b}
+.opt.on{border-color:var(--sel);box-shadow:0 0 0 1px var(--sel)}
+.opt .t{font-weight:600;font-size:14px;display:block}
+.opt .d{font-size:12px;color:var(--ink2);display:block;margin-top:2px}
+.opt .p{font-size:12px;color:var(--ink2);margin-top:8px;display:block}
+.sw{width:26px;height:26px;border-radius:50%;display:block;margin-bottom:10px;border:1px solid rgba(0,0,0,.15)}
+.sz{padding:11px 0;text-align:center;font-variant-numeric:tabular-nums;font-weight:500}
+.sz.no{color:#b5b5ba;background:var(--soft);text-decoration:line-through;cursor:not-allowed}.sz.no:hover{border-color:var(--line)}
+.insole{display:grid;grid-template-columns:1fr;gap:10px}
+.insole .opt{display:flex;justify-content:space-between;align-items:center;padding:13px 16px}
+.insole .opt .p{margin:0;font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums}
+.cta{margin-top:30px;display:flex;flex-direction:column;gap:10px}
+.btn{height:52px;border-radius:26px;background:var(--ink);color:#fff;font-weight:600;font-size:15px;transition:transform .15s,background .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn:hover{background:#000;transform:translateY(-1px)}
+.btn:active{transform:scale(.99)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.btn.added{background:#1a7f4b}
+.ship{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px;font-size:12.5px;color:var(--ink2)}
+.ship div{display:flex;gap:8px;align-items:flex-start}.ship svg{width:18px;height:18px;flex:none;color:var(--ink)}
+.sec{max-width:1440px;margin:0 auto;padding:80px 40px 0}
+.sec h2{font-family:"Noto Serif SC",serif;font-size:32px;font-weight:700;margin-bottom:30px;letter-spacing:.01em}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.feat div{background:var(--soft);border-radius:22px;padding:34px 30px 38px;min-height:240px}
+.feat b{display:block;font-size:44px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.feat h3{font-size:18px;margin:10px 0 8px}.feat p{color:var(--ink2);font-size:14px}
+table.sp{width:100%;border-collapse:collapse;font-size:14px}
+.sp td{padding:16px 0;border-top:1px solid var(--line);vertical-align:top}
+.sp td:first-child{width:200px;color:var(--ink2)}
+.foot{padding:70px 40px 120px;color:var(--ink2);font-size:12px;max-width:1440px;margin:0 auto}
+.sbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid #e5e5ea;transform:translateY(110%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.sbar.on{transform:none}
+.sbar .in{max-width:1440px;margin:0 auto;padding:12px 40px;display:flex;align-items:center;gap:20px}
+.sbar img{width:60px;height:46px;border-radius:10px;background:var(--stage);object-fit:contain;transition:background .6s}
+.sbar .n b{display:block;font-size:14px}.sbar .n span{font-size:12.5px;color:var(--ink2)}
+.sbar .pr{margin-left:auto;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.sbar .btn{height:42px;padding:0 28px;border-radius:21px}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.34);z-index:50;opacity:0;pointer-events:none;transition:opacity .3s;display:grid;place-items:center}
+.mask.on{opacity:1;pointer-events:auto}
+.modal{width:min(900px,92vw);max-height:86vh;overflow:auto;background:#fff;border-radius:24px;padding:36px 40px 34px;transform:translateY(20px) scale(.98);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.mask.on .modal{transform:none}
+.modal header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal h3{font-family:"Noto Serif SC",serif;font-size:26px}
+.x{width:34px;height:34px;border-radius:50%;background:var(--soft);display:grid;place-items:center}.x:hover{background:#e8e8ed}
+.cmp{width:100%;border-collapse:collapse;font-size:14px}
+.cmp th{font-weight:600;text-align:left;padding:0 0 14px;font-size:16px}
+.cmp td{padding:13px 0;border-top:1px solid #e5e5ea;font-variant-numeric:tabular-nums}
+.cmp td:first-child{color:var(--ink2);width:150px}
+.cmp .hl{font-weight:600}
+.cmp .up{color:#1a7f4b;font-size:12px;margin-left:6px}
+.cmp tr.chosen td:not(:first-child){}
+.pickrow{display:flex;gap:10px;margin-bottom:20px}
+.pk{border:1px solid var(--line);border-radius:20px;padding:6px 16px;font-size:13px}.pk.on{border-color:var(--ink);background:var(--ink);color:#fff}
+#err{position:absolute;inset:0;display:none;place-items:center;text-align:center;color:var(--ink2);font-size:14px;padding:30px}
+</style>
+</head>
+<body>
+<header class="top"><span class="brand">ORLA</span><a href="#">跑步</a><a href="#">训练</a><a href="#">日常</a><a href="#">配件</a><a href="#">门店</a>
+  <div class="r"><a href="#">搜索</a><a href="#">登录</a><span class="bag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg><b id="bagN">0</b></span></div></header>
+<div class="crumb">跑步 / 公路跑鞋 / R2 轻跑</div>
+<div class="wrap">
+  <section class="gal">
+    <div class="stage" id="stage"><canvas id="gl"></canvas>
+      <div class="tag">新品<i>2026 春季</i></div>
+      <div class="hintd" id="hintd">拖动旋转 · 滚轮缩放</div>
+      <button class="zbtn" id="zoom" title="放大查看"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.500"/><path d="M16 16l4 4M11 8.500v5M8.500 11h5"/></svg></button>
+      <div id="err">三维模型需要通过本地服务打开页面（直接双击文件时浏览器不允许读取模型文件）。</div>
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+  </section>
+  <section class="info">
+    <div class="eyebrow">R2 轻跑 · 公路</div>
+    <h1>Orla R2 轻跑鞋</h1>
+    <p class="sub">单层透气网面，中底回弹泡棉，适合每周 30–60 公里的日常训练。</p>
+    <div class="rate"><span class="stars" id="stars"></span><span>4.8 · 2,316 条评价</span></div>
+    <div class="price"><b id="price">¥899</b><s id="was">¥999</s><em>首发价</em></div>
+    <div class="inst">订单满 ¥699 免运费 · 支持 7 天无理由退换（鞋底未磨损）</div>
+
+    <div class="grp"><div class="gh"><b>配色</b><span id="cname">午夜</span></div>
+      <div class="opts c3" id="colors"></div></div>
+    <div class="grp"><div class="gh"><b>尺码</b><button id="cmpBtn">与上一代对比</button></div>
+      <div class="opts s" id="sizes"></div></div>
+    <div class="grp"><div class="gh"><b>鞋垫</b><span>可更换</span></div>
+      <div class="opts insole" id="insoles"></div></div>
+
+    <div class="cta"><button class="btn" id="add">加入购物袋</button><button class="btn ghost" id="stock">查看门店库存</button></div>
+    <div class="ship">
+      <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.500" r="1.500"/><circle cx="17" cy="17.500" r="1.500"/></svg><span>今日 15:00 前下单，次日送达</span></div>
+      <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.200M20 12a8 8 0 0 1-14 5.200M18 3v4h-4M6 21v-4h4"/></svg><span>30 天内可试穿退换</span></div>
+      <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.400 7.600-8 9-4.600-1.400-8-4.500-8-9V6z"/></svg><span>12 个月品质保修</span></div>
+    </div>
+  </section>
+</div>
+<section class="sec" id="spec">
+  <h2>为每周的长距离准备</h2>
+  <div class="feat">
+    <div><b>248 g</b><h3>单只重量</h3><p>US 9 / 42 码实测。网面单层成型，没有额外加固片。</p></div>
+    <div><b>32 mm</b><h3>后跟堆叠高度</h3><p>前掌 24 mm，落差 8 mm。回弹泡棉在 5 公里后依然保持脚感。</p></div>
+    <div><b>71%</b><h3>回收材料占比</h3><p>鞋面、鞋带和包装袋均使用回收纤维。</p></div>
+  </div>
+</section>
+<section class="sec">
+  <h2>技术规格</h2>
+  <table class="sp">
+    <tr><td>适用</td><td>公路跑、日常训练、慢跑</td></tr>
+    <tr><td>鞋面</td><td>单层工程网布，热熔贴合</td></tr>
+    <tr><td>中底</td><td>回弹泡棉，后跟 32 mm / 前掌 24 mm</td></tr>
+    <tr><td>外底</td><td>高耐磨橡胶，前掌波纹纹路</td></tr>
+    <tr><td>尺码</td><td>38–45，半码需选邻近整码</td></tr>
+    <tr><td>产地</td><td>示例数据，不对应真实产品</td></tr>
+  </table>
+</section>
+<div class="foot">示例数据 · 品牌与商品均为虚构 · 三维模型：MaterialsVariantsShoe · Shopify · CC-BY 4.0（Khronos glTF Sample Assets）</div>
+
+<div class="sbar" id="sbar"><div class="in"><img id="sbImg" alt=""><div class="n"><b>Orla R2 轻跑鞋</b><span id="sbSum"></span></div><div class="pr" id="sbPrice"></div><button class="btn" id="sbAdd">加入购物袋</button></div></div>
+
+<div class="mask" id="mask"><div class="modal">
+  <header><h3>与上一代对比</h3><button class="x" id="mx"><svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></button></header>
+  <table class="cmp" id="cmp"></table>
+</div></div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/three-GLTFLoader.js"></script>
+<script src="vendor/three-RoomEnvironment.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const COLORS=[{k:0,n:"海湾蓝",sw:"#2a9bd0",stage:"#e3edf4",add:0,sub:"亮蓝网面，白色中底"},{k:1,n:"玫瑰粉",sw:"#d9a3ad",stage:"#f4eaec",add:0,sub:"柔粉网面，日常百搭"},{k:2,n:"炭黑",sw:"#2a2a2c",stage:"#ececee",add:30,sub:"限量，珊瑚红点缀，加价 ¥30"}];
+const INS=[{n:"标准鞋垫",d:"随鞋附送",add:0},{n:"回弹鞋垫",d:"更厚的前掌缓震",add:60},{n:"定制足弓鞋垫",d:"门店扫描后 7 天寄出",add:120}];
+const SIZES=[38,39,40,41,42,43,44,45],NOSTOCK=[38,45];
+const BASE=899;
+let S={color:0,size:42,ins:0};
+const fm=n=>"¥"+Math.round(n).toLocaleString("en-US");
+const total=()=>BASE+COLORS[S.color].add+INS[S.ins].add;
+// 星星
+$("stars").innerHTML=Array(5).fill('<svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.300 4.700 1.600 7.200L12 17.800 5.700 21.500l1.600-7.200L2 9.600 9 9z"/></svg>').join("");
+// 选项
+$("colors").innerHTML=COLORS.map(c=>`<button class="opt" data-k="${c.k}"><i class="sw" style="background:${c.sw}"></i><span class="t">${c.n}</span><span class="p">${c.add?"+"+fm(c.add):"标准价"}</span></button>`).join("");
+$("sizes").innerHTML=SIZES.map(z=>`<button class="opt sz${NOSTOCK.includes(z)?" no":""}" data-z="${z}" ${NOSTOCK.includes(z)?'title="暂时缺货"':""}>${z}</button>`).join("");
+$("insoles").innerHTML=INS.map((c,i)=>`<button class="opt" data-i="${i}"><span><span class="t">${c.n}</span><span class="d">${c.d}</span></span><span class="p">${c.add?"+"+fm(c.add):"含"}</span></button>`).join("");
+function syncOpts(){document.querySelectorAll("#colors .opt").forEach(e=>e.classList.toggle("on",+e.dataset.k===S.color));document.querySelectorAll("#sizes .opt").forEach(e=>e.classList.toggle("on",+e.dataset.z===S.size));document.querySelectorAll("#insoles .opt").forEach(e=>e.classList.toggle("on",+e.dataset.i===S.ins));
+  $("cname").textContent=COLORS[S.color].n+" · "+COLORS[S.color].sub;$("sbSum").textContent=`${COLORS[S.color].n} · ${S.size} 码 · ${INS[S.ins].n}`;document.documentElement.style.setProperty("--stage",COLORS[S.color].stage);rollPrice()}
+let shown=BASE,rollId=0;
+function rollPrice(){const to=total(),from=shown,t0=performance.now(),id=++rollId;(function f(now){if(id!==rollId)return;const p=Math.min(1,(now-t0)/380),e=1-Math.pow(1-p,3);shown=from+(to-from)*e;$("price").textContent=fm(shown);$("sbPrice").textContent=fm(shown);$("was").textContent=fm(to+100);if(p<1)requestAnimationFrame(f)})(t0)}
+$("colors").onclick=e=>{const b=e.target.closest(".opt");if(!b)return;S.color=+b.dataset.k;syncOpts();setVariant(S.color)};
+$("sizes").onclick=e=>{const b=e.target.closest(".opt");if(!b||b.classList.contains("no"))return;S.size=+b.dataset.z;syncOpts()};
+$("insoles").onclick=e=>{const b=e.target.closest(".opt");if(!b)return;S.ins=+b.dataset.i;syncOpts()};
+let bag=0;
+function add(btn){bag++;$("bagN").textContent=bag;const o=btn.textContent;btn.classList.add("added");btn.textContent="已加入购物袋 ✓".replace(" ✓","");setTimeout(()=>{btn.classList.remove("added");btn.textContent=o},1500)}
+$("add").onclick=()=>add($("add"));$("sbAdd").onclick=()=>add($("sbAdd"));
+$("stock").onclick=()=>{const b=$("stock");b.textContent=`示例：门店 3 家有 ${S.size} 码现货`;setTimeout(()=>b.textContent="查看门店库存",2200)};
+// sticky 购买栏
+new IntersectionObserver(([e])=>{$("sbar").classList.toggle("on",!e.isIntersecting&&e.boundingClientRect.top<0)},{threshold:0}).observe($("add"));
+// 对比弹层
+const GEN={r1:{n:"R1（上一代）",w:"271 g",h:"28 mm",d:"6 mm",up:"回弹泡棉 A",out:"普通橡胶",rec:"34%",pr:"¥799"},r2:{n:"R2（本款）",w:"248 g",h:"32 mm",d:"8 mm",up:"回弹泡棉 B",out:"高耐磨橡胶",rec:"71%",pr:null}};
+const ROWS=[["单只重量","w","轻 23 g"],["后跟堆叠","h","+4 mm"],["前后落差","d",""],["中底","up","能量回馈更高"],["外底","out","耐磨提升"],["回收材料占比","rec","+37 pt"],["价格","pr",""]];
+let cmpSel=["r1","r2"];
+function drawCmp(){const a=GEN[cmpSel[0]],b=GEN[cmpSel[1]];
+  const pr=k=>k==="r2"?fm(total()):GEN[k].pr;
+  $("cmp").innerHTML=`<tr><th></th><th>${a.n}</th><th>${b.n}</th></tr>`+ROWS.map(([l,key,note])=>{const va=key==="pr"?pr(cmpSel[0]):a[key],vb=key==="pr"?pr(cmpSel[1]):b[key];return `<tr><td>${l}</td><td>${va}</td><td class="hl">${vb}${note&&cmpSel[1]==="r2"?`<span class="up">${note}</span>`:""}</td></tr>`}).join("")}
+$("cmpBtn").onclick=()=>{cmpSel=["r1","r2"];drawCmp();$("mask").classList.add("on")};
+$("mx").onclick=()=>$("mask").classList.remove("on");$("mask").onclick=e=>{if(e.target===$("mask"))$("mask").classList.remove("on")};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("mask").classList.remove("on")});
+syncOpts();
+
+// ============ 三维 ============
+const VIEWS=[{n:"侧面",ry:-.15,rx:.1,z:1},{n:"斜前方",ry:.75,rx:.22,z:1},{n:"后跟",ry:2.6,rx:.12,z:1},{n:"俯视",ry:-.2,rx:1.0,z:1}];
+let gl,scene,cam,pivot,shoe,mats=[],ready=false,matIdx=[];
+const view={ry:-.15,rx:.1,z:1,tr:-.15,tx:.1,tz:1,px:0,py:0,tpx:0,tpy:0,auto:true};
+let zoomed=false,activeView=0,drag=false;
+(async function init(){
+  try{
+  const cv=$("gl"),st=$("stage");
+  gl=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,preserveDrawingBuffer:true});
+  gl.setPixelRatio(Math.min(2,devicePixelRatio||1));gl.outputEncoding=THREE.sRGBEncoding;gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.05;
+  scene=new THREE.Scene();scene.environment=new THREE.PMREMGenerator(gl).fromScene(new THREE.RoomEnvironment(),.04).texture;
+  const key=new THREE.DirectionalLight(0xffffff,1.1);key.position.set(2,4,3);scene.add(key);
+  cam=new THREE.PerspectiveCamera(26,1,.05,50);
+  const gltf=await new Promise((ok,bad)=>new THREE.GLTFLoader().load("models/MaterialsVariantsShoe.glb",ok,null,bad));
+  shoe=gltf.scene;pivot=new THREE.Group();pivot.add(shoe);scene.add(pivot);
+  const b=new THREE.Box3().setFromObject(shoe),sz=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());
+  const k=3.3/Math.max(sz.x,sz.z);shoe.scale.setScalar(k);shoe.position.set(-c.x*k,-c.y*k,-c.z*k);
+  // 材质变体
+  const J=gltf.parser.json;let mesh=null;shoe.traverse(o=>{if(o.isMesh&&!mesh)mesh=o});
+  const maps=J.meshes[0].primitives[0].extensions.KHR_materials_variants.mappings;
+  for(const mp of maps){const m=await gltf.parser.getDependency("material",mp.material);m.envMapIntensity=1.1;mats[mp.variants[0]]=m}
+  mesh.material=mats[0];shoe._mesh=mesh;
+  // 地面软阴影（canvas 画径向衰减）
+  const sc=document.createElement("canvas");sc.width=sc.height=256;const sx=sc.getContext("2d"),gr=sx.createRadialGradient(128,128,0,128,128,128);gr.addColorStop(0,"rgba(0,0,0,.55)");gr.addColorStop(.5,"rgba(0,0,0,.18)");gr.addColorStop(1,"rgba(0,0,0,0)");sx.fillStyle=gr;sx.fillRect(0,0,256,256);
+  const sh=new THREE.Mesh(new THREE.PlaneGeometry(3.4,1.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.y=-sz.y*k/2-.02;scene.add(sh);window._sh=sh;
+  function resize(){const w=st.clientWidth,h=st.clientHeight;gl.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+  resize();addEventListener("resize",resize);
+  let hasMsg=false;
+  function loop(){view.ry+=(view.tr-view.ry)*.09;view.rx+=(view.tx-view.rx)*.09;view.z+=(view.tz-view.z)*.09;view.px+=(view.tpx-view.px)*.12;view.py+=(view.tpy-view.py)*.12;
+    if(view.auto&&!drag)view.tr+=.0022,view.ry+=.0022;
+    pivot.rotation.y=view.ry;pivot.rotation.x=view.rx;pivot.position.set(view.px,view.py,0);
+    sh.visible=view.rx<.75;sh.material.opacity=Math.max(0,1-view.rx*1.3);
+    cam.position.set(0,.5,9.2/view.z);cam.lookAt(0,0,0);gl.render(scene,cam);requestAnimationFrame(loop)}
+  loop();ready=true;
+  // 缩略图
+  $("thumbs").innerHTML=VIEWS.map((v,i)=>`<button class="th${i===0?" on":""}" data-i="${i}"><img alt=""><span>${v.n}</span></button>`).join("");
+  $("thumbs").onclick=e=>{const b=e.target.closest(".th");if(!b)return;setView(+b.dataset.i)};
+  await new Promise(r=>setTimeout(r,60));await snapThumbs();
+  // 入场：转到侧面后停下自转
+  view.ry=-1.7;view.tr=-.15;setTimeout(()=>{view.auto=false},1800);
+  // 拖动、滚轮
+  let lx=0,ly=0;
+  cv.addEventListener("pointerdown",e=>{drag=true;lx=e.clientX;ly=e.clientY;view.auto=false;cv.setPointerCapture&&(()=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}})();$("hintd").style.opacity=0});
+  cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;
+    if(zoomed){view.tpx=Math.max(-2,Math.min(2,view.tpx+dx*.006));view.tpy=Math.max(-1.2,Math.min(1.2,view.tpy-dy*.006))}
+    else{view.tr+=dx*.011;view.ry+=dx*.011;view.tx=Math.max(-.1,Math.min(1.2,view.tx+dy*.008));setActive(-1)}});
+  cv.addEventListener("pointerup",()=>drag=false);
+  cv.addEventListener("wheel",e=>{e.preventDefault();view.tz=Math.max(.8,Math.min(2.6,view.tz*(e.deltaY<0?1.12:.9)));setZoomUI(view.tz>1.3)},{passive:false});
+  cv.addEventListener("dblclick",()=>toggleZoom());
+  }catch(err){console.warn(err);$("err").dataset.m=String(err)+(err.stack||"").slice(0,300);$("err").style.display="grid"}
+})();
+async function snapThumbs(){const imgs=document.querySelectorAll("#thumbs img");const save={ry:view.ry,rx:view.rx,z:view.z,px:view.px,py:view.py};
+  const sw=gl.domElement.width,sh=gl.domElement.height;
+  for(let i=0;i<VIEWS.length;i++){const v=VIEWS[i];pivot.rotation.set(v.rx,v.ry,0);pivot.position.set(0,0,0);cam.position.set(0,.5,9.2);cam.lookAt(0,0,0);gl.render(scene,cam);
+    const t=document.createElement("canvas");t.width=320;t.height=190;const x=t.getContext("2d");const s=Math.min(sw,sh*1.6);x.drawImage(gl.domElement,(sw-s)/2,(sh-s/1.68)/2,s,s/1.68,0,0,320,190);imgs[i].src=t.toDataURL("image/png")}
+  $("sbImg").src=imgs[0].src;view.ry=save.ry;}
+function setActive(i){activeView=i;document.querySelectorAll(".th").forEach((e,j)=>e.classList.toggle("on",j===i))}
+function setView(i){const v=VIEWS[i];view.auto=false;view.tr=v.ry;view.tx=v.rx;setZoomUI(false);view.tz=1;view.tpx=view.tpy=0;setActive(i);$("hintd").style.opacity=0}
+function setZoomUI(z){zoomed=z;$("gl").classList.toggle("zoomed",z);$("zoom").innerHTML=z?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.500"/><path d="M16 16l4 4M8.500 11h5"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.500"/><path d="M16 16l4 4M11 8.500v5M8.500 11h5"/></svg>';$("zoom").title=z?"还原":"放大查看"}
+function toggleZoom(){if(!zoomed){view.tz=2.2;setZoomUI(true)}else{view.tz=1;view.tpx=view.tpy=0;setZoomUI(false)}}
+$("zoom").onclick=toggleZoom;
+async function setVariant(k){if(!ready)return;shoe._mesh.material=mats[k];view.tr+=Math.PI*2;await new Promise(r=>setTimeout(r,80));try{await snapThumbs()}catch(_){}}
+</script>
+</body>
+</html>

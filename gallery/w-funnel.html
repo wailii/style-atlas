@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>产品洞察 · 漏斗、留存、趋势</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#eeede6; --panel:#fff; --ink:#15150f; --ink2:#55544a; --mute:#8d8c80; --line:#cfcdc0; --line2:#e4e2d8; --acc:#3a45e8; --acc2:#aeb4f7; --hl:#ffe06b; --bad:#cf3b2c; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; overflow:hidden; background:var(--bg); }
+  body { font-family:"DM Sans","Noto Sans SC",sans-serif; font-size:13.5px; color:var(--ink); -webkit-font-smoothing:antialiased; }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; outline:none; }
+  svg { display:block; }
+  .app { display:flex; height:100vh; }
+  .side { width:248px; flex:none; border-right:1.5px solid var(--ink); padding:20px 16px; display:flex; flex-direction:column; gap:22px; overflow-y:auto; }
+  .brand { display:flex; align-items:center; gap:9px; font-family:"Bricolage Grotesque","Noto Sans SC"; font-weight:700; font-size:20px; letter-spacing:-.01em; }
+  .brand svg { width:26px; height:26px; }
+  .sl { font-size:11.5px; color:var(--mute); font-weight:700; letter-spacing:.08em; margin-bottom:8px; }
+  .types { display:flex; flex-direction:column; gap:6px; }
+  .ty { display:flex; align-items:center; gap:11px; padding:9px 11px; border:1.5px solid transparent; border-radius:8px; text-align:left; }
+  .ty:hover { border-color:var(--line); background:#f7f6f0; }
+  .ty.on { background:#fff; border-color:var(--ink); box-shadow:2px 2px 0 var(--ink); }
+  .ty svg { width:30px; height:30px; flex:none; }
+  .ty b { display:block; font-weight:700; font-size:14px; } .ty span { color:var(--mute); font-size:12px; }
+  .saved button { display:block; width:100%; text-align:left; padding:7px 10px; border-radius:6px; color:var(--ink2); font-size:13px; line-height:1.35; }
+  .saved button:hover { background:#f7f6f0; color:var(--ink); }
+  .saved button small { display:block; color:var(--mute); font-size:11.5px; }
+  .tiny { margin-top:auto; font-size:10.5px; color:var(--mute); }
+
+  .main { flex:1; min-width:0; overflow-y:auto; padding:22px 32px 50px; position:relative; }
+  .hd { display:flex; align-items:flex-start; gap:16px; }
+  .hd h1 { font-family:"Bricolage Grotesque","Noto Sans SC"; font-weight:700; font-size:27px; letter-spacing:-.02em; outline:none; border-bottom:2px dashed transparent; }
+  .hd h1:hover, .hd h1:focus { border-bottom-color:var(--line); }
+  .hd p { color:var(--mute); margin-top:3px; }
+  .sp { flex:1; }
+  .btn { height:34px; padding:0 16px; border:1.5px solid var(--ink); border-radius:7px; font-weight:700; background:#fff; }
+  .btn:hover { box-shadow:2px 2px 0 var(--ink); transform:translate(-1px,-1px); }
+  .btn.p { background:var(--ink); color:#fff; }
+  .sentence { margin-top:18px; background:var(--panel); border:1.5px solid var(--ink); border-radius:10px; padding:18px 22px; font-size:18px; line-height:2.2; font-family:"Bricolage Grotesque","Noto Sans SC"; font-weight:500; }
+  .w { font:inherit; font-weight:700; box-shadow:inset 0 -.5em 0 var(--hl); border-bottom:2px solid var(--ink); padding:0 4px; position:relative; }
+  .w:hover { box-shadow:inset 0 -1.6em 0 var(--hl); }
+  .w svg { display:inline; width:10px; height:10px; margin-left:3px; vertical-align:0; }
+  .menu { position:absolute; left:0; top:calc(100% + 4px); z-index:40; background:#fff; border:1.5px solid var(--ink); border-radius:8px; box-shadow:3px 3px 0 var(--ink); padding:5px; min-width:150px; font-family:"DM Sans","Noto Sans SC"; font-weight:500; font-size:14px; line-height:1.4; }
+  .menu button { display:block; width:100%; text-align:left; padding:7px 10px; border-radius:5px; white-space:nowrap; }
+  .menu button:hover { background:#f2f1ea; } .menu button.on { background:var(--hl); font-weight:700; }
+  .menu button.off { color:#b9b8ac; pointer-events:none; }
+
+  .card { margin-top:18px; background:var(--panel); border:1.5px solid var(--ink); border-radius:10px; padding:18px 22px 20px; }
+  .ch { display:flex; align-items:baseline; gap:12px; margin-bottom:6px; }
+  .ch b { font-family:"Bricolage Grotesque","Noto Sans SC"; font-size:17px; font-weight:700; }
+  .ch span { color:var(--mute); }
+  .ch .big { font-family:"Bricolage Grotesque"; font-weight:700; font-size:26px; letter-spacing:-.02em; color:var(--acc); }
+  #fsvg, #rsvg, #tsvg { width:100%; }
+  .ax { fill:var(--mute); font-size:11.5px; font-family:"DM Sans"; }
+  .col { cursor:pointer; }
+  .col:hover .hit { fill:#3a45e80d; }
+  .grow { transform-box:fill-box; transform-origin:bottom; animation:g .7s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes g { from { transform:scaleY(0); } }
+  .tipb { position:fixed; pointer-events:none; background:var(--ink); color:#fff; border-radius:7px; padding:7px 10px; font-size:12px; line-height:1.55; display:none; z-index:60; }
+  table.d { width:100%; border-collapse:collapse; margin-top:12px; }
+  table.d th { text-align:right; font-weight:500; color:var(--mute); font-size:12px; padding:8px 12px; border-bottom:1.5px solid var(--ink); }
+  table.d th:first-child, table.d td:first-child { text-align:left; }
+  table.d td { text-align:right; padding:0 12px; height:38px; border-bottom:1px solid var(--line2); font-variant-numeric:tabular-nums; }
+  table.d tr:hover td { background:#faf9f3; }
+  .num { font-weight:700; }
+  .bad { color:var(--bad); }
+  .dots { display:inline-block; width:22px; height:22px; border-radius:50%; background:var(--ink); color:#fff; text-align:center; line-height:22px; font-size:11.5px; font-weight:700; margin-right:10px; }
+  table.ret { border-collapse:separate; border-spacing:3px; width:100%; margin-top:8px; font-variant-numeric:tabular-nums; }
+  table.ret th { font-weight:500; color:var(--mute); font-size:12px; padding:4px 6px; text-align:center; }
+  table.ret th:first-child { text-align:left; }
+  table.ret td { height:38px; text-align:center; font-size:12.5px; border-radius:4px; cursor:default; }
+  table.ret td.c { text-align:left; background:none; color:var(--ink2); font-size:12.5px; }
+  table.ret td.c small { display:block; color:var(--mute); font-size:11px; }
+  table.ret td.e { background:none; }
+  table.ret tr.avg td { font-weight:700; }
+  table.ret td.h:hover { outline:2px solid var(--ink); }
+
+  .dr { position:fixed; top:0; right:0; bottom:0; width:480px; background:#fff; border-left:1.5px solid var(--ink); transform:translateX(104%); transition:transform .28s cubic-bezier(.3,.7,.2,1); z-index:50; display:flex; flex-direction:column; box-shadow:-6px 0 0 #15150f14; }
+  .dr.open { transform:none; }
+  .dr .dh { padding:18px 22px 12px; border-bottom:1.5px solid var(--ink); display:flex; gap:12px; }
+  .dr .dh h3 { font-family:"Bricolage Grotesque","Noto Sans SC"; font-size:19px; font-weight:700; letter-spacing:-.01em; } .dr .dh p { color:var(--mute); margin-top:2px; }
+  .dr .x { margin-left:auto; width:30px; height:30px; border:1.5px solid var(--ink); border-radius:6px; display:grid; place-items:center; } .dr .x:hover { background:var(--hl); } .dr .x svg { width:12px; height:12px; }
+  .tabs { display:flex; gap:6px; padding:12px 22px 4px; }
+  .tabs button { height:30px; padding:0 14px; border:1.5px solid var(--line); border-radius:15px; color:var(--ink2); font-weight:500; }
+  .tabs button.on { border-color:var(--ink); background:var(--ink); color:#fff; }
+  .dr .body { flex:1; overflow-y:auto; padding:4px 22px 20px; }
+  .u { display:grid; grid-template-columns:1fr 96px 84px; align-items:center; min-height:48px; border-bottom:1px solid var(--line2); gap:8px; }
+  .u b { font-weight:700; display:block; } .u small { color:var(--mute); }
+  .u .pill { justify-self:start; white-space:nowrap; font-size:12px; padding:2px 9px; border:1.5px solid var(--line); border-radius:10px; color:var(--ink2); }
+  .u .t { text-align:right; color:var(--mute); font-size:12px; }
+  .toast { position:fixed; left:50%; bottom:26px; transform:translate(-50%,20px); background:var(--ink); color:#fff; padding:9px 16px; border-radius:8px; opacity:0; transition:all .25s; z-index:80; pointer-events:none; }
+  .toast.on { opacity:1; transform:translate(-50%,0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><svg viewBox="0 0 26 26"><rect x="1" y="1" width="24" height="24" rx="7" fill="#15150f"/><path d="M6 7h14l-4.5 6v6l-5-2.4V13z" fill="#ffe06b"/></svg>洞察</div>
+    <div><div class="sl">洞察类型</div><div class="types" id="types"></div></div>
+    <div class="saved"><div class="sl">已保存</div><div id="saved"></div></div>
+    <div class="tiny">示例数据 · 写作助手「墨迹」</div>
+  </aside>
+  <main class="main" id="main">
+    <div class="hd"><div><h1 id="ttl" contenteditable="true" spellcheck="false"></h1><p id="sub"></p></div><div class="sp"></div><button class="btn" id="save">保存洞察</button></div>
+    <div class="sentence" id="sentence"></div>
+    <div class="card" id="card"></div>
+  </main>
+</div>
+<aside class="dr" id="dr"></aside>
+<div class="tipb" id="tipb"></div><div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+const fmt = (n) => Math.round(n).toLocaleString("en-US");
+const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
+
+const STEPS = ["访问官网", "注册", "创建首篇文档", "使用 AI 续写", "查看定价页", "付费"];
+const RATE = [0, .214, .62, .55, .41, .27];
+const TIME = ["—", "4 分钟", "2 小时", "11 分钟", "1.2 天", "3 天"];
+const RANGES = { "近 7 天": 11840, "近 30 天": 48620, "近 90 天": 142300 };
+const WINDOWS = { "1 天": .7, "7 天": 1, "14 天": 1.06, "30 天": 1.1 };
+const CH = ["自然搜索", "社交分享", "投放", "好友邀请", "应用商店"], PLAT = ["Web", "iOS", "Android"];
+
+const P = {
+  funnel: { from: "注册", to: "付费", win: "7 天", range: "近 30 天" },
+  retention: { start: "注册", ret: "使用 AI 续写", per: "周" },
+  trend: { ev: "使用 AI 续写", met: "总次数", per: "日", range: "近 30 天" },
+};
+let type = "funnel";
+const TYPES = [["funnel", "漏斗", "每一步有多少人走到"], ["retention", "留存", "用户之后还回不回来"], ["trend", "趋势", "某个事件随时间怎么变"]];
+const ICON = {
+  funnel: '<svg viewBox="0 0 30 30" fill="none"><rect x="1" y="1" width="28" height="28" rx="7" fill="#e7e8fd" stroke="#15150f" stroke-width="1.5"/><rect x="6" y="7" width="18" height="4" fill="#3a45e8"/><rect x="9" y="13" width="12" height="4" fill="#3a45e8"/><rect x="12" y="19" width="6" height="4" fill="#3a45e8"/></svg>',
+  retention: '<svg viewBox="0 0 30 30" fill="none"><rect x="1" y="1" width="28" height="28" rx="7" fill="#e7e8fd" stroke="#15150f" stroke-width="1.5"/><g fill="#3a45e8"><rect x="6" y="7" width="5" height="5"/><rect x="12.5" y="7" width="5" height="5" opacity=".6"/><rect x="19" y="7" width="5" height="5" opacity=".3"/><rect x="6" y="13.5" width="5" height="5"/><rect x="12.5" y="13.5" width="5" height="5" opacity=".5"/><rect x="6" y="20" width="5" height="4"/></g></svg>',
+  trend: '<svg viewBox="0 0 30 30" fill="none"><rect x="1" y="1" width="28" height="28" rx="7" fill="#e7e8fd" stroke="#15150f" stroke-width="1.5"/><path d="M5 21l6-7 5 4 9-10" stroke="#3a45e8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+const SAVED = [["注册到付费转化", "漏斗 · 7 天窗口", "funnel", { from: "注册", to: "付费", win: "7 天", range: "近 30 天" }], ["官网到 AI 续写", "漏斗 · 1 天窗口", "funnel", { from: "访问官网", to: "使用 AI 续写", win: "1 天", range: "近 7 天" }], ["新用户周留存", "留存", "retention", { start: "注册", ret: "使用 AI 续写", per: "周" }], ["AI 续写每日使用", "趋势", "trend", { ev: "使用 AI 续写", met: "总次数", per: "日", range: "近 30 天" }]];
+
+/* ---------- 句子 ---------- */
+const DEF = {
+  funnel: [["显示从", "from", () => STEPS.slice(0, 5)], ["到", "to", () => STEPS.slice(STEPS.indexOf(P.funnel.from) + 1)], ["的转化漏斗，转化窗口", "win", () => Object.keys(WINDOWS)], ["，时间范围", "range", () => Object.keys(RANGES)]],
+  retention: [["显示首次", "start", () => ["注册", "创建首篇文档"]], ["的用户，之后", "ret", () => ["任意活动", "使用 AI 续写", "付费"]], ["的留存，按", "per", () => ["日", "周"]], ["分组", null]],
+  trend: [["显示", "ev", () => ["注册", "创建首篇文档", "使用 AI 续写", "付费"]], ["的", "met", () => ["总次数", "去重用户数"]], ["，按", "per", () => ["日", "周"]], ["统计，时间范围", "range", () => Object.keys(RANGES)]],
+};
+let openM = null;
+function renderSentence() {
+  const el = $("#sentence"); el.innerHTML = "";
+  DEF[type].forEach(([txt, key, opts]) => {
+    el.append(txt);
+    if (!key) return;
+    const b = document.createElement("button"); b.className = "w"; b.innerHTML = P[type][key] + '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3.5l3 3 3-3"/></svg>';
+    const wrap = document.createElement("span"); wrap.style.cssText = "position:relative;display:inline-block"; wrap.append(b); el.append(wrap);
+    b.onclick = (e) => { e.stopPropagation(); closeM(); const m = document.createElement("div"); m.className = "menu";
+      m.innerHTML = opts().map((o) => `<button class="${o === P[type][key] ? "on" : ""}">${o}</button>`).join("");
+      m.querySelectorAll("button").forEach((x, i) => x.onclick = (ev) => { ev.stopPropagation(); P[type][key] = opts()[i]; fix(); closeM(); renderAll(); });
+      wrap.append(m); openM = m; };
+  });
+  el.append(type === "retention" ? "" : "");
+}
+function fix() { const f = P.funnel; if (STEPS.indexOf(f.to) <= STEPS.indexOf(f.from)) f.to = STEPS[STEPS.indexOf(f.from) + 1]; }
+function closeM() { if (openM) { openM.remove(); openM = null; } }
+document.addEventListener("click", closeM);
+
+/* ---------- 漏斗 ---------- */
+function funnelCounts() {
+  const f = P.funnel, V = RANGES[f.range], wf = WINDOWS[f.win], all = [V];
+  for (let i = 1; i < STEPS.length; i++) all.push(all[i - 1] * Math.min(.95, RATE[i] * (i >= 2 ? wf : 1)));
+  const a = STEPS.indexOf(f.from), b = STEPS.indexOf(f.to);
+  return all.slice(a, b + 1).map(Math.round).map((c, k) => ({ name: STEPS[a + k], c, idx: a + k }));
+}
+let fData = [];
+function renderFunnel() {
+  fData = funnelCounts(); const base = fData[0].c, last = fData[fData.length - 1].c;
+  $("#card").innerHTML = `<div class="ch"><b>${P.funnel.from} → ${P.funnel.to}</b><span>${P.funnel.range} · 窗口 ${P.funnel.win}</span><div class="sp" style="flex:1"></div><span>整体转化率</span><span class="big">${pct(last / base)}</span></div><svg id="fsvg" height="340"></svg>
+  <table class="d"><thead><tr><th>步骤</th><th>用户数</th><th>较上一步</th><th>较第一步</th><th>流失用户</th><th>平均耗时（中位）</th></tr></thead><tbody>${fData.map((s, i) => `<tr><td><span class="dots">${i + 1}</span>${s.name}</td><td class="num">${fmt(s.c)}</td><td>${i ? pct(s.c / fData[i - 1].c) : "—"}</td><td>${pct(s.c / base)}</td><td class="${i ? "bad" : ""}">${i ? "−" + fmt(fData[i - 1].c - s.c) : "—"}</td><td>${TIME[s.idx]}</td></tr>`).join("")}</tbody></table>`;
+  const svg = $("#fsvg"), W = svg.clientWidth, H = 340, T = 26, B = 56, ph = H - T - B, n = fData.length, cw = W / n, bw = Math.min(110, cw * .56);
+  let g = `<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#fff"/><line x1="0" y1="0" x2="0" y2="7" stroke="#aeb4f7" stroke-width="2"/></pattern></defs>`;
+  [0, .25, .5, .75, 1].forEach((p) => { const y = T + ph - p * ph; g += `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="#e8e6dc"/>`; });
+  fData.forEach((s, i) => {
+    const x = i * cw + (cw - bw) / 2, hb = s.c / base * ph, hp = i ? fData[i - 1].c / base * ph : hb, yb = T + ph - hb, yp = T + ph - hp;
+    g += `<g class="col" data-i="${i}"><rect class="hit" x="${i * cw}" y="0" width="${cw}" height="${H}" fill="transparent"/>`;
+    if (i) g += `<rect class="lost" x="${x}" y="${yp}" width="${bw}" height="${yb - yp}" fill="url(#hatch)" stroke="#aeb4f7"/>`;
+    g += `<rect class="grow done" x="${x}" y="${yb}" width="${bw}" height="${hb}" fill="#3a45e8" style="animation-delay:${i * 90}ms"/>`;
+    g += `<text x="${x + bw / 2}" y="${yb - 8}" text-anchor="middle" style="font:700 15px 'Bricolage Grotesque','DM Sans'">${pct(s.c / base)}</text>`;
+    g += `<text x="${x + bw / 2}" y="${H - 34}" text-anchor="middle" style="font:700 13.5px 'DM Sans','Noto Sans SC'">${s.name}</text><text class="ax" x="${x + bw / 2}" y="${H - 16}" text-anchor="middle">${fmt(s.c)} 人</text></g>`;
+    if (i) g += `<g><rect x="${i * cw - 30}" y="${T + ph / 2 - 12}" width="60" height="24" rx="12" fill="#fff" stroke="#15150f" stroke-width="1.5"/><text x="${i * cw}" y="${T + ph / 2 + 4.5}" text-anchor="middle" style="font:700 12px 'DM Sans'">${pct(s.c / fData[i - 1].c)}</text></g>`;
+  });
+  svg.innerHTML = g;
+  const tip = $("#tipb");
+  svg.querySelectorAll(".col").forEach((c) => {
+    const i = +c.dataset.i, s = fData[i];
+    c.onmousemove = (e) => { const lost = e.target.classList.contains("lost");
+      tip.innerHTML = lost ? `<b>${s.name}</b><br>较上一步流失 ${fmt(fData[i - 1].c - s.c)} 人<br>点击查看这些用户` : `<b>${s.name}</b><br>${fmt(s.c)} 人 · 占第一步 ${pct(s.c / base)}<br>点击查看这些用户`;
+      tip.style.display = "block"; tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY + 14 + "px"; };
+    c.onmouseleave = () => tip.style.display = "none";
+    c.onclick = (e) => openUsers(i, e.target.classList.contains("lost") ? "lost" : (i ? "done" : "done"));
+  });
+}
+function openUsers(i, tab) {
+  const s = fData[i], prev = i ? fData[i - 1] : null, dr = $("#dr");
+  const render = (tab) => {
+    const total = tab === "lost" ? prev.c - s.c : s.c, R = rng(hash(s.name + tab + P.funnel.range)), rows = [];
+    for (let k = 0; k < 14; k++) { const id = (R() * 0xffffff | 0).toString(16).padStart(6, "0"); rows.push({ id, ch: CH[Math.floor(R() * R() * 5)], pl: PLAT[Math.floor(R() * 3)], ago: Math.ceil(R() * 29) }); }
+    dr.innerHTML = `<div class="dh"><div><h3>${s.name} · ${tab === "lost" ? "流失用户" : "完成用户"}</h3><p>${P.funnel.range} · 窗口 ${P.funnel.win} · 共 ${fmt(total)} 位</p></div><button class="x" id="dx"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
+    <div class="tabs">${prev ? `<button data-t="lost" class="${tab === "lost" ? "on" : ""}">流失 ${fmt(prev.c - s.c)}</button>` : ""}<button data-t="done" class="${tab === "done" ? "on" : ""}">完成 ${fmt(s.c)}</button></div>
+    <div class="body">${rows.map((r) => `<div class="u"><div><b>用户 ${r.id}</b><small>${r.pl}</small></div><span class="pill">${r.ch}</span><span class="t">${r.ago} 天前</span></div>`).join("")}<div style="padding:14px 0;color:var(--mute);text-align:center">仅显示前 14 位，共 ${fmt(total)} 位</div></div>`;
+    $("#dx").onclick = () => dr.classList.remove("open");
+    dr.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => render(b.dataset.t));
+  };
+  render(tab === "lost" && !prev ? "done" : tab); dr.classList.add("open");
+}
+
+/* ---------- 留存 ---------- */
+const CURVE = { "任意活动": { 周: [100, 46, 34, 28, 24, 21, 19, 17], 日: [100, 41, 30, 25, 21, 19, 17, 16, 15, 14] }, "使用 AI 续写": { 周: [58, 31, 24, 20, 17, 15, 14, 12], 日: [58, 28, 21, 18, 15, 13, 12, 11, 10, 9] }, "付费": { 周: [3.1, 2.2, 1.9, 1.8, 1.7, 1.6, 1.5, 1.5], 日: [1.2, .9, .8, .8, .7, .7, .7, .6, .6, .6] } };
+function renderRetention() {
+  const r = P.retention, per = r.per, n = per === "周" ? 8 : 10, curve = CURVE[r.ret][per], mul = r.start === "注册" ? 1 : 1.15, R = rng(hash(r.start + r.ret + per));
+  const cohorts = Array.from({ length: n }, (_, i) => { const size = Math.round((per === "周" ? 2300 : 330) * (r.start === "注册" ? 1 : .62) * (.85 + R() * .3)), d0 = new Date(Date.UTC(2026, 10, 20) - (n - i) * (per === "周" ? 7 : 1) * 864e5);
+    return { size, label: `${d0.getUTCMonth() + 1}-${String(d0.getUTCDate()).padStart(2, "0")}` + (per === "周" ? " 当周" : ""), v: curve.slice(0, n - i).map((c, k) => Math.min(100, c * mul * (.92 + R() * .16) * (k === 0 && r.ret === "任意活动" ? 1 / mul / (.92 + R() * .16) * 1 : 1))) }; });
+  cohorts.forEach((c) => { if (r.ret === "任意活动") c.v[0] = 100; });
+  const mx = Math.max(...cohorts.map((c) => Math.max(...c.v))), avg = Array.from({ length: n }, (_, k) => { const a = cohorts.filter((c) => c.v[k] != null); return a.reduce((s, c) => s + c.v[k] * c.size, 0) / a.reduce((s, c) => s + c.size, 0); });
+  const col = (v) => { const t = Math.pow(v / mx, .7), a = [236, 238, 252], b = [58, 69, 232], c = a.map((x, i) => Math.round(x + (b[i] - x) * t)); return { bg: `rgb(${c})`, fg: t > .5 ? "#fff" : "#15150f" }; };
+  $("#card").innerHTML = `<div class="ch"><b>${r.start}后 ${r.ret === "任意活动" ? "再次活跃" : r.ret} 的留存</b><span>${per === "周" ? "最近 8 周" : "最近 10 天"}新用户分组</span><div style="flex:1"></div><span>平均${per === "周" ? "第 1 周" : "第 1 天"}留存</span><span class="big">${avg[1].toFixed(1)}%</span></div>
+  <table class="ret"><thead><tr><th>${per === "周" ? "注册周" : "注册日"}</th><th style="text-align:left">人数</th>${Array.from({ length: n }, (_, k) => `<th>${per === "周" ? "第 " + k + " 周" : "第 " + k + " 天"}</th>`).join("")}</tr></thead><tbody>${cohorts.map((c, i) => `<tr><td class="c">${c.label}</td><td class="c" style="text-align:left">${fmt(c.size)}</td>${Array.from({ length: n }, (_, k) => { if (c.v[k] == null) return '<td class="e"></td>'; const cc = col(c.v[k]); return `<td class="h" data-i="${i}" data-k="${k}" style="background:${cc.bg};color:${cc.fg}">${c.v[k].toFixed(1)}%</td>`; }).join("")}</tr>`).join("")}<tr class="avg"><td class="c">加权平均</td><td class="c"></td>${avg.map((v) => `<td class="e">${v.toFixed(1)}%</td>`).join("")}</tr></tbody></table>`;
+  const tip = $("#tipb");
+  document.querySelectorAll("td.h").forEach((td) => { const c = cohorts[+td.dataset.i], k = +td.dataset.k; td.onmousemove = (e) => { tip.innerHTML = `<b>${c.label} 注册的用户</b><br>${per === "周" ? "第 " + k + " 周" : "第 " + k + " 天"}：${fmt(c.size * c.v[k] / 100)} / ${fmt(c.size)} 人<br>比例 ${c.v[k].toFixed(1)}%`; tip.style.display = "block"; tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY + 14 + "px"; }; td.onmouseleave = () => tip.style.display = "none"; });
+}
+
+/* ---------- 趋势 ---------- */
+const EVBASE = { "注册": 1620, "创建首篇文档": 1010, "使用 AI 续写": 5200, "付费": 310 };
+function renderTrend() {
+  const t = P.trend, days = { "近 7 天": 7, "近 30 天": 30, "近 90 天": 90 }[t.range], R = rng(hash(t.ev + t.range) + 7), mu = t.met === "总次数" ? 1 : .62;
+  const gen = (off) => Array.from({ length: days }, (_, i) => { const d = new Date(Date.UTC(2026, 10, 20) - (days - 1 - i + off) * 864e5), wk = d.getUTCDay(); return Math.round(EVBASE[t.ev] * mu * (1 + (i - off) / 140) * ((wk === 0 || wk === 6) ? .72 : 1.04) * (.9 + R() * .2)); });
+  const cur = gen(0); let prv = gen(days);
+  const labels = Array.from({ length: days }, (_, i) => { const d = new Date(Date.UTC(2026, 10, 20) - (days - 1 - i) * 864e5); return `${d.getUTCMonth() + 1}-${String(d.getUTCDate()).padStart(2, "0")}`; });
+  let c2 = cur, p2 = prv, l2 = labels;
+  if (t.per === "周") { const grp = (a) => { const o = []; for (let i = a.length; i > 0; i -= 7) o.unshift(a.slice(Math.max(0, i - 7), i).reduce((s, x) => s + x, 0)); return o; }; c2 = grp(cur); p2 = grp(prv); l2 = c2.map((_, i) => "第 " + (i + 1) + " 周"); if (c2[0] < c2[1] * .6) { c2.shift(); p2.shift(); l2.shift(); } }
+  const total = c2.reduce((a, b) => a + b, 0), ptotal = p2.reduce((a, b) => a + b, 0);
+  $("#card").innerHTML = `<div class="ch"><b>${t.ev} · ${t.met}</b><span>${t.range} · 按${t.per}</span><div style="flex:1"></div><span>本期合计</span><span class="big">${fmt(total)}</span><span style="color:${total >= ptotal ? "var(--acc)" : "var(--bad)"};font-weight:700">${total >= ptotal ? "↑" : "↓"} ${(Math.abs(total / ptotal - 1) * 100).toFixed(1)}% 较上一期</span></div><svg id="tsvg" height="320"></svg>
+  <table class="d"><thead><tr><th>${t.per === "周" ? "周" : "日期"}</th><th>本期</th><th>上一期</th><th>变化</th></tr></thead><tbody>${c2.slice(-6).reverse().map((v, k) => { const i = c2.length - 1 - k; return `<tr><td>${l2[i]}</td><td class="num">${fmt(v)}</td><td>${fmt(p2[i])}</td><td style="color:${v >= p2[i] ? "var(--acc)" : "var(--bad)"};font-weight:700">${v >= p2[i] ? "+" : "−"}${(Math.abs(v / p2[i] - 1) * 100).toFixed(1)}%</td></tr>`; }).join("")}</tbody></table>`;
+  const svg = $("#tsvg"), W = svg.clientWidth, H = 320, L = 52, Rr = 10, T = 14, B = 28, pw = W - L - Rr, ph = H - T - B, mx = Math.ceil(Math.max(...c2, ...p2) / 1000) * 1000 || 10, N = c2.length;
+  const X = (i) => L + (N === 1 ? 0 : i / (N - 1) * pw), Y = (v) => T + ph - v / mx * ph;
+  let g = ""; for (let k = 0; k <= 4; k++) { const v = mx / 4 * k, y = Y(v); g += `<line x1="${L}" x2="${W - Rr}" y1="${y}" y2="${y}" stroke="#e8e6dc"/><text class="ax" x="${L - 8}" y="${y + 4}" text-anchor="end">${fmt(v)}</text>`; }
+  const step = Math.ceil(N / 8); for (let i = 0; i < N; i += step) g += `<text class="ax" x="${X(i)}" y="${H - 8}" text-anchor="middle">${l2[i]}</text>`;
+  const path = (a) => a.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join("");
+  g += `<path d="${path(p2)}" fill="none" stroke="#9a9a8c" stroke-width="2" stroke-dasharray="5 4"/><path class="ln" d="${path(c2)}" fill="none" stroke="#3a45e8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" style="animation:dr 1s .1s forwards"/>`;
+  g += `<line id="cl" y1="${T}" y2="${T + ph}" stroke="#15150f" opacity="0"/><circle id="cc" r="5" fill="#3a45e8" stroke="#fff" stroke-width="2" opacity="0"/><rect id="ch" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  svg.innerHTML = `<style>@keyframes dr { to { stroke-dashoffset:0; } }</style>` + g;
+  const tip = $("#tipb");
+  $("#ch").onmousemove = (e) => { const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(N - 1, Math.round((e.clientX - r.left - L) / pw * (N - 1)))); $("#cl").setAttribute("x1", X(i)); $("#cl").setAttribute("x2", X(i)); $("#cl").setAttribute("opacity", .5); $("#cc").setAttribute("cx", X(i)); $("#cc").setAttribute("cy", Y(c2[i])); $("#cc").setAttribute("opacity", 1);
+    tip.innerHTML = `<b>${l2[i]}</b><br>本期 ${fmt(c2[i])}<br>上一期 ${fmt(p2[i])}`; tip.style.display = "block"; tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY - 20 + "px"; };
+  $("#ch").onmouseleave = () => { tip.style.display = "none"; $("#cl").setAttribute("opacity", 0); $("#cc").setAttribute("opacity", 0); };
+}
+
+/* ---------- 总控 ---------- */
+function renderSide() {
+  $("#types").innerHTML = TYPES.map(([k, n, d]) => `<button class="ty ${k === type ? "on" : ""}" data-k="${k}">${ICON[k]}<div><b>${n}</b><span>${d}</span></div></button>`).join("");
+  $("#types").querySelectorAll("button").forEach((b) => b.onclick = () => { type = b.dataset.k; $("#dr").classList.remove("open"); renderAll(); });
+  $("#saved").innerHTML = SAVED.map((s, i) => `<button data-i="${i}">${s[0]}<small>${s[1]}</small></button>`).join("");
+  $("#saved").querySelectorAll("button").forEach((b) => b.onclick = () => { const s = SAVED[+b.dataset.i]; type = s[2]; Object.assign(P[type], s[3]); $("#dr").classList.remove("open"); renderAll(); });
+}
+function renderAll() {
+  renderSide(); renderSentence();
+  const T = { funnel: ["注册到付费的转化漏斗", "每一步有多少用户走到，哪一步流失最多"], retention: ["新用户留存", "按注册时间分组，看之后各周期还有多少人回来"], trend: ["关键事件趋势", "和上一个周期对比，看增长还是回落"] }[type];
+  $("#ttl").textContent = T[0]; $("#sub").textContent = T[1];
+  ({ funnel: renderFunnel, retention: renderRetention, trend: renderTrend })[type]();
+}
+$("#save").onclick = () => { const t = $("#toast"); t.textContent = "已保存到「我的洞察」"; t.classList.add("on"); setTimeout(() => t.classList.remove("on"), 1600); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#dr").classList.remove("open"); });
+window.addEventListener("resize", () => renderAll());
+renderAll();
+</script>
+</body>
+</html>

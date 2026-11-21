@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>栖云 API 文档 · 创建对话补全</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#fcfbf8; --paper2:#f4f2ec; --line:#e6e2d8; --ink:#17181c; --ink2:#51545e; --mute:#8b8d96; --acc:#0b7a5f; --acc-bg:#e3f2ec; --warn:#b4491f; --code:#12151c; --code2:#1b1f29; --code-line:#2a2f3c; --nav:236px; --rail:540px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font: 15px/1.7 "DM Sans","Noto Sans SC",sans-serif; -webkit-font-smoothing: antialiased; }
+  button, input, select { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+  a { color: inherit; text-decoration: none; }
+  .mono, code { font-family: "JetBrains Mono",ui-monospace,Menlo,monospace, monospace; font-variant-numeric: tabular-nums; }
+  code.i { font-size: 12.5px; background: var(--paper2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; color: #3b3d46; }
+
+  .top { position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; gap: 28px; padding: 0 24px; background: rgba(252,251,248,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 16px; letter-spacing: .02em; width: calc(var(--nav) - 24px); }
+  .logo svg { width: 24px; height: 24px; }
+  .tabs { display: flex; gap: 22px; font-size: 14px; color: var(--ink2); }
+  .tabs a { height: 56px; display: flex; align-items: center; position: relative; }
+  .tabs a.on { color: var(--ink); font-weight: 600; }
+  .tabs a.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--acc); }
+  .tools { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .search { display: flex; align-items: center; gap: 8px; width: 230px; height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--mute); font-size: 13px; }
+  .search svg { width: 14px; height: 14px; flex: none; }
+  .search input { flex: 1; min-width: 0; cursor: text; color: var(--ink); }
+  .search em { font: 500 11px "JetBrains Mono",ui-monospace,Menlo,monospace; font-style: normal; color: var(--mute); }
+  .ver { height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; font: 500 12.5px "JetBrains Mono",ui-monospace,Menlo,monospace; background: #fff; }
+  .btn { height: 32px; padding: 0 14px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 500; }
+  .btn:hover { background: #2c2e36; }
+
+  .layout { display: grid; grid-template-columns: var(--nav) minmax(0,1fr) var(--rail); padding-top: 56px; min-height: 100vh; }
+  nav.side { position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; padding: 24px 12px 40px 24px; border-right: 1px solid var(--line); scrollbar-width: thin; }
+  nav.side h6 { font-size: 11.5px; letter-spacing: .08em; color: var(--mute); font-weight: 600; margin: 20px 0 6px; padding-left: 10px; }
+  nav.side h6:first-child { margin-top: 0; }
+  nav.side a { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 6px; font-size: 13.5px; color: var(--ink2); line-height: 1.5; margin-bottom: 1px; }
+  nav.side a:hover { background: var(--paper2); color: var(--ink); }
+  nav.side a.cur { color: var(--ink); font-weight: 600; }
+  nav.side .sub { margin: 2px 0 6px 17px; border-left: 1px solid var(--line); padding-left: 6px; }
+  nav.side .sub a { font-size: 13px; padding: 3px 9px; margin-left: -7px; border-left: 2px solid transparent; border-radius: 0 6px 6px 0; }
+  nav.side .sub a.on { color: var(--acc); background: var(--acc-bg); border-left-color: var(--acc); font-weight: 600; }
+  .m { font: 600 9.5px "JetBrains Mono",ui-monospace,Menlo,monospace; letter-spacing: .04em; padding: 1px 4px; border-radius: 3px; flex: none; }
+  .m.post { color: var(--acc); background: var(--acc-bg); } .m.get { color: #2e5fb0; background: #e6edf8; } .m.del { color: var(--warn); background: #f8e7df; }
+  .empty { display: none; padding: 8px 10px; font-size: 12.5px; color: var(--mute); }
+
+  main { padding: 52px 56px 40vh; min-width: 0; }
+  main .in { max-width: 640px; margin: 0 auto; }
+  .eyebrow { font: 500 12px "JetBrains Mono",ui-monospace,Menlo,monospace; color: var(--mute); letter-spacing: .02em; }
+  h1 { font-size: 38px; line-height: 1.2; letter-spacing: -.01em; margin: 10px 0 14px; font-weight: 700; }
+  .lead { color: var(--ink2); font-size: 16.5px; }
+  .endpoint { display: flex; align-items: center; gap: 12px; margin: 26px 0 8px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: 500 13px "JetBrains Mono",ui-monospace,Menlo,monospace; overflow: hidden; }
+  .endpoint .m { font-size: 11px; padding: 2px 7px; }
+  .endpoint span.u { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .endpoint button { font: 500 12px "DM Sans"; color: var(--ink2); padding: 3px 9px; border-radius: 6px; border: 1px solid var(--line); }
+  .endpoint button:hover { background: var(--paper2); }
+  section { padding-top: 56px; scroll-margin-top: 56px; }
+  h2 { font-size: 24px; letter-spacing: -.005em; margin-bottom: 12px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  h2 a.h { opacity: 0; color: var(--mute); font-weight: 400; transition: opacity .15s; }
+  h2:hover a.h { opacity: 1; }
+  h3 { font-size: 15px; margin: 26px 0 4px; }
+  p { margin: 10px 0; color: var(--ink2); }
+  p b { color: var(--ink); font-weight: 600; }
+  .note { margin: 16px 0; padding: 12px 14px 12px 16px; border-left: 3px solid var(--acc); background: var(--acc-bg); border-radius: 0 8px 8px 0; font-size: 14px; color: #174f40; }
+  .note.w { border-left-color: var(--warn); background: #f8ece5; color: #6e2f12; }
+  .inl { margin: 14px 0; border-radius: 10px; overflow: hidden; background: var(--code); border: 1px solid var(--code-line); }
+  .inl pre { padding: 13px 16px; font: 400 12.5px/1.7 "JetBrains Mono",ui-monospace,Menlo,monospace; color: #d6dae4; overflow-x: auto; white-space: pre; }
+
+  .params { margin-top: 8px; border-top: 1px solid var(--line); }
+  .pm { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .pm .hd { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+  .pm .n { font: 600 13.5px "JetBrains Mono",ui-monospace,Menlo,monospace; color: var(--ink); }
+  .pm .t { font: 400 12px "JetBrains Mono",ui-monospace,Menlo,monospace; color: var(--mute); }
+  .pm .rq { font-size: 11px; color: var(--warn); font-weight: 600; }
+  .pm .df { font: 400 12px "JetBrains Mono",ui-monospace,Menlo,monospace; color: var(--mute); margin-left: auto; }
+  .pm .d { margin: 4px 0 0; font-size: 14px; color: var(--ink2); }
+  .pm .en { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .pm .en code { font-size: 11.5px; padding: 1px 7px; border-radius: 99px; background: var(--paper2); border: 1px solid var(--line); color: #3b3d46; }
+  .xp { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--ink2); padding: 3px 10px 3px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .xp:hover { border-color: #cfcabb; color: var(--ink); }
+  .xp svg { width: 11px; height: 11px; transition: transform .2s; }
+  .pm.open > .xp svg { transform: rotate(90deg); }
+  .kids { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .26s ease; }
+  .kids > div { overflow: hidden; min-height: 0; }
+  .pm.open > .kids { grid-template-rows: 1fr; }
+  .kids .params { margin: 10px 0 0 6px; padding-left: 14px; border-left: 2px solid var(--line); border-top: 0; }
+  .kids .pm:last-child { border-bottom: 0; padding-bottom: 4px; }
+  table.err { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+  table.err th { text-align: left; font-size: 12px; color: var(--mute); font-weight: 500; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  table.err td { padding: 11px 12px 11px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink2); }
+  table.err td:first-child { font: 600 13px "JetBrains Mono",ui-monospace,Menlo,monospace; color: var(--ink); width: 56px; }
+  table.err td:nth-child(2) { font: 400 12.5px "JetBrains Mono",ui-monospace,Menlo,monospace; width: 190px; }
+
+  aside.rail { background: var(--code); position: relative; }
+  .rail .stick { position: sticky; top: 56px; height: calc(100vh - 56px); display: flex; flex-direction: column; }
+  .rbar { flex: none; display: flex; align-items: center; gap: 4px; padding: 0 14px 0 18px; height: 46px; border-bottom: 1px solid var(--code-line); }
+  .rbar .lang { display: flex; gap: 2px; }
+  .rbar .lang button { height: 28px; padding: 0 11px; border-radius: 6px; color: #8d93a3; font: 500 12.5px "JetBrains Mono",ui-monospace,Menlo,monospace; }
+  .rbar .lang button:hover { color: #fff; }
+  .rbar .lang button.on { background: #262b38; color: #fff; }
+  .rbar .cp { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 6px; color: #aab0bf; font-size: 12.5px; border: 1px solid var(--code-line); }
+  .rbar .cp:hover { color: #fff; border-color: #444b5e; }
+  .rbar .cp svg { width: 13px; height: 13px; }
+  .rbar .cp.ok { color: #7be0b6; border-color: #2c5a49; }
+  .blk { min-height: 0; display: flex; flex-direction: column; }
+  .blk.rq { flex: 1.35; } .blk.rs { flex: 1; border-top: 1px solid var(--code-line); background: var(--code2); }
+  .blk .lb { flex: none; display: flex; align-items: center; gap: 10px; padding: 11px 18px 0; font-size: 12px; color: #8d93a3; }
+  .blk .lb b { color: #dfe3ee; font-weight: 600; font-size: 12.5px; transition: opacity .2s; }
+  .blk .lb .st { margin-left: auto; font: 500 11.5px "JetBrains Mono",ui-monospace,Menlo,monospace; color: #7be0b6; display: flex; align-items: center; gap: 6px; }
+  .blk .lb .st i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .blk .lb .st.er { color: #f4a27a; }
+  .code { flex: 1; min-height: 0; overflow: auto; padding: 10px 0 14px; font: 400 12.5px/1.75 "JetBrains Mono",ui-monospace,Menlo,monospace; color: #d6dae4; scrollbar-width: thin; scrollbar-color: #343a4a transparent; transition: opacity .18s; }
+  .code.fade { opacity: 0; }
+  .code .ln { display: block; padding: 0 18px; white-space: pre; border-left: 2px solid transparent; transition: background .25s; }
+  .code .ln.mk { background: rgba(123,224,182,.09); border-left-color: #55d3a0; }
+  .tk-s { color: #9fdcaa; } .tk-k { color: #92b9ff; } .tk-n { color: #f5b97c; } .tk-w { color: #d9a3ff; } .tk-c { color: #667087; font-style: italic; } .tk-f { color: #f3d584; } .tk-p { color: #7e8598; }
+  .foot { position: fixed; left: 12px; bottom: 8px; z-index: 40; font-size: 10.5px; color: var(--mute); pointer-events: none; }
+  .toast { position: fixed; z-index: 50; left: calc(var(--nav) + 24px); bottom: 24px; padding: 8px 14px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 13px; opacity: 0; transform: translateY(8px); transition: .2s; pointer-events: none; }
+  .toast.on { opacity: 1; transform: none; }
+  @media (max-width: 1360px) { :root { --rail: 480px; --nav: 216px; } main { padding-left: 36px; padding-right: 36px; } .tabs { display: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="#0b7a5f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17.5a4 4 0 0 1-.6-7.95A6 6 0 0 1 17 8.6a4.5 4.5 0 0 1 .5 8.9H6z"/><path d="M9 13.5l2 2 4-4.5"/></svg>栖云 API</a>
+  <div class="tabs"><a href="#">指南</a><a href="#" class="on">API 参考</a><a href="#">SDK</a><a href="#">更新日志</a></div>
+  <div class="tools">
+    <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="搜索文档" autocomplete="off"><em>/</em></label>
+    <select class="ver"><option>v1 · 稳定</option><option>v2 · 预览</option></select>
+    <button class="btn" data-toast="示例页：此处会跳到密钥管理">获取密钥</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="side" id="nav">
+    <h6>开始</h6>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇">简介</a>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇">快速开始</a>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇">认证与限流</a>
+    <h6>对话</h6>
+    <a href="#top" class="cur"><span class="m post">POST</span>创建对话补全</a>
+    <div class="sub" id="sub">
+      <a href="#auth" data-sec="auth">认证</a>
+      <a href="#basic" data-sec="basic">基本调用</a>
+      <a href="#params" data-sec="params">请求参数</a>
+      <a href="#stream" data-sec="stream">流式输出</a>
+      <a href="#tools" data-sec="tools">工具调用</a>
+      <a href="#response" data-sec="response">响应对象</a>
+      <a href="#errors" data-sec="errors">错误码</a>
+    </div>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇"><span class="m get">GET</span>读取历史对话</a>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇"><span class="m del">DEL</span>删除历史对话</a>
+    <h6>模型</h6>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇"><span class="m get">GET</span>列出模型</a>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇"><span class="m post">POST</span>创建微调任务</a>
+    <h6>向量与文件</h6>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇"><span class="m post">POST</span>创建向量</a>
+    <a href="#" data-toast="示例页仅包含「创建对话补全」这一篇"><span class="m post">POST</span>上传文件</a>
+    <div class="empty" id="empty">没有匹配的章节</div>
+  </nav>
+
+  <main id="top"><div class="in">
+    <div class="eyebrow">对话 · 创建对话补全</div>
+    <h1>创建对话补全</h1>
+    <p class="lead">给定一段对话，让模型生成下一条回复。支持文本与图片输入、流式输出、工具调用和结构化输出。</p>
+    <div class="endpoint"><span class="m post">POST</span><span class="u">https://api.qiyun.example/v1/chat/completions</span><button id="cpEp">复制</button></div>
+
+    <section id="auth" data-ex="auth">
+      <h2>认证<a class="h" href="#auth">#</a></h2>
+      <p>所有请求在 <code class="i">Authorization</code> 头里带上密钥。密钥在控制台「访问密钥」页创建，只在创建时显示一次。</p>
+      <p>先装 SDK。下面的命令和右侧代码会跟着你选的语言一起切换。</p>
+      <div class="inl"><pre data-install></pre></div>
+      <div class="note w">不要把密钥写进前端代码或提交到仓库。泄露后在控制台吊销，旧密钥立即失效。</div>
+    </section>
+
+    <section id="basic" data-ex="basic">
+      <h2>基本调用<a class="h" href="#basic">#</a></h2>
+      <p>最少只需要 <code class="i">model</code> 和 <code class="i">messages</code> 两个字段。<code class="i">messages</code> 按时间顺序排列，最后一条通常是用户的提问。</p>
+      <p>模型会读取全部历史消息，所以多轮对话时，把之前的回复也放回 <code class="i">messages</code> 里再发一次。</p>
+      <div class="note">默认返回完整结果，耗时随输出长度增加。需要边生成边显示，用下面的流式输出。</div>
+    </section>
+
+    <section id="params" data-ex="params">
+      <h2>请求参数<a class="h" href="#params">#</a></h2>
+      <p>带「子字段」按钮的参数可以展开查看嵌套结构。</p>
+      <div class="params" id="reqParams"></div>
+    </section>
+
+    <section id="stream" data-ex="stream">
+      <h2>流式输出<a class="h" href="#stream">#</a></h2>
+      <p>设置 <code class="i">stream: true</code> 后，服务端用 SSE 逐段推送 <code class="i">delta</code>，最后一帧是 <code class="i">[DONE]</code>。每一帧只含新增的片段，客户端自己拼接。</p>
+      <p>首个字符通常在 300 毫秒内到达，长回复的总耗时不变，但用户等待的感觉短很多。</p>
+      <div class="note">流式模式下，用量统计放在最后一帧，需要同时设置 <code class="i">stream_options.include_usage</code>。</div>
+    </section>
+
+    <section id="tools" data-ex="tools">
+      <h2>工具调用<a class="h" href="#tools">#</a></h2>
+      <p>在 <code class="i">tools</code> 里声明函数。模型认为需要时，返回 <code class="i">tool_calls</code> 而不是文本，参数是符合你给的 JSON Schema 的字符串。</p>
+      <p>你执行函数后，把结果以 <code class="i">role: "tool"</code> 的消息追加到 <code class="i">messages</code>，再请求一次，模型据此给出最终回复。</p>
+      <div class="note">参数由模型生成，可能缺字段或类型不对。执行前先校验。</div>
+    </section>
+
+    <section id="response" data-ex="response">
+      <h2>响应对象<a class="h" href="#response">#</a></h2>
+      <p>返回一个 <code class="i">chat.completion</code> 对象。</p>
+      <div class="params" id="resParams"></div>
+    </section>
+
+    <section id="errors" data-ex="errors">
+      <h2>错误码<a class="h" href="#errors">#</a></h2>
+      <p>出错时返回非 2xx 状态码和统一的 <code class="i">error</code> 对象。429 和 5xx 可以重试，建议指数退避，间隔从 1 秒起。</p>
+      <table class="err">
+        <tr><th>状态码</th><th>error.code</th><th>说明</th></tr>
+        <tr><td>400</td><td>invalid_request</td><td>参数缺失或类型不对，message 里指出具体字段。</td></tr>
+        <tr><td>401</td><td>invalid_api_key</td><td>密钥错误、已吊销或没有带 Authorization 头。</td></tr>
+        <tr><td>402</td><td>quota_exceeded</td><td>账户余额或套餐额度用完。</td></tr>
+        <tr><td>429</td><td>rate_limited</td><td>超过每分钟请求数或 Token 数，响应头 <code class="i">retry-after</code> 给出等待秒数。</td></tr>
+        <tr><td>500</td><td>server_error</td><td>服务端内部错误，可重试。</td></tr>
+      </table>
+    </section>
+  </div></main>
+
+  <aside class="rail"><div class="stick">
+    <div class="rbar">
+      <div class="lang" id="lang"><button data-l="curl" class="on">cURL</button><button data-l="py">Python</button><button data-l="js">Node.js</button></div>
+      <button class="cp" id="cp"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg><span>复制</span></button>
+    </div>
+    <div class="blk rq"><div class="lb"><span>请求</span><b id="exT"></b></div><div class="code" id="reqCode"></div></div>
+    <div class="blk rs"><div class="lb"><span>响应</span><span class="st" id="st"><i></i><span></span></span></div><div class="code" id="resCode"></div></div>
+  </div></aside>
+</div>
+<div class="foot">示例数据</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const BASE = "https://api.qiyun.example";
+
+/* ---------- 参数数据 ---------- */
+const REQ = [
+  { n: "model", t: "string", rq: 1, d: "模型 ID，例如 qy-pro-2、qy-flash。完整列表见「列出模型」。" },
+  { n: "messages", t: "object[]", rq: 1, d: "到目前为止的对话，按时间顺序排列。", kids: [
+    { n: "role", t: "string", rq: 1, d: "消息作者的角色。", en: ["system", "user", "assistant", "tool"] },
+    { n: "content", t: "string | object[]", rq: 1, d: "文本，或由文本片段与图片片段组成的数组。", kids: [
+      { n: "type", t: "string", rq: 1, d: "片段类型。", en: ["text", "image_url"] },
+      { n: "text", t: "string", d: "type 为 text 时的文字内容。" },
+      { n: "image_url", t: "object", d: "type 为 image_url 时的图片，可传公网地址或 base64 数据 URL。" } ] },
+    { n: "name", t: "string", d: "参与者名称，多个同角色参与者时用来区分。" },
+    { n: "tool_call_id", t: "string", d: "role 为 tool 时必填，对应上一轮返回的 tool_calls[].id。" } ] },
+  { n: "stream", t: "boolean", df: "false", d: "为 true 时以 SSE 分段返回。" },
+  { n: "temperature", t: "number", df: "1", d: "采样温度，0 到 2。越高越发散，越低越稳定。不建议和 top_p 同时调整。" },
+  { n: "max_tokens", t: "integer", d: "最多生成的 Token 数。不填则生成到模型上下文上限。" },
+  { n: "stop", t: "string | string[]", d: "最多 4 个停止序列，生成到它们时停止，返回内容不含停止序列。" },
+  { n: "tools", t: "object[]", d: "模型可以调用的工具列表，最多 128 个。", kids: [
+    { n: "type", t: "string", rq: 1, d: "目前只支持 function。", en: ["function"] },
+    { n: "function", t: "object", rq: 1, d: "函数定义。", kids: [
+      { n: "name", t: "string", rq: 1, d: "函数名，a-z、A-Z、0-9、下划线和短横线，最长 64 位。" },
+      { n: "description", t: "string", d: "函数做什么。模型靠它决定是否调用，写具体。" },
+      { n: "parameters", t: "object", d: "参数的 JSON Schema。省略表示没有参数。" } ] } ] },
+  { n: "tool_choice", t: "string | object", df: "auto", d: "控制模型是否调用工具。", en: ["auto", "none", "required"] },
+  { n: "response_format", t: "object", d: "指定输出格式。", kids: [
+    { n: "type", t: "string", rq: 1, d: "text 为默认；json_object 保证输出合法 JSON；json_schema 按给定 Schema 输出。", en: ["text", "json_object", "json_schema"] } ] },
+];
+const RES = [
+  { n: "id", t: "string", d: "补全的唯一标识，形如 cmpl_ 开头。" },
+  { n: "object", t: "string", d: "固定为 chat.completion。" },
+  { n: "created", t: "integer", d: "创建时间，Unix 秒。" },
+  { n: "model", t: "string", d: "实际使用的模型。" },
+  { n: "choices", t: "object[]", d: "生成结果列表，n 为 1 时只有一项。", kids: [
+    { n: "index", t: "integer", d: "在列表中的序号。" },
+    { n: "message", t: "object", d: "模型生成的消息。", kids: [
+      { n: "role", t: "string", d: "固定为 assistant。" },
+      { n: "content", t: "string | null", d: "回复文本。调用工具时为 null。" },
+      { n: "tool_calls", t: "object[]", d: "模型要调用的函数，每项含 id 和 function.name、function.arguments。" } ] },
+    { n: "finish_reason", t: "string", d: "停止原因。", en: ["stop", "length", "tool_calls", "content_filter"] } ] },
+  { n: "usage", t: "object", d: "本次请求的 Token 用量。", kids: [
+    { n: "prompt_tokens", t: "integer", d: "输入 Token 数。" },
+    { n: "completion_tokens", t: "integer", d: "输出 Token 数。" },
+    { n: "total_tokens", t: "integer", d: "两者之和。" },
+    { n: "cached_tokens", t: "integer", d: "命中缓存的输入 Token 数，按缓存价计费。" } ] },
+];
+const chev = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2l4 4-4 4"/></svg>';
+function renderParams(list) {
+  return list.map(p => `<div class="pm"><div class="hd"><span class="n">${p.n}</span><span class="t">${p.t}</span>${p.rq ? '<span class="rq">必填</span>' : ''}${p.df ? `<span class="df">默认 ${p.df}</span>` : ''}</div><p class="d">${p.d}</p>${p.en ? `<div class="en">${p.en.map(e => `<code>${e}</code>`).join('')}</div>` : ''}${p.kids ? `<button class="xp" aria-expanded="false">${chev}<span>子字段 · ${p.kids.length}</span></button><div class="kids"><div><div class="params">${renderParams(p.kids)}</div></div></div>` : ''}</div>`).join('');
+}
+$('#reqParams').innerHTML = renderParams(REQ);
+$('#resParams').innerHTML = renderParams(RES);
+document.addEventListener('click', e => {
+  const b = e.target.closest('.xp'); if (!b) return;
+  const pm = b.parentElement, open = pm.classList.toggle('open');
+  b.setAttribute('aria-expanded', open); const n = b.querySelector('span').textContent.split('·')[1];
+  b.querySelector('span').textContent = (open ? '收起子字段 ·' : '子字段 ·') + n;
+});
+
+/* ---------- 示例生成 ---------- */
+const MSG = (c, r = "user") => ({ role: r, content: c });
+const EX = {
+  auth: { title: "列出可用模型", get: true, path: "/v1/models", mark: ["Authorization", "api_key", "apiKey", "QY_API_KEY"],
+    res: { st: "200 OK", json: { object: "list", data: [{ id: "qy-pro-2", object: "model", context: 262144 }, { id: "qy-flash", object: "model", context: 131072 }, { id: "qy-embed-1", object: "model", context: 8192 }] } },
+    py: "models = client.models.list()\nfor m in models.data:\n    print(m.id)", js: "const models = await client.models.list();\nfor (const m of models.data) console.log(m.id);" },
+  basic: { title: "基本调用", path: "/v1/chat/completions", body: { model: "qy-pro-2", messages: [MSG("你是一名资深的运维工程师。", "system"), MSG("用一句话解释什么是显存碎片。")] }, mark: ["model", "messages", "role", "content"],
+    res: { st: "200 OK", json: { id: "cmpl_8f2a91c4", object: "chat.completion", created: 1763625600, model: "qy-pro-2", choices: [{ index: 0, message: { role: "assistant", content: "显存碎片是指空闲显存被分割成许多不连续的小块，总量够用却分配不出一整块大张量。" }, finish_reason: "stop" }] } },
+    py: "print(resp.choices[0].message.content)", js: "console.log(resp.choices[0].message.content);" },
+  params: { title: "调整生成参数", path: "/v1/chat/completions", body: { model: "qy-flash", messages: [MSG("给本周的集群巡检写三条要点。")], temperature: 0.3, max_tokens: 256, stop: ["\n\n"] }, mark: ["temperature", "max_tokens", "stop"],
+    res: { st: "200 OK", json: { id: "cmpl_3d71be08", object: "chat.completion", created: 1763625712, model: "qy-flash", choices: [{ index: 0, message: { role: "assistant", content: "1. 4 台节点 ECC 错误计数上升，已隔离。\n2. 周均 GPU 利用率 61%，较上周 +4 个点。\n3. 2 块网卡固件待升级。" }, finish_reason: "stop" }], usage: { prompt_tokens: 21, completion_tokens: 58, total_tokens: 79 } } },
+    py: "print(resp.choices[0].message.content)", js: "console.log(resp.choices[0].message.content);" },
+  stream: { title: "流式输出", path: "/v1/chat/completions", body: { model: "qy-pro-2", messages: [MSG("写一段 80 字的值班交接说明。")], stream: true }, mark: ["stream", "-N"],
+    resRaw: 'data: {"id":"cmpl_c9e0","choices":[{"delta":{"role":"assistant"}}]}\n\ndata: {"id":"cmpl_c9e0","choices":[{"delta":{"content":"今晚"}}]}\n\ndata: {"id":"cmpl_c9e0","choices":[{"delta":{"content":"值班注意"}}]}\n\ndata: {"id":"cmpl_c9e0","choices":[{"delta":{"content":"三件事："}}]}\n\ndata: {"id":"cmpl_c9e0","choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]', stLabel: "200 · text/event-stream", lang: "text",
+    py: "for chunk in resp:\n    print(chunk.choices[0].delta.content or \"\", end=\"\")", js: "for await (const chunk of resp) {\n  process.stdout.write(chunk.choices[0].delta.content ?? \"\");\n}", flagCurl: "-N " },
+  tools: { title: "工具调用", path: "/v1/chat/completions", body: { model: "qy-pro-2", messages: [MSG("华北二区现在还有几张 H200 空闲？")], tools: [{ type: "function", function: { name: "query_free_gpus", description: "查询某个区域当前空闲的 GPU 数量", parameters: { type: "object", properties: { region: { type: "string" }, model: { type: "string" } }, required: ["region"] } } }], tool_choice: "auto" }, mark: ["tools", "tool_choice", "query_free_gpus"],
+    res: { st: "200 OK", json: { id: "cmpl_77ab2e5d", object: "chat.completion", model: "qy-pro-2", choices: [{ index: 0, message: { role: "assistant", content: null, tool_calls: [{ id: "call_01", type: "function", function: { name: "query_free_gpus", arguments: "{\"region\":\"华北二区\",\"model\":\"H200\"}" } }] }, finish_reason: "tool_calls" }] } },
+    py: "call = resp.choices[0].message.tool_calls[0]\nprint(call.function.name, call.function.arguments)", js: "const call = resp.choices[0].message.tool_calls[0];\nconsole.log(call.function.name, call.function.arguments);" },
+  response: { title: "读取响应与用量", path: "/v1/chat/completions", body: { model: "qy-pro-2", messages: [MSG("总结今天的告警，不超过 50 字。")] }, mark: [],
+    res: { st: "200 OK", json: { id: "cmpl_a40d6f13", object: "chat.completion", created: 1763625920, model: "qy-pro-2", choices: [{ index: 0, message: { role: "assistant", content: "今日告警 12 条，9 条为温度阈值，3 条为链路抖动，均已恢复。" }, finish_reason: "stop" }], usage: { prompt_tokens: 18, completion_tokens: 37, cached_tokens: 0, total_tokens: 55 } } },
+    markRes: ["usage", "prompt_tokens", "completion_tokens", "total_tokens", "cached_tokens", "finish_reason"],
+    py: "print(resp.usage.total_tokens, resp.choices[0].finish_reason)", js: "console.log(resp.usage.total_tokens, resp.choices[0].finish_reason);" },
+  errors: { title: "处理 429 并重试", path: "/v1/chat/completions", body: { model: "qy-pro-2", messages: [MSG("你好")] }, mark: [],
+    res: { st: "429 Too Many Requests", err: 1, json: { error: { code: "rate_limited", type: "rate_limit_error", message: "超过每分钟 Token 上限（600000），请 7 秒后重试。" } } },
+    py: "# 遇到 429 时按 retry-after 退避\nimport time\ntry:\n    client.chat.completions.create(**kwargs)\nexcept qiyun.RateLimitError as e:\n    time.sleep(e.retry_after)", js: "// 遇到 429 时按 retry-after 退避\ntry {\n  await client.chat.completions.create(params);\n} catch (e) {\n  if (e.status === 429) await sleep(e.retryAfter * 1000);\n}" },
+};
+const jsonS = (v, ind = 2, d = 0) => { // 带缩进的 JSON，短数组/对象放一行
+  const sp = " ".repeat(ind * (d + 1)), ep = " ".repeat(ind * d);
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  const flat = JSON.stringify(v);
+  if (flat.length <= 38 && !flat.includes("\\n")) return Array.isArray(v) ? "[" + v.map(x => jsonS(x, ind, d + 1)).join(", ") + "]" : "{ " + Object.entries(v).map(([k, x]) => `"${k}": ${jsonS(x, ind, d + 1)}`).join(", ") + " }";
+  if (Array.isArray(v)) return "[\n" + v.map(x => sp + jsonS(x, ind, d + 1)).join(",\n") + "\n" + ep + "]";
+  return "{\n" + Object.entries(v).map(([k, x]) => `${sp}"${k}": ${jsonS(x, ind, d + 1)}`).join(",\n") + "\n" + ep + "}";
+};
+const pyS = (v, d = 0) => { const sp = "    ".repeat(d + 1), ep = "    ".repeat(d);
+  if (v === null) return "None"; if (v === true) return "True"; if (v === false) return "False";
+  if (typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) { const f = "[" + v.map(x => pyS(x, d + 1)).join(", ") + "]"; return f.length <= 44 && !f.includes("\n") ? f : "[\n" + v.map(x => sp + pyS(x, d + 1) + ",").join("\n") + "\n" + ep + "]"; }
+  const f = "{" + Object.entries(v).map(([k, x]) => `"${k}": ${pyS(x, d + 1)}`).join(", ") + "}"; return f.length <= 44 && !f.includes("\n") ? f : "{\n" + Object.entries(v).map(([k, x]) => `${sp}"${k}": ${pyS(x, d + 1)},`).join("\n") + "\n" + ep + "}"; };
+const jsS = (v, d = 0) => { const sp = "  ".repeat(d + 1), ep = "  ".repeat(d);
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) { const f = "[" + v.map(x => jsS(x, d + 1)).join(", ") + "]"; return f.length <= 44 && !f.includes("\n") ? f : "[\n" + v.map(x => sp + jsS(x, d + 1) + ",").join("\n") + "\n" + ep + "]"; }
+  const f = "{ " + Object.entries(v).map(([k, x]) => `${k}: ${jsS(x, d + 1)}`).join(", ") + " }"; return f.length <= 44 && !f.includes("\n") ? f : "{\n" + Object.entries(v).map(([k, x]) => `${sp}${k}: ${jsS(x, d + 1)},`).join("\n") + "\n" + ep + "}"; };
+function gen(ex, lang) {
+  if (lang === "curl") {
+    if (ex.get) return `curl ${BASE}${ex.path} \\\n  -H "Authorization: Bearer $QY_API_KEY"`;
+    return `curl ${ex.flagCurl || ""}${BASE}${ex.path} \\\n  -H "Authorization: Bearer $QY_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${jsonS(ex.body, 2).replace(/^/gm, (m, o) => o ? "  " : "")}'`;
+  }
+  if (lang === "py") {
+    const head = 'from qiyun import Qiyun\n\nclient = Qiyun()  # 读取环境变量 QY_API_KEY\n\n';
+    if (ex.get) return head + ex.py;
+    const args = Object.entries(ex.body).map(([k, v]) => `    ${k}=${pyS(v, 1)},`).join("\n");
+    return head + `resp = client.chat.completions.create(\n${args}\n)\n` + ex.py;
+  }
+  const head = 'import Qiyun from "qiyun";\n\nconst client = new Qiyun(); // 读取环境变量 QY_API_KEY\n\n';
+  if (ex.get) return head + ex.js;
+  const args = Object.entries(ex.body).map(([k, v]) => `  ${k}: ${jsS(v, 1)},`).join("\n");
+  return head + `const resp = await client.chat.completions.create({\n${args}\n});\n` + ex.js;
+}
+const INSTALL = { curl: "# 无需安装，只要有 curl\nexport QY_API_KEY=\"qy-sk-...\"", py: "pip install qiyun\nexport QY_API_KEY=\"qy-sk-...\"", js: "npm install qiyun\nexport QY_API_KEY=\"qy-sk-...\"" };
+
+/* ---------- 高亮 ---------- */
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const RE = /((?<![:\w\/])#.*$|(?<![:\w\/])\/\/.*$)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(\b\d+(?:\.\d+)?\b)|(\b(?:from|import|for|in|await|const|new|try|except|if|true|false|null|True|False|None|export|pip|npm|install|curl|print|console|process)\b)|(\s--?[A-Za-z][\w-]*)|([{}\[\](),:=])/gm;
+function hl(code, lang) {
+  let out = "", last = 0, m;
+  RE.lastIndex = 0;
+  const raw = code;
+  while ((m = RE.exec(raw))) {
+    out += esc(raw.slice(last, m.index));
+    const t = m[0];
+    if (m[1]) out += `<span class="tk-c">${esc(t)}</span>`;
+    else if (m[2]) { const key = /^\s*:/.test(raw.slice(m.index + t.length, m.index + t.length + 2)); out += `<span class="${key ? "tk-k" : "tk-s"}">${esc(t)}</span>`; }
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-w">${t}</span>`;
+    else if (m[5]) out += lang === "curl" ? `<span class="tk-f">${t}</span>` : esc(t);
+    else out += `<span class="tk-p">${esc(t)}</span>`;
+    last = m.index + t.length;
+  }
+  return out + esc(raw.slice(last));
+}
+function lines(code, lang, marks) {
+  // 按行高亮：先整体上色，再按行切开（单个 token 不跨行，除了字符串里的 \n 已转义）
+  return code.split("\n").map(l => `<span class="ln${marks.some(k => l.includes(k)) ? " mk" : ""}">${hl(l, lang) || " "}</span>`).join("");
+}
+
+/* ---------- 状态与渲染 ---------- */
+let lang = localStorage.getItem("qy-lang") || "curl", cur = "auth";
+const reqEl = $("#reqCode"), resEl = $("#resCode");
+function render(anim) {
+  const ex = EX[cur];
+  const go = () => {
+    $("#exT").textContent = ex.title;
+    reqEl.innerHTML = lines(gen(ex, lang), lang === "curl" ? "curl" : lang, ex.mark);
+    const resTxt = ex.resRaw || jsonS(ex.res.json, 2);
+    resEl.innerHTML = lines(resTxt, ex.resRaw ? "text" : "json", ex.markRes || []);
+    const st = $("#st"); st.className = "st" + (ex.res && ex.res.err ? " er" : ""); st.lastElementChild.textContent = ex.stLabel || ex.res.st;
+    $$('[data-install]').forEach(p => p.innerHTML = hl(INSTALL[lang], lang));
+    $$("#lang button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
+    reqEl.classList.remove("fade"); resEl.classList.remove("fade"); reqEl.scrollTop = 0; resEl.scrollTop = 0;
+  };
+  if (!anim) return go();
+  reqEl.classList.add("fade"); resEl.classList.add("fade"); setTimeout(go, 170);
+}
+$("#lang").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; lang = b.dataset.l; localStorage.setItem("qy-lang", lang); render(false); });
+const cpBtn = $("#cp");
+cpBtn.addEventListener("click", async () => {
+  const txt = gen(EX[cur], lang);
+  try { await navigator.clipboard.writeText(txt); } catch (e) { const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand("copy"); } catch (_) {} t.remove(); }
+  cpBtn.classList.add("ok"); cpBtn.lastElementChild.textContent = "已复制";
+  clearTimeout(cpBtn._t); cpBtn._t = setTimeout(() => { cpBtn.classList.remove("ok"); cpBtn.lastElementChild.textContent = "复制"; }, 1500);
+});
+$("#cpEp").addEventListener("click", e => { try { navigator.clipboard.writeText(BASE + "/v1/chat/completions"); } catch (_) {} e.target.textContent = "已复制"; setTimeout(() => e.target.textContent = "复制", 1500); });
+
+/* ---------- 滚动联动 ---------- */
+const secs = $$("main section"), links = $$("#sub a");
+function spy() {
+  const y = innerHeight * 0.32; let id = secs[0].id;
+  for (const s of secs) { if (s.getBoundingClientRect().top <= y) id = s.id; }
+  if (scrollY + innerHeight >= document.documentElement.scrollHeight - 4) id = secs[secs.length - 1].id;
+  links.forEach(a => a.classList.toggle("on", a.dataset.sec === id));
+  if (id !== cur) { cur = id; render(true); }
+}
+addEventListener("scroll", spy, { passive: true });
+
+/* ---------- 搜索筛选与提示 ---------- */
+$("#q").addEventListener("input", e => {
+  const v = e.target.value.trim().toLowerCase(); let n = 0;
+  $$("#nav a").forEach(a => { const hit = !v || a.textContent.toLowerCase().includes(v); a.style.display = hit ? "" : "none"; if (hit) n++; });
+  $$("#nav h6").forEach(h => h.style.display = v ? "none" : "");
+  $("#sub").style.display = ""; $("#empty").style.display = n ? "none" : "block";
+});
+addEventListener("keydown", e => { if (e.key === "/" && document.activeElement.tagName !== "INPUT") { e.preventDefault(); $("#q").focus(); } });
+const toast = $("#toast");
+document.addEventListener("click", e => { const t = e.target.closest("[data-toast]"); if (!t) return; e.preventDefault(); toast.textContent = t.dataset.toast; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 1800); });
+render(false); spy();
+</script>
+</body>
+</html>

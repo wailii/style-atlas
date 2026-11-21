@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>曜光 · 智算指挥中心</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--c:#3fe9ff;--c2:#1b8fa0;--c3:#0e4955;--c4:#08262d;--bg:#030709;--tx:#b8f6ff;--mono:"Share Tech Mono","Noto Sans SC",monospace;--ori:"Orbitron","Noto Sans SC",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden}
+body{font:13px/1.5 var(--mono);color:var(--tx);min-width:1180px;letter-spacing:.02em}
+#bg{position:fixed;inset:0;width:100%;height:100%}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px)}
+.vig{position:fixed;inset:0;pointer-events:none;z-index:49;box-shadow:inset 0 0 140px 10px rgba(0,0,0,.55)}
+.wrap{position:relative;z-index:2;height:100vh;display:grid;grid-template-rows:64px 1fr 34px;padding:0 24px}
+.cb{--l:var(--c2);background:
+ linear-gradient(var(--l),var(--l)) top left/14px 1px no-repeat,linear-gradient(var(--l),var(--l)) top left/1px 14px no-repeat,
+ linear-gradient(var(--l),var(--l)) top right/14px 1px no-repeat,linear-gradient(var(--l),var(--l)) top right/1px 14px no-repeat,
+ linear-gradient(var(--l),var(--l)) bottom left/14px 1px no-repeat,linear-gradient(var(--l),var(--l)) bottom left/1px 14px no-repeat,
+ linear-gradient(var(--l),var(--l)) bottom right/14px 1px no-repeat,linear-gradient(var(--l),var(--l)) bottom right/1px 14px no-repeat,rgba(6,28,34,.35);
+ border:1px solid var(--c4)}
+header{display:flex;align-items:center;gap:26px;border-bottom:1px solid var(--c3);position:relative}
+header::after{content:"";position:absolute;left:0;bottom:-1px;width:220px;height:2px;background:var(--c)}
+.brand{font:700 18px var(--ori);letter-spacing:.2em;color:var(--c);text-shadow:0 0 10px rgba(63,233,255,.6)}
+.brand small{display:block;font:400 10px var(--mono);letter-spacing:.3em;color:var(--c2);margin-top:2px}
+.chip{border:1px solid var(--c3);padding:2px 10px;font-size:11px;color:var(--c2);display:flex;gap:8px;align-items:center}
+.chip i{width:6px;height:6px;background:var(--c);display:block;animation:bl 2s infinite}
+@keyframes bl{50%{opacity:.25}}
+header .r{margin-left:auto;display:flex;gap:18px;align-items:center}
+#clk{font:500 22px var(--ori);color:var(--c);letter-spacing:.1em}
+main{display:grid;grid-template-columns:372px 1fr 392px;gap:18px;padding:18px 0;min-height:0}
+.col{display:flex;flex-direction:column;gap:14px;min-height:0}
+.mod{position:relative;padding:12px 14px 26px;cursor:pointer;transition:border-color .2s}
+.mod:hover{border-color:var(--c2);--l:var(--c)}
+.mod h4{font:500 11px var(--mono);letter-spacing:.24em;color:var(--c2);display:flex;justify-content:space-between;margin-bottom:8px}
+.mod h4 b{color:var(--c);font-weight:400}
+.mod .hint{position:absolute;right:12px;bottom:8px;font-size:10px;color:var(--c3);letter-spacing:.14em}
+.mod:hover .hint{color:var(--c2)}
+.big{font:700 34px var(--ori);color:var(--c);text-shadow:0 0 12px rgba(63,233,255,.5);line-height:1}
+.big small{font-size:14px;color:var(--c2);margin-left:2px}
+.kv{display:flex;justify-content:space-between;font-size:11px;color:var(--c2);border-top:1px dashed var(--c3);padding:3px 0}
+.kv b{color:var(--tx);font-weight:400}
+.al{display:flex;gap:8px;font-size:12px;padding:4px 0;border-top:1px dashed var(--c3);align-items:center}
+.al svg{width:12px;height:12px;flex:none}
+.al.w svg{animation:bl 1s infinite}
+.al em{font-style:normal;color:var(--c2);margin-left:auto;font-size:11px}
+/* center */
+.mid{position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+#rad{width:min(100%,calc(100vh - 170px));aspect-ratio:1;max-height:100%;cursor:crosshair}
+.tip{position:absolute;pointer-events:none;width:210px;padding:8px 10px;font-size:12px;opacity:0;clip-path:inset(0 100% 0 0);transition:opacity .15s,clip-path .35s;z-index:5}
+.tip.on{opacity:1;clip-path:inset(0 0 0 0)}
+.tip b{font:500 13px var(--ori);color:var(--c);letter-spacing:.1em;display:block;margin-bottom:3px}
+.tip div{display:flex;justify-content:space-between;color:var(--c2)}.tip div span{color:var(--tx)}
+.cap{position:absolute;left:0;top:0;font-size:11px;color:var(--c2);letter-spacing:.2em;line-height:1.8}
+.cap2{position:absolute;right:0;bottom:0;text-align:right;font-size:11px;color:var(--c2);letter-spacing:.2em;line-height:1.8}
+/* log */
+.log{flex:1;min-height:0;overflow:hidden;padding:10px 12px;font-size:11.5px;line-height:1.7;position:relative;display:flex;flex-direction:column}
+.log h4{font:500 11px var(--mono);letter-spacing:.24em;color:var(--c2);display:flex;justify-content:space-between;margin-bottom:6px}
+#lg{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+#lg div{white-space:nowrap;overflow:hidden;color:var(--tx)}
+#lg div .t{color:var(--c3)} #lg div .k{color:var(--c)} #lg div.w .k{text-shadow:0 0 6px rgba(63,233,255,.9)}
+.cur{display:inline-block;width:7px;height:12px;background:var(--c);vertical-align:-2px;animation:bl .8s steps(1) infinite}
+footer{display:flex;align-items:center;gap:30px;border-top:1px solid var(--c3);font-size:10.5px;color:var(--c2);letter-spacing:.16em}
+footer span:last-child{margin-left:auto}
+/* detail panel */
+#ov{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:rgba(1,5,7,.72)}
+#ov.on{display:flex}
+.dp{background-color:#041217;position:relative;width:760px;height:480px;padding:22px 26px;animation:dpo .7s cubic-bezier(.2,.7,.2,1) both}
+.dp>*{animation:dpc .5s .55s both}
+@keyframes dpo{0%{clip-path:inset(49.6% 0 49.6% 0);opacity:.6}35%{clip-path:inset(49.6% 0 49.6% 0);opacity:1}100%{clip-path:inset(0 0 0 0)}}
+@keyframes dpc{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.dp::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--c);box-shadow:0 0 10px var(--c);animation:ln .35s both;transform-origin:center}
+@keyframes ln{from{transform:scaleX(0)}to{transform:scaleX(1);opacity:0}}
+.dp h2{font:700 20px var(--ori);letter-spacing:.16em;color:var(--c);display:flex;justify-content:space-between;align-items:center}
+.dp h2 span{font:400 11px var(--mono);color:var(--c2);letter-spacing:.2em}
+.dp .x{cursor:pointer;border:1px solid var(--c3);padding:0 10px;font:400 12px var(--mono);color:var(--c2)}
+.dp .x:hover{border-color:var(--c);color:var(--c)}
+.dg{display:grid;grid-template-columns:230px 1fr;gap:22px;margin-top:14px;height:calc(100% - 46px)}
+.rows{display:flex;flex-direction:column;gap:7px;overflow:hidden}
+.rw{display:grid;grid-template-columns:86px 1fr 62px;gap:10px;align-items:center;font-size:12px;color:var(--c2)}
+.rw .b{height:6px;background:var(--c4);position:relative}.rw .b i{position:absolute;left:0;top:0;bottom:0;background:var(--c);box-shadow:0 0 8px var(--c);width:0;transition:width .9s .6s}
+.rw span:last-child{color:var(--tx);text-align:right}
+.tp{font-size:12px;line-height:1.8;color:var(--tx);min-height:100px}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="vig"></div><div class="scan"></div>
+<div class="wrap">
+ <header>
+  <div class="brand">曜光 · 智算指挥中心<small>LUMEN COMPUTE COMMAND // SECTOR 07</small></div>
+  <div class="chip"><i></i>链路 正常</div><div class="chip"><i></i>安全等级 L2</div><div class="chip">示例数据</div>
+  <div class="r"><span class="chip">机房 · 华东 3 区</span><span id="clk">00:00:00</span></div>
+ </header>
+ <main>
+  <div class="col">
+   <div class="mod cb" data-m="cluster"><h4>GPU 集群利用率 <b>CLUSTER</b></h4>
+     <div style="display:flex;gap:16px;align-items:center"><canvas id="ring" width="260" height="260" style="width:130px;height:130px"></canvas>
+     <div style="flex:1"><div class="big" id="u1">78.4<small>%</small></div>
+     <div class="kv" style="margin-top:10px"><span>在线卡数</span><b id="k1">1,016 / 1,024</b></div><div class="kv"><span>运行作业</span><b id="k2">212</b></div><div class="kv"><span>排队</span><b>17</b></div></div></div>
+     <div class="hint">点击展开 ▸</div></div>
+   <div class="mod cb" data-m="net"><h4>东西向网络吞吐 <b>FABRIC</b></h4>
+     <canvas id="net" width="680" height="160" style="width:100%;height:80px;display:block"></canvas>
+     <div class="kv" style="margin-top:6px"><span>当前</span><b id="nv">412 GB/s</b></div><div class="kv"><span>丢包</span><b>0.002%</b></div>
+     <div class="hint">点击展开 ▸</div></div>
+   <div class="mod cb" data-m="alert"><h4>告警队列 <b>ALERTS · 3</b></h4>
+     <div class="al w"><svg viewBox="0 0 12 12"><path d="M6 1 11 10.5H1Z" fill="none" stroke="#3fe9ff" stroke-width="1.2"/><path d="M6 4.5v3M6 8.6v.6" stroke="#3fe9ff"/></svg>机柜 A07 进风温度 86°C<em>10:41</em></div>
+     <div class="al w"><svg viewBox="0 0 12 12"><path d="M6 1 11 10.5H1Z" fill="none" stroke="#3fe9ff" stroke-width="1.2"/><path d="M6 4.5v3M6 8.6v.6" stroke="#3fe9ff"/></svg>机柜 C02 GPU 掉卡 1 张<em>10:36</em></div>
+     <div class="al"><svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" fill="none" stroke="#1b8fa0"/></svg>机柜 D05 光模块误码升高<em>10:12</em></div>
+     <div class="hint">点击展开 ▸</div></div>
+   <div class="mod cb" data-m="queue" style="flex:1"><h4>作业队列 <b>QUEUE · 17</b></h4>
+     <div class="kv"><span>job-4824 · 128 卡</span><b>P1 · 等待 2m</b></div><div class="kv"><span>job-4825 · 64 卡</span><b>P2 · 等待 5m</b></div><div class="kv"><span>job-4827 · 32 卡</span><b>P2 · 等待 6m</b></div><div class="kv"><span>job-4830 · 8 卡</span><b>P3 · 等待 9m</b></div>
+     <div class="hint">点击展开 ▸</div></div>
+  </div>
+  <div class="mid cb" style="border-color:transparent;background:none">
+    <div class="cap">RADAR / 机柜扫描<br>SWEEP 9.0s · 14 TARGETS</div>
+    <div class="cap2">悬停锁定目标<br>点击展开详情</div>
+    <canvas id="rad" width="1200" height="1200"></canvas>
+    <div class="tip cb" id="tip"></div>
+  </div>
+  <div class="col">
+   <div class="mod cb" data-m="power"><h4>机房电力 <b>POWER</b></h4>
+     <div style="display:flex;justify-content:space-between;align-items:flex-end"><div class="big" id="pw">3.82<small>MW</small></div><div style="font-size:11px;color:var(--c2);text-align:right">PUE <b style="color:var(--tx);font-weight:400">1.21</b><br>容量 76%</div></div>
+     <div class="hint">点击展开 ▸</div></div>
+   <div class="mod cb" data-m="cool"><h4>冷却回路 <b>COOLING</b></h4>
+     <div class="kv"><span>供水温度</span><b>18.4 °C</b></div><div class="kv"><span>回水温度</span><b>27.9 °C</b></div><div class="kv"><span>冷机负载</span><b>63%</b></div>
+     <div class="hint">点击展开 ▸</div></div>
+   <div class="log cb"><h4>数据流 <b id="lgs" style="color:var(--c);font-weight:400">LIVE</b></h4><div id="lg"></div></div>
+  </div>
+ </main>
+ <footer><span>CMD-07 · 会话 0x4F2A</span><span>数据延迟 38 ms</span><span>加密 AES-256</span><span>空格键暂停扫描</span></footer>
+</div>
+<div id="ov"><div class="dp cb" id="dp"></div></div>
+
+<script>
+window.__e=[];addEventListener("error",e=>__e.push(e.message+" @"+e.lineno));
+const $=s=>document.querySelector(s),C="#3fe9ff";
+let paused=false,T=0;
+// ---------- 背景网格 ----------
+(function(){const c=$("#bg"),x=c.getContext("2d");function d(){c.width=innerWidth;c.height=innerHeight;x.fillStyle="#030709";x.fillRect(0,0,c.width,c.height);x.fillStyle="rgba(63,233,255,.10)";for(let i=0;i<c.width;i+=32)for(let j=0;j<c.height;j+=32)x.fillRect(i,j,1,1);x.strokeStyle="rgba(63,233,255,.05)";x.beginPath();for(let i=0;i<c.width;i+=160){x.moveTo(i,0);x.lineTo(i,c.height)}for(let j=0;j<c.height;j+=160){x.moveTo(0,j);x.lineTo(c.width,j)}x.stroke()}d();addEventListener("resize",d)})();
+// ---------- 数据 ----------
+const seed=n=>{let s=n*9301+49297;return()=>{s=(s*9301+49297)%233280;return s/233280}};
+const rnd=seed(7);
+const NODES=[];
+const nm=["A01","A03","A05","A07","B02","B04","B06","B08","C02","C05","C07","D01","D05","D08"];
+nm.forEach((n,i)=>{const a=(i*137.5+20)%360,r=.28+((i*0.173)%0.62);NODES.push({id:"机柜 "+n,a:a*Math.PI/180,r:Math.min(.93,r),util:Math.round(48+rnd()*48),temp:Math.round(52+rnd()*14),pw:+(32+rnd()*14).toFixed(1),jobs:Math.round(2+rnd()*9),st:"正常"})});
+const byId=k=>NODES.find(n=>n.id=="机柜 "+k);
+Object.assign(byId("A07"),{temp:86,st:"过热",alert:1,util:93});Object.assign(byId("C02"),{st:"掉卡 1/8",alert:1,util:71});Object.assign(byId("D05"),{st:"误码升高",alert:2});
+// ---------- 雷达 ----------
+const rc=$("#rad"),rx=rc.getContext("2d"),S=1200,cx=S/2,cy=S/2,R=500;
+let mx=-1,my=-1,lock=null,lockT=0,lockPrev=null;
+rc.addEventListener("pointermove",e=>{const b=rc.getBoundingClientRect();mx=(e.clientX-b.left)/b.width*S;my=(e.clientY-b.top)/b.height*S});
+rc.addEventListener("pointerleave",()=>{mx=-1});
+rc.addEventListener("click",()=>{if(lock)openPanel("node",lock)});
+const pos=n=>[cx+Math.sin(n.a)*n.r*R,cy-Math.cos(n.a)*n.r*R];
+function radar(dt){
+  rx.clearRect(0,0,S,S);
+  rx.lineWidth=2;
+  // rings
+  for(let i=1;i<=5;i++){rx.strokeStyle=i==5?"rgba(63,233,255,.55)":"rgba(63,233,255,.2)";rx.setLineDash(i%2?[4,10]:[]);rx.beginPath();rx.arc(cx,cy,R*i/5,0,7);rx.stroke()}
+  rx.setLineDash([]);
+  // axis
+  rx.strokeStyle="rgba(63,233,255,.18)";rx.beginPath();rx.moveTo(cx-R-36,cy);rx.lineTo(cx+R+36,cy);rx.moveTo(cx,cy-R-36);rx.lineTo(cx,cy+R+36);rx.stroke();
+  // ticks
+  for(let d=0;d<360;d+=3){const a=d*Math.PI/180,l=d%30==0?28:d%15==0?18:9;rx.strokeStyle=d%30==0?"rgba(63,233,255,.85)":"rgba(63,233,255,.4)";rx.beginPath();rx.moveTo(cx+Math.sin(a)*(R+8),cy-Math.cos(a)*(R+8));rx.lineTo(cx+Math.sin(a)*(R+8+l),cy-Math.cos(a)*(R+8+l));rx.stroke()}
+  rx.fillStyle="rgba(63,233,255,.75)";rx.font="22px 'Share Tech Mono',monospace";rx.textAlign="center";rx.textBaseline="middle";
+  for(let d=0;d<360;d+=30){const a=d*Math.PI/180;rx.fillText(String(d).padStart(3,"0"),cx+Math.sin(a)*(R+58),cy-Math.cos(a)*(R+58))}
+  // 外圈弧段装饰
+  rx.strokeStyle="rgba(63,233,255,.9)";rx.lineWidth=5;rx.beginPath();rx.arc(cx,cy,R+4,-Math.PI/2+T*.1,-Math.PI/2+T*.1+.6);rx.stroke();rx.beginPath();rx.arc(cx,cy,R+4,Math.PI/2+T*.1,Math.PI/2+T*.1+.3);rx.stroke();rx.lineWidth=2;
+  // sweep
+  const sw=(T*2*Math.PI/9)%(2*Math.PI);
+  for(let i=0;i<70;i++){const a0=sw-i*.014-.014,a1=sw-i*.014;rx.fillStyle=`rgba(63,233,255,${.26*(1-i/70)})`;rx.beginPath();rx.moveTo(cx,cy);rx.arc(cx,cy,R,a0-Math.PI/2,a1-Math.PI/2);rx.closePath();rx.fill()}
+  rx.strokeStyle=C;rx.lineWidth=3;rx.shadowColor=C;rx.shadowBlur=14;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(sw)*R,cy-Math.cos(sw)*R);rx.stroke();rx.shadowBlur=0;rx.lineWidth=2;
+  // center
+  rx.fillStyle=C;rx.beginPath();rx.arc(cx,cy,6,0,7);rx.fill();rx.strokeStyle="rgba(63,233,255,.6)";rx.beginPath();rx.arc(cx,cy,16,0,7);rx.stroke();
+  // targets
+  let best=null,bd=60;
+  NODES.forEach(n=>{
+    const [x,y]=pos(n);let d=(sw-n.a)%(2*Math.PI);if(d<0)d+=2*Math.PI;const b=.22+.78*Math.exp(-d*1.0);
+    n.b=b;
+    const hv=Math.hypot(mx-x,my-y);if(mx>=0&&hv<bd){bd=hv;best=n}
+    rx.fillStyle=`rgba(63,233,255,${b})`;rx.strokeStyle=`rgba(63,233,255,${b})`;
+    if(n.alert){const k=(Math.sin(T*6)>0?1:.4);rx.beginPath();rx.moveTo(x,y-15);rx.lineTo(x+14,y+11);rx.lineTo(x-14,y+11);rx.closePath();rx.lineWidth=3;rx.strokeStyle=`rgba(63,233,255,${Math.max(b,.55)*k})`;rx.stroke();rx.lineWidth=2}
+    else{rx.fillRect(x-6,y-6,12,12)}
+    if(b>.55){rx.shadowColor=C;rx.shadowBlur=18;rx.beginPath();rx.arc(x,y,16*(b),0,7);rx.stroke();rx.shadowBlur=0}
+    rx.fillStyle=`rgba(63,233,255,${Math.max(.45,b)})`;rx.font="20px 'Share Tech Mono'";rx.textAlign="left";rx.fillText(n.id.slice(3),x+20,y-14)});
+  if(mx<0)best=NODES[(Math.floor(T/3.5)+3)%NODES.length];
+  if(best!==lock){lock=best;lockT=0;showTip()}
+  if(lock){lockT=Math.min(1,lockT+dt*3.2);drawLock(lock)}
+}
+function drawLock(n){const [x,y]=pos(n);const e=1-Math.pow(1-lockT,3);const s=14+60*(1-e),rot=(1-e)*Math.PI/2;
+  rx.save();rx.translate(x,y);rx.rotate(rot);rx.strokeStyle=C;rx.lineWidth=3;rx.shadowColor=C;rx.shadowBlur=10;
+  const L=12;[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>{rx.beginPath();rx.moveTo(a*s,b*(s-L));rx.lineTo(a*s,b*s);rx.lineTo(a*(s-L),b*s);rx.stroke()});rx.restore();
+  rx.strokeStyle="rgba(63,233,255,.55)";rx.lineWidth=1.5;rx.beginPath();rx.moveTo(x,y);rx.lineTo(x+(x>cx?-1:1)*0,y);rx.stroke();
+  // 引线到中心
+  rx.setLineDash([6,8]);rx.beginPath();rx.moveTo(x,y);rx.lineTo(cx,cy);rx.stroke();rx.setLineDash([]);rx.lineWidth=2}
+function showTip(){const t=$("#tip");if(!lock){t.classList.remove("on");return}const n=lock,b=rc.getBoundingClientRect(),pb=rc.parentElement.getBoundingClientRect();const [x,y]=pos(n);
+  const px=b.left-pb.left+x/S*b.width,py=b.top-pb.top+y/S*b.height;
+  t.innerHTML=`<b>${n.id}</b><div>状态<span>${n.st}</span></div><div>GPU 利用率<span>${n.util}%</span></div><div>进风温度<span>${n.temp}°C</span></div><div>功耗<span>${n.pw} kW</span></div><div>作业<span>${n.jobs}</span></div>`;
+  t.style.left=Math.min(pb.width-224,Math.max(0,px+34))+"px";t.style.top=Math.max(0,Math.min(pb.height-130,py-50))+"px";t.classList.remove("on");void t.offsetWidth;t.classList.add("on")}
+// ---------- 环形仪表 ----------
+const gc=$("#ring"),gx=gc.getContext("2d");let util=78.4;
+function ring(){gx.clearRect(0,0,260,260);const N=60,lit=util/100*N;for(let i=0;i<N;i++){const a=(i/N)*Math.PI*2-Math.PI/2;const on=i<lit;gx.strokeStyle=on?C:"rgba(63,233,255,.18)";gx.lineWidth=on?5:3;if(on){gx.shadowColor=C;gx.shadowBlur=6}else gx.shadowBlur=0;gx.beginPath();gx.moveTo(130+Math.cos(a)*100,130+Math.sin(a)*100);gx.lineTo(130+Math.cos(a)*118,130+Math.sin(a)*118);gx.stroke()}
+ gx.shadowBlur=0;gx.strokeStyle="rgba(63,233,255,.35)";gx.lineWidth=2;gx.beginPath();gx.arc(130,130,86,0,7);gx.stroke();gx.setLineDash([3,7]);gx.beginPath();gx.arc(130,130,72,T,T+4.2);gx.stroke();gx.setLineDash([]);
+ gx.fillStyle=C;gx.font="700 30px Orbitron,sans-serif";gx.textAlign="center";gx.textBaseline="middle";gx.fillText(Math.round(util),130,126);gx.font="16px 'Share Tech Mono'";gx.fillStyle="#1b8fa0";gx.fillText("UTIL %",130,154)}
+// ---------- 网络曲线 ----------
+const nc=$("#net"),nx=nc.getContext("2d");const nd=Array.from({length:68},(_,i)=>.5+Math.sin(i*.35)*.2+rnd()*.2);let nt=0;
+function net(dt){nt+=dt;if(nt>.12){nt=0;nd.shift();nd.push(Math.max(.15,Math.min(.95,nd[nd.length-1]+(rnd()-.5)*.22)));$("#nv").textContent=Math.round(300+nd[nd.length-1]*230)+" GB/s"}
+ nx.clearRect(0,0,680,160);nx.strokeStyle="rgba(63,233,255,.14)";nx.lineWidth=1;for(let i=1;i<4;i++){nx.beginPath();nx.moveTo(0,i*40);nx.lineTo(680,i*40);nx.stroke()}
+ nx.strokeStyle=C;nx.lineWidth=2.5;nx.shadowColor=C;nx.shadowBlur=8;nx.beginPath();nd.forEach((v,i)=>{const x=i*10,y=150-v*140;i?nx.lineTo(x,y):nx.moveTo(x,y)});nx.stroke();nx.shadowBlur=0;
+ nx.fillStyle="rgba(63,233,255,.1)";nx.lineTo(670,160);nx.lineTo(0,160);nx.closePath();nx.fill()}
+// ---------- 数据流 ----------
+const LOG=[["SCH","作业 job-4821 调度到 A03 ×8 卡"],["NET","fabric-2 链路 L14 协商 400G 成功"],["PWR","配电柜 PDU-3 负载 61%"],["SCH","作业 job-4822 进入队列，优先级 P2"],["THM","A07 进风 86°C，已触发降频"],["CKP","训练任务 ckpt 写入 1.8 TB 完成"],["NET","spine-1 吞吐 412 GB/s"],["SEC","堡垒机会话 u-0183 登录"],["SCH","作业 job-4790 完成，释放 16 卡"],["HLT","C02 GPU-5 无响应，标记掉卡"],["COL","冷机 CH-2 负载 63%"],["SCH","作业 job-4823 调度到 B04 ×4 卡"]];
+let li=0;const lg=$("#lg");
+function pad(n){return String(n).padStart(2,"0")}
+function pushLog(){if(paused)return;const [k,m]=LOG[li++%LOG.length];const d=new Date(2026,10,20,10,42,0);d.setSeconds(Math.floor((Date.now()-T0)/1000));
+ const row=document.createElement("div");if(k=="THM"||k=="HLT")row.className="w";lg.appendChild(row);
+ const full=`<span class="t">${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}</span> <span class="k">${k}</span> ${m}`;
+ const txt=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${k} ${m}`;let i=0;
+ const iv=setInterval(()=>{i+=2;const t=txt.slice(0,i);row.innerHTML=t.length>=9?`<span class="t">${t.slice(0,8)}</span>`+(t.length>9?` <span class="k">${t.slice(9,12)}</span>${t.slice(12)}`:""):t;
+  if(i<txt.length)row.innerHTML+='<span class="cur"></span>';else{clearInterval(iv);row.innerHTML=full}},26);
+ while(lg.children.length>21)lg.removeChild(lg.firstChild)}
+for(let i=0;i<21;i++){const [k,m]=LOG[li++%LOG.length];const r=document.createElement("div");if(k=="THM"||k=="HLT")r.className="w";r.innerHTML=`<span class="t">10:${pad(20+Math.floor(i*1.0))}:${pad((i*17)%60)}</span> <span class="k">${k}</span> ${m}`;lg.appendChild(r)}
+// ---------- 详情面板 ----------
+const MODS={cluster:{t:"GPU 集群利用率",s:"CLUSTER / 1,024 CARDS",rows:[["A 区",81],["B 区",76],["C 区",69],["D 区",88],["预留池",34],["调试池",52]],txt:"1,016 张在线，8 张离线（C02 掉卡 1 张，其余为计划维护）。212 个作业运行中，排队 17 个，预计 14 分钟内全部调度。"},
+ net:{t:"东西向网络吞吐",s:"FABRIC / 400G",rows:[["spine-1",79],["spine-2",74],["leaf-A",68],["leaf-B",71],["leaf-C",58],["leaf-D",83]],txt:"当前总吞吐 412 GB/s，峰值 497 GB/s（10:12）。D 区光模块误码升高，已加入观察。"},
+ alert:{t:"告警队列",s:"ALERTS / 3 OPEN",rows:[["A07 温度",86],["C02 掉卡",71],["D05 误码",34],["PDU-3 负载",61],["冷机 CH-2",63],["堡垒机",12]],txt:"A07 已触发降频并通知值班；C02 作业已迁移；D05 观察中。三条告警均未影响训练任务。"},
+ queue:{t:"作业队列",s:"QUEUE / 17 PENDING",rows:[["P1 作业",18],["P2 作业",47],["P3 作业",35],["等待 <5m",62],["等待 5–15m",28],["等待 >15m",10]],txt:"17 个作业排队，需求共 612 张卡。按当前释放速度，预计 14 分钟内全部调度。"},
+ power:{t:"机房电力",s:"POWER / 5.0 MW",rows:[["PDU-1",72],["PDU-2",78],["PDU-3",61],["PDU-4",69],["UPS-A",44],["UPS-B",46]],txt:"总功率 3.82 MW，容量使用 76%，PUE 1.21。两路市电正常，柴发待机。"},
+ cool:{t:"冷却回路",s:"COOLING / 3 LOOPS",rows:[["供水温度",46],["回水温度",70],["冷机 CH-1",58],["冷机 CH-2",63],["冷塔风机",52],["泵组",41]],txt:"供回水温差 9.5°C。A07 区域局部过热，已加大该列风量。"}};
+function openPanel(kind,key){const ov=$("#ov"),dp=$("#dp");let m,rows,txt;
+ if(kind=="node"){const n=key;m={t:n.id,s:"NODE / 8 GPU · "+n.st};rows=Array.from({length:8},(_,i)=>["GPU-"+i,Math.max(8,Math.min(99,n.util+Math.round((((i*37)%17)-8)*2.2)))]);if(n.id.endsWith("C02"))rows[5][1]=0;txt=`进风 ${n.temp}°C · 功耗 ${n.pw} kW · 作业 ${n.jobs} 个。${n.alert?"该机柜有未关闭告警，请值班确认。":"运行正常。"}`}
+ else{m=MODS[key];rows=m.rows;txt=m.txt}
+ dp.innerHTML=`<h2>${m.t}<span>${m.s}</span><div class="x" id="xx">关闭 [ESC]</div></h2><div class="dg"><div class="rows">${rows.map(r=>`<div class="rw"><span>${r[0]}</span><div class="b"><i data-w="${r[1]}"></i></div><span>${r[1]}%</span></div>`).join("")}</div>
+ <div><canvas id="pc" width="760" height="260" style="width:100%;height:130px;display:block;border-bottom:1px dashed #0e4955"></canvas><div class="tp" id="tp" style="margin-top:12px"></div></div></div>`;
+ ov.classList.add("on");dp.style.animation="none";void dp.offsetWidth;dp.style.animation="";
+ setTimeout(()=>dp.querySelectorAll(".b i").forEach(i=>i.style.width=i.dataset.w+"%"),30);
+ $("#xx").onclick=closePanel;
+ // 曲线
+ const pc=$("#pc"),px=pc.getContext("2d");px.strokeStyle="rgba(63,233,255,.15)";for(let i=1;i<5;i++){px.beginPath();px.moveTo(0,i*52);px.lineTo(760,i*52);px.stroke()}
+ px.strokeStyle=C;px.lineWidth=3;px.shadowColor=C;px.shadowBlur=8;px.beginPath();const r2=seed(rows.length*13+rows[0][1]);let v=.5;for(let i=0;i<=60;i++){v=Math.max(.1,Math.min(.9,v+(r2()-.5)*.25));const x=i*12.6,y=250-v*230;i?px.lineTo(x,y):px.moveTo(x,y)}px.stroke();
+ // 打字
+ const tp=$("#tp");let i=0;setTimeout(()=>{const iv=setInterval(()=>{i+=2;tp.textContent=txt.slice(0,i);if(i>=txt.length)clearInterval(iv)},22)},650)}
+function closePanel(){$("#ov").classList.remove("on")}
+$("#ov").addEventListener("click",e=>{if(e.target.id=="ov")closePanel()});
+addEventListener("keydown",e=>{if(e.key=="Escape")closePanel();if(e.code=="Space"){e.preventDefault();paused=!paused;$("#lgs").textContent=paused?"PAUSED":"LIVE"}});
+document.querySelectorAll(".mod[data-m]").forEach(m=>m.addEventListener("click",()=>openPanel("mod",m.dataset.m)));
+// ---------- 主循环 ----------
+const T0=Date.now();let last=performance.now();T=2.6;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!paused)T+=dt;
+ util=78.4+Math.sin(T*.7)*2.2;$("#u1").innerHTML=util.toFixed(1)+"<small>%</small>";
+ radar(dt);ring();net(dt);
+ const d=new Date(2026,10,20,10,42,0);d.setSeconds(Math.floor((Date.now()-T0)/1000));$("#clk").textContent=pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());
+ requestAnimationFrame(loop)}
+requestAnimationFrame(loop);setInterval(pushLog,1700);
+// 入场
+document.querySelectorAll(".mod,.log,.mid").forEach((e,i)=>{e.animate([{opacity:0,transform:"translateY(8px)"},{opacity:1,transform:"none"}],{duration:500,delay:100+i*90,fill:"backwards"})});
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>支付后台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--acc:#5f3dc4;--acc2:#7a5ce0;--accbg:#f0ecfc;--ink:#1a1730;--ink2:#4a4766;--mute:#8b88a0;--line:#e7e5ef;--line2:#f1f0f6;--side:#f8f7fb;--ok:#0d7a46;--okbg:#e3f6ec;--wait:#8a5a00;--waitbg:#fdf1d6;--bad:#b42318;--badbg:#fde8e6;--ref:#4a4766;--refbg:#ecebf3}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#fff}
+body{font-family:Inter,"Noto Sans SC",sans-serif;font-size:13.5px;color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+input{cursor:text}
+svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{display:grid;grid-template-columns:224px 1fr;height:100vh}
+.side{background:var(--side);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+.acct{display:flex;align-items:center;gap:10px;padding:6px 8px 14px}
+.acct .lg{width:30px;height:30px;border-radius:8px;background:var(--acc);color:#fff;display:grid;place-items:center;font-weight:700}
+.acct b{display:block;font-size:13.5px;line-height:1.2}
+.acct small{font-size:11.5px;color:var(--mute)}
+.nv{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:7px;color:var(--ink2);font-weight:500;cursor:pointer}
+.nv:hover{background:#efedf6}
+.nv.on{background:var(--accbg);color:var(--acc)}
+.nv svg{color:var(--mute)}.nv.on svg{color:var(--acc)}
+.sec{font-size:11px;color:var(--mute);padding:16px 10px 4px;letter-spacing:.04em}
+.mode{margin-top:auto;font-size:12px;color:var(--mute);padding:10px;border-top:1px solid var(--line)}
+.mode i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2fb872;margin-right:6px}
+.main{display:flex;flex-direction:column;min-width:0;position:relative}
+.top{height:56px;flex:none;display:flex;align-items:center;gap:12px;padding:0 32px;border-bottom:1px solid var(--line)}
+.sr{display:flex;align-items:center;gap:8px;width:380px;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:8px;color:var(--mute)}
+.sr span{font-size:13px}.sr kbd{margin-left:auto;font:11px Inter;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.top .sp{margin-left:auto}
+.btn{height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--line);font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--side)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}.btn.p:hover{background:var(--acc2)}
+.scroll{flex:1;overflow:auto;padding:22px 32px 40px}
+.scroll::-webkit-scrollbar{width:0}
+.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.hd h1{font-size:24px;letter-spacing:-.02em;font-weight:700}
+.hd .rg{display:flex;gap:8px;align-items:center}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff}
+.seg button{height:28px;padding:0 12px;border-radius:6px;color:var(--ink2);font-weight:500;font-size:13px}
+.seg button.on{background:var(--ink);color:#fff}
+.cmpl{display:flex;align-items:center;gap:7px;color:var(--ink2);font-size:13px;cursor:pointer}
+.cmpl i{width:22px;height:12px;border-radius:7px;background:var(--acc);position:relative;display:inline-block;transition:.15s}
+.cmpl i::after{content:"";position:absolute;left:12px;top:1px;width:10px;height:10px;border-radius:50%;background:#fff;transition:.15s}
+.cmpl.off i{background:#cfcbdc}.cmpl.off i::after{left:0}
+.row1{display:grid;grid-template-columns:1fr 340px;gap:0;border:1px solid var(--line);border-radius:12px;margin-bottom:16px}
+.chart{padding:18px 22px 14px;border-right:1px solid var(--line);min-width:0}
+.lab{font-size:13px;color:var(--ink2);font-weight:500;display:flex;align-items:center;gap:6px}
+.lab svg{width:14px;height:14px;color:var(--mute)}
+.mny{display:inline-flex;align-items:baseline;letter-spacing:-.02em}
+.mny .cur{font-size:.78em;color:var(--mute);font-weight:500;margin-right:3px;letter-spacing:0;transform:translateY(-.12em)}
+.mny .dc{color:var(--mute);font-weight:500}
+.big{font-size:38px;font-weight:600;line-height:1.1;margin-top:4px;display:flex;align-items:baseline;gap:12px}
+.big .mny .cur{font-size:.42em}
+.dl{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:600;padding:1px 7px;border-radius:999px;letter-spacing:0}
+.dl.up{color:var(--ok);background:var(--okbg)}.dl.dn{color:var(--bad);background:var(--badbg)}
+.prev{font-size:12.5px;color:var(--mute);margin-top:2px}
+.prev b{color:var(--ink2);font-weight:500}
+#cv{position:relative;height:204px;margin-top:10px}
+#cv svg{width:100%;height:100%;display:block;overflow:visible;stroke:none;stroke-width:0}
+.tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 24px rgba(26,23,48,.12);padding:9px 12px;font-size:12.5px;min-width:190px;opacity:0;transition:opacity .1s;z-index:4}
+.tip .d{color:var(--mute);font-size:12px;margin-bottom:5px}
+.tip .l{display:flex;align-items:center;gap:7px;justify-content:space-between;margin-top:3px}
+.tip .l span:first-child{display:flex;align-items:center;gap:6px;color:var(--ink2)}
+.tip .l i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.tip .l b{font-weight:600}
+.tip .df{margin-top:6px;padding-top:6px;border-top:1px solid var(--line2);color:var(--ok);font-weight:600;text-align:right}
+.tip .df.n{color:var(--bad)}
+.pay{padding:18px 20px;display:flex;flex-direction:column}
+.pay .sub{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.pay .mny.m{font-size:26px;font-weight:600}
+.pay p.s{font-size:12.5px;color:var(--mute);margin-top:2px}
+.bar{height:6px;border-radius:3px;background:var(--line2);margin:10px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:3px;transition:width .6s}
+.pl{margin-top:8px}
+.pl div{display:flex;justify-content:space-between;align-items:center;height:30px;border-bottom:1px solid var(--line2);font-size:13px}
+.pl div:last-child{border:0}
+.pl span{color:var(--ink2)}
+a.lk{color:var(--acc);font-weight:500;cursor:pointer;font-size:13px}a.lk:hover{text-decoration:underline}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:12px;margin-bottom:22px}
+.kp>div{padding:14px 18px 12px;border-right:1px solid var(--line);position:relative;min-width:0}
+.kp>div:last-child{border:0}
+.kp .v{font-size:23px;font-weight:600;margin-top:2px;letter-spacing:-.02em;display:flex;align-items:baseline;gap:8px}
+.kp .v .dl{font-size:12px}
+.kp svg.sk{position:absolute;right:14px;top:18px;width:86px;height:34px;stroke:var(--acc);stroke-width:1.6}
+.th2{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.th2 h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.th2 h2 small{font-size:13px;font-weight:400;color:var(--mute);margin-left:8px}
+.fl{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;position:relative}
+.chip{display:inline-flex;align-items:center;height:28px;padding:0 4px 0 11px;border-radius:999px;background:var(--accbg);color:var(--acc);font-weight:500;font-size:12.5px;gap:4px;animation:pop .18s both}
+.chip button{width:20px;height:20px;border-radius:50%;display:grid;place-items:center}
+.chip button:hover{background:rgba(95,61,196,.15)}
+.chip svg{width:12px;height:12px;stroke-width:2.2}
+@keyframes pop{from{opacity:0;transform:scale(.9)}}
+.add{height:28px;padding:0 11px;border-radius:999px;border:1px dashed #c6c1d8;color:var(--ink2);font-weight:500;font-size:12.5px;display:inline-flex;align-items:center;gap:5px}
+.add:hover{border-color:var(--acc);color:var(--acc)}
+.add svg{width:13px;height:13px}
+.menu{position:absolute;top:34px;left:0;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 32px rgba(26,23,48,.14);padding:6px;width:230px;z-index:8;display:none}
+.menu.show{display:block;animation:pop .14s both}
+.menu h6{font-size:11px;color:var(--mute);font-weight:500;padding:7px 8px 3px;letter-spacing:.04em}
+.menu button{display:flex;width:100%;height:30px;align-items:center;gap:8px;padding:0 8px;border-radius:6px;text-align:left;font-size:13px}
+.menu button:hover{background:var(--side)}
+.menu button.on{color:var(--acc);font-weight:600}
+.menu button.on::after{content:"✓";margin-left:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-weight:500;color:var(--mute);font-size:12px;height:34px;border-bottom:1px solid var(--line);padding:0 12px}
+td{height:48px;border-bottom:1px solid var(--line2);padding:0 12px;white-space:nowrap}
+tr.tx{cursor:pointer;transition:background .1s}
+tr.tx:hover{background:var(--side)}
+tr.tx.sel{background:var(--accbg)}
+th.r,td.r{text-align:right}
+td .mny{font-size:14.5px;font-weight:600;letter-spacing:0}
+td .mny .cur{font-size:.8em;font-weight:500}
+td .mny.neg{color:var(--ink2);text-decoration:line-through}
+td.sub2{color:var(--ink2)}
+td .id{color:var(--mute);font-size:12px;display:block;line-height:1.2}
+.pill{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:999px;font-size:12px;font-weight:600}
+.pill svg{width:12px;height:12px;stroke-width:2.4}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.wt{background:var(--waitbg);color:var(--wait)}.pill.bd{background:var(--badbg);color:var(--bad)}.pill.rf{background:var(--refbg);color:var(--ref)}
+.drw{position:absolute;top:0;right:0;bottom:0;width:430px;background:#fff;border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(26,23,48,.08);transform:translateX(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:10;display:flex;flex-direction:column}
+.drw.show{transform:none}
+.drw .h{display:flex;justify-content:space-between;align-items:center;height:56px;padding:0 22px;border-bottom:1px solid var(--line);font-weight:600}
+.drw .h button{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--ink2)}
+.drw .h button:hover{background:var(--side)}
+.drw .b{padding:20px 22px;overflow:auto;flex:1}
+.drw .amt{font-size:34px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px}
+.drw .amt .mny .cur{font-size:.45em}
+.kv{display:grid;grid-template-columns:96px 1fr;row-gap:9px;margin:18px 0 6px;font-size:13px;padding-top:16px;border-top:1px solid var(--line)}
+.kv dt{color:var(--mute)}
+.tl{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
+.tl h4{font-size:13px;margin-bottom:12px}
+.ev{display:grid;grid-template-columns:18px 1fr auto;gap:0 10px;position:relative;padding-bottom:16px}
+.ev::before{content:"";position:absolute;left:8px;top:18px;bottom:0;width:1px;background:var(--line)}
+.ev:last-child::before{display:none}
+.ev .dt{width:17px;height:17px;border-radius:50%;background:var(--acc);display:grid;place-items:center;color:#fff;margin-top:1px}
+.ev .dt svg{width:10px;height:10px;stroke-width:3}
+.ev.bad .dt{background:var(--bad)}.ev.wait .dt{background:#fff;border:2px solid #cfcbdc;color:transparent}.ev.ref .dt{background:var(--ink2)}
+.ev b{font-weight:600;font-size:13px;display:block}
+.ev small{color:var(--mute);font-size:12px}
+.ev time{color:var(--mute);font-size:12px}
+@media(max-width:1380px){.kp svg.sk{display:none}}
+.foot{position:absolute;right:12px;bottom:4px;font-size:10px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="acct"><span class="lg">拾</span><div><b>拾圆收单</b><small>星桥科技有限公司</small></div></div>
+  <a class="nv on"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/></svg>首页</a>
+  <a class="nv"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>余额</a>
+  <a class="nv"><svg viewBox="0 0 24 24"><path d="M7 7h13M7 7l3-3M7 7l3 3M17 17H4M17 17l-3-3M17 17l-3 3"/></svg>交易</a>
+  <a class="nv"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 5a3.5 3.5 0 010 6M18 14c1.8.7 3 2.5 3 5"/></svg>客户</a>
+  <div class="sec">财务</div>
+  <a class="nv"><svg viewBox="0 0 24 24"><path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2zM9 9h6M9 13h6"/></svg>对账</a>
+  <a class="nv"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>结算</a>
+  <a class="nv"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3zM12 10v4M12 17v.5"/></svg>争议</a>
+  <div class="sec">开发者</div>
+  <a class="nv"><svg viewBox="0 0 24 24"><path d="M8 8l-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/></svg>接口与密钥</a>
+  <a class="nv"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-7 4 14 2-7h4"/></svg>事件日志</a>
+  <div class="mode"><i></i>正式环境 · 示例数据</div>
+</aside>
+<section class="main">
+  <div class="top"><label class="sr"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>搜索交易、客户、订单号</span><kbd>/</kbd></label><span class="sp"></span><button class="btn">导出</button><button class="btn p"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke-width:2.2"><path d="M12 5v14M5 12h14"/></svg>创建收款</button></div>
+  <div class="scroll" id="sc">
+    <div class="hd"><h1>首页</h1><div class="rg"><label class="cmpl" id="cmp"><i></i>对比上一周期</label><div class="seg" id="seg"><button data-n="7">7 天</button><button data-n="30" class="on">30 天</button><button data-n="90">90 天</button><button data-n="12">12 个月</button></div></div></div>
+    <div class="row1">
+      <div class="chart">
+        <div class="lab"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-9"/></svg>总收款</div>
+        <div class="big"><span class="mny" id="tot"></span><span class="dl up" id="totd"></span></div>
+        <div class="prev" id="prevl"></div>
+        <div id="cv"><div class="tip" id="tip"></div></div>
+      </div>
+      <div class="pay">
+        <div class="lab">待结算金额</div>
+        <div style="margin-top:4px"><span class="mny m" id="set"></span></div>
+        <p class="s">预计 11 月 21 日到账 · 尾号 6021</p>
+        <div class="sub">
+          <div class="lab">昨日对账</div>
+          <div class="bar"><i id="rcb" style="width:0"></i></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span><b id="rcp" style="font-size:15px">0</b>% 已核对</span><span style="color:var(--mute)">4,128 / 4,193 笔</span></div>
+          <div class="pl"><div><span>金额不符</span><b>3 笔 · ¥1,240.00</b></div><div><span>渠道未返回</span><b>62 笔</b></div></div>
+          <div style="margin-top:8px"><a class="lk">查看差异 →</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="kp" id="kp"></div>
+    <div class="th2"><h2>交易<small id="tcnt"></small></h2></div>
+    <div class="fl" id="fl"></div>
+    <table><thead><tr><th>金额</th><th>状态</th><th>付款方式</th><th>客户</th><th class="r">时间</th></tr></thead><tbody id="tb"></tbody></table>
+  </div>
+  <aside class="drw" id="drw"></aside>
+  <div class="foot">示例数据</div>
+</section>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const NOW=new Date(2026,10,20);
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+// 以「几天前」为下标的日收款额
+const DAYV={};
+function v(d){ if(DAYV[d]!=null)return DAYV[d];
+  const r=rng(d*977+31),dt=new Date(NOW-d*864e5),w=dt.getDay(),season=[.72,1.04,1.08,1.1,1.06,1.0,.78][w];
+  const trend=1+(760-d)*0.00042, wave=1+.09*Math.sin(d/9.5);
+  let x=31800*trend*season*wave*(.9+r()*.2);
+  if(d===9)x*=1.55; // 一次大客户集中付款
+  return DAYV[d]=Math.round(x*100)/100 }
+const fmtD=d=>String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const WK=["周日","周一","周二","周三","周四","周五","周六"];
+function series(n,mode){ // 返回 {cur:[{label,val,dt}], prev:[...]}
+  const cur=[],prev=[];
+  if(mode==="m"){ for(let i=11;i>=0;i--){ const a=(i)*30,sum=k=>{let s=0;for(let j=0;j<30;j++)s+=v(k+j);return s};
+      const dt=new Date(NOW-(a+15)*864e5);cur.push({val:sum(a),dt,label:(dt.getMonth()+1)+" 月"});
+      prev.push({val:sum(a+360),dt:new Date(NOW-(a+375)*864e5),label:(new Date(NOW-(a+375)*864e5).getMonth()+1)+" 月"})} }
+  else for(let i=n-1;i>=0;i--){const dt=new Date(NOW-i*864e5),pd=new Date(NOW-(i+n)*864e5);cur.push({val:v(i),dt,label:fmtD(dt)});prev.push({val:v(i+n),dt:pd,label:fmtD(pd)})}
+  return{cur,prev};
+}
+const yuan=(n,d=2)=>n.toLocaleString("zh-CN",{minimumFractionDigits:d,maximumFractionDigits:d});
+const money=(n,d=2)=>{const s=yuan(Math.abs(n),d),i=s.split(".");return `<span class="mny"><span class="cur">¥</span>${i[0]}${i[1]?`<span class="dc">.${i[1]}</span>`:""}</span>`};
+function setM(el,n,d=2){const s=yuan(n,d).split(".");el.innerHTML=`<span class="cur">¥</span>${s[0]}${s[1]?`<span class="dc">.${s[1]}</span>`:""}`}
+const cur={}; // 数字滚动的当前值
+function roll(key,to,apply){const from=cur[key]==null?0:cur[key];cur[key]=to;const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/650),e=1-Math.pow(1-k,3);apply(from+(to-from)*e);if(k<1)requestAnimationFrame(f)})(t0)}
+const delta=(a,b)=>b?((a-b)/b*100):0;
+const dlh=(p,inv)=>{const up=inv?p<=0:p>=0;return `<span class="dl ${up?"up":"dn"}"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke-width:2.6"><path d="${p>=0?"M12 19V5M6 11l6-6 6 6":"M12 5v14M6 13l6 6 6-6"}"/></svg>${Math.abs(p).toFixed(1)}%</span>`};
+let N=30,MODE="d",S,SHOWPREV=true;
+const RLAB={7:"过去 7 天",30:"过去 30 天",90:"过去 90 天",12:"过去 12 个月"};
+function ranged(){S=MODE==="m"?series(12,"m"):series(N);
+  const tc=S.cur.reduce((a,b)=>a+b.val,0),tp=S.prev.reduce((a,b)=>a+b.val,0);
+  const cnt=Math.round(tc/286.4),cntp=Math.round(tp/279.8);
+  const okr=97.2+(tc%7)/10,okp=96.6+(tp%5)/10;
+  const rf=tc*0.0118,rfp=tp*0.0127, dp=Math.round(cnt/820),dpp=Math.round(cntp/760);
+  const p=delta(tc,tp);
+  $("#totd").outerHTML=dlh(p).replace('<span class="dl','<span id="totd" class="dl');
+  $("#prevl").innerHTML=`${RLAB[MODE==="m"?12:N]}　<b>上一周期 ${money(tp,0)}</b>`;
+  roll("tot",tc,x=>setM($("#tot"),x));
+  roll("set",382914.2+(tc%1000),x=>setM($("#set"),x));
+  roll("rc",98.4,x=>{$("#rcp").textContent=x.toFixed(1);$("#rcb").style.width=x+"%"});
+  const K=[["交易笔数",cnt,cntp,x=>Math.round(x).toLocaleString("zh-CN"),0,"M"],["支付成功率",okr,okp,x=>x.toFixed(1)+"%",0,"R"],["退款金额",rf,rfp,x=>"¥"+yuan(x,0),1,"F"],["争议笔数",dp,dpp,x=>Math.round(x)+" 笔",1,"D"]];
+  $("#kp").innerHTML=K.map((k,i)=>`<div><div class="lab">${k[0]}</div><div class="v"><span id="k${i}"></span>${dlh(delta(k[1],k[2]),k[4])}</div>${spark(i)}</div>`).join("");
+  K.forEach((k,i)=>roll("k"+i,k[1],x=>{const el=$("#k"+i);if(el)el.textContent=k[3](x)}));
+  draw();
+}
+function spark(i){const pts=S.cur,mx=Math.max(...pts.map(p=>p.val)),mn=Math.min(...pts.map(p=>p.val)),r=rng(i*5+N);
+  const d=pts.map((p,j)=>{const y=i===0?p.val:i===1?(p.val*(.97+r()*.06)):(p.val*(.8+r()*.4));return[j,y]});
+  const ys=d.map(a=>a[1]),a=Math.min(...ys),b=Math.max(...ys);
+  return `<svg class="sk" viewBox="0 0 86 34" preserveAspectRatio="none"><path d="${d.map((p,j)=>(j?"L":"M")+(j/(d.length-1)*86).toFixed(1)+" "+(32-(p[1]-a)/(b-a||1)*28).toFixed(1)).join(" ")}"/></svg>`}
+// ---- 主图 ----
+function draw(){
+  const box=$("#cv"),W=box.clientWidth,H=box.clientHeight,pl=44,pr=6,pt=8,pb=24,iw=W-pl-pr,ih=H-pt-pb;
+  const all=S.cur.map(x=>x.val).concat(SHOWPREV?S.prev.map(x=>x.val):[]),mx=Math.max(...all)*1.08,n=S.cur.length;
+  const nice=(()=>{const raw=mx/4,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;return(m<=1?1:m<=2?2:m<=5?5:10)*p})();
+  const top=nice*4,X=i=>pl+(n===1?0:i/(n-1)*iw),Y=y=>pt+ih-(y/top)*ih;
+  const path=a=>a.map((p,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(p.val).toFixed(1)).join(" ");
+  const fmtY=y=>y===0?"0":(y>=10000?(y/10000)+" 万":(y/1000)+"k");
+  let g="";for(let i=0;i<=4;i++){const y=Y(nice*i);g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#f1f0f6"/><text x="${pl-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#8b88a0">${fmtY(nice*i)}</text>`}
+  const step=Math.ceil(n/7);let xl="";S.cur.forEach((p,i)=>{if(i%step===0||i===n-1&&n<9)xl+=`<text x="${X(i)}" y="${H-5}" text-anchor="${i===0?"start":"middle"}" font-size="11" fill="#8b88a0">${p.label}</text>`});
+  box.querySelector("svg")?.remove();
+  box.insertAdjacentHTML("afterbegin",`<svg viewBox="0 0 ${W} ${H}">${g}${xl}
+   ${SHOWPREV?`<path d="${path(S.prev)}" fill="none" stroke="#b9b4cf" stroke-width="1.6" stroke-dasharray="4 4"/>`:""}
+   <path d="${path(S.cur)} L${X(n-1)} ${Y(0)} L${X(0)} ${Y(0)} Z" fill="rgba(95,61,196,.07)"/>
+   <path id="line" d="${path(S.cur)}" fill="none" stroke="#5f3dc4" stroke-width="2" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"><animate attributeName="stroke-dashoffset" from="1" to="0" dur=".8s" fill="freeze"/></path>
+   <line id="hl" y1="${pt}" y2="${pt+ih}" stroke="#1a1730" stroke-opacity=".25" style="display:none"/><circle id="hc" r="4.5" fill="#fff" stroke="#5f3dc4" stroke-width="2" style="display:none"/><circle id="hp" r="4" fill="#fff" stroke="#b9b4cf" stroke-width="2" style="display:none"/>
+   <rect x="${pl}" y="${pt}" width="${iw}" height="${ih}" fill="transparent" id="hit"/></svg>`);
+  const hit=$("#hit"),tip=$("#tip");
+  const move=ev=>{const r=box.getBoundingClientRect(),mxp=ev.clientX-r.left;let i=Math.round((mxp-pl)/iw*(n-1));i=Math.max(0,Math.min(n-1,i));
+    const c=S.cur[i],p=S.prev[i],x=X(i);
+    $("#hl").style.display=$("#hc").style.display="";$("#hl").setAttribute("x1",x);$("#hl").setAttribute("x2",x);$("#hc").setAttribute("cx",x);$("#hc").setAttribute("cy",Y(c.val));
+    if(SHOWPREV){$("#hp").style.display="";$("#hp").setAttribute("cx",x);$("#hp").setAttribute("cy",Y(p.val))}
+    const df=delta(c.val,p.val),wk=MODE==="m"?"":" "+WK[c.dt.getDay()];
+    tip.innerHTML=`<div class="d">${MODE==="m"?c.dt.getFullYear()+" 年 "+c.label:c.dt.getFullYear()+"-"+c.label+wk}</div><div class="l"><span><i style="background:#5f3dc4"></i>本期</span><b>${money(c.val,0)}</b></div>${SHOWPREV?`<div class="l"><span><i style="background:#b9b4cf"></i>上期 ${p.label}</span><b>${money(p.val,0)}</b></div><div class="df ${df<0?"n":""}">${df>=0?"+":"−"}${Math.abs(df).toFixed(1)}%</div>`:""}`;
+    tip.style.opacity=1;const tw=tip.offsetWidth;tip.style.left=Math.min(W-tw-4,Math.max(0,x>W/2?x-tw-14:x+14))+"px";tip.style.top="6px"};
+  hit.onmousemove=move;hit.onmouseleave=()=>{tip.style.opacity=0;$("#hl").style.display=$("#hc").style.display=$("#hp").style.display="none"};
+  box._move=move;
+}
+// ---- 交易 ----
+const CUS=["北辰数科","绿野餐饮","星野文旅","澄海物流","云杉教育","木禾商贸","远帆医疗","青石建材","合璧家居","晴川出行","拾光影业","鹿原农业"];
+const MTH=["微信支付","支付宝","银行卡","对公转账"];
+const ST=[["成功","ok"],["处理中","wt"],["失败","bd"],["已退款","rf"]];
+const IC={ok:'<path d="M5 12l5 5 9-10"/>',wt:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',bd:'<path d="M6 6l12 12M18 6L6 18"/>',rf:'<path d="M9 7L4 12l5 5M4 12h10a6 6 0 010 8"/>'};
+const TX=[];(function(){const r=rng(2026);const am=[8888.00,326.50,12400.00,98.00,1580.00,45.90,23800.00,660.00,3200.00,19.90,5400.00,780.00,128000.00,2380.00,360.00,14.00,9980.00,1260.00,420.00,56000.00,168.00,2999.00,730.00,48.50];
+  for(let i=0;i<24;i++){const d=Math.floor(i/4),h=17-Math.floor(i%4*3.6+r()*2),m=Math.floor(r()*60),s=Math.floor(r()*60);
+    const sr=r(),st=sr<.74?0:sr<.84?1:sr<.92?2:3;
+    TX.push({id:"ch_"+(0x7a3f0+i*4817).toString(16).toUpperCase().padStart(6,"0"),amt:am[i],st,m:MTH[Math.floor(r()*4)],c:CUS[Math.floor(r()*CUS.length)],d,h,mi:m,s,ord:"SO-"+(260412-i*3)})}})();
+const FLT={st:null,amt:null,mth:null};
+const AMT=[["< ¥100",0,100],["¥100 – ¥1,000",100,1000],["≥ ¥1,000",1000,1e12]];
+function tlist(){return TX.filter(t=>(FLT.st==null||t.st===FLT.st)&&(FLT.amt==null||(t.amt>=AMT[FLT.amt][1]&&t.amt<AMT[FLT.amt][2]))&&(FLT.mth==null||t.m===MTH[FLT.mth]))}
+const tm=t=>{const dt=new Date(NOW-t.d*864e5);return (t.d===0?"今天":t.d===1?"昨天":fmtD(dt))+" "+String(t.h).padStart(2,"0")+":"+String(t.mi).padStart(2,"0")};
+let sel=null;
+function renderT(){
+  const L=tlist();$("#tcnt").textContent="共 "+L.length+" 笔";
+  $("#tb").innerHTML=L.map(t=>`<tr class="tx ${sel===t.id?"sel":""}" data-id="${t.id}"><td>${money(t.amt)}</td><td><span class="pill ${ST[t.st][1]}"><svg viewBox="0 0 24 24">${IC[ST[t.st][1]]}</svg>${ST[t.st][0]}</span></td><td class="sub2">${t.m}</td><td>${t.c}<span class="id">${t.ord}</span></td><td class="r sub2">${tm(t)}</td></tr>`).join("")||`<tr><td colspan="5" style="text-align:center;color:var(--mute);height:90px">没有符合条件的交易</td></tr>`;
+  const chips=[];
+  if(FLT.st!=null)chips.push(["st","状态：" + ST[FLT.st][0]]);if(FLT.amt!=null)chips.push(["amt","金额：" + AMT[FLT.amt][0]]);if(FLT.mth!=null)chips.push(["mth","付款方式：" + MTH[FLT.mth]]);
+  $("#fl").innerHTML=chips.map(c=>`<span class="chip">${c[1]}<button data-rm="${c[0]}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>`).join("")+`<button class="add" id="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>添加筛选</button>
+  <div class="menu" id="menu"><h6>状态</h6>${ST.map((s,i)=>`<button data-f="st" data-i="${i}" class="${FLT.st===i?"on":""}">${s[0]}</button>`).join("")}<h6>金额区间</h6>${AMT.map((s,i)=>`<button data-f="amt" data-i="${i}" class="${FLT.amt===i?"on":""}">${s[0]}</button>`).join("")}<h6>付款方式</h6>${MTH.map((s,i)=>`<button data-f="mth" data-i="${i}" class="${FLT.mth===i?"on":""}">${s}</button>`).join("")}</div>`;
+}
+function openD(id){
+  sel=id;const t=TX.find(x=>x.id===id),dt=new Date(NOW-t.d*864e5),ds=dt.getFullYear()+"-"+fmtD(dt);
+  const T=(a)=>{let s=t.s+a;return String(t.h).padStart(2,"0")+":"+String(t.mi).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
+  const ck='<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
+  const ev=[["ok","创建订单",t.ord+" · "+t.c,T(0)]];
+  if(t.st===2){ev.push(["ok","发起扣款",t.m+" 渠道",T(2)]);ev.push(["bad","授权失败","渠道返回 51：余额不足",T(5)])}
+  else{ev.push(["ok","支付授权","渠道返回 00：通过",T(3)]);
+    if(t.st===1)ev.push(["wait","等待渠道确认","通常 10 分钟内完成","—"]);
+    else{ev.push(["ok","扣款成功",money(t.amt)+" 已入账",T(4)]);
+      if(t.st===3){ev.push(["ref","发起退款",money(t.amt)+" · 客户申请",fmtD(new Date(NOW-Math.max(0,t.d-1)*864e5))]);ev.push(["ref","退款完成","原路退回",fmtD(new Date(NOW-Math.max(0,t.d-1)*864e5))])}
+      else{ev.push([t.d>0?"ok":"wait","对账完成","批次 B-"+ds.replace(/-/g,"").slice(2)+"-02",t.d>0?fmtD(new Date(NOW-(t.d-1)*864e5)):"待对账"]);ev.push([t.d>1?"ok":"wait","结算到账","T+1 · 尾号 6021",t.d>1?fmtD(new Date(NOW-(t.d-2)*864e5)):"预计 11-21"])}}}
+  $("#drw").innerHTML=`<div class="h"><span>交易详情</span><button id="cls"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="b"><div class="amt">${money(t.amt)}<span class="pill ${ST[t.st][1]}" style="font-size:12px"><svg viewBox="0 0 24 24">${IC[ST[t.st][1]]}</svg>${ST[t.st][0]}</span></div>
+  <dl class="kv"><dt>交易号</dt><dd>${t.id}</dd><dt>订单号</dt><dd>${t.ord}</dd><dt>客户</dt><dd>${t.c}</dd><dt>付款方式</dt><dd>${t.m}</dd><dt>创建时间</dt><dd>${ds} ${T(0)}</dd><dt>手续费</dt><dd>${money(Math.round(t.amt*0.0038*100)/100)}</dd></dl>
+  <div class="tl"><h4>事件时间线</h4>${ev.map(e=>`<div class="ev ${e[0]}"><span class="dt">${e[0]==="wait"?"":ck}</span><div><b>${e[1]}</b><small>${e[2]}</small></div><time>${e[3]}</time></div>`).join("")}</div></div>`;
+  $("#drw").classList.add("show");renderT();
+}
+function closeD(){sel=null;$("#drw").classList.remove("show");renderT()}
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(t.closest("#add")){$("#menu").classList.toggle("show");return}
+  const f=t.closest("[data-f]");if(f){const k=f.dataset.f,i=+f.dataset.i;FLT[k]=FLT[k]===i?null:i;renderT();return}
+  const rm=t.closest("[data-rm]");if(rm){FLT[rm.dataset.rm]=null;renderT();return}
+  if(!t.closest("#menu")&&$("#menu"))$("#menu").classList.remove("show");
+  if(t.closest("#cls")){closeD();return}
+  const tr=t.closest("tr.tx");if(tr){openD(tr.dataset.id);return}
+  const sg=t.closest("#seg button");if(sg){document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("on",b===sg));if(sg.dataset.n==="12"){MODE="m"}else{MODE="d";N=+sg.dataset.n}ranged();return}
+  if(t.closest("#cmp")){SHOWPREV=!SHOWPREV;$("#cmp").classList.toggle("off",!SHOWPREV);draw();return}
+});
+addEventListener("keydown",e=>{if(e.key==="Escape")closeD()});
+addEventListener("resize",()=>draw());
+ranged();renderT();
+</script>
+</body>
+</html>

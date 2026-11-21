@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>编辑器 · 栖码</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --act:#121316; --side:#1a1b1f; --ed:#16171a; --panel:#131417; --line:#26282e; --line2:#2f323a; --tx:#c8cbd2; --tx2:#8a8f9a; --tx3:#585d69; --acc:#f0a93b; --acc2:#3dc3a5; --del:rgba(232,90,80,.15); --add:rgba(70,185,115,.16); --sel:#22242a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--ed); }
+  body { font: 13px/1.5 "Inter","Noto Sans SC",sans-serif; color: var(--tx); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "Fira Code", ui-monospace, Menlo, monospace; font-variant-ligatures: none; }
+  svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .app { height: 100vh; display: grid; grid-template-rows: 38px minmax(0,1fr) 24px; }
+
+  .title { display: flex; align-items: center; background: var(--act); border-bottom: 1px solid var(--line); padding: 0 12px; gap: 14px; position: relative; }
+  .lights { display: flex; gap: 8px; } .lights i { width: 11px; height: 11px; border-radius: 50%; background: #34363d; }
+  .qo { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: 440px; height: 26px; padding: 0 10px; border: 1px solid var(--line2); border-radius: 7px; color: var(--tx2); font-size: 12px; background: var(--side); }
+  .qo:hover { border-color: #444853; color: var(--tx); }
+  .qo em { margin-left: auto; font: 500 11px "Fira Code", monospace; color: var(--tx3); font-style: normal; }
+  .qo svg { width: 13px; height: 13px; }
+  .tr { margin-left: auto; color: var(--tx3); font-size: 12px; }
+
+  .main { display: grid; grid-template-rows: minmax(0,1fr); grid-template-columns: 46px 244px minmax(0,1fr) 388px; min-height: 0; }
+  .actbar { background: var(--act); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 6px 0; gap: 2px; }
+  .actbar button { width: 46px; height: 42px; display: grid; place-items: center; color: var(--tx3); position: relative; }
+  .actbar button:hover { color: var(--tx); }
+  .actbar button.on { color: #fff; }
+  .actbar button.on::before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 2px; background: var(--acc); border-radius: 0 2px 2px 0; }
+  .actbar .sp { flex: 1; }
+  .actbar svg { width: 20px; height: 20px; }
+
+  .side { background: var(--side); border-right: 1px solid var(--line); overflow-y: auto; min-width: 0; scrollbar-width: thin; scrollbar-color: #2c2e35 transparent; }
+  .side h5 { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; font-size: 11px; letter-spacing: .08em; font-weight: 600; color: var(--tx2); }
+  .side h5 span { color: var(--tx3); font-weight: 400; letter-spacing: 0; }
+  .tree .it { display: flex; align-items: center; gap: 6px; height: 24px; padding-right: 10px; cursor: pointer; color: var(--tx2); white-space: nowrap; }
+  .tree .it:hover { background: #202228; color: var(--tx); }
+  .tree .it.on { background: var(--sel); color: #fff; box-shadow: inset 2px 0 0 var(--acc); }
+  .tree .it .ch { width: 12px; height: 12px; transition: transform .15s; flex: none; }
+  .tree .it.open .ch { transform: rotate(90deg); }
+  .tree .kids { display: none; } .tree .kids.open { display: block; }
+  .fi { font: 600 8.5px "Fira Code", monospace; width: 16px; text-align: center; flex: none; }
+  .fi.py { color: #6aa8e8; } .fi.yml { color: #e58f65; } .fi.md { color: #8a8f9a; }
+  .tree .it .gm { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--acc); }
+
+  .edcol { height: 100%; min-height: 0; overflow: hidden; display: grid; grid-template-rows: 36px 26px minmax(0,1fr) 224px; min-width: 0; background: var(--ed); }
+  .tabs { display: flex; background: var(--side); border-bottom: 1px solid var(--line); overflow: hidden; }
+  .tab { display: flex; align-items: center; gap: 7px; padding: 0 12px 0 14px; border-right: 1px solid var(--line); color: var(--tx2); font-size: 12.5px; cursor: pointer; position: relative; white-space: nowrap; }
+  .tab:hover { color: var(--tx); }
+  .tab.on { background: var(--ed); color: #fff; }
+  .tab.on::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--acc); }
+  .tab .x { width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; color: var(--tx3); }
+  .tab .x:hover { background: #2a2c33; color: #fff; }
+  .tab .x svg { width: 10px; height: 10px; }
+  .tab .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); }
+  .crumb { display: flex; align-items: center; gap: 6px; padding: 0 16px; color: var(--tx3); font-size: 12px; border-bottom: 1px solid var(--line); }
+  .crumb b { color: var(--tx2); font-weight: 400; }
+  .code { overflow: auto; padding: 6px 0 60px; font: 400 13px/20px "Fira Code", ui-monospace, Menlo, monospace; scrollbar-width: thin; scrollbar-color: #2c2e35 transparent; position: relative; }
+  .ln { display: flex; min-width: max-content; position: relative; }
+  .ln .n { width: 54px; flex: none; text-align: right; padding-right: 16px; color: var(--tx3); user-select: none; cursor: default; }
+  .ln .s { width: 18px; flex: none; text-align: center; color: transparent; user-select: none; }
+  .ln .t { white-space: pre; padding-right: 160px; }
+  .ln.cur { background: #1c1e23; } .ln.cur .n { color: var(--tx2); }
+  .ln.del { background: var(--del); } .ln.del .s { color: #ef7a70; } .ln.del .t { text-decoration: line-through; text-decoration-color: rgba(239,122,112,.55); opacity: .75; }
+  .ln.add { background: var(--add); } .ln.add .s { color: #5ccf8a; }
+  .ln.add:first-of-type, .ln.hs { box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+  .hc { position: absolute; right: 18px; top: 0; display: flex; gap: 6px; height: 20px; align-items: center; z-index: 2; }
+  .hc button { height: 18px; padding: 0 8px; border-radius: 4px; font: 500 11px "Inter","Noto Sans SC"; background: #23252b; border: 1px solid var(--line2); color: var(--tx); }
+  .hc button.ok { background: #1f4a37; border-color: #2e7a58; color: #b6f0d1; }
+  .hc button:hover { filter: brightness(1.25); }
+  .k { color: #e58f65; } .st { color: #9ccb8c; } .nu { color: #e6c36a; } .fn { color: #7cb7ff; } .cm { color: #5d6370; font-style: italic; } .ty { color: #d79fe0; } .ky { color: #7cb7ff; } .hd { color: #f0a93b; font-weight: 500; } .pn { color: #8a8f9a; }
+
+  .term { background: var(--panel); border-top: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .tt { display: flex; align-items: center; gap: 2px; height: 32px; padding: 0 10px; flex: none; border-bottom: 1px solid var(--line); }
+  .tt button { height: 24px; padding: 0 10px; font-size: 11.5px; letter-spacing: .04em; color: var(--tx3); border-radius: 5px; }
+  .tt button.on { color: #fff; background: #1d1f24; }
+  .tt .cnt { margin-left: 4px; color: var(--tx3); font-size: 11px; }
+  .tout { flex: 1; overflow-y: auto; padding: 8px 16px 10px; font: 400 12.5px/19px "Fira Code", ui-monospace, Menlo, monospace; scrollbar-width: thin; scrollbar-color: #2c2e35 transparent; cursor: text; }
+  .tout pre { font: inherit; white-space: pre-wrap; color: var(--tx); }
+  .tout .pm { color: var(--acc2); } .tout .cmd { color: #fff; } .tout .ok { color: #5ccf8a; } .tout .er { color: #ef7a70; } .tout .dm { color: var(--tx3); }
+  .tin { display: flex; gap: 8px; } .tin input { flex: 1; font: inherit; color: #fff; cursor: text; caret-color: var(--acc); }
+
+  .ai { background: var(--side); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .aih { height: 36px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 12.5px; }
+  .aih svg { color: var(--acc); width: 15px; height: 15px; }
+  .aih .md { margin-left: auto; font: 500 11px "Fira Code", monospace; color: var(--tx2); padding: 2px 8px; border: 1px solid var(--line2); border-radius: 99px; }
+  .msgs { flex: 1; overflow-y: auto; padding: 16px 16px 8px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: thin; scrollbar-color: #2c2e35 transparent; }
+  .me { align-self: flex-end; max-width: 86%; background: #24262c; border-radius: 10px 10px 2px 10px; padding: 8px 12px; color: #e4e6eb; }
+  .bot { color: var(--tx); line-height: 1.65; }
+  .bot p + p { margin-top: 8px; }
+  .bot code { font: 12px "Fira Code", monospace; background: #24262c; padding: 1px 5px; border-radius: 4px; color: #e6c36a; }
+  .ctx { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .ctx span { display: inline-flex; align-items: center; gap: 5px; font: 500 11px "Fira Code", monospace; color: var(--tx2); border: 1px solid var(--line2); border-radius: 5px; padding: 1px 7px; }
+  .edit { margin-top: 10px; border: 1px solid var(--line2); border-radius: 9px; overflow: hidden; background: #17181c; }
+  .edit .eh { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid var(--line); font: 500 11.5px "Fira Code", monospace; color: var(--tx); }
+  .edit .eh .pl { color: #5ccf8a; } .edit .eh .mi { color: #ef7a70; }
+  .edit .eh .fl { margin-left: auto; font-family: "Inter","Noto Sans SC"; color: var(--tx3); }
+  .edit .pv { padding: 6px 0; font: 11.5px/17px "Fira Code", monospace; }
+  .edit .pv div { padding: 0 12px; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+  .edit .pv .d { background: var(--del); color: #e8a29c; } .edit .pv .a { background: var(--add); color: #a8e2c0; } .edit .pv .c { color: var(--tx3); }
+  .edit .ea { display: flex; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--line); align-items: center; }
+  .btn { height: 26px; padding: 0 12px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid var(--line2); color: var(--tx); background: #202228; }
+  .btn:hover { background: #2a2d34; }
+  .btn.pri { background: var(--acc); border-color: var(--acc); color: #1d1405; font-weight: 600; }
+  .btn.pri:hover { background: #f5b955; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .edit .stt { margin-left: auto; font-size: 11.5px; color: var(--tx3); }
+  .sugg { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 8px; }
+  .sugg button { font-size: 11.5px; color: var(--tx2); border: 1px solid var(--line2); border-radius: 99px; padding: 2px 10px; }
+  .sugg button:hover { color: #fff; border-color: #4a4f5b; }
+  .inp { flex: none; margin: 0 12px 12px; border: 1px solid var(--line2); border-radius: 10px; background: #16171b; display: flex; flex-direction: column; }
+  .inp:focus-within { border-color: #5a5f6c; }
+  .inp input { padding: 10px 12px 4px; cursor: text; font-size: 13px; }
+  .inp .ft { display: flex; align-items: center; gap: 10px; padding: 4px 8px 8px 12px; color: var(--tx3); font-size: 11.5px; }
+  .inp .ft .snd { margin-left: auto; width: 26px; height: 26px; border-radius: 7px; background: var(--acc); color: #1d1405; display: grid; place-items: center; }
+  .inp .ft .snd svg { width: 14px; height: 14px; stroke-width: 2; }
+  .cursor-b::after { content: "▍"; color: var(--acc); animation: bl 1s steps(2) infinite; margin-left: 1px; }
+  @keyframes bl { 50% { opacity: 0; } }
+
+  .status { display: flex; align-items: center; gap: 16px; padding: 0 12px; background: var(--act); border-top: 1px solid var(--line); font-size: 11.5px; color: var(--tx2); }
+  .status span { display: flex; align-items: center; gap: 5px; } .status svg { width: 12px; height: 12px; }
+  .status .r { margin-left: auto; } .status .ai-s { color: var(--acc2); }
+  .status .ex { color: var(--tx3); font-size: 10.5px; }
+
+  .qp { position: fixed; inset: 0; z-index: 50; display: none; background: rgba(8,9,11,.5); }
+  .qp.on { display: block; }
+  .qp .box { position: absolute; left: 50%; top: 62px; width: 560px; transform: translateX(-50%); background: #1d1e23; border: 1px solid #3a3d46; border-radius: 10px; box-shadow: 0 24px 60px rgba(0,0,0,.6); overflow: hidden; }
+  .qp input { width: 100%; height: 40px; padding: 0 14px; border-bottom: 1px solid var(--line2); font-size: 14px; cursor: text; caret-color: var(--acc); }
+  .qp .it { display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 14px; color: var(--tx2); cursor: pointer; }
+  .qp .it.on { background: #2a2c33; color: #fff; box-shadow: inset 2px 0 0 var(--acc); }
+  .qp .it b { color: var(--acc); font-weight: 500; }
+  .qp .it small { margin-left: auto; color: var(--tx3); font: 11px "Fira Code", monospace; }
+  .qp .no { padding: 14px; color: var(--tx3); }
+  @media (max-width: 1360px) { .main { grid-template-columns: 46px 200px minmax(0,1fr) 340px; } .qo { width: 340px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="title">
+    <div class="lights"><i></i><i></i><i></i></div>
+    <button class="qo" id="qo"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>gpu-scheduler<em>⌘P 打开文件</em></button>
+    <div class="tr">示例数据</div>
+  </div>
+  <div class="main">
+    <div class="actbar">
+      <button class="on" title="资源管理器"><svg class="i" viewBox="0 0 20 20"><path d="M3 5.5A1.5 1.5 0 0 1 4.5 4h3.2l1.6 2H15.5A1.5 1.5 0 0 1 17 7.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"/></svg></button>
+      <button title="搜索"><svg class="i" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5"/><path d="M13 13l4 4"/></svg></button>
+      <button title="源代码管理"><svg class="i" viewBox="0 0 20 20"><circle cx="6" cy="5" r="1.8"/><circle cx="6" cy="15" r="1.8"/><circle cx="14" cy="8" r="1.8"/><path d="M6 6.8v6.4M14 9.8c0 3-8 1.5-8 3.4"/></svg></button>
+      <button title="扩展"><svg class="i" viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1"/><path d="M13.7 11v5.5M11 13.7h5.5"/></svg></button>
+      <div class="sp"></div>
+      <button title="设置"><svg class="i" viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.4 1.4M13.6 13.6L15 15M15 5l-1.4 1.4M6.4 13.6L5 15"/></svg></button>
+    </div>
+    <div class="side">
+      <h5>资源管理器 <span>gpu-scheduler</span></h5>
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="edcol">
+      <div class="tabs" id="tabs"></div>
+      <div class="crumb" id="crumb"></div>
+      <div class="code" id="code"></div>
+      <div class="term">
+        <div class="tt"><button class="on">终端</button><button data-t="问题">问题<span class="cnt">0</span></button><button data-t="输出">输出</button></div>
+        <div class="tout" id="tout"><div id="log"></div><div class="tin"><span class="pm">~/gpu-scheduler $</span><input id="tin" spellcheck="false" autocomplete="off" placeholder="试试 nvidia-smi、pytest、git status、help"></div></div>
+      </div>
+    </div>
+    <div class="ai">
+      <div class="aih"><svg class="i" viewBox="0 0 16 16"><path d="M8 1.5l1.4 3.6 3.6 1.4-3.6 1.4L8 11.5 6.6 7.9 3 6.5l3.6-1.4z"/><path d="M12.5 11l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg>助手<span class="md">qy-code-2</span></div>
+      <div class="msgs" id="msgs">
+        <div class="me">给 pick_node 加上显存余量校验，显存不够就跳过这个节点</div>
+        <div class="bot">
+          <p>需要两处改动：<code>Request</code> 增加每卡显存需求 <code>mem_gb</code>（默认 40），<code>pick_node</code> 在判断卡数时一并判断显存余量。</p>
+          <div class="ctx"><span>scheduler.py</span><span>quota.py</span></div>
+          <div class="edit">
+            <div class="eh"><span>src/scheduler.py</span><span class="pl">+5</span><span class="mi">−2</span><span class="fl">2 处改动</span></div>
+            <div class="pv mono"><div class="c">  job_id: str</div><div class="a">+ mem_gb: int = 40</div><div class="d">- if n.free_gpus &lt; req.gpus:</div><div class="a">+ if n.free_gpus &lt; req.gpus or n.free_mem_gb &lt; need_mem:</div></div>
+            <div class="ea"><button class="btn pri" id="apply">应用修改</button><button class="btn" id="cpy">复制</button><span class="stt" id="stt"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sugg" id="sugg"><button>为 quota.py 写单元测试</button><button>解释 schedule 的流程</button></div>
+      <div class="inp"><input id="ain" placeholder="向助手提问，回车发送" autocomplete="off"><div class="ft"><span>@ 文件</span><span>· 当前文件 scheduler.py</span><button class="snd" id="snd"><svg class="i" viewBox="0 0 16 16"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/></svg></button></div></div>
+    </div>
+  </div>
+  <div class="status"><span><svg class="i" viewBox="0 0 16 16"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="7" r="1.5"/><path d="M5 5.5v5M11 8.5c0 2-6 .8-6 2"/></svg>main</span><span id="sb-pos">行 1，列 1</span><span id="sb-lang">Python</span><span>UTF-8</span><span class="r ai-s">助手就绪</span><span class="ex">示例数据</span></div>
+</div>
+<div class="qp" id="qp"><div class="box"><input id="qin" placeholder="按文件名搜索" autocomplete="off" spellcheck="false"><div id="qlist"></div></div></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/* ---------- 文件内容（带可接受/拒绝的改动块） ---------- */
+const H = {
+  mem: { del: [], add: ["    mem_gb: int = 40"], state: "off" },
+  chk: { del: ["        if n.free_gpus < req.gpus:", "            continue"], add: ["        need_mem = req.mem_gb * req.gpus", "        if n.free_gpus < req.gpus or n.free_mem_gb < need_mem:", "            continue"], state: "off" },
+};
+const FILES = {
+  "src/scheduler.py": { lang: "py", label: "py", lines: [
+    '"""GPU 作业调度：为作业挑选节点。"""', "from dataclasses import dataclass", "from quota import check_quota", "", "", "@dataclass", "class Node:", "    name: str", "    free_gpus: int", "    free_mem_gb: int", "    pool: str", "", "", "@dataclass", "class Request:", "    job_id: str", "    team: str", "    gpus: int", { h: "mem" }, "", "",
+    "def pick_node(nodes, req):", '    """从候选节点里挑一个放得下的，优先填满碎片。"""', "    best = None", "    for n in nodes:", { h: "chk" },
+    "        if best is None or n.free_gpus < best.free_gpus:", "            best = n", "    return best", "", "",
+    "def schedule(queue, nodes):", "    placed = []", "    for req in queue:", "        if not check_quota(req.team, req.gpus):", "            continue", "        node = pick_node(nodes, req)", "        if node is None:", '            print(f"[等待] {req.job_id} 暂无可用节点")', "            continue", "        node.free_gpus -= req.gpus", "        placed.append((req.job_id, node.name))", "    return placed", ""] },
+  "src/quota.py": { lang: "py", label: "py", lines: [
+    '"""部门配额检查。"""', "import yaml", "", "with open(\"config/pools.yaml\") as f:", "    CFG = yaml.safe_load(f)", "", "_used = {}", "", "", "def check_quota(team: str, gpus: int) -> bool:", '    """该部门已用 + 本次申请不超过配额则放行。"""', "    limit = CFG[\"quota\"].get(team, 0)", "    now = _used.get(team, 0)", "    if now + gpus > limit:", "        return False", "    _used[team] = now + gpus", "    return True", "", "", "def release(team: str, gpus: int) -> None:", "    _used[team] = max(0, _used.get(team, 0) - gpus)", ""] },
+  "config/pools.yaml": { lang: "yml", label: "yml", lines: [
+    "# 资源池与部门配额（单位：卡）", "pools:", "  - name: train-a100", "    gpu: A100-80G", "    nodes: 24", "  - name: infer-l20", "    gpu: L20-48G", "    nodes: 36", "", "quota:", "  算法一部: 64", "  算法二部: 48", "  平台研发: 16", "  数据中台: 24", "", "scheduler:", "  policy: best-fit", "  preempt: false", "  retry_seconds: 30", ""] },
+  "tests/test_quota.py": { lang: "py", label: "py", lines: [
+    "from quota import check_quota, release", "", "", "def test_within_limit():", '    assert check_quota("平台研发", 8)', "", "", "def test_over_limit():", '    assert not check_quota("平台研发", 20)', "", "", "def test_release():", '    release("平台研发", 8)', '    assert check_quota("平台研发", 16)', ""] },
+  "README.md": { lang: "md", label: "md", lines: [
+    "# gpu-scheduler", "", "按最佳适配（best-fit）为训练和推理作业挑选 GPU 节点。", "", "## 运行", "", "- `python -m scheduler` 读取队列并放置作业", "- `pytest` 运行配额测试", "", "## 配置", "", "配额和资源池写在 `config/pools.yaml`。", ""] },
+};
+const TREE = [
+  { d: "src", kids: ["src/scheduler.py", "src/quota.py"] },
+  { d: "config", kids: ["config/pools.yaml"] },
+  { d: "tests", kids: ["tests/test_quota.py"] },
+  "README.md",
+];
+
+/* ---------- 高亮 ---------- */
+const KW = /\b(def|class|return|if|else|elif|for|in|not|and|or|import|from|with|as|is|None|True|False|continue|break|pass|while|assert|print|lambda)\b/;
+function tok(line, lang) {
+  if (lang === "md") { if (/^#{1,3} /.test(line)) return `<span class="hd">${esc(line)}</span>`; return esc(line).replace(/`([^`]+)`/g, '<span class="st">`$1`</span>').replace(/^(\s*-)/, '<span class="k">$1</span>'); }
+  if (lang === "yml") { if (/^\s*#/.test(line)) return `<span class="cm">${esc(line)}</span>`; const m = line.match(/^(\s*-?\s*)([^:]+)(:)(.*)$/); if (m) { const v = m[4].replace(/\b(\d+)\b/g, '<span class="nu">$1</span>').replace(/\b(true|false)\b/g, '<span class="k">$1</span>'); return `${m[1]}<span class="ky">${esc(m[2])}</span><span class="pn">:</span>${v}`; } return esc(line); }
+  const re = /("""[^"]*"""|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|#.*$)|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_]\w*\b)|(@\w+)/g; let o = "", last = 0, m, prevDef = false;
+  const f = /^f"/;
+  while ((m = re.exec(line))) {
+    o += esc(line.slice(last, m.index)); const t = m[0];
+    if (m[1]) o += `<span class="${t[0] === "#" ? "cm" : "st"}">${esc(t)}</span>`;
+    else if (m[2]) o += `<span class="nu">${t}</span>`;
+    else if (m[4]) o += `<span class="ty">${t}</span>`;
+    else { const after = line[m.index + t.length]; const before = line.slice(0, m.index);
+      if (KW.test(t) && /^(def|class|return|if|else|elif|for|in|not|and|or|import|from|with|as|is|continue|break|pass|while|assert|lambda)$/.test(t)) o += `<span class="k">${t}</span>`;
+      else if (/^(None|True|False)$/.test(t)) o += `<span class="nu">${t}</span>`;
+      else if (/(def|class)\s+$/.test(before)) o += `<span class="${/class\s+$/.test(before) ? "ty" : "fn"}">${t}</span>`;
+      else if (after === "(") o += `<span class="fn">${t}</span>`;
+      else if (/^(int|str|bool)$/.test(t)) o += `<span class="ty">${t}</span>`;
+      else o += t; }
+    last = m.index + t.length;
+  }
+  return o + esc(line.slice(last));
+}
+
+/* ---------- 编辑器 ---------- */
+let open = ["src/scheduler.py", "src/quota.py"], active = "src/scheduler.py", curLine = {};
+const codeEl = $("#code");
+function resolved(file) { // 当前文件的行序列：{t, kind, h?, first?}
+  const out = []; let n = 0;
+  for (const l of FILES[file].lines) {
+    if (typeof l === "string") { out.push({ t: l, n: ++n }); continue; }
+    const h = H[l.h];
+    if (h.state === "idle") { h.del.forEach((t, i) => out.push({ t, kind: "del", h: l.h, first: i === 0 })); h.add.forEach((t, i) => out.push({ t, kind: "add", n: ++n, h: l.h, first: h.del.length === 0 && i === 0 })); }
+    else if (h.state === "ok") h.add.forEach(t => out.push({ t, n: ++n }));
+    else h.del.forEach(t => out.push({ t, n: ++n }));
+  }
+  return out;
+}
+function pending(file) { return FILES[file].lines.some(l => typeof l !== "string" && H[l.h].state === "idle"); }
+function renderCode() {
+  const f = FILES[active], rows = resolved(active), cl = curLine[active] || 1;
+  codeEl.innerHTML = rows.map(r => `<div class="ln${r.kind ? " " + r.kind : ""}${r.n === cl && !r.kind ? " cur" : ""}" data-n="${r.n || ""}"><span class="n">${r.n || ""}</span><span class="s">${r.kind === "del" ? "−" : r.kind === "add" ? "+" : ""}</span><span class="t">${tok(r.t, f.lang) || " "}</span>${r.first ? `<span class="hc"><button data-a="no" data-h="${r.h}">拒绝</button><button class="ok" data-a="ok" data-h="${r.h}">接受</button></span>` : ""}</div>`).join("");
+  $("#sb-lang").textContent = { py: "Python", yml: "YAML", md: "Markdown" }[f.lang];
+  $("#sb-pos").textContent = `行 ${cl}，列 1`;
+  $("#crumb").innerHTML = active.split("/").map((p, i, a) => i === a.length - 1 ? `<span style="color:var(--tx)">${p}</span>` : `<b>${p}</b><span>›</span>`).join("");
+}
+function renderTabs() {
+  $("#tabs").innerHTML = open.map(p => `<div class="tab${p === active ? " on" : ""}" data-p="${p}"><span class="fi ${FILES[p].label}">${FILES[p].label}</span>${p.split("/").pop()}${pending(p) ? '<i class="dot"></i>' : ""}<button class="x" data-x="${p}"><svg class="i" viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button></div>`).join("");
+  renderTree();
+}
+function openFile(p) { if (!open.includes(p)) open.push(p); active = p; renderTabs(); renderCode(); codeEl.scrollTop = 0; }
+$("#tabs").addEventListener("click", e => { const x = e.target.closest("[data-x]"); if (x) { const p = x.dataset.x, i = open.indexOf(p); open.splice(i, 1); if (active === p) active = open[Math.min(i, open.length - 1)] || null; if (!active) { open = ["README.md"]; active = "README.md"; } renderTabs(); renderCode(); return; } const t = e.target.closest(".tab"); if (t) { active = t.dataset.p; renderTabs(); renderCode(); } });
+codeEl.addEventListener("click", e => {
+  const b = e.target.closest("[data-a]");
+  if (b) { resolveHunk(b.dataset.h, b.dataset.a); return; }
+  const ln = e.target.closest(".ln"); if (ln && ln.dataset.n) { curLine[active] = +ln.dataset.n; renderCode(); }
+});
+function updateCard() {
+  const hs = Object.values(H), idle = hs.filter(h => h.state === "idle").length, ok = hs.filter(h => h.state === "ok").length, no = hs.filter(h => h.state === "no").length;
+  const stt = $("#stt"), ap = $("#apply");
+  if (applied && idle === 0) { stt.textContent = `已接受 ${ok} 处，拒绝 ${no} 处`; ap.textContent = "已完成"; ap.disabled = true; }
+  else if (applied) { stt.textContent = `还有 ${idle} 处待确认`; ap.textContent = "全部接受"; ap.disabled = false; }
+}
+function resolveHunk(id, a) { H[id].state = a === "ok" ? "ok" : "no"; renderTabs(); renderCode(); updateCard(); }
+
+/* ---------- 文件树 ---------- */
+const openDirs = new Set(["src", "config", "tests"]);
+function renderTree() {
+  const chev = '<svg class="i ch" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4"/></svg>';
+  const file = (p, pad) => `<div class="it${p === active ? " on" : ""}" data-f="${p}" style="padding-left:${pad}px"><span class="fi ${FILES[p].label}">${FILES[p].label}</span>${p.split("/").pop()}${pending(p) ? '<i class="gm"></i>' : ""}</div>`;
+  $("#tree").innerHTML = TREE.map(n => typeof n === "string" ? file(n, 26) : `<div class="it${openDirs.has(n.d) ? " open" : ""}" data-d="${n.d}" style="padding-left:10px">${chev}${n.d}</div><div class="kids${openDirs.has(n.d) ? " open" : ""}">${n.kids.map(k => file(k, 38)).join("")}</div>`).join("");
+}
+$("#tree").addEventListener("click", e => { const f = e.target.closest("[data-f]"); if (f) return openFile(f.dataset.f); const d = e.target.closest("[data-d]"); if (d) { const k = d.dataset.d; openDirs.has(k) ? openDirs.delete(k) : openDirs.add(k); renderTree(); } });
+
+/* ---------- AI 面板 ---------- */
+let applied = false;
+$("#apply").addEventListener("click", () => {
+  if (!applied) { applied = true; openFile("src/scheduler.py"); Object.values(H).forEach(h => h.state = "idle"); renderTabs(); renderCode(); setTimeout(() => { const t = codeEl.querySelector(".ln.add"); if (t) codeEl.scrollTop = Math.max(0, t.offsetTop - 160); }, 30); updateCard(); }
+  else { Object.keys(H).forEach(k => { if (H[k].state === "idle") H[k].state = "ok"; }); renderTabs(); renderCode(); updateCard(); }
+});
+$("#cpy").addEventListener("click", e => { e.target.textContent = "已复制"; setTimeout(() => e.target.textContent = "复制", 1400); });
+const msgs = $("#msgs");
+const REPLIES = [
+  [/测试|test/, "可以。<code>check_quota</code> 有三个分支：额度内放行、超额拒绝、<code>release</code> 后额度回收。已有的三个用例覆盖了这三条，再补一个「不存在的部门额度为 0」的用例即可。"],
+  [/解释|流程|schedule/, "<code>schedule</code> 按队列顺序处理：先用 <code>check_quota</code> 过部门配额，再用 <code>pick_node</code> 选节点；选不到就打印等待并跳过，选到了就扣减节点空闲卡数并记录放置结果。"],
+];
+function ask(q) {
+  if (!q.trim()) return;
+  msgs.insertAdjacentHTML("beforeend", `<div class="me">${esc(q)}</div>`);
+  const rep = (REPLIES.find(r => r[0].test(q)) || [0, "收到。我会先读相关文件，再给出改动方案。示例页只预置了上面三种提问的回答。"])[1];
+  const b = document.createElement("div"); b.className = "bot cursor-b"; msgs.appendChild(b); msgs.scrollTop = msgs.scrollHeight;
+  let i = 0; const plain = rep; const t = setInterval(() => { i += 2; b.innerHTML = plain.slice(0, i).replace(/<[^>]*$/, ""); msgs.scrollTop = msgs.scrollHeight; if (i >= plain.length) { clearInterval(t); b.classList.remove("cursor-b"); b.innerHTML = plain; } }, 22);
+}
+$("#sugg").addEventListener("click", e => { const b = e.target.closest("button"); if (b) ask(b.textContent); });
+$("#ain").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { ask(e.target.value); e.target.value = ""; } });
+$("#snd").addEventListener("click", () => { ask($("#ain").value); $("#ain").value = ""; });
+
+/* ---------- 终端 ---------- */
+const log = $("#log"), tin = $("#tin"), hist = []; let hi = 0;
+const GPU = () => "  0  A100-80G   62%   41212MiB / 81920MiB   58C   311W\n  1  A100-80G   97%   78890MiB / 81920MiB   71C   398W\n  2  A100-80G   88%   70144MiB / 81920MiB   67C   372W\n  3  A100-80G    4%    1024MiB / 81920MiB   39C    74W";
+const CMDS = {
+  help: () => "可用命令：ls  cat <文件>  nvidia-smi  pytest  git status  python -m scheduler  clear",
+  ls: () => "README.md  config/  src/  tests/",
+  "git status": () => { const n = Object.values(H).filter(h => h.state === "ok").length; return "位于分支 main\n" + (n ? "尚未暂存的修改：\n\t修改：  src/scheduler.py" : "工作区干净"); },
+  "nvidia-smi": () => "GPU  型号        利用率  显存                   温度  功耗\n" + GPU(),
+  pytest: () => { const n = Object.values(H).filter(h => h.state === "ok").length; return `<span class="dm">============ 测试会话开始 ============</span>\n收集到 ${3 + n} 项\ntests/test_quota.py <span class="ok">...${n ? "." : ""}</span>            [100%]\n<span class="ok">============ ${3 + n} 项通过，用时 0.42s ============</span>`; },
+  "python -m scheduler": () => "[等待] job-0417 暂无可用节点\n已放置 5 个作业：job-0412 → a100-07，job-0413 → a100-11 …",
+};
+function runCmd(c) {
+  log.insertAdjacentHTML("beforeend", `<div><span class="pm">~/gpu-scheduler $</span> <span class="cmd">${esc(c)}</span></div>`);
+  if (c === "clear") log.innerHTML = "";
+  else if (c.startsWith("cat ")) { const p = c.slice(4).trim(), f = FILES[p] || FILES["src/" + p]; log.insertAdjacentHTML("beforeend", f ? `<pre>${esc(f.lines.filter(l => typeof l === "string").slice(0, 8).join("\n"))}\n<span class="dm">…</span></pre>` : `<pre class="er">cat: ${esc(p)}: 没有那个文件</pre>`); }
+  else if (c) { const r = CMDS[c]; log.insertAdjacentHTML("beforeend", r ? `<pre>${r()}</pre>` : `<pre class="er">zsh: 找不到命令：${esc(c)}（输入 help 查看）</pre>`); }
+  $("#tout").scrollTop = $("#tout").scrollHeight;
+}
+tin.addEventListener("keydown", e => {
+  if (e.key === "Enter") { const c = tin.value.trim(); if (c) { hist.push(c); hi = hist.length; } runCmd(c); tin.value = ""; }
+  else if (e.key === "ArrowUp") { if (hi > 0) tin.value = hist[--hi]; e.preventDefault(); }
+  else if (e.key === "ArrowDown") { tin.value = hi < hist.length - 1 ? hist[++hi] : ""; hi = Math.min(hi, hist.length); e.preventDefault(); }
+});
+$("#tout").addEventListener("click", e => { if (!getSelection().toString()) tin.focus(); });
+$(".tt").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; document.querySelectorAll(".tt button").forEach(x => x.classList.toggle("on", x === b)); });
+runCmd("nvidia-smi");
+
+/* ---------- ⌘P ---------- */
+const qp = $("#qp"), qin = $("#qin"), qlist = $("#qlist"); let qsel = 0, qres = [];
+function fuzzy(q, s) { q = q.toLowerCase(); const t = s.toLowerCase(); let i = 0, idx = []; for (let j = 0; j < t.length && i < q.length; j++) if (t[j] === q[i]) { idx.push(j); i++; } return i === q.length ? idx : null; }
+function qrender() {
+  qres = Object.keys(FILES).map(p => ({ p, idx: fuzzy(qin.value, p) })).filter(r => r.idx);
+  qsel = Math.min(qsel, Math.max(0, qres.length - 1));
+  qlist.innerHTML = qres.length ? qres.map((r, i) => `<div class="it${i === qsel ? " on" : ""}" data-i="${i}"><span class="fi ${FILES[r.p].label}">${FILES[r.p].label}</span><span>${[...r.p].map((c, j) => r.idx.includes(j) && qin.value ? `<b>${esc(c)}</b>` : esc(c)).join("")}</span>${open.includes(r.p) ? "<small>已打开</small>" : ""}</div>`).join("") : '<div class="no">没有匹配的文件</div>';
+}
+function qopen() { qp.classList.add("on"); qin.value = ""; qsel = 0; qrender(); setTimeout(() => qin.focus(), 0); }
+function qclose() { qp.classList.remove("on"); }
+function qgo() { if (qres[qsel]) { qclose(); openFile(qres[qsel].p); } }
+$("#qo").addEventListener("click", qopen);
+qin.addEventListener("input", () => { qsel = 0; qrender(); });
+qin.addEventListener("keydown", e => { if (e.key === "ArrowDown") { qsel = Math.min(qsel + 1, qres.length - 1); qrender(); e.preventDefault(); } else if (e.key === "ArrowUp") { qsel = Math.max(0, qsel - 1); qrender(); e.preventDefault(); } else if (e.key === "Enter") qgo(); });
+qlist.addEventListener("click", e => { const it = e.target.closest(".it"); if (it) { qsel = +it.dataset.i; qgo(); } });
+qp.addEventListener("mousedown", e => { if (e.target === qp) qclose(); });
+addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "p") { e.preventDefault(); qopen(); } else if (e.key === "Escape") qclose(); });
+
+renderTabs(); renderCode();
+if (/demo/.test(location.search)) setTimeout(() => $("#apply").click(), 400);
+</script>
+</body>
+</html>

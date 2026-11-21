@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>岚点 LD-1 口袋合成器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@500;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#e4e4df;--body:#f1f1ed;--ink:#17171a;--mute:#7b7b75;--line:#c4c4bd;--org:#ff5a14;--lcd:#161614;--mono:"Space Mono","Noto Sans SC",monospace;--sans:"Archivo","Noto Sans SC",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--bg);min-width:1100px;overflow-x:hidden}
+.tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+header{height:60px;display:flex;align-items:center;padding:0 40px;border-bottom:1px solid var(--line);gap:36px}
+.logo{display:flex;align-items:center;gap:10px;font:800 17px var(--sans);letter-spacing:.02em}
+.logo i{width:14px;height:14px;border-radius:50%;background:var(--org);display:block}
+nav{display:flex;gap:26px;margin-left:12px}
+nav a{color:var(--ink);text-decoration:none;font-size:11px;letter-spacing:.1em;padding:4px 0;border-bottom:1px solid transparent}
+nav a:hover{border-color:var(--org)}
+.cart{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px}
+.cart b{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:11px;background:var(--ink);color:#fff;font-weight:400;transition:transform .2s}
+.hero{display:grid;grid-template-columns:420px 1fr;gap:20px;padding:34px 40px 0;max-width:1440px;margin:0 auto;align-items:start}
+.copy{padding-top:10px}
+.copy h1{font:900 168px/.82 var(--sans);letter-spacing:-.05em;margin:18px 0 20px -6px}
+.copy h1 span{color:var(--org)}
+.copy h2{font:700 22px/1.35 var(--sans);margin-bottom:14px}
+.copy p{font:400 13px/1.8 "Noto Sans SC";color:#44443f;max-width:360px}
+.buy{margin-top:26px;display:flex;align-items:center;gap:18px}
+.btn{width:96px;height:96px;border-radius:50%;border:0;background:var(--org);color:#fff;font:700 12px var(--mono);cursor:pointer;display:grid;place-items:center;line-height:1.5;text-align:center;box-shadow:0 5px 0 #c23f08;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c23f08}
+.price{font:800 34px var(--sans)}
+.price small{display:block;font:400 10px var(--mono);color:var(--mute);letter-spacing:.1em;margin-bottom:4px}
+.dots{display:flex;gap:6px;margin-top:30px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.dots i:nth-child(2){background:var(--org)} .dots i:nth-child(3){background:#fff;border:1px solid var(--ink)}
+/* device */
+.dev{position:relative;background:var(--body);border:1px solid #cfcfc8;border-radius:18px;padding:26px 28px 24px;box-shadow:0 3px 0 #b9b9b1,0 40px 50px -30px rgba(0,0,0,.35);height:560px;display:grid;grid-template-columns:462px 1fr;gap:34px}
+.dev::before,.dev::after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:#d6d6cf;border:1px solid #bdbdb5;top:12px}
+.dev::before{left:12px}.dev::after{right:12px}
+.screen{background:var(--lcd);border-radius:6px;padding:10px;border:3px solid #dcdcd5;outline:1px solid #b9b9b1}
+.screen canvas{display:block}
+.rd{display:flex;gap:16px;margin:10px 2px 0;font-size:10px;letter-spacing:.08em;color:#55554f}
+.rd b{color:var(--org);font-weight:700}
+.knobs{display:grid;grid-template-columns:repeat(4,1fr);margin-top:20px}
+.knob{display:flex;flex-direction:column;align-items:center;gap:8px;outline:none}
+.kb{position:relative;width:84px;height:84px;touch-action:none;cursor:grab}
+.kb svg{position:absolute;inset:0}
+.kb .cap{position:absolute;left:14px;top:14px;width:56px;height:56px;border-radius:50%;background:#e9e9e4;border:1px solid #a9a9a1;box-shadow:0 3px 0 #a6a69e,inset 0 -3px 0 #d3d3cc}
+.kb .cap::after{content:"";position:absolute;left:50%;top:5px;width:4px;height:16px;margin-left:-2px;border-radius:2px;background:var(--org)}
+.kb:active{cursor:grabbing}
+.knob:focus-visible .cap{outline:2px solid var(--org);outline-offset:3px}
+.knob label{font-size:10px;letter-spacing:.14em}
+.pads{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-content:start}
+.pads .hd,.sil{grid-column:1/-1}
+.sil{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.14em;color:#55554f;margin-bottom:4px}
+.sil::after{content:"";flex:1;border-top:1px solid #a5a59d}
+.pad{position:relative;aspect-ratio:1;border-radius:10px;background:#e8e8e3;border:1px solid #a9a9a1;box-shadow:0 6px 0 #a6a69e;cursor:pointer;font:700 11px var(--mono);color:#55554f;display:flex;align-items:flex-end;justify-content:flex-start;padding:8px 9px;transition:transform .06s,box-shadow .06s;user-select:none}
+.pad i{position:absolute;right:9px;top:9px;width:7px;height:7px;border-radius:50%;background:#cfcfc8;transition:background .05s}
+.pad.on{transform:translateY(5px);box-shadow:0 1px 0 #a6a69e;background:#dcdcd6}
+.pad.on i{background:var(--org)}
+.pad.o{background:var(--org);border-color:#c23f08;color:#fff;box-shadow:0 6px 0 #b83a06}
+.pad.o.on{box-shadow:0 1px 0 #b83a06;background:#f05010}
+.pad.o i{background:#ffb08f}
+.pad.o.on i{background:#fff}
+.grille{position:absolute;left:34px;bottom:22px;display:grid;grid-template-columns:repeat(18,1fr);gap:7px;width:310px;opacity:.55}
+.grille i{width:5px;height:5px;border-radius:50%;background:#8d8d85}
+.below{display:flex;align-items:center;gap:28px;margin-top:80px;padding:0}
+.xp{font-size:10px;letter-spacing:.14em;color:var(--mute);margin-top:18px}
+.xp u{text-decoration:none;color:var(--ink)}
+.band{max-width:1440px;margin:0 auto;padding:60px 40px 20px}
+.band h3{font:900 56px/1 var(--sans);letter-spacing:-.03em;margin-bottom:30px}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:0 60px}
+.row{display:flex;align-items:baseline;gap:10px;padding:13px 0;border-top:1px solid var(--ink);font-size:12px}
+.row .k{letter-spacing:.12em;white-space:nowrap}
+.row .d{flex:1;border-bottom:2px dotted #a9a9a1;transform:translateY(-3px)}
+.row .v{font-weight:700;white-space:nowrap}
+.row::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--org);align-self:center}
+.foot{max-width:1440px;margin:0 auto;padding:30px 40px 40px;display:flex;justify-content:space-between;color:var(--mute);font-size:10px;letter-spacing:.12em}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:10px 18px;font-size:11px;letter-spacing:.08em;border-radius:3px;opacity:0;pointer-events:none;transition:.25s}
+.toast.s{opacity:1;transform:translate(-50%,0)}
+.stg{position:absolute;right:30px;top:-16px;font-size:10px;letter-spacing:.14em;background:var(--org);color:#fff;padding:3px 9px;border-radius:10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><i></i>岚点 LANDOT</div>
+  <nav><a href="#">合成器</a><a href="#">配件</a><a href="#s">规格</a><a href="#">手册</a><a href="#">门店</a></nav>
+  <div class="cart"><span class="tag">购物车</span><b id="cn">0</b></div>
+</header>
+
+<section class="hero">
+  <div class="copy">
+    <div class="tag">POCKET SYNTHESIZER · 2026</div>
+    <h1>LD<span>-</span>1</h1>
+    <h2>能装进口袋的 16 键合成器</h2>
+    <p>四个旋钮，十六个按键，一块点阵屏。按下去就有声音，拧一拧波形就变。右边这台是真的能玩的，试试看。</p>
+    <div class="buy">
+      <button class="btn" id="buy">加入<br>购物车</button>
+      <div class="price"><small>RMB / 含税</small>¥1,290</div>
+    </div>
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="xp">键盘 <u>1234 QWER ASDF ZXCV</u> 演奏 · 空格 播放示范</div>
+  </div>
+
+  <div style="position:relative">
+    <div class="dev" id="dev">
+      <div class="left">
+        <div class="screen"><canvas id="wave" width="440" height="140" style="width:440px;height:140px"></canvas>
+          <canvas id="txt" width="440" height="140" style="width:440px;height:140px;margin-top:8px"></canvas></div>
+        <div class="rd"><span>波形 <b id="r0">锯齿</b></span><span>音高 <b id="r1">+0</b></span><span>滤波 <b id="r2">70%</b></span><span>音量 <b id="r3">60%</b></span></div>
+        <div class="knobs" id="knobs"></div>
+      </div>
+      <div class="pads" id="pads"><div class="sil">PADS 1—16</div></div>
+      <div class="grille" id="grille"></div>
+    </div>
+    <div class="stg">在线试玩</div>
+  </div>
+</section>
+
+<section class="band" id="s">
+  <h3>规格</h3>
+  <div class="specs">
+    <div>
+      <div class="row"><span class="k">尺寸</span><span class="d"></span><span class="v">180 × 124 × 22 MM</span></div>
+      <div class="row"><span class="k">重量</span><span class="d"></span><span class="v">286 G</span></div>
+      <div class="row"><span class="k">发声</span><span class="d"></span><span class="v">4 波形 · 8 复音</span></div>
+      <div class="row"><span class="k">按键</span><span class="d"></span><span class="v">16 PAD / 力度感应</span></div>
+      <div class="row"><span class="k">屏幕</span><span class="d"></span><span class="v">44 × 28 点阵</span></div>
+    </div>
+    <div>
+      <div class="row"><span class="k">电池</span><span class="d"></span><span class="v">2400 MAH / 12 H</span></div>
+      <div class="row"><span class="k">接口</span><span class="d"></span><span class="v">3.5 MM × 2 · TYPE-C</span></div>
+      <div class="row"><span class="k">存储</span><span class="d"></span><span class="v">64 个乐句</span></div>
+      <div class="row"><span class="k">机身</span><span class="d"></span><span class="v">再生 ABS · 浅灰</span></div>
+      <div class="row"><span class="k">包装清单</span><span class="d"></span><span class="v">主机 / 线 / 腕带 / 手册</span></div>
+    </div>
+  </div>
+</section>
+<div class="foot"><span>© 2026 岚点 LANDOT · 示例数据</span><span>LD-1 / REV.C / SN 000417</span></div>
+<div class="toast" id="toast"></div>
+
+<script>window.__e=[];addEventListener("error",e=>__e.push(e.message+" @"+e.lineno));
+const $=s=>document.querySelector(s);
+const WAVES=["正弦","三角","锯齿","方波"],WT=["sine","triangle","sawtooth","square"];
+const S={wave:.6,pitch:.5,filt:.7,vol:.6}; // 0..1
+const defs=[["WAVE","wave"],["PITCH","pitch"],["FILTER","filt"],["VOLUME","vol"]];
+let env=0,phase=0,AC=null,master=null;
+function wi(){return Math.min(3,Math.floor(S.wave*4))}
+function semi(){return Math.round((S.pitch-.5)*24)}
+function readout(){$("#r0").textContent=WAVES[wi()];$("#r1").textContent=(semi()>=0?"+":"")+semi();$("#r2").textContent=Math.round(S.filt*100)+"%";$("#r3").textContent=Math.round(S.vol*100)+"%"}
+// ---- knobs
+const kn=$("#knobs");
+defs.forEach(([lab,key],i)=>{
+  const d=document.createElement("div");d.className="knob";d.tabIndex=0;
+  let ticks="";
+  for(let t=0;t<=10;t++){const a=(-135+t*27)*Math.PI/180;ticks+=`<circle cx="${42+36*Math.sin(a)}" cy="${42-36*Math.cos(a)}" r="${t%5==0?2:1.2}" fill="#55554f"/>`}
+  d.innerHTML=`<div class="kb"><svg viewBox="0 0 84 84">${ticks}</svg><div class="cap"></div></div><label>${lab}</label>`;
+  kn.appendChild(d);
+  const kb=d.querySelector(".kb"),cap=d.querySelector(".cap");
+  const set=v=>{S[key]=Math.max(0,Math.min(1,v));cap.style.transform=`rotate(${-135+S[key]*270}deg)`;readout()};
+  d.set=set;set(S[key]);
+  let sy=0,sv=0;
+  kb.addEventListener("pointerdown",e=>{kb.setPointerCapture(e.pointerId);sy=e.clientY;sv=S[key];d.focus();audio()});
+  kb.addEventListener("pointermove",e=>{if(!kb.hasPointerCapture(e.pointerId))return;set(sv+(sy-e.clientY)/160)});
+  d.addEventListener("wheel",e=>{e.preventDefault();set(S[key]-e.deltaY/800)},{passive:false});
+  d.addEventListener("keydown",e=>{if(e.key=="ArrowUp"||e.key=="ArrowRight"){set(S[key]+.05);e.preventDefault()}if(e.key=="ArrowDown"||e.key=="ArrowLeft"){set(S[key]-.05);e.preventDefault()}});
+});
+// ---- pads
+const keys="1234qwerasdfzxcv".split(""),penta=[0,2,4,7,9];
+const pads=$("#pads");
+keys.forEach((k,i)=>{
+  const p=document.createElement("div");p.className="pad"+((i%5==0)?" o":"");p.innerHTML=`<i></i>${k.toUpperCase()}`;pads.appendChild(p);
+  const dn=()=>{p.classList.add("on");play(i)},up=()=>p.classList.remove("on");
+  p.addEventListener("pointerdown",e=>{e.preventDefault();dn()});
+  p.addEventListener("pointerup",up);p.addEventListener("pointerleave",up);
+  p.id="p"+i;
+});
+const held={};
+addEventListener("keydown",e=>{if(e.repeat||e.metaKey||e.ctrlKey)return;const i=keys.indexOf(e.key.toLowerCase());if(i>=0){held[i]=1;$("#p"+i).classList.add("on");play(i)}
+  if(e.code=="Space"){e.preventDefault();demo()}});
+addEventListener("keyup",e=>{const i=keys.indexOf(e.key.toLowerCase());if(i>=0)$("#p"+i).classList.remove("on")});
+// ---- audio
+function audio(){if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination)}if(AC.state=="suspended")AC.resume()}
+function play(i){
+  env=1;audio();
+  const f=130.81*Math.pow(2,(penta[i%5]+12*Math.floor(i/5)+semi())/12);
+  const t=AC.currentTime,o=AC.createOscillator(),fl=AC.createBiquadFilter(),g=AC.createGain();
+  o.type=WT[wi()];o.frequency.value=f;fl.type="lowpass";fl.frequency.value=200*Math.pow(40,S.filt);fl.Q.value=2;
+  const v=.35*S.vol;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+.7);
+  o.connect(fl);fl.connect(g);g.connect(master);o.start(t);o.stop(t+.75);
+}
+let demoT=null;
+function demo(){if(demoT){clearInterval(demoT);demoT=null;return}
+  const seq=[0,2,4,7,9,7,4,2,5,7,9,12,9,7,4,2];let n=0;
+  demoT=setInterval(()=>{const i=seq[n++%seq.length]%16;const p=$("#p"+i);p.classList.add("on");setTimeout(()=>p.classList.remove("on"),110);play(i)},210)}
+// ---- dot screen
+const wc=$("#wave"),wx=wc.getContext("2d"),tc=$("#txt"),tx=tc.getContext("2d");
+[wc,tc].forEach(c=>{const w=c.width,h=c.height;c.width=w*2;c.height=h*2;c.getContext("2d").scale(2,2)});
+const P=10,COLS=44,ROWS=14;
+function waveAt(x,ph,h){ // 加法合成，滤波越低谐波越少
+  const N=Math.max(1,Math.round(1+S.filt*14));let s=0,w=wi();
+  for(let n=1;n<=N;n++){
+    if(w==0){if(n==1)s=Math.sin(x*1+ph)}
+    else if(w==1){if(n%2)s+=((n%4==1)?1:-1)*Math.sin(n*x+ph)/(n*n)*1.2}
+    else if(w==2)s+=Math.sin(n*x+ph)/n*(n%2?1:-1)*.75
+    else if(n%2)s+=Math.sin(n*x+ph)/n*1.1
+  }return s}
+function drawWave(){
+  wx.fillStyle="#161614";wx.fillRect(0,0,440,140);
+  const cyc=2+Math.round(S.pitch*5),amp=(.35+.65*S.vol)*(.55+.45*env);
+  for(let c=0;c<COLS;c++){
+    const s=waveAt(c/COLS*Math.PI*2*cyc,phase,0)*amp;
+    const r=Math.round(ROWS/2-1-s*(ROWS/2-1.5));
+    for(let y=0;y<ROWS;y++){
+      const d=Math.abs(y-r);
+      let col="#2b2b28",rad=2;
+      if(y==ROWS/2||y==ROWS/2-1){col="#33332f"}
+      if(d==0){col="#ff6a24";rad=3.2}else if(y>=Math.min(r,ROWS/2)&&y<=Math.max(r,ROWS/2-1)&&Math.abs(y-r)<9){col="#8a3a14";rad=2.4}
+      wx.fillStyle=col;wx.beginPath();wx.arc(c*P+P/2,y*P+P/2,rad,0,7);wx.fill();
+    }
+  }
+}
+// 文字：离屏画字再阈值成点
+const off=document.createElement("canvas"),ox=off.getContext("2d",{willReadFrequently:true});
+const MSG="LD-1 口袋合成器  ·  16 键 4 旋钮  ·  拖动旋钮改变波形  ·  按 1 2 3 4 Q W E R 演奏  ·  空格键播放示范  ·  LANDOT 2026  ·  ";
+let bm=null,off0=0;
+function makeBm(){ox.font='500 14px "Noto Sans SC","Space Mono",sans-serif';const w=Math.ceil(ox.measureText(MSG).width)+4;off.width=w;off.height=14;
+  ox.font='500 14px "Noto Sans SC","Space Mono",sans-serif';ox.textBaseline="middle";ox.fillStyle="#000";ox.clearRect(0,0,w,14);ox.fillText(MSG,0,7.5);
+  const a=ox.getImageData(0,0,w,14).data;bm={w,a}}
+function drawTxt(){
+  tx.fillStyle="#161614";tx.fillRect(0,0,440,140);
+  const rows=14;
+  for(let c=0;c<COLS;c++)for(let y=0;y<rows;y++){
+    let on=false;if(bm){const x=Math.floor(off0+c)%bm.w;on=bm.a[(y*bm.w+x)*4+3]>100}
+    tx.fillStyle=on?"#ff6a24":"#2b2b28";tx.beginPath();tx.arc(c*P+P/2,y*P+P/2,on?3.4:2,0,7);tx.fill();
+  }
+}
+let last=0,acc=0;
+function loop(t){
+  const dt=Math.min(.05,(t-last)/1000);last=t;
+  phase+=dt*(2+S.pitch*3);env=Math.max(0,env-dt*2.2);acc+=dt;
+  if(acc>.07){acc=0;off0=(off0+1)%(bm?bm.w:1)}
+  drawWave();drawTxt();requestAnimationFrame(loop)}
+(document.fonts?document.fonts.load('500 14px "Noto Sans SC"',MSG):Promise.resolve()).catch(()=>{}).finally(()=>{makeBm()});
+requestAnimationFrame(loop);
+// grille
+const g=$("#grille");for(let i=0;i<54;i++)g.appendChild(document.createElement("i"));
+// buy
+let cn=0;$("#buy").onclick=()=>{cn++;$("#cn").textContent=cn;$("#cn").style.transform="scale(1.4)";setTimeout(()=>$("#cn").style.transform="",200);const t=$("#toast");t.textContent="已加入购物车 · LD-1 × "+cn;t.classList.add("s");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("s"),1600);play(7)};
+</script>
+</body>
+</html>

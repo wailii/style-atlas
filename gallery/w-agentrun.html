@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 运行台 · 执行轨迹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f5f5f9; --panel:#fff; --ink:#17172b; --ink2:#5a5a72; --mute:#9696aa; --line:#e5e5ee; --line2:#efeff5; --agent:#17172b; --llm:#6d4aff; --tool:#0f9d8a; --ret:#e08a1a; --ok:#1f9d63; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Onest", "Noto Sans SC", sans-serif; font-size: 13px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+  .app { height: 100vh; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; padding: 14px; }
+  .head { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; display: flex; align-items: stretch; }
+  .id { padding: 14px 20px; display: flex; flex-direction: column; justify-content: center; gap: 5px; min-width: 430px; }
+  .id .t { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+  .id .t svg { width: 18px; height: 18px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 8px; border-radius: 100px; font-size: 11.5px; font-weight: 600; background: #e6f5ed; color: #14804d; }
+  .chip.run { background: #efeaff; color: var(--llm); } .chip i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .id .s { font-size: 12px; color: var(--mute); display: flex; gap: 14px; }
+  .id .s span b { font-weight: 500; color: var(--ink2); font-family: "IBM Plex Mono"; font-size: 11.5px; }
+  .met { display: flex; flex: 1; border-left: 1px solid var(--line); }
+  .met > div { flex: 1; padding: 14px 20px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; }
+  .met small { font-size: 11.5px; color: var(--mute); }
+  .met b { font-size: 24px; font-weight: 600; letter-spacing: -.03em; line-height: 1.2; }
+  .met b em { font-style: normal; font-size: 12px; font-weight: 500; color: var(--mute); margin-left: 3px; letter-spacing: 0; }
+  .met i { font-style: normal; font-size: 11px; color: var(--mute); font-family: "IBM Plex Mono"; margin-top: 1px; }
+  .rp { padding: 0 20px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .play { height: 38px; padding: 0 18px 0 14px; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+  .play:hover { background: #2a2a48; } .play svg { width: 13px; height: 13px; }
+  .spd { display: flex; gap: 2px; justify-content: center; } .spd button { font-size: 11.5px; padding: 1px 8px; border-radius: 100px; color: var(--mute); font-family: "IBM Plex Mono"; } .spd button.on { background: #ececf5; color: var(--ink); }
+  .body { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 12px; min-height: 0; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+  .wfh { display: flex; flex: none; border-bottom: 1px solid var(--line); height: 64px; }
+  .wfh .l { width: 330px; flex: none; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-right: 1px solid var(--line2); }
+  .wfh .l b { font-size: 13px; font-weight: 600; } .wfh .l button { font-size: 12px; color: var(--mute); } .wfh .l button:hover { color: var(--ink); }
+  .wfh .r { flex: 1; position: relative; min-width: 0; }
+  .wfh .r svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .wfh .tk { position: absolute; bottom: 4px; font-size: 10.5px; color: var(--mute); font-family: "IBM Plex Mono"; transform: translateX(-50%); }
+  .wfh .lg { position: absolute; left: 10px; top: 6px; font-size: 10.5px; color: var(--mute); }
+  .wfh .lg b { color: var(--ink2); font-weight: 500; font-family: "IBM Plex Mono"; }
+  .wf { flex: 1; overflow-y: auto; display: flex; min-height: 0; position: relative; scrollbar-width: thin; }
+  .tree { width: 330px; flex: none; border-right: 1px solid var(--line2); }
+  .gantt { flex: 1; position: relative; min-width: 0; }
+  .gantt .vl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line2); }
+  .rowL, .rowR { height: 38px; border-bottom: 1px solid var(--line2); position: relative; }
+  .rowL { display: flex; align-items: center; gap: 7px; padding-right: 12px; cursor: pointer; transition: opacity .3s; }
+  .rowR { cursor: pointer; transition: opacity .3s; }
+  .rowL:hover, .rowR.hv { background: #f9f9fc; }
+  .rowL.sel, .rowR.sel { background: #f1eeff; }
+  .rowL.sel::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--llm); }
+  .pend { opacity: .28; }
+  .tg { width: 18px; height: 18px; flex: none; display: grid; place-items: center; border-radius: 4px; color: var(--mute); } .tg:hover { background: #ececf5; color: var(--ink); } .tg svg { width: 10px; height: 10px; transition: transform .15s; } .tg.c svg { transform: rotate(-90deg); }
+  .ico { width: 20px; height: 20px; border-radius: 6px; flex: none; display: grid; place-items: center; } .ico svg { width: 12px; height: 12px; }
+  .nm { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nm small { font-weight: 400; color: var(--mute); margin-left: 6px; font-family: "IBM Plex Mono"; font-size: 11px; }
+  .tk2 { font-family: "IBM Plex Mono"; font-size: 11px; color: var(--mute); flex: none; }
+  .bar { position: absolute; top: 9px; height: 20px; border-radius: 5px; display: flex; align-items: center; padding: 0 7px; font-size: 11px; font-family: "IBM Plex Mono"; color: #fff; overflow: visible; white-space: nowrap; transition: filter .15s; }
+  .bar:hover, .rowR.sel .bar { filter: brightness(.9); box-shadow: 0 0 0 2px rgba(109,74,255,.25); }
+  .bar.par { height: 8px; top: 15px; border-radius: 2px; padding: 0; opacity: .85; }
+  .bar .o { position: absolute; left: calc(100% + 6px); color: var(--ink2); }
+  .bar .fill { position: absolute; inset: 0; border-radius: inherit; background: repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 4px, transparent 4px 8px); animation: mv 1s linear infinite; }
+  @keyframes mv { to { background-position: 11px 0; } }
+  #cur { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px solid #e5484d; display: none; z-index: 3; pointer-events: none; }
+  #cur::before { content: attr(data-t); position: absolute; top: 2px; left: 5px; background: #e5484d; color: #fff; font-size: 10.5px; font-family: "IBM Plex Mono"; padding: 1px 5px; border-radius: 3px; }
+  #hov { position: absolute; top: 0; bottom: 0; border-left: 1px dashed #b9b9d0; display: none; z-index: 2; pointer-events: none; }
+  .io { display: flex; flex-direction: column; min-height: 0; }
+  .io .ph { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); flex: none; }
+  .io .ph .n { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 700; }
+  .io .ph .m { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 9px; font-size: 12px; color: var(--ink2); }
+  .io .ph .m span { display: inline-flex; gap: 5px; } .io .ph .m span em { font-style: normal; color: var(--mute); } .io .ph .m b { font-family: "IBM Plex Mono"; font-weight: 500; font-size: 11.5px; }
+  .io .acc { margin-top: 10px; padding: 8px 10px; background: #f6f5fd; border-radius: 8px; font-size: 11.5px; color: var(--ink2); display: flex; justify-content: space-between; }
+  .io .acc b { font-family: "IBM Plex Mono"; font-weight: 600; color: var(--ink); }
+  .ioc { flex: 1; overflow-y: auto; padding: 4px 0 20px; scrollbar-width: thin; }
+  .sec h5 { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 8px; font-size: 11.5px; font-weight: 600; color: var(--mute); letter-spacing: .06em; }
+  .sec h5 button { font-size: 11.5px; font-weight: 500; letter-spacing: 0; color: var(--mute); } .sec h5 button:hover { color: var(--ink); }
+  .json { margin: 0 14px; padding: 10px 6px 10px 10px; background: #fafafd; border: 1px solid var(--line2); border-radius: 8px; font-family: "IBM Plex Mono", monospace; font-size: 11.8px; line-height: 1.7; overflow-x: auto; }
+  .jl { padding-left: 16px; white-space: pre-wrap; word-break: break-word; } .jl.root { padding-left: 0; }
+  .jt { display: inline-block; width: 14px; margin-left: -16px; text-align: center; color: var(--mute); cursor: pointer; user-select: none; font-size: 9px; } .jt:hover { color: var(--ink); }
+  .jk { color: #5a3fd1; } .js { color: #0b7a69; } .jn { color: #b45a0a; } .jb { color: #b0245a; } .jz { color: var(--mute); } .jp { color: var(--mute); }
+  .jsum { color: var(--mute); cursor: pointer; } .jsum:hover { color: var(--ink); }
+  .tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: #fff; padding: 8px 11px; border-radius: 8px; font-size: 11.5px; line-height: 1.65; opacity: 0; transition: opacity .1s; white-space: nowrap; }
+  .tip.on { opacity: 1; } .tip span { color: #a9a9c4; } .tip b { font-family: "IBM Plex Mono"; font-weight: 500; }
+  .foot { position: fixed; right: 18px; bottom: 3px; font-size: 10px; color: var(--mute); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="head">
+    <div class="id">
+      <div class="t"><svg viewBox="0 0 20 20" fill="none" stroke="#17172b" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2l7 4v8l-7 4-7-4V6z"/><path d="M10 10l7-4M10 10v8M10 10L3 6"/></svg>账单分析助手<span class="chip" id="chip"><i></i>成功</span></div>
+      <div class="s"><span>运行 <b>run_7f3a92</b></span><span>用户 <b>u_20318</b></span><span>模型 <b>qwen3-72b</b></span><span>今天 <b>14:02:07</b></span></div>
+    </div>
+    <div class="met">
+      <div><small>总耗时</small><b class="mono" id="m1">—<em>s</em></b><i id="m1s">&nbsp;</i></div>
+      <div><small>Token</small><b class="mono" id="m2">—</b><i id="m2s">&nbsp;</i></div>
+      <div><small>成本</small><b class="mono" id="m3">—</b><i id="m3s">&nbsp;</i></div>
+      <div><small>步骤</small><b class="mono" id="m4">—</b><i id="m4s">&nbsp;</i></div>
+    </div>
+    <div class="rp"><button class="play" id="play"></button><div class="spd" id="spd"><button class="on" data-s="1">1×</button><button data-s="2">2×</button><button data-s="4">4×</button></div></div>
+  </header>
+  <div class="body">
+    <section class="box">
+      <div class="wfh"><div class="l"><b>步骤</b><button id="allx">折叠全部</button></div><div class="r" id="ruler"></div></div>
+      <div class="wf" id="wf"><div class="tree" id="tree"></div><div class="gantt" id="gantt"><div id="hov"></div><div id="cur"></div></div></div>
+    </section>
+    <section class="box io" id="io"></section>
+  </div>
+</div>
+<div class="tip" id="tip"></div>
+<div class="foot">示例数据</div>
+
+<script>
+window.__err = []; addEventListener("error", (e) => __err.push(e.message));
+const $ = (s) => document.querySelector(s);
+const COLOR = { agent: "#17172b", llm: "#6d4aff", tool: "#0f9d8a", retriever: "#e08a1a" };
+const TNAME = { agent: "Agent", llm: "模型", tool: "工具", retriever: "检索" };
+const ICON = {
+  agent: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 1l4.5 2.5v5L6 11 1.5 8.5v-5z"/></svg>',
+  llm: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 1.2l1.2 3.1 3.1 1.2-3.1 1.2L6 9.8 4.8 6.7 1.7 5.5l3.1-1.2z"/></svg>',
+  tool: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.8a2.7 2.7 0 00-2.9 3.5L1.7 8.2a1 1 0 000 1.4l.7.7a1 1 0 001.4 0l2.9-2.9a2.7 2.7 0 003.5-2.9L8.3 5.7 6.6 4.9 6.3 3z"/></svg>',
+  retriever: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="5.2" cy="5.2" r="3.2"/><path d="M7.7 7.7L10.5 10.5"/></svg>',
+};
+const PRICE = { in: .008 / 1000, out: .024 / 1000 };       // 元 / token
+// 步骤：编号、父级、类型、名称、开始、结束、入/出 token、输入、输出
+const S = [
+  { id: 1, p: 0, ty: "agent", nm: "agent.run", s: 0, e: 18.4, in: { query: "帮我分析 10 月各部门 GPU 费用，找出异常并生成报告", user: "u_20318", session: "sess_91c2" }, out: { report_id: "doc_5b21", summary: "10 月 GPU 总费用 ¥1,284,300，环比 +9.4%；发现 2 处异常", anomalies: 2 } },
+  { id: 2, p: 1, ty: "llm", nm: "llm.plan", s: 0, e: 1.9, tk: [812, 164], in: { model: "qwen3-72b", temperature: 0.2, messages: [{ role: "system", content: "你是账单分析助手，可调用工具查询账单、检索制度、检测异常。" }, { role: "user", content: "帮我分析 10 月各部门 GPU 费用，找出异常并生成报告" }], tools: ["query_bill", "search_policy", "detect_anomaly", "render_chart", "save_doc"] }, out: { content: "先按部门汇总 10 月费用，再按项目下钻，并和上月对比找异常。", tool_calls: [{ name: "query_bill", arguments: { month: "2026-10", group_by: "dept" } }], finish_reason: "tool_calls" } },
+  { id: 3, p: 1, ty: "tool", nm: "tool.query_bill", sub: "按部门", s: 1.9, e: 4.6, in: { month: "2026-10", group_by: "dept", metric: "cost" }, out: { total: 1284300, rows: [{ dept: "算法研究部", cost: 512800, mom: 0.062 }, { dept: "推理平台部", cost: 301900, mom: 0.118 }, { dept: "多模态组", cost: 228400, mom: 0.187 }, { dept: "数据工程部", cost: 136100, mom: -0.021 }, { dept: "公共池", cost: 105100, mom: 0.044 }] } },
+  { id: 4, p: 3, ty: "tool", nm: "sql.execute", s: 2.2, e: 4.3, in: { sql: "SELECT dept, SUM(cost) FROM bill_daily WHERE month = '2026-10' GROUP BY dept", timeout_ms: 8000 }, out: { rows: 5, scanned: "1.2M 行", elapsed_ms: 2140 } },
+  { id: 5, p: 1, ty: "llm", nm: "llm.reason", s: 4.6, e: 6.9, tk: [3120, 388], in: { model: "qwen3-72b", messages: [{ role: "tool", name: "query_bill", content: "{ total: 1284300, rows: [ … 5 项 ] }" }], note: "上文含 plan 与第一次工具结果" }, out: { content: "多模态组环比 +18.7%，需要下钻到项目；同时检索费用异常判定规范。", tool_calls: [{ name: "query_bill", arguments: { month: "2026-10", group_by: "project" } }, { name: "search_policy", arguments: { query: "GPU 费用异常 判定标准" } }], finish_reason: "tool_calls" } },
+  { id: 6, p: 1, ty: "tool", nm: "tool.query_bill", sub: "按项目", s: 6.9, e: 9.2, in: { month: "2026-10", group_by: "project", top: 5 }, out: { rows: [{ project: "qwen-pretrain-v4", dept: "算法研究部", cost: 318400 }, { project: "vl-finetune", dept: "多模态组", cost: 187200 }, { project: "chat-online", dept: "推理平台部", cost: 164900 }, { project: "data-clean", dept: "数据工程部", cost: 88600 }, { project: "eval-bench", dept: "公共池", cost: 61300 }] } },
+  { id: 7, p: 1, ty: "retriever", nm: "retriever.search_policy", s: 7.1, e: 8.0, in: { query: "GPU 费用异常 判定标准 环比阈值", top_k: 3 }, out: { docs: [{ id: "pol-0412", title: "算力费用异常判定规范", score: 0.89 }, { id: "pol-0388", title: "部门预算超支处理流程", score: 0.74 }, { id: "pol-0217", title: "GPU 资源申请与回收", score: 0.61 }] } },
+  { id: 8, p: 1, ty: "tool", nm: "tool.detect_anomaly", s: 9.2, e: 11.5, in: { series: "dept × day", method: "mad", threshold: 3, month: "2026-10" }, out: { anomalies: [{ dept: "多模态组", date: "2026-10-18", cost: 21300, baseline: 7600, reason: "单日突增 2.8 倍" }, { dept: "推理平台部", date: "2026-10-26", cost: 14800, baseline: 9100, reason: "连续 3 日高于基线" }] } },
+  { id: 9, p: 8, ty: "tool", nm: "python.run", s: 9.4, e: 11.3, in: { code: "df = load('bill_daily'); mad_detect(df, k=3)", sandbox: "py311" }, out: { stdout: "found 2 anomalies", elapsed_ms: 1830, memory_mb: 214 } },
+  { id: 10, p: 1, ty: "llm", nm: "llm.draft_report", s: 11.5, e: 16.1, tk: [5420, 1736], in: { model: "qwen3-72b", messages: [{ role: "user", content: "依据部门汇总、项目下钻、异常检测结果和判定规范，写 10 月 GPU 费用分析报告。" }], max_tokens: 3000 }, out: { content: "## 10 月 GPU 费用分析\n总费用 ¥1,284,300，环比 +9.4%。多模态组 10 月 18 日单日费用 ¥21,300，为基线的 2.8 倍……", tool_calls: [{ name: "render_chart", arguments: { type: "stacked_bar" } }, { name: "save_doc", arguments: { blocks: 6 } }], finish_reason: "tool_calls" } },
+  { id: 11, p: 1, ty: "tool", nm: "tool.render_chart", s: 16.1, e: 17.6, in: { type: "stacked_bar", x: "day", series: "dept", month: "2026-10" }, out: { image_id: "img_77f0", width: 1280, height: 640 } },
+  { id: 12, p: 1, ty: "tool", nm: "tool.save_doc", s: 17.6, e: 18.4, in: { title: "2026 年 10 月 GPU 费用分析报告", blocks: 6, images: ["img_77f0"] }, out: { doc_id: "doc_5b21", url: "https://docs.demo/doc_5b21" } },
+];
+const TOTAL = 18.4;
+S.forEach((x) => { x.dur = x.e - x.s; x.cost = x.tk ? x.tk[0] * PRICE.in + x.tk[1] * PRICE.out : 0; x.kids = S.filter((k) => k.p === x.id).map((k) => k.id); });
+const byId = Object.fromEntries(S.map((x) => [x.id, x]));
+const SUMTK = [S.reduce((a, x) => a + (x.tk ? x.tk[0] : 0), 0), S.reduce((a, x) => a + (x.tk ? x.tk[1] : 0), 0)], SUMCOST = S.reduce((a, x) => a + x.cost, 0);
+let sel = 3, collapsed = new Set(), T = null, speed = 1, raf = 0, playing = false;
+const depth = (x) => { let d = 0; while (x.p) { d++; x = byId[x.p]; } return d; };
+const visible = () => S.filter((x) => { let p = x.p; while (p) { if (collapsed.has(p)) return false; p = byId[p].p; } return true; });
+// 到时刻 t 的累计（t 为空则全程）
+function cum(t) { let ti = 0, to = 0, c = 0; S.forEach((x) => { if (!x.tk) return; const f = t == null ? 1 : Math.max(0, Math.min(1, (t - x.s) / x.dur)); if (t == null || t >= x.s) { ti += x.tk[0]; } to += x.tk[1] * (t == null ? 1 : f); c += (t == null || t >= x.s ? x.tk[0] * PRICE.in : 0) + x.tk[1] * f * PRICE.out; }); return [Math.round(ti), Math.round(to), c]; }
+const yuan = (v) => "¥" + v.toFixed(4);
+// ---- 头部指标 ----
+function metrics() {
+  const c = cum(T), run = T != null && T < TOTAL;
+  $("#m1").innerHTML = ((T == null ? TOTAL : Math.min(T, TOTAL)).toFixed(1)) + "<em>s</em>"; $("#m1s").textContent = run ? "回放中…" : "步骤间并行 1 处";
+  $("#m2").textContent = (c[0] + c[1]).toLocaleString(); $("#m2s").textContent = `输入 ${c[0].toLocaleString()} · 输出 ${c[1].toLocaleString()}`;
+  $("#m3").textContent = yuan(c[2]); $("#m3s").textContent = "¥0.008 / ¥0.024 每千 Token";
+  const n = T == null ? S.length : S.filter((x) => x.s <= T).length; $("#m4").textContent = T == null ? n : n + " / " + S.length; $("#m4s").textContent = "模型 3 · 工具 6 · 检索 1";
+  const ch = $("#chip"); ch.className = "chip" + (run ? " run" : ""); ch.innerHTML = "<i></i>" + (run ? "运行中" : "成功");
+}
+// ---- 树和甘特 ----
+const GW = () => $("#gantt").clientWidth;
+function render() {
+  const rows = visible(), tree = $("#tree"), g = $("#gantt");
+  tree.innerHTML = ""; [...g.querySelectorAll(".rowR")].forEach((e) => e.remove());
+  rows.forEach((x) => {
+    const L = document.createElement("div"); L.className = "rowL" + (sel === x.id ? " sel" : ""); L.dataset.id = x.id; L.style.paddingLeft = 12 + depth(x) * 18 + "px";
+    const pend = T != null && x.s > T; if (pend) L.classList.add("pend");
+    L.innerHTML = `${x.kids.length ? `<span class="tg ${collapsed.has(x.id) ? "c" : ""}" data-t="${x.id}"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg></span>` : '<span class="tg"></span>'}<span class="ico" style="background:${COLOR[x.ty]}1f;color:${COLOR[x.ty]}">${ICON[x.ty]}</span><span class="nm">${x.nm}${x.sub ? `<small>${x.sub}</small>` : ""}</span><span class="tk2">${x.tk ? (x.tk[0] + x.tk[1]).toLocaleString() + " tok" : x.dur.toFixed(1) + "s"}</span>`;
+    tree.appendChild(L);
+    const R = document.createElement("div"); R.className = "rowR" + (sel === x.id ? " sel" : "") + (pend ? " pend" : ""); R.dataset.id = x.id;
+    const left = x.s / TOTAL * 100, w = x.dur / TOTAL * 100, par = x.kids.length > 0 && x.ty === "agent" || (x.nm === "tool.detect_anomaly" || x.nm === "tool.query_bill" && x.kids.length);
+    const isRun = T != null && T >= x.s && T < x.e, prog = isRun ? (T - x.s) / x.dur : 1;
+    const b = document.createElement("div"); b.className = "bar" + (x.ty === "agent" ? " par" : ""); b.style.left = left + "%"; b.style.width = Math.max(.4, w) + "%"; b.style.background = COLOR[x.ty];
+    if (isRun) { b.style.background = `linear-gradient(90deg, ${COLOR[x.ty]} ${prog * 100}%, ${COLOR[x.ty]}33 ${prog * 100}%)`; }
+    const wide = w > 7; if (x.ty !== "agent") b.innerHTML = (wide ? x.dur.toFixed(1) + "s" : `<span class="o">${x.dur.toFixed(1)}s</span>`) + (isRun ? '<div class="fill"></div>' : ""); 
+    R.appendChild(b); g.appendChild(R);
+    [L, R].forEach((e) => { e.onclick = (ev) => { if (ev.target.closest(".tg")) return; select(x.id); }; e.onmouseenter = (ev) => { hv(x.id, true); tip(x); }; e.onmousemove = (ev) => { mvTip(ev); const r = g.getBoundingClientRect(); if (ev.clientX > r.left) { const h = $("#hov"); h.style.display = "block"; h.style.left = ev.clientX - r.left + "px"; } }; e.onmouseleave = () => { hv(x.id, false); $("#tip").classList.remove("on"); $("#hov").style.display = "none"; }; });
+  });
+  tree.querySelectorAll(".tg[data-t]").forEach((t) => (t.onclick = (ev) => { ev.stopPropagation(); const id = +t.dataset.t; collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); render(); }));
+  $("#allx").textContent = collapsed.size ? "展开全部" : "折叠全部";
+  gridlines(); cursor();
+}
+function hv(id, on) { document.querySelectorAll(`[data-id="${id}"]`).forEach((e) => e.classList.toggle("hv", on)); }
+function gridlines() { const g = $("#gantt"); g.querySelectorAll(".vl").forEach((e) => e.remove()); for (let t = 0; t <= 18; t += 2) { const v = document.createElement("div"); v.className = "vl"; v.style.left = t / TOTAL * 100 + "%"; g.insertBefore(v, g.firstChild); } }
+function cursor() { const c = $("#cur"); if (T == null) { c.style.display = "none"; return; } c.style.display = "block"; c.style.left = Math.min(T, TOTAL) / TOTAL * 100 + "%"; c.dataset.t = Math.min(T, TOTAL).toFixed(1) + "s"; }
+// ---- 标尺 + 累计曲线 ----
+function ruler() {
+  const r = $("#ruler"); r.innerHTML = ""; const pts = [];
+  for (let t = 0; t <= TOTAL + .01; t += .2) { const c = cum(Math.min(t, TOTAL)); pts.push([t, c[0] + c[1]]); }
+  const mx = SUMTK[0] + SUMTK[1], X = (t) => t / TOTAL * 100, Y = (v) => 44 - v / mx * 36;
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(2)} ${Y(p[1]).toFixed(1)}`).join("");
+  r.innerHTML = `<svg viewBox="0 0 100 64" preserveAspectRatio="none"><path d="${d}L100 44L0 44Z" fill="#6d4aff" opacity=".1"/><path d="${d}" fill="none" stroke="#6d4aff" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg><div class="lg">累计 Token <b>${mx.toLocaleString()}</b></div>` + [0, 2, 4, 6, 8, 10, 12, 14, 16, 18].map((t) => `<span class="tk" style="left:${X(t)}%">${t}s</span>`).join("");
+}
+// ---- 选择与右侧面板 ----
+function select(id) { sel = id; document.querySelectorAll(".rowL,.rowR").forEach((e) => e.classList.toggle("sel", +e.dataset.id === id)); panel(); }
+function esc(s) { return String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+function jnode(v, key, last, d) {
+  const wrap = document.createElement("div"); wrap.className = "jl" + (d === 0 ? " root" : "");
+  const k = key != null ? `<span class="jk">"${esc(key)}"</span><span class="jp">: </span>` : "";
+  const comma = last ? "" : '<span class="jp">,</span>';
+  if (v && typeof v === "object") {
+    const arr = Array.isArray(v), ent = Object.entries(v), o = arr ? "[" : "{", c = arr ? "]" : "}";
+    if (!ent.length) { wrap.innerHTML = k + `<span class="jp">${o}${c}</span>` + comma; return wrap; }
+    const head = document.createElement("div"), body = document.createElement("div"); let open = true;
+    head.innerHTML = `<span class="jt">▾</span>${k}<span class="jp">${o}</span><span class="jsum" style="display:none"> ${ent.length} ${arr ? "项" : "个字段"} </span>`; head.style.paddingLeft = "0";
+    ent.forEach(([kk, vv], i) => body.appendChild(jnode(vv, arr ? null : kk, i === ent.length - 1, d + 1)));
+    const tail = document.createElement("div"); tail.innerHTML = `<span class="jp">${c}</span>` + comma; tail.style.paddingLeft = "0";
+    const tg = head.querySelector(".jt"), sm = head.querySelector(".jsum");
+    const toggle = () => { open = !open; body.style.display = open ? "" : "none"; tg.textContent = open ? "▾" : "▸"; sm.style.display = open ? "none" : ""; if (!open) { tail.style.display = "none"; sm.innerHTML = ` ${ent.length} ${arr ? "项" : "个字段"} <span class="jp">${c}</span>${comma}`; } else tail.style.display = ""; };
+    tg.onclick = toggle; sm.onclick = toggle; wrap.append(head, body, tail); return wrap;
+  }
+  const val = typeof v === "string" ? `<span class="js">"${esc(v)}"</span>` : typeof v === "number" ? `<span class="jn">${v}</span>` : v === null ? '<span class="jz">null</span>' : `<span class="jb">${v}</span>`;
+  wrap.innerHTML = k + val + comma; return wrap;
+}
+function panel() {
+  const x = byId[sel], cc = cum(x.e);
+  $("#io").innerHTML = `<div class="ph"><div class="n"><span class="ico" style="background:${COLOR[x.ty]}1f;color:${COLOR[x.ty]}">${ICON[x.ty]}</span>${x.nm}${x.sub ? `<span style="font-weight:400;color:var(--mute);font-size:12.5px">${x.sub}</span>` : ""}<span class="chip" style="margin-left:auto"><i></i>成功</span></div>
+    <div class="m"><span><em>类型</em>${TNAME[x.ty]}</span><span><em>开始</em><b>+${x.s.toFixed(1)}s</b></span><span><em>耗时</em><b>${x.dur.toFixed(1)}s</b></span>${x.tk ? `<span><em>输入</em><b>${x.tk[0].toLocaleString()}</b></span><span><em>输出</em><b>${x.tk[1].toLocaleString()}</b></span><span><em>成本</em><b>${yuan(x.cost)}</b></span>` : ""}</div>
+    <div class="acc"><span>累计至此步骤结束</span><span><b>${(cc[0] + cc[1]).toLocaleString()}</b> Token　<b>${yuan(cc[2])}</b></span></div></div>
+    <div class="ioc"><div class="sec"><h5>输入<button data-f="in">全部折叠</button></h5><div class="json" id="jin"></div></div><div class="sec"><h5>输出<button data-f="out">全部折叠</button></h5><div class="json" id="jout"></div></div></div>`;
+  $("#jin").appendChild(jnode(x.in, null, true, 0)); $("#jout").appendChild(jnode(x.out, null, true, 0));
+  document.querySelectorAll(".sec h5 button").forEach((b) => (b.onclick = () => { const box = $("#j" + b.dataset.f), toggles = [...box.querySelectorAll(".jt")]; const anyOpen = toggles.some((t) => t.textContent === "▾"); toggles.slice().reverse().forEach((t) => { if ((t.textContent === "▾") === anyOpen && !(anyOpen && t === toggles[0])) t.click(); }); b.textContent = anyOpen ? "全部展开" : "全部折叠"; }));
+}
+// ---- 提示 ----
+function tip(x) { const t = $("#tip"); t.innerHTML = `<b>${x.nm}</b>${x.sub ? " · " + x.sub : ""}<br><span>开始</span> +${x.s.toFixed(1)}s　<span>耗时</span> ${x.dur.toFixed(1)}s${x.tk ? `<br><span>Token</span> ${x.tk[0].toLocaleString()} → ${x.tk[1].toLocaleString()}　<span>成本</span> ${yuan(x.cost)}` : ""}`; t.classList.add("on"); }
+function mvTip(e) { const t = $("#tip"); let x = e.clientX + 16, y = e.clientY + 16; if (x + t.offsetWidth > innerWidth - 8) x = e.clientX - t.offsetWidth - 16; t.style.left = x + "px"; t.style.top = y + "px"; }
+// ---- 回放 ----
+const PLAY = '<svg viewBox="0 0 13 13" fill="currentColor"><path d="M2.5 1.2l9 5.3-9 5.3z"/></svg>回放', STOP = '<svg viewBox="0 0 13 13" fill="currentColor"><rect x="2.5" y="2.5" width="8" height="8" rx="1.5"/></svg>停止', AGAIN = '<svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6.5a4.5 4.5 0 108-2.8M10.5 1.5v2.7H7.8"/></svg>重新回放';
+function play() {
+  if (playing) { playing = false; cancelAnimationFrame(raf); T = null; $("#play").innerHTML = PLAY; render(); metrics(); panel(); return; }
+  playing = true; T = 0; $("#play").innerHTML = STOP; let last = performance.now();
+  (function f(now) {
+    if (!playing) return; T += (now - last) / 1000 * speed; last = now;
+    if (T >= TOTAL + .4) { playing = false; T = null; $("#play").innerHTML = AGAIN; render(); metrics(); panel(); return; }
+    const run = S.filter((x) => x.s <= T && T < x.e).filter((x) => x.kids.length === 0 || x.ty !== "agent").pop(); if (run && run.id !== sel) { sel = run.id; panel(); }
+    render(); metrics(); raf = requestAnimationFrame(f);
+  })(last);
+}
+$("#play").innerHTML = PLAY; $("#play").onclick = play;
+$("#spd").onclick = (e) => { const s = e.target.dataset.s; if (!s) return; speed = +s; document.querySelectorAll("#spd button").forEach((b) => b.classList.toggle("on", b === e.target)); };
+$("#allx").onclick = () => { if (collapsed.size) collapsed.clear(); else S.filter((x) => x.kids.length && x.id !== 1).forEach((x) => collapsed.add(x.id)); render(); };
+addEventListener("resize", render);
+ruler(); render(); metrics(); panel();
+</script>
+</body>
+</html>

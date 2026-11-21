@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>回声 · 音乐播放器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media=\'all\'">
+<style>
+:root{--c:73,91,76;--ink:#fff;--ink2:rgba(255,255,255,.62);--ink3:rgba(255,255,255,.36);--line:rgba(255,255,255,.09);--panel:rgba(0,0,0,.26)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font:14px/1.5 Inter,"Noto Sans SC",system-ui,sans-serif;color:var(--ink);background:rgb(calc(var(--c)));-webkit-font-smoothing:antialiased;user-select:none}
+#bg{position:fixed;inset:0;background:#0b0b0d;overflow:hidden}
+#bg .tint{position:absolute;inset:0;background:rgb(var(--c));opacity:.82}
+#bg img{position:absolute;left:-10%;top:-10%;width:120%;height:120%;object-fit:cover;filter:blur(90px) saturate(1.2);opacity:0;transition:opacity 1.4s ease;transform:scale(1.2)}
+#bg img.on{opacity:.4}
+#bg .shade{position:absolute;inset:0;background:rgba(8,8,10,.3)}
+.app{position:relative;display:grid;grid-template-columns:208px 1fr 336px;grid-template-rows:1fr 104px;height:100vh;min-width:1100px}
+nav{grid-row:1/3;padding:26px 14px 18px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:.04em;padding:0 10px 22px}
+.logo svg{width:24px;height:24px}
+nav h6{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.12em;padding:18px 10px 6px}
+nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:8px;color:var(--ink2);font-size:13.5px;transition:background .15s,color .15s}
+nav button:hover{background:rgba(255,255,255,.07);color:#fff}
+nav button.on{background:rgba(255,255,255,.12);color:#fff}
+nav button svg{width:17px;height:17px;flex:none}
+nav button small{margin-left:auto;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.sample{margin-top:auto;font-size:10.5px;color:var(--ink3);padding:0 10px;line-height:1.6}
+main{display:grid;grid-template-columns:320px 1fr;gap:48px;padding:48px 44px 0 52px;overflow:hidden;min-width:0}
+.now{display:flex;flex-direction:column}
+.cover{width:320px;height:320px;border-radius:10px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);position:relative;background:#222}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .6s}
+.cover img.out{opacity:0}
+.meta{margin-top:26px;display:flex;align-items:flex-start;gap:10px}
+.meta .t{min-width:0;flex:1}
+.meta h1{font-size:26px;font-weight:700;letter-spacing:.01em;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta p{color:var(--ink2);font-size:14px;margin-top:2px}
+.meta p.alb{color:var(--ink3);font-size:12.5px}
+.heart{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:var(--ink2);transition:transform .2s,color .2s}
+.heart:hover{background:rgba(255,255,255,.1)}
+.heart svg{width:20px;height:20px}
+.heart.on{color:#fff}.heart.on svg{fill:currentColor}
+.heart.pop{animation:pop .35s}
+@keyframes pop{40%{transform:scale(1.3)}}
+.credit{margin-top:auto;padding-bottom:22px;font-size:10.5px;color:var(--ink3)}
+.hints{font-size:11px;color:var(--ink3);margin-bottom:6px}
+.lyr{position:relative;overflow:hidden;-webkit-mask-image:linear-gradient(transparent 0,#000 16%,#000 78%,transparent);mask-image:linear-gradient(transparent 0,#000 16%,#000 78%,transparent)}
+.lyr ol{list-style:none;position:absolute;left:0;right:0;top:0;transition:transform .7s cubic-bezier(.25,.8,.25,1);padding-top:30vh;padding-bottom:40vh}
+.lyr li{font-size:31px;line-height:1.38;font-weight:700;padding:10px 0;color:#fff;opacity:.28;filter:blur(1.4px);transform-origin:left center;transform:scale(.92);transition:opacity .5s,filter .5s,transform .5s;cursor:pointer;letter-spacing:.01em}
+.lyr li:hover{opacity:.55}
+.lyr li.near{opacity:.42;filter:blur(.6px)}
+.lyr li.act{opacity:1;filter:none;transform:scale(1)}
+.lyr li.intro{font-size:22px;opacity:.5;filter:none;font-weight:500;transform:none}
+aside{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+aside header{padding:24px 20px 12px;display:flex;align-items:baseline;gap:8px}
+aside header b{font-size:16px}
+aside header span{color:var(--ink3);font-size:12px;margin-left:auto;font-variant-numeric:tabular-nums}
+.qh{font-size:11px;color:var(--ink3);padding:0 20px 8px}
+#q{position:relative;flex:1;overflow-y:auto;padding:0 10px 12px}
+#q::-webkit-scrollbar{width:0}
+.qi{position:absolute;left:10px;right:10px;height:60px;border-radius:9px;display:flex;align-items:center;gap:12px;padding:0 10px;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1),background .15s;background:transparent}
+.qi:hover{background:rgba(255,255,255,.07)}
+.qi.cur{background:rgba(255,255,255,.12)}
+.qi.drag{transition:none;z-index:5;background:rgba(40,40,46,.92);box-shadow:0 12px 30px rgba(0,0,0,.5);cursor:grabbing}
+.qi img{width:42px;height:42px;border-radius:5px;object-fit:cover;flex:none;pointer-events:none}
+.qi .n{flex:1;min-width:0;pointer-events:none}
+.qi .n b{display:block;font-weight:500;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi .n i{display:block;font-style:normal;font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi.cur .n b{color:#fff}
+.qi .d{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;pointer-events:none}
+.qi .grip{width:20px;height:30px;display:grid;place-items:center;color:var(--ink3);cursor:grab;touch-action:none;opacity:0;transition:opacity .15s}
+.qi:hover .grip,.qi.drag .grip{opacity:1}
+.eq{display:none;gap:2px;align-items:flex-end;height:12px;width:14px;pointer-events:none}
+.qi.cur .eq{display:flex}.qi.cur .d{display:none}
+.eq i{width:3px;background:#fff;border-radius:1px;animation:eq .9s infinite ease-in-out}
+.eq i:nth-child(2){animation-delay:-.3s}.eq i:nth-child(3){animation-delay:-.6s}
+.paused .eq i{animation-play-state:paused}
+@keyframes eq{0%,100%{height:3px}50%{height:12px}}
+footer{grid-column:2/4;display:grid;grid-template-columns:260px 1fr 220px;align-items:center;gap:24px;padding:0 28px 0 28px;border-top:1px solid var(--line);background:rgba(0,0,0,.3)}
+.mini{display:flex;align-items:center;gap:12px;min-width:0}
+.mini img{width:50px;height:50px;border-radius:6px;object-fit:cover}
+.mini b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini i{display:block;font-style:normal;font-size:12px;color:var(--ink2)}
+.tr{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ctl{display:flex;align-items:center;justify-content:center;gap:10px}
+.ctl button{all:unset;cursor:pointer;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink2);transition:color .15s,background .15s,transform .15s}
+.ctl button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.ctl button svg{width:19px;height:19px}
+.ctl button.on{color:#fff;background:rgba(255,255,255,.14)}
+.ctl .play{width:44px;height:44px;background:#fff;color:#111}
+.ctl .play:hover{background:#fff;color:#000;transform:scale(1.06)}
+.ctl .play svg{width:20px;height:20px}
+.wave{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.wave canvas{flex:1;height:42px;display:block;cursor:pointer;min-width:0}
+.vol{display:flex;align-items:center;gap:10px;justify-content:flex-end;color:var(--ink2)}
+.vol svg{width:18px;height:18px}
+.vol input{-webkit-appearance:none;appearance:none;width:110px;height:3px;border-radius:2px;background:rgba(255,255,255,.22);outline:none;cursor:pointer}
+.vol input::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#fff}
+#toast{position:fixed;left:50%;top:22px;transform:translate(-50%,-30px);opacity:0;background:rgba(0,0,0,.6);padding:7px 16px;border-radius:20px;font-size:12.5px;border:1px solid var(--line);transition:.3s;pointer-events:none;z-index:9}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="bg"><img id="bgA"><img id="bgB"><div class="tint"></div><div class="shade"></div></div>
+<div class="app" id="app">
+<nav>
+  <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M22 12h-1"/></svg>回声</div>
+  <button class="on" data-pl="all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>全部歌曲<small id="cAll"></small></button>
+  <button data-pl="like"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/></svg>我喜欢的<small id="cLike"></small></button>
+  <h6>歌单</h6>
+  <button data-pl="rain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M7 15a4 4 0 1 1 1-7.900A5 5 0 0 1 18 9a3 3 0 0 1 0 6zM9 18l-1 3M13 18l-1 3M17 18l-1 3"/></svg>雨天的车里<small>4</small></button>
+  <button data-pl="trip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h18M5 17l2-6h10l2 6M8 11l1-4h6l1 4"/><circle cx="8" cy="17.500" r="1"/><circle cx="16" cy="17.500" r="1"/></svg>周末公路<small>5</small></button>
+  <button data-pl="calm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 9c3-3 5 3 8 0s5 3 8 0M4 15c3-3 5 3 8 0s5 3 8 0"/></svg>安静下来<small>4</small></button>
+  <div class="sample">示例数据 · 曲目、歌词均为虚构<br>不播放真实音频，进度由计时器驱动<br>空格 播放/暂停　← → 快退/快进 5 秒<br>N / P 下一首 / 上一首</div>
+</nav>
+<main>
+  <section class="now">
+    <div class="cover"><img id="cvA"><img id="cvB" class="out"></div>
+    <div class="meta"><div class="t"><h1 id="ttl"></h1><p id="art"></p><p class="alb" id="alb"></p></div>
+      <button class="heart" id="heart" title="喜欢"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 20s-7-4.400-7-10a4 4 0 0 1 7-2.500A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/></svg></button></div>
+    <div class="credit" id="credit"></div>
+  </section>
+  <section class="lyr" id="lyr"><ol id="ol"></ol></section>
+</main>
+<aside>
+  <header><b>播放队列</b><span id="qc"></span></header>
+  <div class="qh">拖动右侧手柄调整顺序</div>
+  <div id="q"></div>
+</aside>
+<footer>
+  <div class="mini"><img id="mi"><div style="min-width:0"><b id="mt"></b><i id="ma"></i></div></div>
+  <div class="tr">
+    <div class="ctl">
+      <button id="shuf" title="随机"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3c4 0 5 10 9 10h5M3 17h3c1.500 0 2.500-1.200 3.400-2.800M13 9.200C14 7.800 15 7 17 7h3M17 4l3 3-3 3M17 14l3 3-3 3"/></svg></button>
+      <button id="prev" title="上一首"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9.500 12z"/></svg></button>
+      <button class="play" id="play"></button>
+      <button id="next" title="下一首"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5l10.500 7L4 19z"/></svg></button>
+      <button id="rep" title="单曲循环"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l3 3-3 3M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 13v2a3 3 0 0 1-3 3H4"/></svg></button>
+    </div>
+    <div class="wave"><span id="tc">0:00</span><canvas id="wv"></canvas><span id="td">0:00</span></div>
+  </div>
+  <div class="vol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9zM16.500 9a4 4 0 0 1 0 6"/></svg><input id="vol" type="range" min="0" max="100" value="68"></div>
+</footer>
+</div>
+<div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const IMG=n=>"img/real/"+n+".jpg";
+const SONGS=[
+{id:0,t:"雨刷",a:"林间客",al:"挡风玻璃",d:222,img:"filmstill-road",by:"Cole Keister",col:[73,91,76],pl:["rain","trip"],lyr:["雨刷来回，擦不掉你的名字","高架桥在车灯里慢慢拉长","收音机说今夜有大雨","我说好，那就多开一会儿","路口的绿灯亮了又灭","副驾驶放下一首老歌","把车窗留一条缝","让潮湿的风替我开口","后视镜里城市越来越小","而我还没想好要去哪","雨刷来回，一下一下","像心跳在倒数","就这样开到天亮吧","天亮以后再说"]},
+{id:1,t:"潮汐表",a:"白昼计划",al:"退潮时刻",d:198,img:"satellite-harbor",by:"Michael Olsen",col:[16,60,58],pl:["calm","trip"],lyr:["船在港口里排成一行","谁都不急着解开缆绳","潮水写好了今天的时间","涨一点，又退一点","我把行李留在岸上","只带走一小段平静","海面像一张摊开的纸","风是唯一的笔","等水位慢慢升到胸口","再决定要不要出发","没有人催，没有人问","这样就很好"]},
+{id:2,t:"云层之上",a:"云端回信",al:"平流层",d:245,img:"flatlay-clouds",by:"Luke Pamer",col:[21,103,150],pl:["calm","trip"],lyr:["起飞之后城市变成格子","再往上，连格子也看不见","云把所有声音都折叠起来","只剩引擎在耳边低语","我写了一封不寄的信","放进小桌板的凹槽里","落地时它会变成什么","也许只是一页空白","也许是你读到的第一行","在云层之上","我们离得最近"]},
+{id:3,t:"末班摩托",a:"雨夜小队",al:"十二点以后",d:207,img:"filmstill-rain",by:"Suhyeon Choi",col:[98,78,62],pl:["rain"],lyr:["最后一班公交刚开走","我们骑着车追它的尾灯","雨水灌进袖口","你在后座大声唱歌","红灯停下的三十秒","整条街只有我们的笑声","别管明天几点上班","别管钱包里剩多少","把油门拧到底","让夜晚长一点","再长一点"]},
+{id:4,t:"午后窗台",a:"木椅乐队",al:"慢一点",d:176,img:"lifestyle-window",by:"Logan Adermatt",col:[98,104,113],pl:["calm"],lyr:["阳光挪了三寸","椅子还在原来的位置","门外有人走过","又没有人进来","茶凉了我也不想添","今天什么都不用完成","时间在木纹里打转","像一只睡着的猫","就让下午这样过去","谁也别来打扰"]},
+{id:5,t:"日落海岸",a:"蓝岸",al:"最后一格光",d:231,img:"documentary-shore",by:"Dana Cristea",col:[151,105,64],pl:["trip","like"],lyr:["两个影子牵着走","沙滩把脚印一个个收走","太阳掉进海里之前","给每个人都留了一份橙色","我们捡了几只空贝壳","把它们当作承诺","涨潮之前别回头","回头就会舍不得","往前走，一直走","走到天黑为止"]},
+{id:6,t:"沙丘漫步",a:"远行者",al:"无人区",d:252,img:"filmstill-desert",by:"MontyLov",col:[209,192,174],pl:["trip"],lyr:["背包里只有水和地图","地图上这里还是空白","风把昨天的路抹平","我就重新画一条","没有信号也好","沉默比消息更诚实","影子越走越长","像是在追我","翻过下一座沙丘","也许就能看见海"]},
+{id:7,t:"两杯咖啡",a:"桌边谈话",al:"周二下午",d:168,img:"rawcam-coffee",by:"Toa Heftiba",col:[126,86,53],pl:["calm","rain"],lyr:["两只玻璃杯碰了一下","冰块转了半圈","你说最近睡得不好","我说我也是","窗外刚好下起了雨","我们谁也没有提起","那件很久以前的事","只是把糖搅了又搅","等杯子见了底","再点一杯"]},
+{id:8,t:"花瓶里的春天",a:"木椅乐队",al:"慢一点",d:189,img:"lifestyle-tulips",by:"Patrick Langwallner",col:[91,76,62],pl:["rain","calm"],lyr:["买了一束郁金香","插进用旧的玻璃瓶","水每天换一次","花每天开一点","没有人告诉我春天","是从窗台开始的","黄色的那朵最先醒","白色的还在犹豫","我也是，我也是","等一等就好了"]}
+];
+const PLN={all:"全部歌曲",like:"我喜欢的",rain:"雨天的车里",trip:"周末公路",calm:"安静下来"};
+let liked=new Set([0,5,2]);
+let pl="all";
+let queue=SONGS.map(s=>s.id);
+let st={pos:0,t:73,playing:true,shuf:false,rep:false};
+const S=i=>SONGS[i];
+const fmt=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const ICON_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.500v15l13-7.500z"/></svg>',ICON_PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+function toast(m){const e=$("toast");e.textContent=m;e.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("on"),1600)}
+
+// 颜色：从封面取主色；file:// 下 canvas 被污染时用预置色
+const colCache={};
+function extract(s){return new Promise(ok=>{
+  if(colCache[s.id])return ok(colCache[s.id]);
+  const im=new Image();im.onload=()=>{try{
+    const c=document.createElement("canvas");c.width=c.height=32;const x=c.getContext("2d");x.drawImage(im,0,0,32,32);const d=x.getImageData(0,0,32,32).data;
+    let R=0,G=0,B=0,W=0;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b),v=mx/255,sat=mx?(mx-mn)/mx:0;let w=(sat*sat+.02)*(v>.15?Math.max(.05,1-Math.abs(v-.55)*1.2):.1);R+=r*w;G+=g*w;B+=b*w;W+=w}
+    colCache[s.id]=[R/W,G/W,B/W];
+  }catch(e){colCache[s.id]=s.col}ok(colCache[s.id])};im.onerror=()=>ok(s.col);im.src=IMG(s.img)})}
+let curC=[73,91,76],tgtC=[73,91,76];
+function darken(c){const m=Math.max(...c);const k=m>150?150/m:1;return c.map(v=>Math.round(v*k*.78))}
+(function colorLoop(){for(let i=0;i<3;i++)curC[i]+=(tgtC[i]-curC[i])*.06;document.documentElement.style.setProperty("--c",curC.map(Math.round).join(","));requestAnimationFrame(colorLoop)})();
+
+// 波形
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+const WN=150,waves={};
+function wave(s){if(waves[s.id])return waves[s.id];const r=rng(s.id*977+13),a=[];let e=.3;for(let i=0;i<WN;i++){const p=i/WN;const env=.28+.5*Math.sin(Math.PI*Math.min(1,p*1.15))*(.7+.3*Math.sin(p*17+s.id));e+=(r()-.5)*.35;e=Math.max(.15,Math.min(1,e));let v=env*(.45+.8*r())*(.6+.4*e);if(p<.03||p>.97)v*=.35;a.push(Math.max(.1,Math.min(1,v*1.7)))}return waves[s.id]=a}
+const cv=$("wv"),cx=cv.getContext("2d");let hov=-1;
+function sizeCv(){const r=cv.getBoundingClientRect(),dp=Math.min(2,devicePixelRatio||1);cv.width=r.width*dp;cv.height=r.height*dp;cx.setTransform(dp,0,0,dp,0,0)}
+function drawWave(){const s=S(queue[st.pos]),w=wave(s),W=cv.clientWidth,H=cv.clientHeight,step=W/WN,pr=st.t/s.d;cx.clearRect(0,0,W,H);
+  const col=curC.map(Math.round);const lite=`rgb(${col.map(v=>Math.min(255,v*.5+150)|0)})`;
+  for(let i=0;i<WN;i++){const x=i*step,h=w[i]*H,played=(i+.5)/WN<=pr,near=hov>=0&&Math.abs(i-hov)<2;
+    cx.fillStyle=played?"#fff":(hov>=0&&i<=hov?lite:"rgba(255,255,255,.28)");if(near)cx.fillStyle="#fff";
+    const bw=Math.max(2,step*.56);cx.beginPath();cx.roundRect(x+(step-bw)/2,(H-h)/2,bw,h,bw/2);cx.fill()}
+  if(hov>=0){const t=hov/WN*s.d,x=hov*step;cx.fillStyle="rgba(0,0,0,.7)";cx.font="11px Inter";const tx=fmt(t),tw=cx.measureText(tx).width+12;cx.fillRect(Math.min(W-tw,Math.max(0,x-tw/2)),-1,tw,0);}
+}
+let seeking=false;
+function seekAt(e){const r=cv.getBoundingClientRect();const p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));st.t=p*S(queue[st.pos]).d;updLyr(true)}
+cv.addEventListener("pointerdown",e=>{seeking=true;try{cv.setPointerCapture(e.pointerId)}catch(_){};seekAt(e)});
+cv.addEventListener("pointermove",e=>{const r=cv.getBoundingClientRect();hov=Math.max(0,Math.min(WN-1,Math.floor((e.clientX-r.left)/r.width*WN)));if(seeking)seekAt(e)});
+cv.addEventListener("pointerup",()=>seeking=false);
+cv.addEventListener("pointerleave",()=>{hov=-1});
+
+// 歌词
+let lt=[],li=-2;
+function buildLyr(){const s=S(queue[st.pos]),n=s.lyr.length,start=14,end=s.d-18,g=(end-start)/n;lt=s.lyr.map((_,i)=>start+i*g+(i%3===1?g*.08:0));
+  $("ol").innerHTML='<li class="intro">♪ 前奏</li>'+s.lyr.map((l,i)=>`<li data-i="${i}">${l}</li>`).join("");li=-2;updLyr(true)}
+$("ol").addEventListener("click",e=>{const l=e.target.closest("li[data-i]");if(!l)return;st.t=lt[+l.dataset.i]+.01;updLyr(true)});
+function updLyr(force){let k=-1;for(let i=0;i<lt.length;i++)if(st.t>=lt[i])k=i;if(k===li&&!force)return;li=k;
+  const lis=$("ol").children;for(let i=0;i<lis.length;i++){const idx=i-1;lis[i].className=i===0?"intro":(idx===k?"act":(Math.abs(idx-k)===1?"near":""));}
+  const el=lis[k+1];if(el){const y=el.offsetTop+el.offsetHeight/2;const H=$("lyr").clientHeight;$("ol").style.transform=`translateY(${H*.36-y}px)`}}
+
+// 队列
+const ROW=64;
+function renderQ(){const q=$("q");q.style.height=queue.length*ROW+"px";q.innerHTML="";
+  queue.forEach((id,i)=>{const s=S(id),e=document.createElement("div");e.className="qi"+(i===st.pos?" cur":"");e.dataset.i=i;e.style.top=i*ROW+"px";
+    e.innerHTML=`<img src="${IMG(s.img)}" alt=""><div class="n"><b>${s.t}</b><i>${s.a}</i></div><div class="eq"><i></i><i></i><i></i></div><span class="d">${fmt(s.d)}</span><div class="grip"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4.500" cy="3" r="1.200"/><circle cx="9.500" cy="3" r="1.200"/><circle cx="4.500" cy="7" r="1.200"/><circle cx="9.500" cy="7" r="1.200"/><circle cx="4.500" cy="11" r="1.200"/><circle cx="9.500" cy="11" r="1.200"/></svg></div>`;
+    e.addEventListener("click",()=>{if(e.dataset.moved)return;go(i)});
+    const gr=e.querySelector(".grip");gr.addEventListener("pointerdown",ev=>startDrag(ev,e,i));
+    q.appendChild(e)});
+  $("qc").textContent=queue.length+" 首 · "+fmt(queue.reduce((a,b)=>a+S(b).d,0))}
+function startDrag(ev,el,from){ev.preventDefault();ev.stopPropagation();const y0=ev.clientY,rows=[...$("q").children];el.classList.add("drag");try{el.setPointerCapture(ev.pointerId)}catch(_){};let to=from;
+  const move=e=>{const dy=e.clientY-y0;el.dataset.moved="1";const max=(queue.length-1)*ROW;const top=Math.max(0,Math.min(max,from*ROW+dy));el.style.transform=`translateY(${top-from*ROW}px)`;to=Math.round(top/ROW);
+    rows.forEach((r,j)=>{if(r===el)return;let sh=0;if(from<to&&j>from&&j<=to)sh=-ROW;if(from>to&&j<from&&j>=to)sh=ROW;r.style.transform=sh?`translateY(${sh}px)`:""})};
+  const up=()=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up);
+    if(to!==from){const cur=queue[st.pos];const [m]=queue.splice(from,1);queue.splice(to,0,m);st.pos=queue.indexOf(cur);toast("已将「"+S(m).t+"」移到第 "+(to+1)+" 位")}
+    renderQ();setTimeout(()=>{},0)};
+  el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);}
+
+// 切歌
+let first=true,cvFlip=false;
+async function load(anim){const s=S(queue[st.pos]);
+  $("ttl").textContent=s.t;$("art").textContent=s.a;$("alb").textContent="专辑《"+s.al+"》";$("mt").textContent=s.t;$("ma").textContent=s.a;$("mi").src=IMG(s.img);
+  $("credit").textContent="封面：示意图 · "+s.by;$("td").textContent=fmt(s.d);document.title=s.t+" · "+s.a+" — 回声";
+  const a=$("cvA"),b=$("cvB");if(anim){b.src=IMG(s.img);b.classList.remove("out");setTimeout(()=>{a.src=IMG(s.img);b.classList.add("out")},620)}else{a.src=IMG(s.img);b.classList.add("out")}
+  const bg=cvFlip?$("bgA"):$("bgB"),old=cvFlip?$("bgB"):$("bgA");cvFlip=!cvFlip;bg.src=IMG(s.img);bg.classList.add("on");old.classList.remove("on");
+  $("heart").classList.toggle("on",liked.has(s.id));
+  document.querySelectorAll(".qi").forEach((e,i)=>e.classList.toggle("cur",i===st.pos));
+  buildLyr();
+  const c=await extract(s);tgtC=darken(c);if(first){curC=tgtC.slice();first=false}}
+function go(pos,keepT){st.pos=(pos+queue.length)%queue.length;st.t=0;document.querySelectorAll(".qi").forEach((e,i)=>e.classList.toggle("cur",i===st.pos));load(true);if(!st.playing)setPlay(true)}
+function next(auto){if(auto&&st.rep){st.t=0;buildLyr();return}if(st.shuf&&queue.length>1){let p;do p=Math.floor(Math.random()*queue.length);while(p===st.pos);go(p)}else go(st.pos+1)}
+function setPlay(p){st.playing=p;$("play").innerHTML=p?ICON_PAUSE:ICON_PLAY;$("app").classList.toggle("paused",!p)}
+$("play").onclick=()=>setPlay(!st.playing);
+$("next").onclick=()=>next();
+$("prev").onclick=()=>{if(st.t>3){st.t=0;updLyr(true)}else go(st.pos-1)};
+$("shuf").onclick=e=>{st.shuf=!st.shuf;e.currentTarget.classList.toggle("on",st.shuf);toast(st.shuf?"随机播放：开":"随机播放：关")};
+$("rep").onclick=e=>{st.rep=!st.rep;e.currentTarget.classList.toggle("on",st.rep);toast(st.rep?"单曲循环：开":"单曲循环：关")};
+$("heart").onclick=e=>{const id=queue[st.pos];liked.has(id)?liked.delete(id):liked.add(id);const b=$("heart");b.classList.toggle("on",liked.has(id));b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");counts();toast(liked.has(id)?"已加入「我喜欢的」":"已取消喜欢")};
+$("vol").oninput=e=>{e.target.style.background=`linear-gradient(90deg,#fff ${e.target.value}%,rgba(255,255,255,.22) ${e.target.value}%)`};
+$("vol").oninput({target:$("vol")});
+document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;
+  if(e.code==="Space"){e.preventDefault();setPlay(!st.playing)}
+  else if(e.key==="ArrowRight"){st.t=Math.min(S(queue[st.pos]).d-1,st.t+5);updLyr(true)}
+  else if(e.key==="ArrowLeft"){st.t=Math.max(0,st.t-5);updLyr(true)}
+  else if(e.key==="n"||e.key==="N")next();else if(e.key==="p"||e.key==="P")$("prev").click()});
+function counts(){$("cAll").textContent=SONGS.length;$("cLike").textContent=liked.size}
+document.querySelectorAll("nav button[data-pl]").forEach(b=>b.onclick=()=>{const k=b.dataset.pl;let ids=SONGS.filter(s=>k==="all"||(k==="like"?liked.has(s.id):s.pl.includes(k))).map(s=>s.id);if(!ids.length){toast("还没有喜欢的歌曲");return}
+  document.querySelectorAll("nav button[data-pl]").forEach(x=>x.classList.toggle("on",x===b));pl=k;queue=ids;st.pos=0;st.t=0;renderQ();load(true);if(!st.playing)setPlay(true);toast("正在播放「"+PLN[k]+"」")});
+
+let last=performance.now();
+function tick(now){const dt=Math.min(.1,(now-last)/1000);last=now;if(st.playing&&!seeking){st.t+=dt;const s=S(queue[st.pos]);if(st.t>=s.d)next(true)}
+  const s=S(queue[st.pos]);$("tc").textContent=fmt(st.t);updLyr();drawWave();requestAnimationFrame(tick)}
+renderQ();counts();setPlay(true);sizeCv();addEventListener("resize",()=>{sizeCv();updLyr(true)});
+load(false).then(()=>{updLyr(true);requestAnimationFrame(tick)});
+document.fonts&&document.fonts.ready.then(()=>{sizeCv();updLyr(true)});
+</script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黑白控制台 · 推理服务部署</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#fff; --alt:#fafafa; --ink:#000; --ink2:#666; --mute:#8f8f8f; --line:#eaeaea; --line2:#d4d4d4; --ok:#18a058; --warn:#f5a623; --bad:#e5484d; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--alt); }
+  body { font-family: "Geist", "Noto Sans SC", sans-serif; font-size: 14px; color: var(--ink); -webkit-font-smoothing: antialiased; overflow-y: auto; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "Geist Mono", monospace; font-variant-numeric: tabular-nums; }
+  .nav { background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1320px; margin: 0 auto; padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 12px; }
+  .logo { width: 26px; height: 26px; border-radius: 6px; background: var(--ink); display: grid; place-items: center; }
+  .logo svg { width: 14px; height: 14px; }
+  .crumb { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+  .crumb i { font-style: normal; color: var(--line2); font-size: 18px; font-weight: 300; }
+  .crumb .av { width: 20px; height: 20px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 10px; display: grid; place-items: center; }
+  .crumb .team { display: flex; align-items: center; gap: 8px; }
+  .crumb .pill { font-size: 12px; color: var(--ink2); border: 1px solid var(--line); border-radius: 100px; padding: 1px 8px; }
+  .sp { flex: 1; }
+  .kbtn { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 8px 0 10px; width: 232px; border: 1px solid var(--line); border-radius: 6px; color: var(--mute); font-size: 13px; background: var(--bg); }
+  .kbtn:hover { border-color: var(--line2); } .kbtn svg { width: 14px; height: 14px; } .kbtn span { flex: 1; text-align: left; }
+  .kbtn kbd { font-family: "Geist Mono"; font-size: 11px; color: var(--mute); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; line-height: 18px; }
+  .me { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+  .tabs { max-width: 1320px; margin: 0 auto; padding: 0 18px; display: flex; gap: 2px; }
+  .tabs button { position: relative; height: 44px; padding: 0 6px; margin: 0 6px; font-size: 14px; color: var(--ink2); }
+  .tabs button:hover { color: var(--ink); } .tabs button.on { color: var(--ink); }
+  .tabs button.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--ink); }
+  main { max-width: 1320px; margin: 0 auto; padding: 20px 24px 60px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; }
+  h2 { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+  .sech { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .btn { height: 32px; padding: 0 12px; border-radius: 6px; font-size: 13.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  .btn.k { background: var(--ink); color: #fff; } .btn.k:hover { background: #333; }
+  .btn.o { border: 1px solid var(--line2); background: var(--bg); } .btn.o:hover { border-color: var(--ink); }
+  .btn svg { width: 14px; height: 14px; }
+  .field { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); min-width: 220px; color: var(--mute); }
+  .field:focus-within { border-color: var(--ink); } .field input { flex: 1; cursor: text; color: var(--ink); font-size: 13.5px; } .field svg { width: 14px; height: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 10px; border: 1px solid var(--ink); border-radius: 100px; font-size: 12.5px; }
+  .chip button { width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; } .chip button:hover { background: #eee; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .card { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; text-align: left; transition: border-color .15s, box-shadow .15s; display: block; width: 100%; }
+  .card:hover { border-color: var(--ink); }
+  .card.on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+  .card .t { display: flex; align-items: center; gap: 10px; }
+  .card .ic { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-family: "Geist Mono"; font-size: 12px; font-weight: 600; }
+  .card h3 { font-size: 14px; font-weight: 600; letter-spacing: -.01em; } .card .dom { font-size: 12.5px; color: var(--ink2); font-family: "Geist Mono"; }
+  .card .st { margin-left: auto; align-self: flex-start; }
+  .card .cm { margin-top: 12px; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .meta { margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink2); }
+  .card .meta svg { width: 13px; height: 13px; }
+  .card .qps { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); }
+  .card .qps b { color: var(--ink); font-weight: 500; font-family: "Geist Mono"; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; vertical-align: middle; }
+  .dot.ready { background: var(--ok); } .dot.error { background: var(--bad); } .dot.queued { background: none; border: 1.5px solid var(--line2); }
+  .dot.building { background: var(--warn); animation: breathe 1.4s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245,166,35,.5); } 50% { opacity: .55; box-shadow: 0 0 0 4px rgba(245,166,35,0); } }
+  .list { margin-top: 26px; }
+  .dl { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .row { display: grid; grid-template-columns: 22px 190px minmax(0, 1fr) 90px 150px; align-items: center; gap: 10px; padding: 0 16px; height: 56px; border-bottom: 1px solid var(--line); cursor: pointer; width: 100%; text-align: left; background: var(--bg); }
+  .row:hover { background: var(--alt); }
+  .row .n b { font-weight: 500; font-size: 13.5px; display: block; line-height: 1.25; } .row .n small { font-size: 12px; color: var(--mute); font-family: "Geist Mono"; }
+  .row .cmt { min-width: 0; font-size: 13px; } .row .cmt div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .row .cmt small { color: var(--mute); font-size: 12px; display: flex; gap: 5px; align-items: center; } .row .cmt svg { width: 12px; height: 12px; }
+  .row .dur { font-size: 12.5px; color: var(--ink2); font-family: "Geist Mono"; text-align: right; }
+  .row .who { display: flex; align-items: center; gap: 8px; justify-content: flex-end; font-size: 12.5px; color: var(--ink2); }
+  .row .who i { width: 20px; height: 20px; border-radius: 50%; background: var(--ink); color: #fff; font-style: normal; font-size: 9.5px; display: grid; place-items: center; }
+  .env { font-size: 11px; border: 1px solid var(--line2); border-radius: 4px; padding: 0 5px; margin-left: 6px; color: var(--ink2); font-weight: 400; vertical-align: 1px; } .env.p { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .logbox { border-bottom: 1px solid var(--line); background: var(--bg); display: none; }
+  .logbox.on { display: block; }
+  .lh { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 12.5px; color: var(--ink2); border-top: 1px solid var(--line); }
+  .lh b { color: var(--ink); font-weight: 500; } .lh .sp { flex: 1; }
+  .lh .btn { height: 26px; font-size: 12px; padding: 0 9px; }
+  .log { margin: 0 16px 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--alt); font-family: "Geist Mono", monospace; font-size: 12px; line-height: 1.75; height: 196px; overflow-y: auto; padding: 8px 0; scrollbar-width: thin; }
+  .log div { display: flex; gap: 14px; padding: 0 14px; white-space: pre; } .log div:hover { background: #f1f1f1; }
+  .log time { color: var(--mute); width: 52px; flex: none; text-align: right; }
+  .log .w { color: #a16207; } .log .e { color: var(--bad); } .log .o { color: var(--ok); font-weight: 600; } .log .d { color: var(--mute); }
+  .log .cur::after { content: "▍"; animation: blink 1s steps(1) infinite; margin-left: 2px; } @keyframes blink { 50% { opacity: 0; } }
+  aside h2 { margin-bottom: 16px; }
+  .act { display: flex; gap: 12px; padding: 0 0 18px; position: relative; font-size: 13px; line-height: 1.5; }
+  .act::before { content: ""; position: absolute; left: 11px; top: 26px; bottom: 0; width: 1px; background: var(--line); }
+  .act:last-child::before { display: none; }
+  .act .a { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line2); background: var(--bg); display: grid; place-items: center; flex: none; font-size: 9.5px; font-weight: 600; z-index: 1; }
+  .act b { font-weight: 500; } .act small { display: block; color: var(--mute); font-size: 12px; margin-top: 1px; }
+  .act em { font-style: normal; font-family: "Geist Mono"; font-size: 12px; background: var(--bg); border: 1px solid var(--line); padding: 0 4px; border-radius: 4px; }
+  .usage { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 20px; }
+  .usage .u { display: grid; grid-template-columns: 180px 1fr 110px; gap: 18px; align-items: center; height: 52px; border-bottom: 1px solid var(--line); font-size: 13.5px; } .usage .u:last-child { border: 0; }
+  .usage .b { height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; } .usage .b i { display: block; height: 100%; background: var(--ink); }
+  .usage .u span:last-child { text-align: right; font-family: "Geist Mono"; font-size: 12.5px; }
+  .empty { padding: 40px; text-align: center; color: var(--mute); }
+  #pal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 50; align-items: flex-start; justify-content: center; padding-top: 14vh; }
+  #pal.on { display: flex; }
+  .pbox { width: 560px; background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 24px 60px -12px rgba(0,0,0,.35); overflow: hidden; animation: pop .14s ease-out; }
+  @keyframes pop { from { transform: scale(.98) translateY(-4px); opacity: 0; } }
+  .pbox .pin { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 52px; border-bottom: 1px solid var(--line); } .pbox .pin svg { width: 16px; height: 16px; color: var(--mute); }
+  .pbox input { flex: 1; font-size: 15px; cursor: text; }
+  .plist { max-height: 340px; overflow-y: auto; padding: 6px; }
+  .plist h6 { font-size: 12px; color: var(--mute); font-weight: 500; padding: 8px 10px 4px; }
+  .pit { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .pit.on { background: #f4f4f4; } .pit svg { width: 15px; height: 15px; color: var(--ink2); flex: none; } .pit span { flex: 1; } .pit em { font-style: normal; font-size: 12px; color: var(--mute); font-family: "Geist Mono"; }
+  .pit mark { background: none; color: var(--ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+  .pft { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); }
+  #toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 140px); background: #000; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 13px; transition: transform .25s; z-index: 60; }
+  #toast.on { transform: translate(-50%, 0); }
+  .foot { position: fixed; left: 16px; bottom: 6px; font-size: 10px; color: var(--mute); }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="bar">
+    <div class="logo"><svg viewBox="0 0 14 14" stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none"><path d="M10.5 2.5l-7 9"/></svg></div>
+    <div class="crumb"><i>/</i><span class="team"><span class="av">周</span>周启明的团队<span class="pill">专业版</span></span><i>/</i><span>推理服务</span></div>
+    <div class="sp"></div>
+    <button class="kbtn" id="kopen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><span>搜索或执行命令…</span><kbd>⌘K</kbd></button>
+    <div class="me">周</div>
+  </div>
+  <div class="tabs" id="tabs"><button class="on" data-t="all">概览</button><button data-t="dep">部署</button><button data-t="use">用量</button></div>
+</div>
+
+<main>
+  <section id="left"></section>
+  <aside>
+    <h2>活动</h2>
+    <div id="acts"></div>
+  </aside>
+</main>
+
+<div id="pal"><div class="pbox"><div class="pin"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="pq" placeholder="搜索服务、部署，或输入命令" spellcheck="false"></div><div class="plist" id="plist"></div><div class="pft"><span>↑↓ 选择</span><span>↵ 执行</span><span>esc 关闭</span></div></div></div>
+<div id="toast"></div>
+<div class="foot">示例数据</div>
+
+<script>
+window.__err = []; addEventListener("error", (e) => __err.push(e.message));
+const $ = (s, r = document) => r.querySelector(s);
+const ICON = {
+  branch: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="4.5" cy="3.5" r="1.7"/><circle cx="4.5" cy="12.5" r="1.7"/><circle cx="11.5" cy="6" r="1.7"/><path d="M4.5 5.2v5.6M11.5 7.7c0 2.5-3 2-7 3.3"/></svg>',
+  plus: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>',
+  search: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>',
+  run: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4.5 3l8 5-8 5z"/></svg>',
+  box: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 1.8l5.5 3v6.4L8 14.2l-5.5-3V4.8zM2.8 5L8 8l5.2-3M8 8v6"/></svg>',
+  nav: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h10M3 8h10M3 11h6"/></svg>',
+  undo: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 6.5h6a3 3 0 010 6H6M3.5 6.5L6 4M3.5 6.5L6 9"/></svg>',
+};
+const P = [
+  ["qwen-chat", "qwen-chat.inf.demo", "Qwen3-72B-AWQ", "main", "调高 max_model_len 到 32k", "周启明", "ZQ", 1240],
+  ["llama-batch", "llama-batch.inf.demo", "Llama-3.3-70B", "main", "离线批处理改用 continuous batching", "吴静", "WJ", 380],
+  ["embed-svc", "embed.inf.demo", "bge-m3", "main", "向量维度改为 1024，兼容旧索引", "陈立", "CL", 2650],
+  ["vision-ocr", "ocr.inf.demo", "Qwen2.5-VL-7B", "release/1.4", "修复大图 resize 后坐标偏移", "李沐阳", "LM", 96],
+  ["rerank-api", "rerank.inf.demo", "bge-reranker-v2", "main", "新增 top_n 上限校验", "郑可", "ZK", 410],
+  ["voice-asr", "asr.inf.demo", "whisper-large-v3", "feat/stream", "流式识别首包延迟优化", "孙雨桐", "SY", 58],
+];
+const AV = Object.fromEntries(P.map((p) => [p[5], p[6]]));
+let D = [
+  { id: "dpl_9k2xq", proj: "qwen-chat", env: "生产", branch: "main", cm: "调高 max_model_len 到 32k", who: "周启明", st: "building", dur: "—", ago: "刚刚" },
+  { id: "dpl_8f3m1", proj: "embed-svc", env: "生产", branch: "main", cm: "向量维度改为 1024，兼容旧索引", who: "陈立", st: "ready", dur: "3m 12s", ago: "18 分钟前" },
+  { id: "dpl_7c1pa", proj: "vision-ocr", env: "预览", branch: "release/1.4", cm: "修复大图 resize 后坐标偏移", who: "李沐阳", st: "error", dur: "1m 47s", ago: "42 分钟前" },
+  { id: "dpl_6b9ts", proj: "rerank-api", env: "生产", branch: "main", cm: "新增 top_n 上限校验", who: "郑可", st: "ready", dur: "2m 05s", ago: "1 小时前" },
+  { id: "dpl_5a7de", proj: "llama-batch", env: "生产", branch: "main", cm: "离线批处理改用 continuous batching", who: "吴静", st: "ready", dur: "4m 38s", ago: "3 小时前" },
+  { id: "dpl_4z2wc", proj: "voice-asr", env: "预览", branch: "feat/stream", cm: "流式识别首包延迟优化", who: "孙雨桐", st: "queued", dur: "—", ago: "排队中" },
+  { id: "dpl_3y8kn", proj: "qwen-chat", env: "生产", branch: "main", cm: "启用前缀缓存", who: "周启明", st: "ready", dur: "3m 51s", ago: "昨天" },
+];
+const ACT = [["周启明", "ZQ", "触发了 <b>qwen-chat</b> 的生产部署 <em>dpl_9k2xq</em>", "刚刚", "building"], ["陈立", "CL", "部署了 <b>embed-svc</b> 到生产环境", "18 分钟前", "ready"], ["系统", "·", "<b>vision-ocr</b> 构建失败：显存不足", "42 分钟前", "error"], ["郑可", "ZK", "为 <b>rerank-api</b> 绑定域名 <em>rerank.inf.demo</em>", "1 小时前"], ["吴静", "WJ", "把 <b>llama-batch</b> 回滚到 <em>dpl_4q1ab</em>", "2 小时前"], ["孙雨桐", "SY", "邀请了 <b>许晴</b> 加入团队", "昨天"], ["系统", "·", "<b>qwen-chat</b> 日调用量突破 100 万", "昨天"]];
+const LOGSTEPS = (d) => [
+  [200, "d", `Cloning git@code.inf.demo:${d.proj}.git (branch: ${d.branch})`], [250, "", `Checked out commit 6e1f0a2 ${d.cm}`], [200, "", "Installing dependencies from requirements.lock"], [300, "d", "  vllm==0.9.2  torch==2.6.0+cu124  transformers==4.51.3"],
+  [250, "", "Running  docker build -t registry.inf.demo/" + d.proj + ":6e1f0a2 ."], [200, "d", "  #7 [builder 3/5] COPY ./serve /app/serve   0.3s"], [250, "d", "  #8 [builder 4/5] RUN pip install -r requirements.lock   41.2s"],
+  [200, "", "Pulling model weights Qwen3-72B-AWQ (38.2 GB) from model-hub"], [0, "prog", ""], [200, "", "Weights verified  sha256 ok"],
+  [250, "", "Allocating 4 × H800 80G  (tensor-parallel-size=4)"], [300, "w", "warn  max_model_len=32768 将占用额外 6.1 GB KV 缓存，已自动调低 gpu-memory-utilization 到 0.90"],
+  [300, "", "Initializing vLLM engine"], [250, "d", "  profiling memory … 71.4 GiB / 80 GiB per GPU"], [300, "d", "  capturing CUDA graphs  [██████████████████████] 35/35"],
+  [250, "", "Health check  GET /v1/models → 200 (212 ms)"], [200, "", "Warm-up request  tokens=512  ttft=0.41s  tpot=24ms"], [250, "", "Switching traffic  0% → 10% → 50% → 100%"], [350, "o", "Ready  https://" + (P.find((p) => p[0] === d.proj) || P[0])[1]],
+];
+const ERRSTEPS = (d) => [[200, "d", `Cloning git@code.inf.demo:${d.proj}.git (branch: ${d.branch})`], [200, "", "Installing dependencies from requirements.lock"], [200, "", "Pulling model weights Qwen2.5-VL-7B (15.4 GB) from model-hub"], [200, "", "Allocating 1 × A100 40G"], [200, "w", "warn  image_max_pixels=4096×4096 的激活峰值约 37 GB"], [200, "e", "Error: CUDA out of memory. Tried to allocate 3.2 GiB (GPU 0; 39.4 GiB total, 1.1 GiB free)"], [100, "e", "Build failed with exit code 1"]];
+let tab = "all", filter = "", openId = null, q = "";
+const logs = {};   // id -> {lines, done}
+function stat(s) { return s === "building" ? "构建中" : s === "ready" ? "已就绪" : s === "error" ? "失败" : "排队中"; }
+function ts(ms) { const s = ms / 1000; return String(Math.floor(s / 60)).padStart(2, "0") + ":" + (s % 60).toFixed(1).padStart(4, "0"); }
+function startBuild(d) {
+  const L = logs[d.id] = { lines: [], done: false, t: 0, prog: null }, steps = LOGSTEPS(d); let i = 0, t0 = performance.now();
+  (function next() {
+    if (i >= steps.length) { L.done = true; d.st = "ready"; const s = Math.round((performance.now() - t0) / 1000 * 11); d.dur = `${Math.floor((s + 150) / 60)}m ${String((s + 150) % 60).padStart(2, "0")}s`; const ai = ACT.findIndex((a) => a[2].includes(d.id)); if (ai >= 0) ACT[ai][4] = "ready"; renderAll(); toast("构建完成，已发布到生产环境"); return; }
+    const [dl, cl, tx] = steps[i++];
+    if (cl === "prog") { const line = { t: L.t, cl: "", tx: "", prog: 0 }; L.lines.push(line); paintLog(d); let p = 0; const iv = setInterval(() => { p = Math.min(100, p + 7 + Math.random() * 8); line.prog = p; const n = Math.round(p / 100 * 24); line.tx = `  [${"█".repeat(n)}${"░".repeat(24 - n)}] ${Math.round(p)}%  ${(38.2 * p / 100).toFixed(1)}/38.2 GB`; paintLog(d); if (p >= 100) { clearInterval(iv); L.t += 400; next(); } }, 90); return; }
+    setTimeout(() => { L.t += dl * 11; L.lines.push({ t: L.t, cl, tx }); paintLog(d); next(); }, dl * (d._fast ? .3 : .5));
+  })();
+}
+function fillStatic(d) { const L = logs[d.id] = { lines: [], done: true, t: 0 }; (d.st === "error" ? ERRSTEPS(d) : LOGSTEPS(d)).forEach(([dl, cl, tx]) => { if (cl === "prog") tx = "  [████████████████████████] 100%  38.2/38.2 GB", cl = ""; L.t += dl * 11; L.lines.push({ t: L.t, cl, tx }); }); }
+function paintLog(d) {
+  const box = $(`#log-${d.id}`), L = logs[d.id]; if (!box || !L) return;
+  box.innerHTML = L.lines.map((l, i) => `<div class="${l.cl}${!L.done && i === L.lines.length - 1 ? " cur" : ""}"><time>${ts(l.t)}</time><span class="${l.cl}">${esc(l.tx)}</span></div>`).join("");
+  box.scrollTop = box.scrollHeight;
+}
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+function renderAll() {
+  const vis = D.filter((d) => !filter || d.proj === filter);
+  const cards = P.filter((p) => !q || p[0].includes(q)).map((p) => { const last = D.find((d) => d.proj === p[0]); return `<button class="card ${filter === p[0] ? "on" : ""}" data-p="${p[0]}"><div class="t"><div class="ic">${p[0].slice(0, 2)}</div><div><h3>${p[0]}</h3><div class="dom">${p[1]}</div></div><span class="st"><i class="dot ${last.st}"></i></span></div><div class="cm">${p[4]}</div><div class="qps"><span style="display:flex;align-items:center;gap:5px">${ICON.branch.replace("<svg","<svg width=12 height=12")}${p[3]} · ${last.ago}</span><span><b>${p[7].toLocaleString()}</b> 次/分</span></div></button>`; }).join("");
+  const rows = vis.map((d) => `<div><button class="row" data-d="${d.id}"><i class="dot ${d.st}"></i><span class="n"><b>${d.proj}<span class="env ${d.env === "生产" ? "p" : ""}">${d.env}</span></b><small>${d.id}</small></span><span class="cmt"><div>${d.cm}</div><small>${ICON.branch}${d.branch}</small></span><span class="dur">${d.st === "building" ? "构建中…" : stat(d.st) === "排队中" ? "排队中" : d.dur}</span><span class="who">${d.ago}<i>${AV[d.who]}</i></span></button><div class="logbox ${openId === d.id ? "on" : ""}" id="box-${d.id}"><div class="lh"><b>构建日志</b><span>${d.id}</span><span class="sp"></span><button class="btn o" data-copy="${d.id}">复制</button><button class="btn o" data-redo="${d.id}">重新部署</button></div><div class="log" id="log-${d.id}"></div></div></div>`).join("");
+  const dep = `<div class="list" style="${tab === "dep" ? "margin-top:0" : ""}"><div class="sech"><h2>部署</h2>${filter ? `<span class="chip">项目：${filter}<button data-clear title="清除">✕</button></span>` : ""}<span style="flex:1"></span><span style="color:var(--mute);font-size:12.5px">${vis.length} 条</span></div><div class="dl">${rows || '<div class="empty">没有部署</div>'}</div></div>`;
+  const head = `<div class="sech"><h2>推理服务</h2><span style="flex:1"></span><label class="field">${ICON.search}<input id="pf" placeholder="筛选项目…" value="${q}"></label><button class="btn k" id="newdep">${ICON.plus}新建部署</button></div>`;
+  const useTab = `<div class="sech"><h2>用量</h2><span style="flex:1"></span><span style="color:var(--mute);font-size:12.5px">今日 · 单位：次</span></div><div class="usage">${P.map((p) => { const v = p[7] * 1440 * .6; const mx = 2650 * 1440 * .6; return `<div class="u"><span>${p[0]}</span><div class="b"><i style="width:${v / mx * 100}%"></i></div><span>${Math.round(v).toLocaleString()}</span></div>`; }).join("")}</div>`;
+  $("#left").innerHTML = tab === "use" ? useTab : tab === "dep" ? dep : head + `<div class="grid">${cards || '<div class="empty" style="grid-column:1/4">没有匹配的项目</div>'}</div>` + dep;
+  vis.forEach((d) => { if (openId === d.id) paintLog(d); });
+  document.querySelectorAll(".card").forEach((c) => (c.onclick = () => { filter = filter === c.dataset.p ? "" : c.dataset.p; renderAll(); }));
+  document.querySelectorAll(".row").forEach((r) => (r.onclick = () => openDep(r.dataset.d)));
+  const cl = $("[data-clear]"); if (cl) cl.onclick = () => { filter = ""; renderAll(); };
+  document.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => { const L = logs[b.dataset.copy]; try { navigator.clipboard.writeText(L.lines.map((l) => l.tx).join("\n")); } catch (e) {} toast("日志已复制"); }));
+  document.querySelectorAll("[data-redo]").forEach((b) => (b.onclick = () => newDeploy(D.find((d) => d.id === b.dataset.redo).proj)));
+  const nd = $("#newdep"); if (nd) nd.onclick = () => newDeploy("qwen-chat");
+  const pf = $("#pf"); if (pf) pf.oninput = (e) => { q = e.target.value; const pos = e.target.selectionStart; renderAll(); const n = $("#pf"); n.focus(); n.setSelectionRange(pos, pos); };
+  $("#acts").innerHTML = ACT.map((a) => `<div class="act"><div class="a">${a[1]}</div><div><div>${a[2]}${a[4] ? ` <i class="dot ${a[4]}" style="margin-left:4px"></i>` : ""}</div><small>${a[0]} · ${a[3]}</small></div></div>`).join("");
+}
+function openDep(id) {
+  const d = D.find((x) => x.id === id); if (!d) return;
+  if (!logs[id]) fillStatic(d);
+  openId = openId === id ? null : id; renderAll();
+}
+function newDeploy(proj) {
+  const p = P.find((x) => x[0] === proj), d = { id: "dpl_" + Math.random().toString(36).slice(2, 7), proj, env: "生产", branch: p[3], cm: p[4], who: "周启明", st: "building", dur: "—", ago: "刚刚", _fast: true };
+  D.unshift(d); ACT.unshift(["周启明", "ZQ", `触发了 <b>${proj}</b> 的生产部署 <em>${d.id}</em>`, "刚刚", "building"]); filter = ""; tab = tab === "use" ? "all" : tab; openId = d.id; syncTabs(); renderAll(); startBuild(d); toast("已创建部署 " + d.id);
+}
+function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 2200); }
+function syncTabs() { document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === tab)); }
+$("#tabs").onclick = (e) => { const t = e.target.dataset.t; if (!t) return; tab = t; syncTabs(); renderAll(); };
+// ---- ⌘K ----
+let items = [], act = 0;
+function cmds() {
+  return [["动作", ICON.plus, "新建部署", "", () => newDeploy("qwen-chat")], ["动作", ICON.nav, "查看全部部署", "", () => { tab = "dep"; syncTabs(); renderAll(); }], ["动作", ICON.nav, "回到概览", "", () => { tab = "all"; filter = ""; syncTabs(); renderAll(); }], ["动作", ICON.undo, "回滚 qwen-chat 到上一个生产部署", "dpl_3y8kn", () => toast("已回滚到 dpl_3y8kn")],
+    ...P.map((p) => ["项目", ICON.box, p[0], p[1], () => { tab = "all"; syncTabs(); filter = p[0]; renderAll(); }]), ...D.slice(0, 6).map((d) => ["部署", ICON.run, d.id, d.proj + " · " + stat(d.st), () => { tab = tab === "use" ? "all" : tab; syncTabs(); filter = ""; if (!logs[d.id]) fillStatic(d); openId = d.id; renderAll(); setTimeout(() => $("#box-" + d.id)?.scrollIntoView({ block: "center", behavior: "smooth" }), 50); }])];
+}
+function fz(s, q) { s = s.toLowerCase(); q = q.toLowerCase(); let i = 0, idx = []; for (let k = 0; k < s.length && i < q.length; k++) if (s[k] === q[i]) { idx.push(k); i++; } return i === q.length ? idx : null; }
+function hl(s, idx) { if (!idx) return esc(s); let o = ""; for (let k = 0; k < s.length; k++) o += idx.includes(k) ? `<mark>${esc(s[k])}</mark>` : esc(s[k]); return o; }
+function renderPal() {
+  const v = $("#pq").value.trim(); items = [];
+  cmds().forEach((c) => { const m = v ? fz(c[2], v) : []; if (m) items.push({ c, m: v ? m : null }); });
+  act = Math.min(act, Math.max(0, items.length - 1)); let last = "", h = "";
+  items.forEach((it, i) => { if (it.c[0] !== last) { last = it.c[0]; h += `<h6>${last}</h6>`; } h += `<div class="pit ${i === act ? "on" : ""}" data-i="${i}">${it.c[1]}<span>${hl(it.c[2], it.m)}</span><em>${esc(it.c[3])}</em></div>`; });
+  $("#plist").innerHTML = h || '<div class="empty">没有匹配项</div>';
+  document.querySelectorAll(".pit").forEach((e) => { e.onmouseenter = () => { act = +e.dataset.i; document.querySelectorAll(".pit").forEach((x) => x.classList.toggle("on", x === e)); }; e.onclick = () => run(+e.dataset.i); });
+}
+function run(i) { const it = items[i]; if (!it) return; closePal(); it.c[4](); }
+function openPal() { $("#pal").classList.add("on"); $("#pq").value = ""; act = 0; renderPal(); $("#pq").focus(); }
+function closePal() { $("#pal").classList.remove("on"); }
+$("#kopen").onclick = openPal; $("#pal").onmousedown = (e) => { if (e.target.id === "pal") closePal(); };
+$("#pq").oninput = () => { act = 0; renderPal(); };
+addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); $("#pal").classList.contains("on") ? closePal() : openPal(); return; }
+  if (!$("#pal").classList.contains("on")) return;
+  if (e.key === "Escape") closePal(); else if (e.key === "ArrowDown") { e.preventDefault(); act = (act + 1) % items.length; renderPal(); $(".pit.on")?.scrollIntoView({ block: "nearest" }); } else if (e.key === "ArrowUp") { e.preventDefault(); act = (act - 1 + items.length) % items.length; renderPal(); $(".pit.on")?.scrollIntoView({ block: "nearest" }); } else if (e.key === "Enter") run(act);
+});
+renderAll(); openId = D[0].id; renderAll(); startBuild(D[0]);
+</script>
+</body>
+</html>

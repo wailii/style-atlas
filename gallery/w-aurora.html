@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>曳光 · 暗场极光</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #06070b; --ink: #e9eaf2; --mute: #8b8fa3; --faint: #565a6e; --line: rgba(255,255,255,.08); --acc: #8d8bff; --acc2: #5fe0e6; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: Inter, "Noto Sans SC", sans-serif; font-weight: 300; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace, monospace; }
+  #field { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; display: block; }
+  main, nav, footer { position: relative; z-index: 2; }
+  main { overflow-x: clip; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; z-index: 40; font-size: 14px; font-weight: 400; transition: background .3s, border-color .3s; border-bottom: 1px solid transparent; }
+  nav.solid { background: rgba(6,7,11,.7); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom-color: var(--line); }
+  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 16px; letter-spacing: .02em; }
+  nav .mid { display: flex; gap: 32px; color: var(--mute); }
+  nav .mid a:hover { color: var(--ink); }
+  nav .r { display: flex; gap: 22px; align-items: center; color: var(--mute); }
+  .btn { padding: 8px 16px; border-radius: 8px; background: #f2f3f8; color: #0a0b10; font-weight: 500; font-size: 14px; transition: transform .15s, background .2s; }
+  .btn:hover { background: #fff; transform: translateY(-1px); }
+  .btn.ghost { background: rgba(255,255,255,.04); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+  .btn.ghost:hover { background: rgba(255,255,255,.09); }
+  .btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 10px; }
+
+  .hero { padding-top: 150px; text-align: center; }
+  .badge { display: inline-flex; gap: 10px; align-items: center; padding: 5px 14px 5px 6px; border-radius: 99px; font-size: 13px; color: var(--mute); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); background: rgba(255,255,255,.03); font-weight: 400; }
+  .badge b { background: rgba(141,139,255,.2); color: #c3c2ff; padding: 2px 9px; border-radius: 99px; font-weight: 500; font-size: 12px; }
+  h1 { font: 300 78px/1.1 Inter, "Noto Sans SC"; letter-spacing: -.04em; margin: 26px auto 0; max-width: 960px; }
+  h1 em { font-style: normal; font-weight: 500; }
+  .sub { margin: 24px auto 0; max-width: 560px; font-size: 18px; line-height: 1.65; color: var(--mute); }
+  .cta { margin-top: 36px; display: flex; gap: 12px; justify-content: center; align-items: center; }
+  .cmd { display: inline-flex; align-items: center; gap: 12px; padding: 11px 16px; border-radius: 10px; background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); font: 400 13.5px "JetBrains Mono", ui-monospace, Menlo, monospace; color: var(--ink); }
+  .cmd i { color: var(--faint); font-style: normal; }
+  .cmd button { color: var(--mute); font: 400 12px Inter, "Noto Sans SC"; padding: 2px 8px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+  .cmd button:hover { color: var(--ink); }
+
+  /* 产品截图：倾斜入场，随滚动转正 */
+  .shotwrap { perspective: 1800px; margin: 70px auto 0; width: 1180px; max-width: 94vw; }
+  .shot { transform-origin: 50% 0; transform: rotateX(34deg) scale(.94); border-radius: 14px; background: #0b0d14; box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 40px 120px rgba(40,30,120,.35); overflow: hidden; will-change: transform; height: 640px; text-align: left; display: flex; flex-direction: column; font-size: 12.5px; }
+  .shot .bar { height: 38px; flex: none; display: flex; align-items: center; padding: 0 14px; gap: 7px; border-bottom: 1px solid var(--line); color: var(--faint); font-size: 12px; font-weight: 400; }
+  .shot .bar i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  .shot .bar span { margin: 0 auto; transform: translateX(-24px); }
+  .shot .cols { flex: 1; display: grid; grid-template-columns: 200px 1fr 330px; min-height: 0; }
+  .tree { border-right: 1px solid var(--line); padding: 14px 10px; color: var(--mute); font-weight: 400; }
+  .tree h6 { font: 500 10.5px Inter; letter-spacing: .08em; color: var(--faint); padding: 0 8px 8px; }
+  .tree div { padding: 4px 8px; border-radius: 5px; display: flex; gap: 8px; align-items: center; }
+  .tree div.on { background: rgba(141,139,255,.14); color: #d8d8ff; }
+  .tree div.in { padding-left: 24px; }
+  .tree svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; opacity: .8; }
+  .ed { font: 400 12.5px/1.85 "JetBrains Mono", ui-monospace, Menlo, monospace; padding: 12px 0; overflow: hidden; }
+  .ed .ln { display: grid; grid-template-columns: 44px 1fr; color: #d4d6e6; white-space: pre; }
+  .ed .ln b { font-weight: 400; color: #444860; text-align: right; padding-right: 16px; }
+  .ed .ln.add { background: rgba(70,200,140,.1); box-shadow: inset 2px 0 #46c88c; }
+  .ed .ln.del { background: rgba(240,90,100,.1); box-shadow: inset 2px 0 #f05a64; opacity: .8; }
+  .k { color: #c4a5ff; } .f { color: #7fd3ff; } .s { color: #9be3b0; } .c { color: #565a78; } .n { color: #ffb88a; }
+  .agent { border-left: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 14px; font-weight: 400; }
+  .agent .me { align-self: flex-end; max-width: 250px; background: rgba(255,255,255,.07); border-radius: 12px 12px 3px 12px; padding: 10px 12px; line-height: 1.6; color: var(--ink); }
+  .agent .st { display: flex; gap: 10px; color: var(--mute); align-items: flex-start; line-height: 1.5; }
+  .agent .st svg { width: 15px; height: 15px; flex: none; margin-top: 1px; stroke: #46c88c; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .agent .st.run svg { stroke: var(--acc); }
+  .agent .st b { color: var(--ink); font-weight: 400; }
+  .agent .apply { margin-top: auto; display: flex; gap: 8px; }
+  .agent .apply span { flex: 1; text-align: center; padding: 8px; border-radius: 7px; background: #f2f3f8; color: #0a0b10; font-weight: 500; }
+  .agent .apply span.g { background: rgba(255,255,255,.06); color: var(--mute); flex: .6; }
+
+  /* 功能区 */
+  section.sec { max-width: 1180px; margin: 0 auto; padding: 150px 0 0; }
+  .eb { font: 400 13px "JetBrains Mono", ui-monospace, Menlo, monospace; color: var(--acc); letter-spacing: .06em; margin-bottom: 18px; }
+  h2 { font: 300 48px/1.2 Inter, "Noto Sans SC"; letter-spacing: -.035em; max-width: 720px; }
+  h2 em { font-style: normal; color: var(--mute); }
+  .feat { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 64px; }
+  .card { position: relative; padding: 28px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); background: rgba(255,255,255,.015); min-height: 230px; }
+  .card.w2 { grid-column: span 2; }
+  .card svg.ic { width: 26px; height: 26px; stroke: var(--ink); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+  .card h3 { font: 500 19px Inter, "Noto Sans SC"; margin: 22px 0 10px; letter-spacing: -.01em; }
+  .card p { color: var(--mute); font-size: 15px; line-height: 1.7; font-weight: 300; max-width: 460px; }
+  .card code { display: block; margin-top: 18px; font: 400 12.5px "JetBrains Mono", ui-monospace, Menlo, monospace; color: #a9abc4; }
+  #glow { position: absolute; inset: 0; pointer-events: none; width: 100%; height: 100%; }
+
+  /* 更新日志 */
+  .log { margin-top: 24px; display: grid; grid-template-columns: 300px 1fr; gap: 60px; }
+  .log .l p { color: var(--mute); font-size: 15px; line-height: 1.7; margin-top: 18px; }
+  .scroll { height: 440px; overflow-y: auto; padding-right: 18px; scrollbar-width: thin; scrollbar-color: #2a2d3e transparent; -webkit-mask-image: linear-gradient(transparent, #000 40px, #000 calc(100% - 60px), transparent); mask-image: linear-gradient(transparent, #000 40px, #000 calc(100% - 60px), transparent); }
+  .ver { display: grid; grid-template-columns: 110px 1fr; gap: 20px; padding: 26px 0; border-top: 1px solid var(--line); }
+  .ver:first-child { border-top: 0; }
+  .ver .v { font: 500 15px "JetBrains Mono", ui-monospace, Menlo, monospace; color: var(--ink); }
+  .ver .d { font: 400 12.5px Inter; color: var(--faint); margin-top: 4px; }
+  .ver ul { list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: 15px; color: #b8bace; line-height: 1.55; font-weight: 300; }
+  .ver li::before { content: "+"; font: 400 13px "JetBrains Mono", ui-monospace, Menlo, monospace; color: var(--acc2); margin-right: 10px; }
+  .ver li.fix::before { content: "~"; color: var(--acc); }
+  .ver h4 { font: 500 17px Inter, "Noto Sans SC"; margin-bottom: 12px; }
+  footer { margin-top: 160px; padding: 36px 40px 40px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 12.5px; color: var(--faint); }
+</style>
+</head>
+<body>
+<canvas id="field"></canvas>
+
+<nav id="nav">
+  <div class="brand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e9eaf2" stroke-width="1.6" stroke-linecap="round"><path d="M4 18L12 4l8 14"/><path d="M8 18l4-7 4 7" stroke="#8d8bff"/></svg>曳光</div>
+  <div class="mid"><a href="#top">产品</a><a href="#feat">功能</a><a href="#log">更新日志</a><a href="#foot">定价</a><a href="#foot">文档</a></div>
+  <div class="r"><a href="#foot">登录</a><a class="btn" href="#foot">开始使用</a></div>
+</nav>
+
+<main id="top">
+  <div class="hero">
+    <div class="badge"><b>v2.4</b>多文件重构 现已可用 ›</div>
+    <h1>写代码，像和<em>同事</em><br>对话一样。</h1>
+    <p class="sub">曳光读懂你的整个代码库，在终端和编辑器里直接改、直接测，每一处改动都先给你看。</p>
+    <div class="cta">
+      <a class="btn lg" href="#foot">免费开始</a>
+      <div class="cmd"><i>$</i><span id="cmdTxt">npm i -g @trail/cli</span><button id="copy">复制</button></div>
+    </div>
+    <div class="shotwrap">
+      <div class="shot" id="shot">
+        <div class="bar"><i></i><i></i><i></i><span>auth/session.ts — 曳光</span></div>
+        <div class="cols">
+          <div class="tree">
+            <h6>文件</h6>
+            <div><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>auth</div>
+            <div class="in on"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/></svg>session.ts</div>
+            <div class="in"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/></svg>token.ts</div>
+            <div class="in"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/></svg>session.test.ts</div>
+            <div><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>api</div>
+            <div><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>utils</div>
+            <div><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/></svg>package.json</div>
+          </div>
+          <div class="ed">
+<div class="ln"><b>1</b><span><span class="k">import</span> { sign, verify } <span class="k">from</span> <span class="s">"./token"</span></span></div>
+<div class="ln"><b>2</b><span></span></div>
+<div class="ln"><b>3</b><span><span class="k">const</span> MAX_AGE = <span class="n">60</span> * <span class="n">60</span> * <span class="n">24</span> * <span class="n">7</span></span></div>
+<div class="ln"><b>4</b><span></span></div>
+<div class="ln del"><b>5</b><span><span class="k">export async function</span> <span class="f">refresh</span>(req: Request) {</span></div>
+<div class="ln del"><b>6</b><span>  <span class="k">const</span> t = <span class="k">await</span> <span class="f">verify</span>(req.cookies.sid)</span></div>
+<div class="ln del"><b>7</b><span>  <span class="k">if</span> (Date.now() - t.iat &gt; MAX_AGE * <span class="n">1000</span>) <span class="k">throw</span> <span class="f">Error</span>(<span class="s">"expired"</span>)</span></div>
+<div class="ln add"><b>5</b><span><span class="k">export function</span> <span class="f">isExpired</span>(iat: <span class="k">number</span>, now = Date.now()) {</span></div>
+<div class="ln add"><b>6</b><span>  <span class="k">return</span> now - iat &gt; MAX_AGE * <span class="n">1000</span></span></div>
+<div class="ln add"><b>7</b><span>}</span></div>
+<div class="ln add"><b>8</b><span></span></div>
+<div class="ln add"><b>9</b><span><span class="k">export async function</span> <span class="f">refresh</span>(req: Request) {</span></div>
+<div class="ln add"><b>10</b><span>  <span class="k">const</span> t = <span class="k">await</span> <span class="f">verify</span>(req.cookies.sid)</span></div>
+<div class="ln add"><b>11</b><span>  <span class="k">if</span> (<span class="f">isExpired</span>(t.iat)) <span class="k">throw</span> <span class="f">Error</span>(<span class="s">"expired"</span>)</span></div>
+<div class="ln"><b>12</b><span>  <span class="k">return</span> <span class="f">sign</span>({ uid: t.uid }, MAX_AGE)</span></div>
+<div class="ln"><b>13</b><span>}</span></div>
+<div class="ln"><b>14</b><span></span></div>
+<div class="ln"><b>15</b><span><span class="c">// 登出时清掉 cookie，见 api/logout.ts</span></span></div>
+<div class="ln"><b>16</b><span><span class="k">export function</span> <span class="f">clear</span>(res: Response) {</span></div>
+<div class="ln"><b>17</b><span>  res.cookies.<span class="f">delete</span>(<span class="s">"sid"</span>)</span></div>
+<div class="ln"><b>18</b><span>}</span></div>
+          </div>
+          <div class="agent">
+            <div class="me">把 session 的过期判断抽成独立函数，再补上单测。</div>
+            <div class="st"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>读取了 <b>4 个文件</b></span></div>
+            <div class="st"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>修改 <b>auth/session.ts</b>，新增 <b>isExpired</b></span></div>
+            <div class="st"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>新建 <b>session.test.ts</b>，5 个用例</span></div>
+            <div class="st run"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg><span>运行测试：<b>12 通过</b></span></div>
+            <div class="apply"><span>应用修改</span><span class="g">查看 diff</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="sec" id="feat">
+    <div class="eb">功能</div>
+    <h2>你描述要做什么，<br><em>剩下的交给它。</em></h2>
+    <div class="feat" id="feat-grid">
+      <canvas id="glow"></canvas>
+      <div class="card w2"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M16 16l4.5 4.5M8.5 11h5M11 8.5v5"/></svg><h3>读懂整个代码库</h3><p>首次打开时建立项目索引，之后每次提问都带着调用关系和依赖。几十万行的仓库，问一句「登录在哪里校验」只要两秒。</p><code>$ trail ask "登录在哪里校验？"</code></div>
+      <div class="card"><svg class="ic" viewBox="0 0 24 24"><path d="M5 5h9v6H5zM10 13h9v6h-9z"/><path d="M14 8h3v5"/></svg><h3>一次改多个文件</h3><p>重命名、拆分、迁移，跨文件的修改放在同一份变更里。</p></div>
+      <div class="card"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 10l3 2.5L7 15M12.5 15H17"/></svg><h3>终端里直接用</h3><p>不换编辑器。在你熟悉的命令行里完成全部操作。</p></div>
+      <div class="card w2"><svg class="ic" viewBox="0 0 24 24"><path d="M4 12.5l4.5 4.5L20 6.5"/></svg><h3>每次改动，先给你看</h3><p>所有修改以 diff 形式列出，逐处接受或拒绝。运行测试失败时，会带着报错再改一轮，直到通过或者明确告诉你卡在哪里。</p><code>12 passed · 0 failed · 1.8s</code></div>
+    </div>
+  </section>
+
+  <section class="sec" id="log">
+    <div class="eb">更新日志</div>
+    <div class="log">
+      <div class="l"><h2 style="font-size:40px">每周一更。</h2><p>最近的改动都写在这里，向下滚动看更早的版本。</p></div>
+      <div class="scroll" id="scroll">
+        <div class="ver"><div><div class="v">v2.4.0</div><div class="d">2026-11-17</div></div><div><h4>多文件重构</h4><ul><li>跨文件重命名与拆分，一次变更内完成</li><li>diff 视图支持逐处接受</li><li class="fix">修复大仓库首次索引超过 3 分钟的问题</li></ul></div></div>
+        <div class="ver"><div><div class="v">v2.3.2</div><div class="d">2026-11-10</div></div><div><h4>稳定性</h4><ul><li class="fix">修复在 Windows 上路径含空格时读取失败</li><li class="fix">测试命令超时后不再残留子进程</li><li>新增 --quiet，只输出最终结果</li></ul></div></div>
+        <div class="ver"><div><div class="v">v2.3.0</div><div class="d">2026-11-03</div></div><div><h4>团队规则文件</h4><ul><li>仓库根目录的 TRAIL.md 自动生效，约定代码风格与禁用写法</li><li>支持按目录覆盖规则</li><li class="fix">会话历史保存时间从 7 天延长到 30 天</li></ul></div></div>
+        <div class="ver"><div><div class="v">v2.2.1</div><div class="d">2026-10-27</div></div><div><h4>模型</h4><ul><li>可接入自有的模型服务，只需一个地址和密钥</li><li class="fix">长上下文下的响应延迟降低约 35%</li></ul></div></div>
+        <div class="ver"><div><div class="v">v2.2.0</div><div class="d">2026-10-20</div></div><div><h4>运行测试并自动修复</h4><ul><li>测试失败时带着报错再改一轮，最多三轮</li><li>新增 trail run，一条命令跑完整个流程</li><li class="fix">修复中文文件名在 diff 中显示为乱码</li></ul></div></div>
+        <div class="ver"><div><div class="v">v2.1.0</div><div class="d">2026-10-06</div></div><div><h4>代码库索引</h4><ul><li>首次打开建立索引，后续增量更新</li><li>提问自动附带相关文件与调用关系</li></ul></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="foot"><span>曳光 · 示例页面，产品为虚构</span><span>示例数据</span></footer>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+/* ---------- 光场：WebGL 噪声，随鼠标偏移；细网格也在 shader 里画 ---------- */
+const cv = $('#field'), gl = cv.getContext('webgl', { antialias: false, alpha: false });
+const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+const FS = `precision highp float;
+uniform vec2 R; uniform float T; uniform vec2 M; uniform float S;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+void main(){
+  vec2 uv=gl_FragCoord.xy/R; vec2 p=(gl_FragCoord.xy-.5*R)/R.y; p.y+=S*.0003*R.y*.0;
+  vec2 m=(M-.5)*vec2(1.,1.);
+  vec2 q=p*1.6+vec2(m.x*.5,m.y*.35);
+  float t=T*.05;
+  vec2 w=vec2(fbm(q+vec2(0.,t)),fbm(q+vec2(5.2,1.3)-t));
+  float f=fbm(q+2.2*w+vec2(t*2.,0.));
+  // 光带：集中在页面顶部中央，向下与向两侧衰减
+  float top=smoothstep(.1,1.0,uv.y);
+  float cx=1.-smoothstep(.0,.95,abs(uv.x-.5-m.x*.08));
+  float band=pow(top,2.2)*cx*mix(1.,.4,clamp(S/900.,0.,1.));
+  float v=smoothstep(.22,.8,f)*band*1.7;
+  vec3 c1=vec3(.30,.27,1.0), c2=vec3(.2,.88,.9);
+  vec3 col=mix(c1,c2,smoothstep(.3,.95,f+uv.y*.35+m.x*.2));
+  vec3 base=vec3(.024,.027,.043);
+  vec3 o=base+col*v*.9;
+  // 细网格：64px，淡出
+  vec2 g=abs(fract(gl_FragCoord.xy/64.)-.5);
+  float ln=1.-smoothstep(.0,.03,min(g.x,g.y)*1.0);
+  float gm=smoothstep(.0,.7,uv.y)*.9+.1;
+  o+=vec3(.55,.58,.85)*ln*.07*gm*(.35+v*1.6);
+  // 暗角
+  o*=1.-.35*dot(uv-.5,uv-.5)*2.;
+  gl_FragColor=vec4(o,1.);
+}`;
+const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(o)); return o; };
+const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = k => gl.getUniformLocation(pr, k);
+const mouse = { x: .5, y: .6, tx: .5, ty: .6 };
+addEventListener('mousemove', e => { mouse.tx = e.clientX / innerWidth; mouse.ty = 1 - e.clientY / innerHeight; });
+function fit() { const s = .5; cv.width = Math.round(innerWidth * s); cv.height = Math.round(innerHeight * s); gl.viewport(0, 0, cv.width, cv.height); }
+fit(); addEventListener('resize', fit);
+
+/* ---------- 截图倾斜 ---------- */
+const shot = $('#shot'), nav = $('#nav');
+const ease = t => 1 - Math.pow(1 - t, 3);
+function tilt() { const t = Math.min(1, Math.max(0, scrollY / 460)), e = ease(t); shot.style.transform = `rotateX(${34 * (1 - e)}deg) scale(${.94 + .06 * e})`; nav.classList.toggle('solid', scrollY > 20); }
+addEventListener('scroll', tilt, { passive: true }); tilt();
+
+/* ---------- 复制 ---------- */
+$('#copy').onclick = async e => { try { await navigator.clipboard.writeText($('#cmdTxt').textContent); } catch {} e.target.textContent = '已复制'; setTimeout(() => e.target.textContent = '复制', 1400); };
+
+/* ---------- 功能卡：跟随指针的边框光（canvas 画） ---------- */
+const grid = $('#feat-grid'), gc = $('#glow'), gx = gc.getContext('2d'), cards = [...grid.querySelectorAll('.card')];
+const ptr = { x: -999, y: -999, a: 0 };
+grid.addEventListener('mousemove', e => { const r = grid.getBoundingClientRect(); ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top; ptr.on = true; });
+grid.addEventListener('mouseleave', () => { ptr.on = false; });
+function rr(x, y, w, h, r) { gx.beginPath(); gx.moveTo(x + r, y); gx.arcTo(x + w, y, x + w, y + h, r); gx.arcTo(x + w, y + h, x, y + h, r); gx.arcTo(x, y + h, x, y, r); gx.arcTo(x, y, x + w, y, r); gx.closePath(); }
+function glow() {
+  const dpr = devicePixelRatio || 1, w = grid.clientWidth, h = grid.clientHeight;
+  if (gc.width !== Math.round(w * dpr) || gc.height !== Math.round(h * dpr)) { gc.width = Math.round(w * dpr); gc.height = Math.round(h * dpr); }
+  gx.setTransform(dpr, 0, 0, dpr, 0, 0); gx.clearRect(0, 0, w, h);
+  ptr.a += ((ptr.on ? 1 : 0) - ptr.a) * .12;
+  if (ptr.a > .01) cards.forEach(c => {
+    const x = c.offsetLeft, y = c.offsetTop, cw = c.offsetWidth, ch = c.offsetHeight;
+    const gr = gx.createRadialGradient(ptr.x, ptr.y, 0, ptr.x, ptr.y, 260);
+    gr.addColorStop(0, `rgba(160,158,255,${.95 * ptr.a})`); gr.addColorStop(.5, `rgba(95,224,230,${.35 * ptr.a})`); gr.addColorStop(1, 'rgba(95,224,230,0)');
+    gx.save(); rr(x, y, cw, ch, 14); gx.clip();
+    const fl = gx.createRadialGradient(ptr.x, ptr.y, 0, ptr.x, ptr.y, 220); fl.addColorStop(0, `rgba(141,139,255,${.1 * ptr.a})`); fl.addColorStop(1, 'rgba(141,139,255,0)'); gx.fillStyle = fl; gx.fillRect(x, y, cw, ch);
+    gx.restore();
+    gx.lineWidth = 1.2; gx.strokeStyle = gr; rr(x + .6, y + .6, cw - 1.2, ch - 1.2, 14); gx.stroke();
+  });
+}
+
+/* ---------- 主循环 ---------- */
+const t0 = performance.now();
+function frame(n) {
+  mouse.x += (mouse.tx - mouse.x) * .04; mouse.y += (mouse.ty - mouse.y) * .04;
+  gl.uniform2f(U('R'), cv.width, cv.height); gl.uniform1f(U('T'), (n - t0) / 1000); gl.uniform2f(U('M'), mouse.x, mouse.y); gl.uniform1f(U('S'), scrollY);
+  gl.drawArrays(gl.TRIANGLES, 0, 3); glow(); requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__a = { mouse };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>潮线 Tideline · 功能格</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f8;--card:#fff;--ink:#0e0f13;--ink2:#555a68;--mute:#9399a8;--line:#e4e6ee;--acc:#5b3df5;--acc2:#ebe7ff;--ok:#12a150;--warn:#e8890c;--bad:#e5484d;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,"Noto Sans SC",system-ui,sans-serif;font-size:14px;overflow-x:hidden}
+button{font:inherit;cursor:pointer;color:inherit}
+.nav{display:flex;align-items:center;justify-content:space-between;max-width:1240px;margin:0 auto;padding:16px 28px 0;height:64px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.logo svg{width:24px;height:24px}
+.links{display:flex;gap:26px;color:var(--ink2);font-size:14px}.links a{color:inherit;text-decoration:none}.links a:hover{color:var(--ink)}
+.nav .r{display:flex;gap:10px;align-items:center}
+.b{height:34px;padding:0 15px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:500;font-size:13.5px}
+.b.p{background:var(--ink);color:#fff;border-color:var(--ink)}
+.hero{text-align:center;padding:30px 20px 0}
+.badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 12px 4px 5px;font-size:12.5px;color:var(--ink2)}
+.badge i{font-style:normal;background:var(--acc);color:#fff;border-radius:99px;padding:1px 8px;font-weight:600;font-size:11.5px}
+h1{font-size:54px;line-height:1.14;letter-spacing:-.03em;font-weight:700;margin:16px 0 10px}
+h1 span{color:var(--acc)}
+.sub{color:var(--ink2);font-size:16.5px;margin-bottom:20px}
+.seg{display:inline-flex;background:#e9eaf0;border-radius:11px;padding:3px;position:relative}
+.seg button{border:0;background:none;padding:7px 22px;border-radius:9px;font-weight:500;color:var(--ink2);position:relative;z-index:1;transition:color .25s}
+.seg button.on{color:var(--ink)}
+.seg .th{position:absolute;top:3px;bottom:3px;left:3px;border-radius:9px;background:#fff;box-shadow:0 1px 2px rgba(20,20,40,.12);transition:transform .35s cubic-bezier(.3,.8,.2,1),width .35s}
+.grid{max-width:1240px;margin:22px auto 0;padding:0 28px 40px;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:176px;gap:14px}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px 20px;position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color .25s,transform .25s}
+.cell:hover{border-color:#cfd2de}
+.cell h3{font-size:15.5px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.cell h3 em{font-style:normal;font-size:11px;font-weight:600;color:var(--acc);background:var(--acc2);border-radius:5px;padding:1px 6px}
+.cell p{color:var(--ink2);font-size:12.5px;margin-top:3px;line-height:1.5;max-width:340px}
+.cell .demo{flex:1;position:relative;margin-top:10px;min-height:0;transition:transform .5s cubic-bezier(.2,.8,.2,1);transform-origin:50% 80%}
+.cell:hover .demo{transform:scale(1.035)}
+.cell .more{position:absolute;right:14px;top:14px;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;color:var(--mute);background:#fff;opacity:0;transition:.2s}
+.cell:hover .more{opacity:1}
+.cell .more svg{width:12px;height:12px}
+.sA{grid-column:1/3;grid-row:1/3}.sB{grid-column:3;grid-row:1}.sC{grid-column:4;grid-row:1/3}.sE{grid-column:3;grid-row:2}.sD{grid-column:1/3;grid-row:3}.sF{grid-column:3;grid-row:3}.sG{grid-column:4;grid-row:3}
+.grid.has-open .cell{grid-column:auto;grid-row:auto}.cell.open{grid-column:1/-1!important;grid-row:span 2!important;order:-1;cursor:default;padding:26px 28px;border-color:var(--acc)}
+.cell.open .more{opacity:1;right:20px;top:20px}
+.cell .detail{display:none}
+.cell.open{display:grid;grid-template-columns:1.25fr 1fr;grid-template-rows:auto 1fr;column-gap:36px}
+.cell.open>.hd{grid-column:1}.cell.open>.demo{grid-column:1;grid-row:2;margin-top:18px;border:1px solid var(--line);border-radius:14px;background:#fbfbfd;padding:14px}
+.cell.open>.detail{display:block;grid-column:2;grid-row:1/3;padding-top:4px}
+.cell.open h3{font-size:24px}.cell.open p{font-size:14px;max-width:none}
+.detail ul{list-style:none;margin:14px 0 20px}.detail li{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--ink2)}
+.detail li:before{content:"";width:6px;height:6px;border-radius:2px;background:var(--acc);margin-top:7px;flex:none}
+.detail .st{display:flex;gap:28px;margin-bottom:6px}.detail .st b{display:block;font-size:30px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.detail .st span{font-size:12px;color:var(--mute)}
+.foot{text-align:center;color:var(--mute);font-size:11.5px;padding:0 0 22px}
+/* demo A */
+.chart{display:flex;flex-direction:column;height:100%}
+.chart .big{font-size:34px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:8px}
+.chart .big small{font-size:12px;font-weight:500;color:var(--ok)}
+.bars{flex:1;display:flex;align-items:flex-end;gap:4px;margin-top:8px;min-height:0}
+.bars i{flex:1;background:#d9d3fb;border-radius:4px 4px 1px 1px;transition:height .5s cubic-bezier(.3,.8,.2,1)}
+.bars i:last-child{background:var(--acc)}
+/* B */
+.tg{display:flex;flex-direction:column;gap:7px;justify-content:center;height:100%}
+.tg div{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--ink2)}
+.sw{width:32px;height:19px;border-radius:99px;background:#d6d9e3;position:relative;transition:background .3s}.sw:after{content:"";position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+.sw.on{background:var(--acc)}.sw.on:after{transform:translateX(13px)}
+/* C */
+.ui{position:absolute;inset:0;border:1px solid var(--line);border-radius:12px;background:#fbfbfd;padding:12px;overflow:hidden}
+.ui .row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink2);padding:7px 0;border-bottom:1px solid var(--line)}
+.ui .row b{color:var(--ink);font-weight:600}
+.ui .dep{margin-top:14px;width:100%;height:34px;border-radius:9px;border:0;background:var(--ink);color:#fff;font-weight:600;font-size:13px;transition:background .3s,transform .15s}
+.ui .dep.go{background:#9a8cf7}.ui .dep.ok{background:var(--ok)}.ui .dep.dn{transform:scale(.96)}
+.ui .pb{height:4px;border-radius:3px;background:#e7e8ef;margin-top:10px;overflow:hidden}.ui .pb i{display:block;height:100%;width:0;background:var(--acc)}
+.cur{position:absolute;width:18px;height:18px;left:0;top:0;z-index:3;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25));pointer-events:none}
+/* D */
+.term{position:absolute;inset:0;background:#14151a;border-radius:12px;padding:12px 14px;font:12px/1.65 var(--mono);color:#c9ccd8;overflow:hidden}
+.term .p{color:#8f7bff}.term .o{color:#6ee7a0}.term .d{color:#7b8094}
+.term{display:flex;flex-direction:column;justify-content:flex-end}.term div:last-child:after{content:"";display:inline-block;width:7px;height:13px;margin-left:3px;background:#c9ccd8;vertical-align:-2px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+/* E */
+.don{display:flex;align-items:center;gap:14px;height:100%}
+.don svg{width:92px;height:92px;flex:none}
+.don .t b{display:block;font-size:24px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.don .t span{font-size:11.5px;color:var(--mute)}
+.lg{font-size:11.5px;color:var(--ink2);margin-top:6px;display:flex;flex-direction:column;gap:2px}.lg i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px}
+/* F */
+.demo canvas{position:absolute;inset:0;width:100%;height:100%}
+/* G */
+.flow{display:flex;flex-direction:column;gap:8px;justify-content:center;height:100%}
+.flow div{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--mute);transition:color .3s}
+.flow i{width:18px;height:18px;border-radius:50%;border:1.5px solid #cfd2de;display:grid;place-items:center;transition:.3s;flex:none}
+.flow i svg{width:10px;height:10px;opacity:0;transition:.2s}
+.flow .dn{color:var(--ink)}.flow .dn i{background:var(--ok);border-color:var(--ok)}.flow .dn svg{opacity:1}
+.flow .cu{color:var(--ink)}.flow .cu i{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc2)}
+</style></head><body>
+<div class="nav">
+  <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#5b3df5" stroke-width="2.2" stroke-linecap="round"><path d="M3 15c3-6 5-6 7-2s4 4 7-4l4-3"/><path d="M3 20h18" stroke="#0e0f13"/></svg>潮线 Tideline</div>
+  <div class="links"><a href="#">产品</a><a href="#">方案</a><a href="#">文档</a><a href="#">价格</a><a href="#">更新日志</a></div>
+  <div class="r"><button class="b">登录</button><button class="b p">免费试用</button></div>
+</div>
+<div class="hero">
+  <span class="badge"><i>新</i>v4.2：流量回放与灰度开关已上线 →</span>
+  <h1>一个控制台，<span>看清并管住</span>每一次调用</h1>
+  <p class="sub" id="sub">为开发者准备的 API 网关与可观测平台：接入五分钟，延迟和报错一眼可见。</p>
+  <div class="seg" id="seg"><span class="th" id="th"></span><button data-m="dev" class="on">开发者</button><button data-m="team">团队</button><button data-m="ent">企业</button></div>
+</div>
+<div class="grid" id="grid"></div>
+<div class="foot">示意界面 · 示例数据，仅用于展示版式</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const MODES={
+ dev:{sub:'为开发者准备的 API 网关与可观测平台：接入五分钟，延迟和报错一眼可见。',
+  A:['实时吞吐','每秒请求数，延迟 p95 低于 80ms','req/s',12480,'+8.2%'],B:['灰度开关','改配置不发版','',['新计费逻辑','流量镜像','重试 3 次','调试日志']],
+  C:['一键部署','合并即上线，失败自动回滚','服务','api-gateway','v4.2.1'],D:['命令行','和控制台同一套能力','',['tide deploy --env prod','✓ 构建完成 12.4s','✓ 健康检查通过 3/3','tide logs -f --level error','tide rollback v4.2.0']],
+  E:['错误预算','本月已用','',[['成功',96.4,'#5b3df5'],['超时',2.6,'#e8890c'],['失败',1.0,'#e5484d']],'96.4%'],F:['全球节点','就近接入，自动切换','',['东京','新加坡','法兰克福','弗吉尼亚','圣保罗']],
+  G:['变更审批','高风险变更要人点头','',['提交变更','代码评审','灰度 5%','全量发布']],
+  detail:{A:['每秒请求数、错误率、延迟分位数在同一张图里；点任意一根柱子，下方列出那一秒的请求样本。',['1 秒粒度，保留 30 天','按路由、状态码、地区切片','告警规则与图表同屏编辑'],[['12,480','当前 req/s'],['78ms','p95 延迟'],['0.04%','错误率']]]}},
+ team:{sub:'给协作团队：谁改了什么、谁在用多少额度，都在同一个地方，不用再翻群聊。',
+  A:['团队调用量','本月累计，按成员拆分','次/分',8420,'+3.1%'],B:['权限开关','按角色放行','',['成员可建密钥','外部协作者只读','测试环境免审批','导出需管理员']],
+  C:['一键发布','评审通过自动发布','环境','预发布 → 生产','v4.2.1'],D:['团队命令行','脚本里也能审批','',['tide request --quota 2M','✓ 已提交，等待 @陈沐','tide who-changed routes/pay','✓ 周岚 · 今天 10:42','tide report --team 增长组']],
+  E:['额度使用','团队本月额度','',[['后端组',48,'#5b3df5'],['增长组',31,'#1aa6a0'],['数据组',21,'#e8890c']],'68%'],F:['多区域协作','各地团队看各自的流量','',['北京','上海','深圳','成都','杭州']],
+  G:['额度申请','申请到批准的全流程','',['提交申请','组长确认','财务复核','额度生效']],
+  detail:{A:['每个成员的调用量单独成线，一眼看出是谁把额度用完了；点成员名过滤整张图。',['按成员、项目、密钥拆分','超额自动提醒负责人','周报自动发到群'],[['8,420','当前 次/分'],['14','活跃成员'],['68%','额度已用']]]}},
+ ent:{sub:'给企业：单点登录、审计留痕、私有部署与专属支持，合规评审一次过。',
+  A:['全局吞吐','全部业务线合并视图','req/s',286400,'+1.4%'],B:['合规策略','默认全部开启','',['SSO 强制登录','日志不可删除','数据不出区域','密钥 90 天轮换']],
+  C:['受控发布','窗口期内审批后发布','集群','华北-生产 A','v4.2.1'],D:['审计命令','每条操作可追溯','',['tide audit --since 7d','✓ 导出 18,204 条','tide policy apply sox.yaml','✓ 6 条策略已生效','tide dr drill --region 备']],
+  E:['可用性','本季度 SLA','',[['正常',99.95,'#5b3df5'],['降级',0.04,'#e8890c'],['中断',0.01,'#e5484d']],'99.95%'],F:['私有部署','多云多机房统一纳管','',['机房 A','机房 B','公有云','边缘 1','边缘 2']],
+  G:['变更窗口','四级审批后才放行','',['变更申请','安全评审','CAB 批准','窗口内执行']],
+  detail:{A:['所有业务线的流量汇到一张图，按事业部拆分；容量预测提前 14 天提示扩容。',['每个事业部独立视图与预算','容量预测与扩容建议','数据可写入自有数据仓库'],[['286,400','全局 req/s'],['11','业务线'],['99.95%','季度可用性']]]}}
+};
+const CELLS=[['A','sA','chart'],['B','sB','toggle'],['C','sC','deploy'],['E','sE','donut'],['D','sD','term'],['F','sF','net'],['G','sG','flow']];
+let mode='dev';const grid=$('#grid');
+const arrow='<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10L10 2M4 2h6v6"/></svg>',xmark='<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg>';
+const state={};
+// ---------- 演示 ----------
+const demos={
+ chart:{init(el,d){el.innerHTML=`<div class="chart"><div class="big"><span class="v">0</span><small></small></div><div class="bars"></div></div>`;const b=$('.bars',el);b.innerHTML='<i></i>'.repeat(30);return{arr:Array.from({length:30},(_,i)=>.4+.3*Math.sin(i/3)+Math.random()*.15),last:0,base:d[3]}},
+  tick(el,s,t,d){const k=Math.floor(t/.45);if(k!==s.last){s.last=k;s.arr.shift();const prev=s.arr[s.arr.length-1];s.arr.push(Math.min(.98,Math.max(.2,prev+(Math.random()-.45)*.28+(Math.random()<.08?.3:0))))}
+   $$('.bars i',el).forEach((e,i)=>e.style.height=(s.arr[i]*100)+'%');const cur=Math.round(s.base*(.85+s.arr[29]*.3));$('.v',el).textContent=cur.toLocaleString('en-US')+' '+d[2];$('small',el).textContent=d[4]}},
+ toggle:{init(el,d){const L=d[3];el.innerHTML='<div class="tg">'+L.map(x=>`<div>${x}<span class="sw"></span></div>`).join('')+'</div>';return{}},
+  tick(el,s,t){const sw=$$('.sw',el);sw.forEach((e,i)=>{const ph=(t*.6+i*.9)%4;e.classList.toggle('on',ph<2.4)})}},
+ deploy:{init(el,d){el.innerHTML=`<div class="ui"><div class="row">${d[2]}<b>${d[3]}</b></div><div class="row">版本<b>${d[4]}</b></div><div class="row">区域<b>3 / 3</b></div><div class="row">状态<b class="stt">待发布</b></div><button class="dep">部署</button><div class="pb"><i></i></div><svg class="cur" viewBox="0 0 18 18"><path d="M2 1l13 7-6 1.6L6.5 16z" fill="#0e0f13" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg></div>`;return{}},
+  tick(el,s,t){const T=6,p=t%T,btn=$('.dep',el),ui=$('.ui',el),c=$('.cur',el),pb=$('.pb i',el),stt=$('.stt',el);const bx=btn.offsetLeft+btn.offsetWidth*.6,by=btn.offsetTop+btn.offsetHeight*.55;
+   const sx=ui.clientWidth*.9,sy=ui.clientHeight*.25;let x,y;const e=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+   if(p<1.4){const u=e(p/1.4);x=sx+(bx-sx)*u;y=sy+(by-sy)*u}else if(p<4.6){x=bx;y=by}else{const u=e(Math.min(1,(p-4.6)/1.2));x=bx+(sx-bx)*u;y=by+(sy-by)*u}
+   c.style.transform=`translate(${x}px,${y}px)`;btn.classList.toggle('dn',p>1.4&&p<1.65);
+   if(p<1.5){btn.className='dep';btn.textContent='部署';stt.textContent='待发布';pb.style.width='0'}
+   else if(p<3.6){btn.className='dep go';btn.textContent='部署中…';stt.textContent='构建中';pb.style.width=((p-1.5)/2.1*100)+'%'}
+   else{btn.className='dep ok';btn.textContent='已上线';stt.textContent='运行中';pb.style.width='100%'}}},
+ term:{init(el,d){el.innerHTML='<div class="term"></div>';return{}},
+  tick(el,s,t,d){const L=d[3],T=L.length*1.7,p=(t%(T+2));let html='';let shown=Math.min(L.length,Math.floor(p/1.7)+1);for(let i=0;i<shown;i++){const line=L[i],cmd=!line.startsWith('✓');let txt=line;if(i===shown-1&&p<T){const f=(p-i*1.7)/(cmd?1.1:.4);txt=line.slice(0,Math.max(0,Math.floor(Math.min(1,f)*line.length)))}
+   html+=cmd?`<div><span class="p">$</span> ${txt}</div>`:`<div class="o">${txt}</div>`}$('.term',el).innerHTML=html}},
+ donut:{init(el,d){const R=34,C=2*Math.PI*R;let off=0;const segs=d[3].map(([n,v,c])=>{const s=`<circle r="${R}" cx="46" cy="46" fill="none" stroke="${c}" stroke-width="12" stroke-dasharray="0 ${C}" transform="rotate(-90 46 46)" data-v="${v}"/>`;return s}).join('');
+   el.innerHTML=`<div class="don"><svg viewBox="0 0 92 92"><circle r="${R}" cx="46" cy="46" fill="none" stroke="#eceef4" stroke-width="12"/>${segs}</svg><div class="t"><b>0</b><span>${d[1]}</span><div class="lg">${d[3].map(([n,v,c])=>`<span><i style="background:${c}"></i>${n} ${v}%</span>`).join('')}</div></div></div>`;return{C}},
+  tick(el,s,t,d){const k=Math.min(1,(t%7)/1.4),e=1-Math.pow(1-k,3);let off=0;const tot=d[3].reduce((a,x)=>a+x[1],0);$$('circle[data-v]',el).forEach(c=>{const len=s.C*(+c.dataset.v/100)*e;c.setAttribute('stroke-dasharray',`${Math.max(0,len-1.5)} ${s.C}`);c.setAttribute('stroke-dashoffset',-off);off+=s.C*(+c.dataset.v/100)*e});
+   const tv=parseFloat(d[4]);$('b',el).textContent=(tv*e).toFixed(tv>99.9?2:1)+'%'}},
+ net:{init(el,d){const cv=document.createElement('canvas');el.appendChild(cv);const P=[[.14,.32],[.3,.78],[.52,.2],[.72,.8],[.86,.34]];const nodes=d[3].map((n,i)=>({n,x:P[i][0],y:P[i][1]}));return{cv,nodes,pk:[]}},
+  tick(el,s,t,d,dt){const cv=s.cv,w=el.clientWidth,h=el.clientHeight,dpr=2;if(cv.width!==w*dpr){cv.width=w*dpr;cv.height=h*dpr}const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+   const N=s.nodes,hub={x:.5,y:.55};g.lineWidth=1;g.strokeStyle='#dfe1ea';N.forEach(n=>{g.beginPath();g.moveTo(n.x*w,n.y*h);g.lineTo(hub.x*w,hub.y*h);g.stroke()});
+   if(Math.random()<dt*2.2)s.pk.push({i:Math.floor(Math.random()*N.length),u:0,out:Math.random()<.5});s.pk=s.pk.filter(p=>(p.u+=dt*.7)<1);
+   s.pk.forEach(p=>{const n=N[p.i],u=p.out?p.u:1-p.u;const x=(hub.x+(n.x-hub.x)*u)*w,y=(hub.y+(n.y-hub.y)*u)*h;g.fillStyle='#5b3df5';g.beginPath();g.arc(x,y,3,0,7);g.fill()});
+   g.fillStyle='#0e0f13';g.beginPath();g.arc(hub.x*w,hub.y*h,6,0,7);g.fill();g.font='11px Inter,"Noto Sans SC",sans-serif';g.textAlign='center';
+   N.forEach((n,i)=>{const pulse=(Math.sin(t*2+i*1.7)+1)/2;g.strokeStyle='rgba(91,61,245,'+(.35*(1-pulse))+')';g.beginPath();g.arc(n.x*w,n.y*h,5+pulse*8,0,7);g.stroke();g.fillStyle='#fff';g.strokeStyle='#5b3df5';g.lineWidth=1.6;g.beginPath();g.arc(n.x*w,n.y*h,5,0,7);g.fill();g.stroke();g.fillStyle='#7a8092';g.fillText(n.n,n.x*w,n.y*h+19)})}},
+ flow:{init(el,d){el.innerHTML='<div class="flow">'+d[3].map(x=>`<div><i><svg viewBox="0 0 10 10" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.2l2.2 2.2L8 3"/></svg></i>${x}</div>`).join('')+'</div>';return{}},
+  tick(el,s,t,d){const n=d[3].length,p=(t*.8)%(n+1.6);$$('.flow div',el).forEach((e,i)=>{e.classList.toggle('dn',p>i+1);e.classList.toggle('cu',p>i&&p<=i+1)})}}
+};
+// ---------- 渲染 ----------
+function build(){
+  const M=MODES[mode];grid.innerHTML='';
+  CELLS.forEach(([k,cls,kind])=>{const d=M[k],el=document.createElement('div');el.className='cell '+cls;el.dataset.k=k;el.style.viewTransitionName='c'+k;
+    const det=M.detail[k];
+    el.innerHTML=`<div class="hd"><h3>${d[0]}${k==='A'?'<em>实时</em>':''}</h3><p>${d[1]}</p></div><div class="demo"></div><button class="more" aria-label="展开">${arrow}</button>
+     <div class="detail">${det?`<div class="st">${det[2].map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join('')}</div><p style="font-size:14.5px;line-height:1.7;color:var(--ink2);max-width:none">${det[0]}</p><ul>${det[1].map(x=>`<li>${x}</li>`).join('')}</ul><button class="b p">在控制台打开</button>`:`<p style="font-size:14.5px;line-height:1.7;color:var(--ink2);max-width:none;margin-top:6px">${d[1]}。在控制台里可以单独配置，也可以和团队共享一套模板。</p><ul><li>支持按环境分别设置</li><li>每次改动自动留痕</li><li>可通过命令行或接口调用</li></ul><button class="b p">在控制台打开</button>`}</div>`;
+    grid.appendChild(el);const demo=demos[kind],box=$('.demo',el);state[k]={demo,box,d,s:demo.init(box,d),t:Math.random()*2+3,speed:1,target:1,el};
+    el.addEventListener('mouseenter',()=>state[k].target=2.6);el.addEventListener('mouseleave',()=>state[k].target=1);
+    el.addEventListener('click',()=>toggleOpen(el));});
+}
+function toggleOpen(el){const go=()=>{const was=el.classList.contains('open');$$('.cell.open').forEach(c=>{c.classList.remove('open');$('.more',c).innerHTML=arrow});if(!was){el.classList.add('open');$('.more',el).innerHTML=xmark}grid.classList.toggle('has-open',!was)};
+  if(document.startViewTransition)document.startViewTransition(go);else go();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$('.cell.open');if(o)toggleOpen(o)}});
+let last=performance.now();
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  for(const k in state){const S=state[k];S.speed+=(S.target-S.speed)*Math.min(1,dt*6);S.t+=dt*S.speed;if(!S.el.isConnected)continue;try{S.demo.tick(S.box,S.s,S.t,S.d,dt*S.speed)}catch(err){console.error(err)}}
+  requestAnimationFrame(loop)}
+// ---------- 分段切换 ----------
+const th=$('#th');function moveTh(){const b=$('#seg button.on');th.style.width=b.offsetWidth+'px';th.style.transform=`translateX(${b.offsetLeft-3}px)`}
+$$('#seg button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.m===mode)return;$$('#seg button').forEach(x=>x.classList.toggle('on',x===b));mode=b.dataset.m;moveTh();
+  const go=()=>{$('#sub').textContent=MODES[mode].sub;build()};if(document.startViewTransition)document.startViewTransition(go);else go()}));
+moveTh();build();requestAnimationFrame(loop);document.fonts&&document.fonts.ready.then(moveTh);
+</script></body></html>

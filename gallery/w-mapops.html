@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>地图调度 · 全国算力运营</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --sea:#dfe6e7; --land:#faf8f2; --ink:#1c2230; --ink2:#566070; --mute:#8d97a3; --glass:rgba(255,255,255,.86); --line:rgba(28,34,48,.12); --hot:#c4384f; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--sea); }
+  body { font-family: "Plus Jakarta Sans", "Noto Sans SC", sans-serif; font-size: 13px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "Spline Sans Mono", monospace; font-variant-numeric: tabular-nums; }
+  #map { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  .hex { transition: fill .25s; }
+  .hex:hover { stroke: #1c2230; stroke-width: 1.4; }
+  .nd { cursor: pointer; }
+  .nd .lab { font-size: 10.5px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: rgba(250,248,242,.92); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
+  .pulse { transform-box: fill-box; transform-origin: center; opacity: 0; } .pulse.hot { animation: pulse 2s ease-out infinite; }
+  @keyframes pulse { from { transform: scale(.6); opacity: .7; } to { transform: scale(2.2); opacity: 0; } }
+  .flow { stroke-dasharray: 2 7; animation: flow 1.2s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -9; } }
+  .glass { position: fixed; background: var(--glass); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); border: 1px solid rgba(255,255,255,.9); border-radius: 14px; box-shadow: 0 0 0 1px var(--line), 0 10px 30px -14px rgba(28,34,48,.3); }
+  #head { left: 20px; top: 20px; padding: 14px 18px 12px; width: 286px; }
+  #head h1 { font-size: 15px; font-weight: 700; letter-spacing: -.005em; display: flex; align-items: center; gap: 8px; }
+  #head h1 i { width: 8px; height: 8px; border-radius: 50%; background: #2f9e6a; animation: blink 2s infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+  #head p { font-size: 11.5px; color: var(--mute); margin-top: 2px; }
+  .kp { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .kp small { display: block; font-size: 10.5px; color: var(--mute); }
+  .kp b { font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+  .kp b em { font-style: normal; font-size: 11px; color: var(--mute); margin-left: 1px; }
+  #layers { left: 20px; top: 178px; width: 170px; padding: 8px; }
+  #layers h4 { font-size: 10.5px; color: var(--mute); font-weight: 600; letter-spacing: .08em; padding: 5px 8px 4px; }
+  .lay { display: flex; align-items: center; gap: 9px; width: 100%; height: 34px; padding: 0 8px; border-radius: 9px; font-size: 12.5px; font-weight: 500; text-align: left; }
+  .lay:hover { background: rgba(28,34,48,.05); }
+  .lay svg { width: 16px; height: 16px; flex: none; }
+  .lay span { flex: 1; }
+  .sw { width: 28px; height: 16px; border-radius: 8px; background: #cfd4da; position: relative; transition: background .2s; flex: none; }
+  .sw::after { content: ""; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .lay.on .sw { background: var(--ink); } .lay.on .sw::after { transform: translateX(12px); }
+  #scale { left: 20px; top: 360px; width: 170px; padding: 10px 14px 12px; }
+  #scale h4 { font-size: 10.5px; color: var(--mute); font-weight: 600; letter-spacing: .08em; margin-bottom: 8px; }
+  #scale .bar { display: flex; height: 8px; border-radius: 2px; overflow: hidden; } #scale .bar i { flex: 1; }
+  #scale .tk { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px; color: var(--mute); }
+  #card { width: 300px; padding: 0; opacity: 0; pointer-events: none; transform: translateY(6px); transition: opacity .2s, transform .2s; z-index: 5; }
+  #card.on { opacity: 1; pointer-events: auto; transform: none; }
+  #card header { padding: 14px 16px 10px; position: relative; }
+  #card h3 { font-size: 15px; font-weight: 700; } #card header small { color: var(--mute); font-size: 11.5px; }
+  #card .x { position: absolute; right: 10px; top: 10px; width: 24px; height: 24px; border-radius: 7px; color: var(--mute); display: grid; place-items: center; } #card .x:hover { background: rgba(28,34,48,.07); }
+  #card .row { display: grid; grid-template-columns: repeat(3, 1fr); padding: 0 16px 10px; gap: 4px; }
+  #card .row small { display: block; font-size: 10.5px; color: var(--mute); } #card .row b { font-size: 16px; font-weight: 600; }
+  #card .row b em { font-style: normal; font-size: 10.5px; color: var(--mute); }
+  #card svg.sp { display: block; margin: 0 16px; width: 268px; height: 44px; }
+  #card footer { padding: 10px 16px 14px; display: flex; gap: 8px; }
+  .btn { height: 30px; padding: 0 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600; }
+  .btn.k { background: var(--ink); color: #fff; } .btn.k:hover { background: #000; }
+  .btn.g { border: 1px solid var(--line); } .btn.g:hover { background: rgba(28,34,48,.05); }
+  #time { left: 50%; bottom: 22px; transform: translateX(-50%); width: 720px; padding: 10px 16px 22px 12px; display: flex; align-items: center; gap: 14px; }
+  #play { width: 38px; height: 38px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; flex: none; }
+  #play:hover { background: #000; } #play svg { width: 14px; height: 14px; }
+  #clock { width: 96px; flex: none; } #clock b { display: block; font-size: 20px; font-weight: 600; letter-spacing: -.02em; } #clock small { font-size: 10.5px; color: var(--mute); }
+  #track { position: relative; flex: 1; height: 46px; cursor: ew-resize; touch-action: none; }
+  #track svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  #spd { flex: none; display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  #spd button { height: 28px; padding: 0 9px; font-size: 11.5px; font-family: "Spline Sans Mono"; color: var(--ink2); } #spd button.on { background: var(--ink); color: #fff; }
+  #tip { position: fixed; pointer-events: none; z-index: 9; background: var(--ink); color: #fff; padding: 7px 10px; border-radius: 8px; font-size: 11.5px; line-height: 1.6; opacity: 0; transition: opacity .1s; white-space: nowrap; }
+  #tip.on { opacity: 1; } #tip span { color: #aab3bf; }
+  #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -80px); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 12.5px; transition: transform .35s cubic-bezier(.2,.8,.2,1); z-index: 20; }
+  #toast.on { transform: translate(-50%, 0); }
+  .foot { position: fixed; right: 16px; bottom: 8px; font-size: 10px; color: var(--mute); }
+</style>
+</head>
+<body>
+<svg id="map"></svg>
+
+<div class="glass" id="head">
+  <h1><i></i>全国算力调度<span style="font-weight:400;color:var(--mute);font-size:12px">· 实时</span></h1>
+  <p id="hp">24 个节点 · 4 个核心机房</p>
+  <div class="kp"><div><small>在线 GPU</small><b class="mono" id="k1">—</b></div><div><small>平均负载</small><b class="mono" id="k2">—</b></div><div><small>高负载节点</small><b class="mono" id="k3" style="color:var(--hot)">—</b></div></div>
+</div>
+<div class="glass" id="layers">
+  <h4>图层</h4>
+  <button class="lay on" data-l="heat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M8 3.5l4 2.3v4.6l-4 2.3-4-2.3V5.8zM16 10.5l4 2.3v4.6l-4 2.3-4-2.3v-4.6z"/></svg><span>热力</span><i class="sw"></i></button>
+  <button class="lay on" data-l="link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.5 16.5C10 14 8 9 12 8s4.5-.5 5-.6"/></svg><span>链路</span><i class="sw"></i></button>
+  <button class="lay on" data-l="node"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8" stroke-dasharray="2.5 3"/></svg><span>节点</span><i class="sw"></i></button>
+  <button class="lay on" data-l="name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 7h14M12 7v11M9 18h6"/></svg><span>名称</span><i class="sw"></i></button>
+</div>
+<div class="glass" id="scale"><h4>六边形 · 加权负载</h4><div class="bar" id="bar"></div><div class="tk mono"><span>0</span><span>50%</span><span>100%</span></div></div>
+<div class="glass" id="card"></div>
+<div class="glass" id="time">
+  <button id="play" aria-label="播放"></button>
+  <div id="clock"><b class="mono" id="clk">14:30</b><small id="day">今日 · 周四</small></div>
+  <div id="track"><svg id="tsv" viewBox="0 0 560 46" preserveAspectRatio="none"></svg></div>
+  <div id="spd"><button class="on" data-s="1">1×</button><button data-s="4">4×</button><button data-s="12">12×</button></div>
+</div>
+<div id="tip"></div><div id="toast"></div>
+<div class="foot">示例数据 · 底图为示意轮廓</div>
+
+<script>
+window.__err = []; addEventListener("error", (e) => __err.push(e.message));
+const $ = (s) => document.querySelector(s), NS = "http://www.w3.org/2000/svg";
+const sv = (t, a = {}, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const svg = $("#map");
+// ---- 底图轮廓（示意） ----
+const CN = [[73.6,39.5],[76,40.5],[80,42],[80.2,45],[83,47.2],[85.5,47],[87.5,49.2],[90,47.8],[91,45.2],[96,42.8],[100,42.6],[105,41.7],[111,43.7],[112,45],[116,46.5],[117.5,49.6],[120,52.3],[122,53.5],[126,53.3],[127.5,50.2],[131,48],[134.5,48.3],[133,45],[131,43],[129.5,42.4],[128,41.5],[124.5,40],[121.5,39],[121.2,40.7],[119.5,39.5],[118,39],[117.8,38.5],[119,37.2],[122.5,37.4],[120.7,36.3],[119.2,35],[120.5,33],[121.9,31.8],[121.9,30.8],[122,29.5],[121.5,28],[120,26],[119,25],[117.5,23.5],[116,22.8],[113.5,22.2],[111,21.5],[110.4,20.3],[109.6,21.6],[108,21.5],[106.7,22.2],[105.5,23.3],[103,22.5],[101.5,21.5],[100.2,21.7],[98.8,24],[98.5,27.5],[97,28.3],[95,29],[92,27.8],[89,28],[86,27.9],[84,29.3],[81,30.2],[79,32.5],[78.8,34.5],[77,35.5],[75.5,37],[74.5,38.5]];
+const ISL = [[[108.7,19.8],[110.5,20.1],[111,19.5],[110,18.3],[109,18.4],[108.6,19]], [[120.1,23],[121,25.2],[121.9,25],[121.5,22.5],[120.8,22]]];
+let W = innerWidth, H = innerHeight, S = 22, OX = 0, OY = 0;
+const P = ([lo, la]) => [OX + (lo - 104) * 0.82 * S, OY - (la - 36) * S];
+// ---- 节点 ----
+// 名称, 类型, 经度, 纬度, GPU 数, 基础负载, 高峰时刻
+const ND = [["北京", "core", 116.4, 39.9, 6400, .62, 15.5], ["上海", "core", 121.5, 31.2, 5200, .66, 15], ["广州", "core", 113.3, 23.1, 3800, .6, 16], ["乌兰察布", "core", 113.1, 41, 9600, .48, 17.5],
+  ["深圳", "edge", 114.1, 22.5, 1600, .64, 15.5], ["杭州", "edge", 120.2, 30.3, 2200, .6, 15], ["南京", "edge", 118.8, 32.1, 1200, .55, 16], ["天津", "edge", 117.2, 39.1, 900, .5, 15], ["济南", "edge", 117, 36.7, 700, .44, 16],
+  ["郑州", "edge", 113.6, 34.8, 1100, .52, 16.5], ["武汉", "edge", 114.3, 30.6, 1500, .58, 16], ["长沙", "edge", 113, 28.2, 800, .46, 16.5], ["合肥", "edge", 117.3, 31.8, 1300, .56, 16], ["成都", "edge", 104.1, 30.7, 2100, .57, 17], ["重庆", "edge", 106.5, 29.6, 1400, .5, 17],
+  ["贵安", "core", 106.6, 26.4, 4800, .45, 18], ["昆明", "edge", 102.7, 25, 600, .4, 18], ["西安", "edge", 108.9, 34.3, 1000, .5, 17], ["兰州", "edge", 103.8, 36.1, 500, .38, 18], ["中卫", "core", 105.2, 37.5, 5600, .5, 19],
+  ["呼和浩特", "edge", 111.7, 40.8, 600, .42, 17], ["沈阳", "edge", 123.4, 41.8, 900, .45, 15.5], ["哈尔滨", "edge", 126.6, 45.8, 500, .36, 15.5], ["乌鲁木齐", "edge", 87.6, 43.8, 700, .34, 20]]
+  .map(([name, kind, lo, la, gpu, base, peak], i) => ({ i, name, kind, lo, la, gpu, base, peak, ph: i * 1.7 }));
+const loadAt = (n, t) => { const d = Math.cos((t - n.peak) / 24 * 2 * Math.PI); const v = n.base + .26 * d + .045 * Math.sin(t * 1.9 + n.ph) + .03 * Math.sin(t * 5.1 + n.ph * 2); return Math.max(.04, Math.min(.99, v)); };
+const LINKS = [[0,3,9],[0,7,4],[0,1,8],[0,9,5],[1,5,6],[1,6,4],[1,12,3],[1,2,6],[2,4,5],[2,10,4],[2,15,5],[3,20,3],[3,19,5],[19,18,3],[18,13,3],[13,14,4],[13,15,5],[15,16,3],[9,10,4],[9,17,3],[10,11,3],[10,12,3],[7,8,2],[0,21,3],[21,22,2],[17,19,3],[19,23,1.5],[3,0,6]];
+const COL = ["#f6e9cc", "#f5c183", "#ea8052", "#c4384f", "#7b2060"];
+const lerp = (a, b, t) => a + (b - a) * t, hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+const heatCol = (v) => { v = Math.max(0, Math.min(1, v)); const s = v * (COL.length - 1), i = Math.min(COL.length - 2, Math.floor(s)), k = s - i, a = hex(COL[i]), b = hex(COL[i + 1]); return `rgb(${a.map((x, j) => Math.round(lerp(x, b[j], k)))})`; };
+let layers = { heat: true, link: true, node: true, name: true }, t = 14.5, playing = false, speed = 1, sel = null, hexes = [], gHex, gLink, gNode, gFlow, gMig;
+const inPoly = (x, y, poly) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+const HR = 17;
+function layout() {
+  W = innerWidth; H = innerHeight; svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  S = Math.min((W - 80) / (62 * .82), (H - 70) / 36.5);
+  OX = W / 2 - .2 * .82 * S; OY = H / 2;
+  draw();
+}
+function draw() {
+  svg.innerHTML = "";
+  const defs = sv("defs", {}, svg);
+  const poly = CN.map(P), polys = [poly, ...ISL.map((a) => a.map(P))];
+  const clip = sv("clipPath", { id: "land" }, defs); polys.forEach((p) => sv("path", { d: "M" + p.map((q) => q.map((v) => v.toFixed(1)).join(" ")).join("L") + "Z" }, clip));
+  sv("rect", { width: W, height: H, fill: "#dfe6e7" }, svg);
+  const gr = sv("g", { stroke: "#fff", "stroke-width": 1, opacity: .75 }, svg);
+  for (let lo = 70; lo <= 140; lo += 10) { const a = P([lo, 14]), b = P([lo, 56]); sv("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, gr); const tx = sv("text", { x: a[0] + 3, y: H - 8, "font-size": 9, fill: "#9aa5ab", stroke: "none", "font-family": "Spline Sans Mono" }, svg); if (a[0] > 20 && a[0] < W - 40) tx.textContent = lo + "°E"; }
+  for (let la = 15; la <= 55; la += 5) { const a = P([68, la]), b = P([140, la]); sv("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, gr); }
+  const land = sv("g", {}, svg);
+  polys.forEach((p) => sv("path", { d: "M" + p.map((q) => q.map((v) => v.toFixed(1)).join(" ")).join("L") + "Z", fill: "#faf8f2", stroke: "#b9c1c4", "stroke-width": 1.2, "stroke-linejoin": "round" }, land));
+  // 六边形
+  gHex = sv("g", { "clip-path": "url(#land)" }, svg); hexes = [];
+  const w = Math.sqrt(3) * HR, bb = [Math.min(...poly.map((p) => p[0])), Math.max(...poly.map((p) => p[0])), Math.min(...poly.map((p) => p[1])), Math.max(...poly.map((p) => p[1]))];
+  const pos = ND.map((n) => P([n.lo, n.la]));
+  for (let r = 0, y = bb[2] - HR; y < bb[3] + HR; r++, y += HR * 1.5) for (let x = bb[0] - w + (r % 2 ? w / 2 : 0); x < bb[1] + w; x += w) {
+    if (!polys.some((p) => inPoly(x, y, p)) && !pos.some((q) => Math.hypot(q[0] - x, q[1] - y) < 30)) continue;
+    const ws = []; pos.forEach((q, i) => { const d = Math.hypot(q[0] - x, q[1] - y), sg = ND[i].kind === "core" ? 70 : 48; if (d < sg * 3) ws.push([i, Math.exp(-d * d / (2 * sg * sg)) * Math.sqrt(ND[i].gpu / 1000)]); });
+    if (!ws.length) continue;
+    const pts = Array.from({ length: 6 }, (_, k) => { const a = Math.PI / 180 * (60 * k - 30); return [(x + (HR - 1) * Math.cos(a)).toFixed(1), (y + (HR - 1) * Math.sin(a)).toFixed(1)].join(","); }).join(" ");
+    const el = sv("polygon", { class: "hex", points: pts, stroke: "rgba(250,248,242,.9)", "stroke-width": .8 }, gHex);
+    const h = { el, ws, x, y }; hexes.push(h);
+    el.addEventListener("mouseenter", () => { const f = hexVal(h); tip(`<span>该格覆盖</span> ${h.ws.filter((q) => q[1] > .15).length || 1} 个节点<br><span>加权负载</span> ${(f.v * 100).toFixed(0)}%`); });
+    el.addEventListener("mousemove", mv); el.addEventListener("mouseleave", () => $("#tip").classList.remove("on"));
+  }
+  gHex.style.display = layers.heat ? "" : "none";
+  // 链路
+  gLink = sv("g", { fill: "none" }, svg); gMig = sv("g", { fill: "none" }, svg);
+  LINKS.forEach(([a, b, wd]) => { const A = pos[a], B = pos[b], mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, d = Math.hypot(B[0] - A[0], B[1] - A[1]), nx = -(B[1] - A[1]) / d, ny = (B[0] - A[0]) / d, c = [mx + nx * d * .16, my + ny * d * .16 - d * .06];
+    const dd = `M${A[0]} ${A[1]}Q${c[0]} ${c[1]} ${B[0]} ${B[1]}`;
+    sv("path", { d: dd, stroke: "#1c2230", "stroke-opacity": .4, "stroke-width": 1 + wd * .28 }, gLink); sv("path", { class: "flow", d: dd, stroke: "#fff", "stroke-width": 1.4, "stroke-opacity": .95 }, gLink); });
+  gLink.style.display = layers.link ? "" : "none";
+  // 节点
+  gNode = sv("g", {}, svg);
+  ND.forEach((n, i) => {
+    const [x, y] = pos[i], r = n.kind === "core" ? 6 + Math.sqrt(n.gpu / 1000) * 1.1 : 4 + Math.sqrt(n.gpu / 1000) * 1.1, g = sv("g", { class: "nd", transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` }, gNode); n.g = g; n.r = r; n.x = x; n.y = y;
+    n.pulse = sv("circle", { class: "pulse", r: r + 3, fill: "none", stroke: "#c4384f", "stroke-width": 1.6, opacity: 0 }, g);
+    sv("circle", { r: r + 3, fill: "rgba(255,255,255,.55)" }, g);
+    n.dot = sv("circle", { r, fill: n.kind === "core" ? "#1c2230" : "#fff", stroke: "#1c2230", "stroke-width": 2 }, g);
+    n.ring = sv("circle", { r: r + 5.5, fill: "none", stroke: "#1c2230", "stroke-width": 1.4, opacity: 0 }, g);
+    n.lab = sv("text", { class: "lab", x: r + 6, y: 4 }, g); n.lab.textContent = n.name;
+    g.addEventListener("mouseenter", () => tip(`<b>${n.name}</b>　<span>${n.kind === "core" ? "核心机房" : "边缘节点"}</span><br><span>GPU</span> ${n.gpu.toLocaleString()} 卡　<span>负载</span> ${(loadAt(n, t) * 100).toFixed(0)}%`));
+    g.addEventListener("mousemove", mv); g.addEventListener("mouseleave", () => $("#tip").classList.remove("on"));
+    g.addEventListener("click", (e) => { e.stopPropagation(); pick(n); });
+  });
+  gNode.querySelectorAll(".lab").forEach((l) => (l.style.display = layers.name ? "" : "none"));
+  gNode.style.display = layers.node ? "" : "none";
+  svg.addEventListener("click", () => pick(null));
+  paint();
+}
+function hexVal(h) { let s = 0, w = 0; h.ws.forEach(([i, k]) => { s += loadAt(ND[i], t) * k; w += k; }); return { v: w ? (s / w) * Math.min(1, w / .5) : 0, w }; }
+function paint() {
+  hexes.forEach((h) => { const f = hexVal(h); h.el.setAttribute("fill", heatCol((f.v - .28) / .62)); h.el.setAttribute("fill-opacity", Math.min(1, .35 + f.w * 1.6).toFixed(2)); });
+  let on = 0, sum = 0, hot = 0;
+  ND.forEach((n) => { const l = loadAt(n, t); n.l = l; n.pulse.classList.toggle("hot", l > .85); if (l > .85) hot++; on += n.gpu; sum += l * n.gpu; });
+  $("#k1").textContent = on.toLocaleString(); $("#k2").textContent = (sum / on * 100).toFixed(0) + "%"; $("#k3").textContent = hot;
+  const hh = Math.floor(t), mm = Math.floor((t - hh) * 60); $("#clk").textContent = String(hh).padStart(2, "0") + ":" + String(Math.floor(mm / 5) * 5).padStart(2, "0");
+  const cur = $("#cur"); if (cur) { const px = t / 24 * 560; cur.setAttribute("x1", px); cur.setAttribute("x2", px); const d = $("#curd"); if (d) d.style.left = (t / 24 * 100) + "%"; }
+  if (sel) cardNums();
+}
+// ---- 提示 ----
+function tip(h) { const e = $("#tip"); e.innerHTML = h; e.classList.add("on"); }
+function mv(e) { const t = $("#tip"); let x = e.clientX + 14, y = e.clientY + 14; if (x + t.offsetWidth > innerWidth - 8) x = e.clientX - t.offsetWidth - 14; t.style.left = x + "px"; t.style.top = y + "px"; }
+// ---- 卡片 ----
+function pick(n) {
+  ND.forEach((m) => m.ring.setAttribute("opacity", m === n ? 1 : 0)); sel = n; const c = $("#card");
+  if (!n) { c.classList.remove("on"); return; }
+  const series = Array.from({ length: 97 }, (_, i) => loadAt(n, i / 4));
+  const d = series.map((v, i) => `${i ? "L" : "M"}${(i / 96 * 268).toFixed(1)} ${(40 - v * 38).toFixed(1)}`).join("");
+  const near = ND.filter((m) => m !== n).sort((a, b) => Math.hypot(a.lo - n.lo, a.la - n.la) - Math.hypot(b.lo - n.lo, b.la - n.la))[0];
+  c.innerHTML = `<header><h3>${n.name}${n.kind === "core" ? "核心机房" : "边缘节点"}</h3><small>${n.lo.toFixed(1)}°E ${n.la.toFixed(1)}°N · 就近 ${near.name}</small><button class="x" id="cx"><svg width="11" height="11" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header>
+  <div class="row"><div><small>GPU</small><b class="mono">${n.gpu.toLocaleString()}</b></div><div><small>当前负载</small><b class="mono" id="cl"></b></div><div><small>可调度空闲</small><b class="mono" id="cf"></b></div></div>
+  <svg class="sp" viewBox="0 0 268 44"><path d="${d}L268 44L0 44Z" fill="#c4384f" opacity=".1"/><path d="${d}" fill="none" stroke="#c4384f" stroke-width="1.6"/><path d="M0 ${40 - .85 * 38} H268" stroke="#1c2230" stroke-dasharray="2 3" opacity=".35"/><line id="cm" y1="0" y2="44" stroke="#1c2230" stroke-width="1"/><circle id="cmd" r="3.4" fill="#1c2230" stroke="#fff" stroke-width="1.5"/></svg>
+  <footer><button class="btn k" id="mig">调度负载到此</button><button class="btn g" id="mig2">迁出</button></footer>`;
+  const x = Math.min(innerWidth - 320, Math.max(210, n.x + 24)), y = Math.min(innerHeight - 290, Math.max(20, n.y - 70)); c.style.left = x + "px"; c.style.top = y + "px"; c.classList.add("on");
+  $("#cx").onclick = () => pick(null); $("#mig").onclick = () => migrate(hotOther(n), n); $("#mig2").onclick = () => migrate(n, coolOther(n)); cardNums();
+}
+function cardNums() { const n = sel, l = n.l ?? loadAt(n, t); $("#cl").textContent = (l * 100).toFixed(0) + "%"; $("#cl").style.color = l > .85 ? "#c4384f" : ""; $("#cf").textContent = Math.round(n.gpu * Math.max(0, .85 - l)).toLocaleString(); const x = t / 24 * 268; $("#cm").setAttribute("x1", x); $("#cm").setAttribute("x2", x); $("#cmd").setAttribute("cx", x); $("#cmd").setAttribute("cy", 40 - l * 38); }
+const hotOther = (n) => ND.filter((m) => m !== n).sort((a, b) => loadAt(b, t) - loadAt(a, t))[0];
+const coolOther = (n) => ND.filter((m) => m !== n && m.gpu > 1000).sort((a, b) => loadAt(a, t) - loadAt(b, t))[0];
+function migrate(a, b) {
+  const A = [a.x, a.y], B = [b.x, b.y], d = Math.hypot(B[0] - A[0], B[1] - A[1]), nx = -(B[1] - A[1]) / d, ny = (B[0] - A[0]) / d, c = [(A[0] + B[0]) / 2 + nx * d * .22, (A[1] + B[1]) / 2 + ny * d * .22 - d * .08];
+  const p = sv("path", { d: `M${A[0]} ${A[1]}Q${c[0]} ${c[1]} ${B[0]} ${B[1]}`, stroke: "#c4384f", "stroke-width": 2.6, "stroke-linecap": "round" }, gMig), L = p.getTotalLength();
+  p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = "stroke-dashoffset .9s ease"; p.style.strokeDashoffset = 0;
+  const dot = sv("circle", { r: 4.5, fill: "#c4384f", stroke: "#fff", "stroke-width": 2 }, gMig), t0 = performance.now();
+  (function f(now) { const k = Math.min(1, (now - t0) / 900), q = p.getPointAtLength(L * k); dot.setAttribute("cx", q.x); dot.setAttribute("cy", q.y); if (k < 1) requestAnimationFrame(f); else setTimeout(() => { p.style.transition = "opacity .6s"; p.style.opacity = 0; dot.remove(); setTimeout(() => p.remove(), 700); }, 600); })(t0);
+  const n = Math.round(Math.min(a.gpu, b.gpu) * .06 / 8) * 8;
+  const T = $("#toast"); T.textContent = `已创建调度任务：${a.name} → ${b.name}，迁移 ${n} 卡的推理负载`; T.classList.add("on"); clearTimeout(T._t); T._t = setTimeout(() => T.classList.remove("on"), 3200);
+}
+// ---- 时间轴 ----
+function buildTrack() {
+  const s = $("#tsv"), pts = Array.from({ length: 97 }, (_, i) => { let a = 0, w = 0; ND.forEach((n) => { a += loadAt(n, i / 4) * n.gpu; w += n.gpu; }); return a / w; }), lo = .3, hi = .8;
+  const y = (v) => 42 - (v - lo) / (hi - lo) * 34, d = pts.map((v, i) => `${i ? "L" : "M"}${(i / 96 * 560).toFixed(1)} ${y(v).toFixed(1)}`).join("");
+  s.innerHTML = `<path d="${d}L560 46L0 46Z" fill="#1c2230" opacity=".07"/><path d="${d}" fill="none" stroke="#1c2230" stroke-width="1.3" vector-effect="non-scaling-stroke"/>` + [0, 6, 12, 18, 24].map((h) => `<line x1="${h / 24 * 560}" x2="${h / 24 * 560}" y1="40" y2="46" stroke="#8d97a3" vector-effect="non-scaling-stroke"/>`).join("") + `<line id="cur" x1="0" x2="0" y1="0" y2="46" stroke="#c4384f" stroke-width="1.5" vector-effect="non-scaling-stroke"/><circle id="curd" r="4" cx="0" cy="3" fill="#c4384f" stroke="#fff" stroke-width="1.5"/>`;
+  const lab = document.createElement("div"); lab.style.cssText = "position:absolute;left:0;right:0;bottom:-14px;display:flex;justify-content:space-between;font-size:9.5px;color:#8d97a3;font-family:Spline Sans Mono"; lab.innerHTML = "<span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>"; $("#track").appendChild(lab);
+  // 圆点不能随 preserveAspectRatio 变形：用 HTML 点
+  $("#curd").remove(); const dot = document.createElement("i"); dot.id = "curd"; dot.style.cssText = "position:absolute;top:-3px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#c4384f;border:2px solid #fff;pointer-events:none"; $("#track").appendChild(dot);
+}
+function setT(v) { t = ((v % 24) + 24) % 24; paint(); }
+const trk = $("#track");
+const fromX = (e) => { const r = trk.getBoundingClientRect(); setT(Math.max(0, Math.min(23.99, (e.clientX - r.left) / r.width * 24))); };
+trk.addEventListener("pointerdown", (e) => { trk.setPointerCapture(e.pointerId); fromX(e); trk.onpointermove = fromX; });
+trk.addEventListener("pointerup", () => (trk.onpointermove = null));
+const PLAY = '<svg viewBox="0 0 14 14" fill="currentColor"><path d="M3 1.5l9 5.5-9 5.5z"/></svg>', PAUSE = '<svg viewBox="0 0 14 14" fill="currentColor"><rect x="2.5" y="1.5" width="3.2" height="11" rx="1"/><rect x="8.3" y="1.5" width="3.2" height="11" rx="1"/></svg>';
+let last = 0;
+function toggle() { playing = !playing; $("#play").innerHTML = playing ? PAUSE : PLAY; if (playing) { last = performance.now(); requestAnimationFrame(tick); } }
+function tick(now) { if (!playing) return; setT(t + (now - last) / 1000 * speed * 1.1); last = now; requestAnimationFrame(tick); }
+$("#play").onclick = toggle; $("#play").innerHTML = PLAY;
+$("#spd").onclick = (e) => { const s = e.target.dataset.s; if (!s) return; speed = +s; document.querySelectorAll("#spd button").forEach((b) => b.classList.toggle("on", b === e.target)); };
+addEventListener("keydown", (e) => { if (e.code === "Space") { e.preventDefault(); toggle(); } if (e.key === "Escape") pick(null); });
+// ---- 图层开关 ----
+document.querySelectorAll(".lay").forEach((b) => (b.onclick = () => { const k = b.dataset.l; layers[k] = !layers[k]; b.classList.toggle("on", layers[k]);
+  if (k === "heat") gHex.style.display = layers.heat ? "" : "none"; if (k === "link") gLink.style.display = layers.link ? "" : "none"; if (k === "node") gNode.style.display = layers.node ? "" : "none";
+  if (k === "name") gNode.querySelectorAll(".lab").forEach((l) => (l.style.display = layers.name ? "" : "none")); }));
+$("#bar").innerHTML = Array.from({ length: 5 }, (_, i) => `<i style="background:${COL[i]}"></i>`).join("");
+addEventListener("resize", () => { layout(); });
+layout(); buildTrack(); paint();
+setTimeout(() => pick(ND[0]), 500);
+</script>
+</body>
+</html>

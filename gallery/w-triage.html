@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分拣收件 · 待办收件箱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fff; --wash: #f4f5f2; --line: #e7e8e3; --line2: #f0f1ed; --ink: #17181a; --ink2: #5c5f5a; --mute: #9a9d96; --ok: #2f7d62; --ok-bg: #e8f2ed; --bad: #c4452f; --bad-bg: #fbeae6; --warn: #a96a0c; --warn-bg: #fbf1dc; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font-family: "Inter", "Noto Sans SC", sans-serif; font-size: 13px; color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; }
+  button, input, textarea { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+  input, textarea { cursor: text; user-select: text; }
+  svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .mono { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+  .app { height: 100vh; display: grid; grid-template-columns: 218px 408px 1fr; min-width: 1100px; }
+
+  .rail { background: var(--wash); border-right: 1px solid var(--line); padding: 20px 12px 14px; display: flex; flex-direction: column; }
+  .who { display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; }
+  .who i { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 12px "Noto Sans SC"; font-style: normal; display: grid; place-items: center; }
+  .who b { font-weight: 600; display: block; font-size: 13px; } .who span { font-size: 11px; color: var(--mute); }
+  .nv { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 8px; border-radius: 7px; color: var(--ink2); cursor: pointer; transition: background .12s; }
+  .nv:hover { background: rgba(0,0,0,.04); }
+  .nv.on { background: #fff; color: var(--ink); font-weight: 500; box-shadow: 0 0 0 1px var(--line); }
+  .nv .n { margin-left: auto; font-size: 11.5px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  .nv.on .n { color: var(--ink); }
+  .rail h6 { font-size: 11px; font-weight: 500; color: var(--mute); padding: 18px 8px 6px; letter-spacing: .04em; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin: 0 4px; }
+  .keys { margin-top: auto; padding: 0 8px; font-size: 11.5px; color: var(--mute); line-height: 2; }
+  .keys div { display: flex; justify-content: space-between; } .keys b { font: 500 11px "JetBrains Mono"; color: var(--ink2); }
+  .demo { font-size: 10px; color: var(--mute); padding: 10px 8px 0; }
+
+  .list { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--paper); }
+  .lh { padding: 18px 20px 0; }
+  .lh h2 { font-family: "Noto Serif SC", serif; font-size: 22px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 10px; }
+  .lh h2 small { font: 400 12px "Inter", "Noto Sans SC"; color: var(--mute); }
+  .splits { display: flex; gap: 22px; margin-top: 14px; border-bottom: 1px solid var(--line); }
+  .sp { position: relative; padding: 0 0 10px; color: var(--mute); font-weight: 500; display: flex; gap: 6px; align-items: center; transition: color .15s; }
+  .sp:hover { color: var(--ink2); } .sp.on { color: var(--ink); }
+  .sp i { font-style: normal; font-size: 11px; font-variant-numeric: tabular-nums; min-width: 16px; padding: 0 5px; height: 17px; line-height: 17px; border-radius: 9px; background: var(--wash); text-align: center; color: var(--ink2); }
+  .sp.on i { background: var(--ink); color: #fff; }
+  .sp::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--ink); transform: scaleX(0); transition: transform .2s; }
+  .sp.on::after { transform: scaleX(1); }
+  .rows { flex: 1; overflow-y: auto; position: relative; scrollbar-width: thin; scrollbar-color: #dcdcd6 transparent; }
+  .row { position: relative; padding: 12px 20px 12px 24px; border-bottom: 1px solid var(--line2); cursor: pointer; height: 82px; overflow: hidden; transition: height .26s ease, opacity .22s, transform .26s, padding .26s; }
+  .row:hover { background: #fafaf8; }
+  .row.sel { background: #f1f4ef; }
+  .row.sel::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ink); }
+  .row.unread::after { content: ""; position: absolute; left: 10px; top: 20px; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+  .row.out { opacity: 0; transform: translateX(-46px); height: 0; padding-top: 0; padding-bottom: 0; border-color: transparent; }
+  .row .a { display: flex; align-items: baseline; gap: 8px; }
+  .row .a b { font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.unread .a b { font-weight: 600; }
+  .row .a time { font-size: 11.5px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  .row .s { margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .row .p { margin-top: 3px; color: var(--mute); font-size: 12px; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
+  .tg { flex: none; font-size: 10.5px; font-weight: 500; padding: 1px 6px; border-radius: 4px; background: var(--b); color: var(--c); }
+  .row .sn { color: var(--warn); font-size: 11.5px; }
+  .empty { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-bottom: 40px; }
+  .empty.on { display: flex; }
+  .empty svg { width: 150px; height: 120px; stroke-width: 1.3; color: var(--ink); }
+  .empty svg .dr { stroke-dasharray: 260; stroke-dashoffset: 260; animation: draw 1.4s ease forwards; }
+  .empty svg .dr2 { stroke-dasharray: 80; stroke-dashoffset: 80; animation: draw .8s .9s ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .empty h3 { font-family: "Noto Serif SC", serif; font-size: 18px; font-weight: 600; margin-top: 14px; }
+  .empty p { color: var(--mute); margin-top: 6px; font-size: 12.5px; }
+  .empty button { margin-top: 16px; font-size: 12px; color: var(--ink2); border-bottom: 1px solid var(--line); padding-bottom: 1px; }
+  .empty button:hover { color: var(--ink); border-color: var(--ink); }
+
+  .pv { display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
+  .pvh { flex: none; height: 52px; border-bottom: 1px solid var(--line2); display: flex; align-items: center; padding: 0 28px; gap: 6px; }
+  .ia { height: 30px; padding: 0 10px; border-radius: 7px; display: flex; align-items: center; gap: 7px; color: var(--ink2); font-size: 12.5px; transition: background .12s; }
+  .ia:hover { background: var(--wash); color: var(--ink); }
+  .ia em { font: 500 10.5px "JetBrains Mono"; font-style: normal; color: var(--mute); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+  .pvh .sp2 { flex: 1; }
+  .pvh .cnt { font-size: 12px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  .pvb { flex: 1; overflow-y: auto; padding: 30px 56px 120px; scrollbar-width: thin; }
+  .pvb .inner { max-width: 700px; margin: 0 auto; animation: fade .3s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .pvb h1 { font-family: "Noto Serif SC", serif; font-size: 27px; line-height: 1.4; font-weight: 600; letter-spacing: -.01em; }
+  .from { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  .av { width: 36px; height: 36px; border-radius: 50%; background: var(--wash); display: grid; place-items: center; font-weight: 600; font-size: 13px; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--line); }
+  .from b { font-weight: 600; } .from span { color: var(--mute); font-size: 12px; display: block; margin-top: 1px; }
+  .from time { margin-left: auto; font-size: 12px; color: var(--mute); }
+  .body { margin-top: 26px; line-height: 1.85; font-size: 14.5px; color: #2a2c2a; }
+  .body p + p { margin-top: 12px; }
+  .kv { margin-top: 22px; border-top: 1px solid var(--ink); }
+  .kv div { display: grid; grid-template-columns: 112px 1fr; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .kv dt { color: var(--mute); font-size: 12.5px; } .kv dd { font-weight: 500; font-variant-numeric: tabular-nums; }
+  .kv dd small { font-weight: 400; color: var(--mute); margin-left: 8px; }
+  .chart { margin-top: 22px; }
+  .chart svg { width: 100%; height: 120px; stroke-width: 1.5; }
+  .chart .cap { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--mute); margin-top: 4px; }
+  .nodes { margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 24px; }
+  .nodes div { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line2); font-size: 12.5px; }
+  .nodes b { font-weight: 400; color: var(--ok); display: flex; align-items: center; gap: 5px; }
+  .act { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 56px 20px; background: linear-gradient(to top, #fff 70%, rgba(255,255,255,0)); }
+  .act .in { max-width: 700px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
+  .btn { height: 38px; padding: 0 18px; border-radius: 9px; font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 8px; transition: transform .1s, background .15s; }
+  .btn:active { transform: scale(.97); }
+  .btn.pri { background: var(--ink); color: #fff; } .btn.pri:hover { background: #33363a; }
+  .btn.sec { box-shadow: inset 0 0 0 1px var(--line); } .btn.sec:hover { background: var(--wash); }
+  .btn.danger { color: var(--bad); box-shadow: inset 0 0 0 1px #efc9c1; } .btn.danger:hover { background: var(--bad-bg); }
+  .act .hint { margin-left: auto; font-size: 11.5px; color: var(--mute); }
+  .reason { flex: 1; display: flex; align-items: center; gap: 8px; height: 38px; border-radius: 9px; padding: 0 12px; box-shadow: inset 0 0 0 1px #efc9c1; background: #fffafa; }
+  .reason input { flex: 1; }
+  .reason small { color: var(--mute); font-size: 11.5px; white-space: nowrap; }
+  .done { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 6px; }
+  .none { height: 100%; display: grid; place-items: center; color: var(--mute); }
+
+  .snz { position: fixed; z-index: 40; width: 250px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px var(--line), 0 16px 40px rgba(20,20,10,.14); padding: 6px; display: none; }
+  .snz.on { display: block; animation: fade .18s both; }
+  .snz h5 { font-size: 11.5px; color: var(--mute); font-weight: 500; padding: 8px 10px 6px; }
+  .snz button { width: 100%; display: flex; align-items: center; height: 34px; padding: 0 10px; border-radius: 7px; gap: 10px; text-align: left; }
+  .snz button:hover, .snz button.f { background: var(--wash); }
+  .snz button span { flex: 1; } .snz button em { font: 400 11.5px "Inter"; font-style: normal; color: var(--mute); }
+  .snz button b { font: 500 10.5px "JetBrains Mono"; color: var(--mute); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+  .toast { position: fixed; left: 242px; bottom: 26px; transform: translateY(20px); background: var(--ink); color: #fff; padding: 9px 10px 9px 16px; border-radius: 10px; font-size: 12.5px; opacity: 0; pointer-events: none; transition: .3s; z-index: 60; display: flex; gap: 14px; align-items: center; }
+  .toast.on { opacity: 1; transform: none; pointer-events: auto; }
+  .toast button { color: #cfe9dc; font-weight: 600; padding: 2px 8px; border-radius: 5px; } .toast button:hover { background: rgba(255,255,255,.12); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="who"><i>陆</i><div><b>陆遥</b><span>运维组</span></div></div>
+    <div class="nv on" data-v="inbox"><svg viewBox="0 0 16 16"><path d="M2 9.5 4 3h8l2 6.5M2 9.5V13h12V9.5M2 9.5h3.5l.7 1.5h3.6l.7-1.5H14"/></svg>收件箱<span class="n" id="nInbox"></span></div>
+    <div class="nv" data-v="snoozed"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.8V8l2.2 1.4"/></svg>稍后<span class="n" id="nSnz"></span></div>
+    <div class="nv" data-v="done"><svg viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5"/></svg>已处理<span class="n" id="nDone"></span></div>
+    <h6>类型</h6>
+    <div class="nv" data-t="审批"><i class="dot" style="--c:var(--ink)"></i>资源申请<span class="n" id="tA"></span></div>
+    <div class="nv" data-t="告警"><i class="dot" style="--c:var(--bad)"></i>费用告警<span class="n" id="tB"></span></div>
+    <div class="nv" data-t="交付"><i class="dot" style="--c:var(--ok)"></i>交付完成<span class="n" id="tC"></span></div>
+    <div class="keys">
+      <div><span>上一封 / 下一封</span><b>K / J</b></div>
+      <div><span>归档</span><b>E</b></div>
+      <div><span>稍后</span><b>H</b></div>
+      <div><span>撤销</span><b>Z</b></div>
+    </div>
+    <div class="demo">示例数据</div>
+  </aside>
+
+  <section class="list">
+    <div class="lh">
+      <h2 id="lt">收件箱<small id="ls"></small></h2>
+      <div class="splits" id="splits"></div>
+    </div>
+    <div class="rows" id="rows">
+      <div class="empty" id="empty">
+        <svg viewBox="0 0 150 120"><path class="dr" d="M20 70 36 30h78l16 40M20 70v30a4 4 0 0 0 4 4h102a4 4 0 0 0 4-4V70M20 70h34l6 14h30l6-14h34"/><path class="dr2" d="M62 54l9 9 18-20"/><path class="dr2" d="M110 14v8M106 18h8M30 16v6M27 19h6"/></svg>
+        <h3 id="et">全部处理完了</h3><p id="ep">这一栏已经清空。</p>
+        <button id="reset">恢复示例邮件</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv">
+    <div class="pvh">
+      <button class="ia" id="bA"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="3" rx="1"/><path d="M3 6v6.5h10V6M6.5 9h3"/></svg>归档<em>E</em></button>
+      <button class="ia" id="bH"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.8V8l2.2 1.4"/></svg>稍后<em>H</em></button>
+      <span class="sp2"></span><span class="cnt" id="cnt"></span>
+    </div>
+    <div class="pvb" id="pvb"></div>
+    <div class="act" id="act"></div>
+  </section>
+</div>
+<div class="snz" id="snz"><h5>什么时候再提醒你</h5>
+  <button data-k="1"><span>今天傍晚</span><em>18:00</em><b>1</b></button>
+  <button data-k="2"><span>明天早上</span><em>周四 09:00</em><b>2</b></button>
+  <button data-k="3"><span>下周一</span><em>11月23日 09:00</em><b>3</b></button>
+  <button data-k="4"><span>下个月初</span><em>12月1日 09:00</em><b>4</b></button></div>
+<div class="toast" id="toast"><span id="tmsg"></span><button id="undo">撤销</button></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const TAGS = { 审批: ["var(--ink)", "var(--wash)"], 告警: ["var(--bad)", "var(--bad-bg)"], 交付: ["var(--ok)", "var(--ok-bg)"], 系统: ["var(--ink2)", "var(--wash)"], 维保: ["var(--warn)", "var(--warn-bg)"] };
+const DATA = [
+  { id: 1, type: "审批", imp: 1, from: "张弛", org: "算法一部", av: "张", time: "09:42", subj: "申请 H100 × 16 卡，使用 14 天", snip: "用于 70B 模型继续预训练，数据已就绪", body: ["张弛提交了一份 GPU 资源申请，用于 70B 模型的继续预训练，训练数据和 checkpoint 已迁移到集群存储。", "按部门当前额度，这次申请会使算法一部本月 H100 使用达到额度的 86%。"], kv: [["资源", "H100 80G × 16（2 节点）"], ["使用时长", "14 天", "11月19日 – 12月3日"], ["所属部门", "算法一部"], ["预估费用", "¥ 268,800", "按合同价 ¥ 50 / 卡·时"], ["池内余量", "H100-A 剩 24 卡", "批准后剩 8 卡"]] },
+  { id: 2, type: "告警", imp: 1, from: "费用监控", org: "系统", av: "监", time: "09:15", subj: "A800 池本月费用已达预算 92%", snip: "按当前速度预计 11月26日 超出预算", body: ["A800 资源池本月累计费用 ¥ 1,288,400，预算 ¥ 1,400,000，已使用 92%。", "按最近 7 天日均 ¥ 46,200 推算，预计 11 月 26 日触达预算上限。主要增量来自推理集群 2 号节点组。"], chart: [38, 40, 41, 43, 44, 47, 52, 58, 61, 66, 72, 79, 86, 92], kv: [["本月累计", "¥ 1,288,400"], ["预算", "¥ 1,400,000"], ["日均（近 7 天）", "¥ 46,200", "较上周 +18%"]] },
+  { id: 3, type: "审批", imp: 1, from: "林栋", org: "多模态组", av: "林", time: "08:58", subj: "申请续期 A800 × 8，延长到 12 月 31 日", snip: "原到期日 11月30日，评测任务未完成", body: ["林栋申请将 A800 × 8 的使用期限延长 31 天，原因是多模态评测任务排期延后。", "该资源近 14 天平均利用率 71%。"], kv: [["资源", "A800 80G × 8"], ["原到期日", "11月30日"], ["新到期日", "12月31日", "延长 31 天"], ["近 14 天利用率", "71%"], ["预估费用", "¥ 74,400"]] },
+  { id: 4, type: "交付", from: "陈婕", org: "交付组", av: "陈", time: "昨天", subj: "L20 × 4 已交付给语音组", snip: "节点 gn-l20-017 / 018，SSH 已开通", body: ["语音组申请的 L20 × 4 已完成交付，节点已加入对方的网络分区，SSH 密钥已下发。", "交付单 DL-20261117-03 已关闭。"], nodes: [["gn-l20-017", "已验收"], ["gn-l20-018", "已验收"]] },
+  { id: 5, type: "审批", imp: 1, from: "周晓雯", org: "数据平台", av: "周", time: "昨天", subj: "申请并行文件系统扩容 40 TB", snip: "标注数据增长，剩余空间 6%", body: ["周晓雯申请为数据平台的并行文件系统扩容 40 TB。当前总容量 320 TB，剩余 6%。"], kv: [["资源", "并行文件系统 + 40 TB"], ["所属部门", "数据平台"], ["预估费用", "¥ 4,800 / 月"], ["当前使用率", "94%"]] },
+  { id: 6, type: "告警", imp: 1, from: "费用监控", org: "系统", av: "监", time: "昨天", subj: "推理集群昨日费用环比 +38%", snip: "新增 L40S × 12 弹性节点，未设自动回收", body: ["推理集群昨日费用 ¥ 31,780，较前一日上涨 38%。", "增量来自 12 台 L40S 弹性节点，创建后没有设置自动回收时间。"], chart: [22, 23, 22, 24, 23, 25, 23, 31], kv: [["昨日费用", "¥ 31,780"], ["前一日", "¥ 23,030"], ["增量来源", "L40S × 12", "弹性节点"]] },
+  { id: 7, type: "系统", from: "账单中心", org: "系统", av: "账", time: "11月16日", subj: "云厂商 10 月账单已出账", snip: "合计 ¥ 3,926,500，待核对", body: ["云厂商 10 月账单已出账，合计 ¥ 3,926,500。其中算力 ¥ 3,410,200，存储 ¥ 388,700，网络 ¥ 127,600。"], kv: [["算力", "¥ 3,410,200"], ["存储", "¥ 388,700"], ["网络", "¥ 127,600"], ["合计", "¥ 3,926,500"]] },
+  { id: 8, type: "审批", imp: 1, from: "吴嘉豪", org: "推荐算法", av: "吴", time: "11月16日", subj: "临时申请 910B × 8，使用 3 天", snip: "线上模型回归验证，需尽快", body: ["吴嘉豪提交了临时资源申请，用于线上模型的回归验证。"], kv: [["资源", "昇腾 910B × 8"], ["使用时长", "3 天", "11月19日 – 11月21日"], ["预估费用", "¥ 15,840"], ["池内余量", "910B-C 剩 16 卡"]] },
+  { id: 9, type: "交付", from: "陈婕", org: "交付组", av: "陈", time: "11月16日", subj: "H100 × 8 已交付给搜索组", snip: "节点 gn-h100-031，已验收", body: ["搜索组申请的 H100 × 8 已完成交付并通过验收。"], nodes: [["gn-h100-031", "已验收"]] },
+  { id: 10, type: "系统", from: "资源周报", org: "系统", av: "报", time: "11月15日", subj: "资源管理周报 · 11 月第 3 周", snip: "整体利用率 63.4%，较上周 +2.1 个百分点", body: ["本周 GPU 整体利用率 63.4%，较上周上升 2.1 个百分点。", "利用率低于 30% 的节点有 14 台，已列入下周清理建议。"], kv: [["整体利用率", "63.4%", "+2.1 pt"], ["低利用节点", "14 台"], ["本周新增申请", "37 单"]] },
+  { id: 11, type: "审批", imp: 1, from: "郑一鸣", org: "安全组", av: "郑", time: "11月15日", subj: "申请公网 IP × 4", snip: "用于渗透测试环境", body: ["郑一鸣申请 4 个公网 IP 用于渗透测试环境，使用期限 30 天。"], kv: [["资源", "公网 IP × 4"], ["使用期限", "30 天"], ["预估费用", "¥ 960"]] },
+  { id: 12, type: "维保", from: "机房运维", org: "运维组", av: "运", time: "11月14日", subj: "周六 B1 机房搬迁演练，影响 22 台节点", snip: "11月21日 08:00 – 14:00", body: ["11 月 21 日 08:00 至 14:00 进行 B1 机房搬迁演练，期间 22 台节点会短暂下线，已通知相关使用方。"], kv: [["时间", "11月21日 08:00 – 14:00"], ["影响节点", "22 台"], ["负责人", "运维组 · 孙立"]] }
+];
+let items, sel, split, view, typ, lastUndo, snzTarget, rejecting;
+function init() { items = DATA.map((d) => ({ ...d, st: "inbox", read: false, res: null })); split = "important"; view = "inbox"; typ = null; sel = 1; rejecting = false; renderAll(); }
+const inView = () => items.filter((i) => {
+  if (view === "snoozed") return i.st === "snoozed";
+  if (view === "done") return i.st === "done";
+  if (i.st !== "inbox") return false;
+  if (typ) return i.type === typ;
+  return split === "important" ? i.imp : !i.imp;
+});
+const count = (f) => items.filter(f).length;
+
+function renderAll() { renderNav(); renderList(); renderPreview(); }
+function renderNav() {
+  $("#nInbox").textContent = count((i) => i.st === "inbox"); $("#nSnz").textContent = count((i) => i.st === "snoozed") || ""; $("#nDone").textContent = count((i) => i.st === "done") || "";
+  $("#tA").textContent = count((i) => i.st === "inbox" && i.type === "审批") || ""; $("#tB").textContent = count((i) => i.st === "inbox" && i.type === "告警") || ""; $("#tC").textContent = count((i) => i.st === "inbox" && i.type === "交付") || "";
+  $$(".nv").forEach((n) => n.classList.toggle("on", n.dataset.t ? typ === n.dataset.t && view === "inbox" : !typ && n.dataset.v === view));
+  const imp = count((i) => i.st === "inbox" && i.imp), oth = count((i) => i.st === "inbox" && !i.imp), sn = count((i) => i.st === "snoozed");
+  $("#splits").innerHTML = view === "inbox" && !typ
+    ? [["important", "重要", imp], ["other", "其他", oth], ["snoozed", "稍后", sn]].map(([k, n, c]) => `<button class="sp${(k === split) ? " on" : ""}" data-k="${k}">${n}<i>${c}</i></button>`).join("")
+    : `<button class="sp on">${typ ? typ === "审批" ? "资源申请" : typ === "告警" ? "费用告警" : "交付完成" : view === "snoozed" ? "稍后" : "已处理"}<i>${inView().length}</i></button>`;
+  $("#lt").firstChild.textContent = view === "inbox" ? "收件箱" : view === "snoozed" ? "稍后" : "已处理";
+  const need = count((i) => i.st === "inbox" && i.type === "审批");
+  $("#ls").textContent = view === "inbox" ? (need ? `${need} 项待你审批` : "") : "";
+}
+function renderList() {
+  const rows = $("#rows"), list = inView();
+  $$(".row", rows).forEach((r) => r.remove());
+  if (!list.some((i) => i.id === sel)) sel = list.length ? list[0].id : null;
+  const frag = document.createDocumentFragment();
+  list.forEach((i) => {
+    const el = document.createElement("div");
+    el.className = "row" + (i.id === sel ? " sel" : "") + (!i.read && i.st === "inbox" ? " unread" : "");
+    el.dataset.id = i.id;
+    const [c, b] = TAGS[i.type];
+    el.innerHTML = `<div class="a"><b>${i.from}<span style="font-weight:400;color:var(--mute)"> · ${i.org}</span></b><time>${i.snz && i.st === "snoozed" ? "" : i.time}</time></div>
+      <div class="s">${i.subj}</div>
+      <div class="p"><span class="tg" style="--c:${c};--b:${b}">${i.type === "审批" ? (i.res ? (i.res === "ok" ? "已同意" : "已驳回") : "待审批") : i.type}</span>${i.st === "snoozed" ? `<span class="sn">${i.snz} 回到收件箱</span>` : `<span style="overflow:hidden;text-overflow:ellipsis">${i.snip}</span>`}</div>`;
+    frag.appendChild(el);
+  });
+  rows.appendChild(frag);
+  const e = $("#empty"); e.classList.toggle("on", !list.length);
+  if (!list.length) {
+    const all = count((i) => i.st === "inbox");
+    $("#et").textContent = view === "snoozed" ? "没有稍后处理的事项" : view === "done" ? "还没有处理过的事项" : all === 0 ? "全部处理完了" : split === "important" && !typ ? "重要的都处理完了" : "这一栏已经清空";
+    $("#ep").textContent = view === "inbox" && all === 0 ? "收件箱已清空，去喝杯水吧。" : view === "inbox" ? `「其他」里还有 ${count((i) => i.st === "inbox")} 封。` : "按 E 归档、H 稍后，处理过的会出现在这里。";
+    const svg = $("#empty svg"); svg.innerHTML = svg.innerHTML; // 重播线条
+  }
+  $("#cnt").textContent = list.length && sel ? `${list.findIndex((i) => i.id === sel) + 1} / ${list.length}` : "";
+}
+function renderPreview() {
+  const i = items.find((x) => x.id === sel), pb = $("#pvb"), act = $("#act");
+  $("#bA").style.visibility = $("#bH").style.visibility = i ? "visible" : "hidden";
+  if (!i) { pb.innerHTML = `<div class="none">没有选中的事项</div>`; act.innerHTML = ""; return; }
+  i.read = true;
+  const [c, b] = TAGS[i.type];
+  let h = `<div class="inner" key="${i.id}"><h1>${i.subj}</h1>
+    <div class="from"><div class="av">${i.av}</div><div><b>${i.from}</b><span>${i.org}</span></div><time>${i.type === "审批" ? "" : ""}${i.time === "昨天" ? "昨天" : i.time.includes("月") ? i.time : "今天 " + i.time}</time></div>
+    <div class="body">${i.body.map((p) => `<p>${p}</p>`).join("")}</div>`;
+  if (i.kv) h += `<dl class="kv">${i.kv.map((r) => `<div><dt>${r[0]}</dt><dd>${r[1]}${r[2] ? `<small>${r[2]}</small>` : ""}</dd></div>`).join("")}</dl>`;
+  if (i.chart) h += chartSvg(i.chart, i.id === 2);
+  if (i.nodes) h += `<div class="nodes">${i.nodes.map((n) => `<div class="mono">${n[0]}<b><svg viewBox="0 0 16 16" style="width:13px;height:13px"><path d="M3 8.5 6.5 12 13 4.5"/></svg>${n[1]}</b></div>`).join("")}</div>`;
+  h += "</div>";
+  pb.innerHTML = h;
+  let a = "";
+  if (i.st === "done") a = `<div class="in"><span class="done" style="background:var(--wash);color:var(--ink2)">已处理${i.res === "ok" ? " · 已同意" : i.res === "no" ? " · 已驳回" : ""}</span></div>`;
+  else if (i.type === "审批" && !i.res) {
+    a = rejecting
+      ? `<div class="in"><div class="reason"><input id="rsn" placeholder="写一句驳回理由，回车确认" maxlength="40"><small>Esc 取消</small></div><button class="btn sec" id="bCancel">取消</button></div>`
+      : `<div class="in"><button class="btn pri" id="bOk"><svg viewBox="0 0 16 16" style="stroke:#fff"><path d="M3 8.5 6.5 12 13 4.5"/></svg>同意</button><button class="btn danger" id="bNo">驳回</button><span class="hint">同意后自动进入下一封</span></div>`;
+  } else if (i.type === "告警") a = `<div class="in"><button class="btn pri" id="bKnow">已知悉并归档</button><button class="btn sec" id="bGo">去看费用明细</button></div>`;
+  else a = `<div class="in"><button class="btn sec" id="bAr">归档</button></div>`;
+  act.innerHTML = a;
+  const q = (s, f) => { const e = $(s); if (e) e.onclick = f; };
+  q("#bOk", () => decide("ok")); q("#bNo", () => { rejecting = true; renderPreview(); $("#rsn").focus(); }); q("#bCancel", () => { rejecting = false; renderPreview(); });
+  q("#bKnow", () => archive()); q("#bAr", () => archive()); q("#bGo", () => toast("已打开费用明细（示意）", true));
+  const r = $("#rsn"); if (r) r.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") decide("no", r.value); if (e.key === "Escape") { rejecting = false; renderPreview(); } };
+}
+function chartSvg(d, bud) {
+  const W = 700, H = 120, mx = Math.max(...d, bud ? 100 : 0) * 1.05, mn = 0, x = (k) => k / (d.length - 1) * (W - 6) + 3, y = (v) => H - 8 - (v - mn) / (mx - mn) * (H - 20);
+  const p = d.map((v, k) => `${k ? "L" : "M"}${x(k).toFixed(1)} ${y(v).toFixed(1)}`).join("");
+  const last = d.length - 1;
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${bud ? `<line x1="0" x2="${W}" y1="${y(100)}" y2="${y(100)}" stroke="#c4452f" stroke-dasharray="4 4" stroke-width="1"/>` : ""}<path d="${p}" stroke="#17181a" vector-effect="non-scaling-stroke"/><circle cx="${x(last)}" cy="${y(d[last])}" r="4" fill="#c4452f" stroke="none"/></svg><div class="cap"><span>${bud ? "11月1日 – 11月18日 · 预算使用率 %" : "近 8 天 · 日费用（千元）"}</span><span>${bud ? "虚线为 100% 预算" : "昨日 31.8"}</span></div></div>`;
+}
+
+/* 操作 */
+function pick(id) { sel = id; rejecting = false; renderAll(); $(`.row[data-id="${id}"]`)?.scrollIntoView({ block: "nearest" }); }
+function move(d) { const l = inView(); if (!l.length) return; const k = Math.max(0, Math.min(l.length - 1, l.findIndex((i) => i.id === sel) + d)); pick(l[k].id); }
+function leave(i, patch, msg) {
+  const l = inView(), k = l.findIndex((x) => x.id === i.id), next = l[k + 1] || l[k - 1];
+  lastUndo = { id: i.id, prev: { st: i.st, res: i.res, snz: i.snz } };
+  const el = $(`.row[data-id="${i.id}"]`); if (el) el.className = "row out";
+  Object.assign(i, patch); sel = next && next.id !== i.id ? next.id : null; rejecting = false;
+  renderNav(); renderPreview(); $$(".row:not(.out)").forEach((r) => r.classList.toggle("sel", +r.dataset.id === sel));
+  setTimeout(renderList, 270);
+  toast(msg, true);
+}
+function archive() { const i = items.find((x) => x.id === sel); if (i && i.st === "inbox") leave(i, { st: "done" }, `已归档「${i.subj.slice(0, 14)}…」`); }
+function decide(r, why) { const i = items.find((x) => x.id === sel); if (!i) return; leave(i, { st: "done", res: r }, r === "ok" ? `已同意 ${i.from} 的申请，已通知对方` : `已驳回${why ? "：" + why : ""}，已通知 ${i.from}`); }
+function snooze(k) {
+  const i = snzTarget; closeSnz(); if (!i) return;
+  const t = { 1: "今天 18:00", 2: "明天 09:00", 3: "11月23日 09:00", 4: "12月1日 09:00" }[k];
+  leave(i, { st: "snoozed", snz: t }, `已稍后，${t} 回到收件箱`);
+}
+function openSnz() {
+  const i = items.find((x) => x.id === sel); if (!i || i.st !== "inbox") return; snzTarget = i;
+  const el = $("#snz"), r = $("#bH").getBoundingClientRect(); el.style.left = Math.min(r.left, innerWidth - 270) + "px"; el.style.top = r.bottom + 6 + "px"; el.classList.add("on");
+}
+function closeSnz() { $("#snz").classList.remove("on"); snzTarget = null; }
+$("#snz").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) snooze(b.dataset.k); });
+document.addEventListener("pointerdown", (e) => { if (!e.target.closest("#snz") && !e.target.closest("#bH")) closeSnz(); });
+let tt; function toast(m, undo) { $("#tmsg").textContent = m; $("#undo").style.display = undo ? "" : "none"; $("#toast").classList.add("on"); clearTimeout(tt); tt = setTimeout(() => $("#toast").classList.remove("on"), 3200); }
+function undo() { if (!lastUndo) return; const i = items.find((x) => x.id === lastUndo.id); Object.assign(i, lastUndo.prev); if (view === "done" || view === "snoozed") { view = "inbox"; } sel = i.id; typ = null; split = i.imp ? "important" : "other"; lastUndo = null; $("#toast").classList.remove("on"); renderAll(); }
+$("#undo").onclick = undo;
+
+$("#rows").addEventListener("click", (e) => { const r = e.target.closest(".row"); if (r) pick(+r.dataset.id); });
+$("#splits").addEventListener("click", (e) => { const b = e.target.closest(".sp"); if (!b || !b.dataset.k) return; if (b.dataset.k === "snoozed") { view = "snoozed"; typ = null; } else split = b.dataset.k; sel = null; rejecting = false; renderAll(); });
+$$(".nv").forEach((n) => (n.onclick = () => { if (n.dataset.t) { typ = n.dataset.t; view = "inbox"; } else { view = n.dataset.v; typ = null; } sel = null; rejecting = false; renderAll(); }));
+$("#bA").onclick = archive; $("#bH").onclick = openSnz; $("#reset").onclick = init;
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.metaKey || e.ctrlKey) return;
+  const k = e.key.toLowerCase();
+  if ($("#snz").classList.contains("on")) { if ("1234".includes(k) && k) snooze(k); else if (k === "escape") closeSnz(); return; }
+  if (k === "j" || k === "arrowdown") { e.preventDefault(); move(1); }
+  else if (k === "k" || k === "arrowup") { e.preventDefault(); move(-1); }
+  else if (k === "e") archive();
+  else if (k === "h") { e.preventDefault(); openSnz(); }
+  else if (k === "z") undo();
+});
+init();
+</script>
+</body>
+</html>

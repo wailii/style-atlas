@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关系记录 · 供应商</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #fbfbfc; --pn: #fff; --line: #e8e9ed; --line2: #f1f2f5; --ink: #1b1c20; --ink2: #5d6068; --mute: #9b9ea8; --acc: #e0502a; --acc-bg: #fdf0eb; --ok: #1d8a5b; --ok-bg: #e5f4ec; --warn: #b4730a; --warn-bg: #fcf1dc; --bad: #c93b3b; --bad-bg: #fbe9e9; --gray-bg: #f1f2f5; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: "Inter", "Noto Sans SC", sans-serif; font-size: 13px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  button, input, select { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+  input { cursor: text; }
+  svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .num { font-variant-numeric: tabular-nums; }
+  .app { height: 100vh; display: grid; grid-template-columns: 52px 1fr; min-width: 1100px; }
+  .rail { border-right: 1px solid var(--line); background: var(--pn); display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 4px; }
+  .rail .lg { width: 28px; height: 28px; border-radius: 8px; background: var(--ink); display: grid; place-items: center; margin-bottom: 12px; }
+  .rail .lg svg { stroke: #fff; width: 15px; height: 15px; }
+  .rail button { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; color: var(--mute); transition: background .12s, color .12s; position: relative; }
+  .rail button:hover { background: var(--gray-bg); color: var(--ink2); }
+  .rail button.on { background: var(--gray-bg); color: var(--ink); }
+  .rail .sp { flex: 1; }
+  .demo { writing-mode: vertical-rl; font-size: 10px; color: var(--mute); padding-top: 8px; }
+
+  .main { display: flex; flex-direction: column; min-width: 0; height: 100vh; position: relative; overflow: hidden; }
+  .hd { flex: none; background: var(--pn); border-bottom: 1px solid var(--line); padding: 16px 28px 0; }
+  .hd .r1 { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 40px; height: 40px; border-radius: 10px; background: var(--ink); display: grid; place-items: center; }
+  .logo svg { width: 22px; height: 22px; stroke: #fff; stroke-width: 1.6; }
+  .hd h1 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+  .hd .sub { font-size: 12px; color: var(--mute); margin-top: 3px; display: flex; gap: 8px; align-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 8px; border-radius: 10px; font-size: 11.5px; font-weight: 500; background: var(--b, var(--gray-bg)); color: var(--c, var(--ink2)); white-space: nowrap; }
+  .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+  .hd .acts { margin-left: auto; display: flex; gap: 8px; }
+  .b { height: 30px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12.5px; box-shadow: inset 0 0 0 1px var(--line); background: #fff; transition: background .12s; }
+  .b:hover { background: var(--gray-bg); }
+  .b.pri { background: var(--ink); color: #fff; box-shadow: none; } .b.pri:hover { background: #34363c; }
+  .tabs { display: flex; gap: 24px; margin-top: 14px; }
+  .tab { position: relative; padding: 0 0 11px; color: var(--mute); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .tab:hover { color: var(--ink2); } .tab.on { color: var(--ink); }
+  .tab i { font-style: normal; font-size: 11px; color: var(--mute); }
+  .tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--acc); transform: scaleX(0); transition: transform .2s; }
+  .tab.on::after { transform: scaleX(1); }
+
+  .body { flex: 1; min-height: 0; display: grid; grid-template-columns: 340px 1fr; }
+  .props { border-right: 1px solid var(--line); background: var(--pn); overflow-y: auto; padding: 8px 0 24px; scrollbar-width: thin; }
+  .grp { padding: 14px 20px 6px; }
+  .grp h4 { font-size: 11.5px; font-weight: 500; color: var(--mute); margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .pr { display: grid; grid-template-columns: 92px 1fr; align-items: center; min-height: 34px; position: relative; }
+  .pr .k { color: var(--mute); font-size: 12.5px; display: flex; align-items: center; gap: 7px; }
+  .pr .k svg { width: 13px; height: 13px; }
+  .pr .v { min-height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 8px; margin-left: -8px; border-radius: 6px; cursor: text; transition: background .1s; position: relative; min-width: 0; }
+  .pr .v:hover { background: var(--gray-bg); }
+  .pr .v:hover::after { content: ""; position: absolute; right: 8px; width: 12px; height: 12px; background: no-repeat center/contain url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%239b9ea8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M10.5 3 13 5.5 5.5 13H3v-2.5z'/></svg>"); }
+  .pr .v.sel { cursor: pointer; }
+  .pr .v .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pr .v.flash { animation: fl 1.2s ease; }
+  @keyframes fl { 0% { background: var(--acc-bg); } 100% { background: transparent; } }
+  .pr input { width: calc(100% + 8px); margin-left: -8px; height: 28px; border-radius: 6px; padding: 0 8px; box-shadow: 0 0 0 1.5px var(--acc); background: #fff; }
+  .av { width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 10px; font-weight: 600; display: grid; place-items: center; flex: none; }
+  .rel { margin: 4px 0 0; display: grid; gap: 6px; }
+  .card { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; text-align: left; width: 100%; transition: box-shadow .12s, background .12s; }
+  .card:hover { background: var(--bg); box-shadow: inset 0 0 0 1px #d3d5dc; }
+  .card .ic { width: 28px; height: 28px; border-radius: 7px; background: var(--gray-bg); display: grid; place-items: center; color: var(--ink2); flex: none; }
+  .card b { font-weight: 500; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+  .card span.s { color: var(--mute); font-size: 11.5px; display: block; margin-top: 1px; }
+  .card .pill { margin-left: auto; }
+
+  .center { overflow-y: auto; padding: 20px 32px 40px; scrollbar-width: thin; }
+  .center .in { max-width: 900px; }
+  .ft { display: flex; align-items: center; gap: 6px; margin-bottom: 18px; }
+  .ft h3 { font-size: 14px; font-weight: 600; margin-right: 10px; }
+  .chip { height: 26px; padding: 0 10px; border-radius: 13px; font-size: 12px; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--line); display: inline-flex; align-items: center; gap: 6px; transition: all .12s; background: #fff; }
+  .chip:hover { background: var(--gray-bg); }
+  .chip.on { background: var(--ink); color: #fff; box-shadow: none; }
+  .chip i { font-style: normal; font-size: 11px; opacity: .6; }
+  .day { font-size: 11.5px; font-weight: 500; color: var(--mute); margin: 18px 0 10px 40px; }
+  .tl { position: relative; }
+  .tl::before { content: ""; position: absolute; left: 13px; top: 4px; bottom: 4px; width: 1px; background: var(--line); }
+  .it { position: relative; display: flex; gap: 14px; padding: 7px 0; animation: up .3s ease both; }
+  @keyframes up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  .it .dot { width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px var(--line); display: grid; place-items: center; color: var(--ink2); z-index: 1; flex: none; }
+  .it .dot.mail { color: #7a5ad0; } .it .dot.cal { color: #0e8f7e; } .it .dot.bill { color: var(--warn); } .it .dot.tk { color: var(--bad); } .it .dot.ed { color: var(--mute); }
+  .it .tx { flex: 1; min-width: 0; padding-top: 3px; }
+  .it .ttl { line-height: 1.5; } .it .ttl b { font-weight: 600; }
+  .it .tm { float: right; color: var(--mute); font-size: 11.5px; margin-left: 12px; font-variant-numeric: tabular-nums; }
+  .it .snip { margin-top: 4px; color: var(--ink2); line-height: 1.6; background: var(--bg); border-radius: 8px; padding: 8px 12px; box-shadow: inset 0 0 0 1px var(--line2); }
+  .lk { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; border-radius: 5px; box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; cursor: pointer; vertical-align: 1px; background: #fff; margin: 0 2px; transition: all .12s; }
+  .lk:hover { box-shadow: inset 0 0 0 1px var(--acc); color: var(--acc); }
+  .lk svg { width: 11px; height: 11px; color: var(--mute); }
+  .lk:hover svg { color: var(--acc); }
+  .none { text-align: center; color: var(--mute); padding: 40px 0; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 500; color: var(--mute); font-size: 12px; padding: 0 12px 8px; border-bottom: 1px solid var(--line); }
+  td { height: 46px; padding: 0 12px; border-bottom: 1px solid var(--line2); }
+  tr.rw { cursor: pointer; transition: background .1s; } tr.rw:hover { background: #f6f7f9; }
+  th.r, td.r { text-align: right; }
+  .barc { display: inline-block; width: 90px; height: 4px; border-radius: 2px; background: var(--line2); vertical-align: middle; margin-right: 10px; overflow: hidden; } .barc i { display: block; height: 100%; background: var(--ink); }
+  .ctl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+  .stat { padding: 14px 16px; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
+  .stat span { color: var(--mute); font-size: 12px; } .stat b { display: block; font-size: 22px; font-weight: 600; margin-top: 4px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat b small { font-size: 12px; font-weight: 400; color: var(--mute); margin-left: 2px; }
+
+  .scrim { position: absolute; inset: 0; z-index: 20; display: none; }
+  .scrim.on { display: block; }
+  .sl { position: absolute; top: 0; right: 0; bottom: 0; width: 440px; background: #fff; z-index: 21; box-shadow: -1px 0 0 var(--line), -20px 0 50px rgba(20,22,30,.08); transform: translateX(104%); transition: transform .3s cubic-bezier(.2,.9,.3,1); display: flex; flex-direction: column; }
+  .sl.on { transform: none; }
+  .sl .sh { flex: none; padding: 16px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+  .sl .sh .ic { width: 28px; height: 28px; border-radius: 7px; background: var(--gray-bg); display: grid; place-items: center; }
+  .sl .sh h2 { font-size: 15px; font-weight: 600; flex: 1; min-width: 0; line-height: 1.35; }
+  .sl .sb { flex: 1; overflow-y: auto; padding: 18px 20px 30px; }
+  .sl .x { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; color: var(--mute); } .sl .x:hover { background: var(--gray-bg); }
+  .sl dl > div { display: grid; grid-template-columns: 96px 1fr; padding: 9px 0; border-bottom: 1px solid var(--line2); }
+  .sl dt { color: var(--mute); } .sl dd { font-weight: 500; }
+  .sl h5 { font-size: 11.5px; font-weight: 500; color: var(--mute); margin: 22px 0 10px; }
+  .sl ul { list-style: none; } .sl li { padding: 6px 0 6px 18px; position: relative; line-height: 1.6; color: var(--ink2); }
+  .sl li::before { content: ""; position: absolute; left: 4px; top: 14px; width: 5px; height: 5px; border-radius: 50%; background: var(--mute); }
+  .steps { display: grid; gap: 0; }
+  .stp { display: flex; gap: 12px; padding-bottom: 14px; position: relative; }
+  .stp::before { content: ""; position: absolute; left: 5px; top: 14px; bottom: -2px; width: 1px; background: var(--line); } .stp:last-child::before { display: none; }
+  .stp i { width: 11px; height: 11px; border-radius: 50%; background: var(--ok); margin-top: 4px; flex: none; z-index: 1; } .stp.wait i { background: #fff; box-shadow: inset 0 0 0 1.5px var(--mute); }
+  .stp b { font-weight: 500; } .stp span { display: block; color: var(--mute); font-size: 11.5px; margin-top: 1px; }
+  .mn { position: fixed; z-index: 40; min-width: 160px; background: #fff; border-radius: 10px; padding: 4px; box-shadow: 0 0 0 1px var(--line), 0 12px 32px rgba(20,22,30,.14); animation: up .15s both; }
+  .mn button { display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 10px; border-radius: 6px; text-align: left; } .mn button:hover { background: var(--gray-bg); }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 12.5px; opacity: 0; pointer-events: none; transition: .3s; z-index: 60; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail">
+    <div class="lg"><svg viewBox="0 0 16 16"><path d="M3 12V5l5-3 5 3v7M6.5 12V8.5h3V12"/></svg></div>
+    <button class="on" title="厂商"><svg viewBox="0 0 16 16"><path d="M2.5 13.5v-9L8 2l5.5 2.5v9M5.5 13.5v-3h5v3M5.5 6.5h1M9.5 6.5h1"/></svg></button>
+    <button title="合同"><svg viewBox="0 0 16 16"><path d="M4 2h6l3 3v9H4zM9.5 2v3.5H13M6 8.5h5M6 11h5"/></svg></button>
+    <button title="账单"><svg viewBox="0 0 16 16"><path d="M3.5 2h9v12l-2-1.2-1.5 1.2-1.5-1.2-1.5 1.2-2-1.2zM6 6h4M6 8.5h4"/></svg></button>
+    <button title="工单"><svg viewBox="0 0 16 16"><path d="M10.5 3a3 3 0 0 0-3 4L3 11.5 4.5 13 9 8.5a3 3 0 0 0 4-3l-1.8 1.8-1.7-.5-.5-1.7z"/></svg></button>
+    <button title="联系人"><svg viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c.5-2.5 2.5-4 5-4s4.5 1.5 5 4"/></svg></button>
+    <div class="sp"></div><div class="demo">示例数据</div>
+  </nav>
+  <main class="main">
+    <header class="hd">
+      <div class="r1">
+        <div class="logo"><svg viewBox="0 0 24 24"><path d="M4 16c3-6 6-9 10-9s5 2 6 4M4 20c4-4 8-6 16-6"/><circle cx="17" cy="7" r="1.5"/></svg></div>
+        <div><h1 id="vn">澜云科技</h1><div class="sub"><span class="pill" id="hs"></span><span>GPU 整机租赁 · 机房托管</span><span>·</span><span>华东</span></div></div>
+        <div class="acts"><button class="b" id="follow"><svg viewBox="0 0 16 16"><path d="M8 2.5l1.7 3.5 3.8.5-2.8 2.7.7 3.8L8 11.2 4.6 13l.7-3.8L2.5 6.5l3.8-.5z"/></svg><span>关注</span></button><button class="b pri" id="newlog"><svg viewBox="0 0 16 16" style="stroke:#fff"><path d="M8 3v10M3 8h10"/></svg>记录跟进</button></div>
+      </div>
+      <div class="tabs" id="tabs"></div>
+    </header>
+    <div class="body" id="body"></div>
+    <div class="scrim" id="scrim"></div>
+    <aside class="sl" id="sl"></aside>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const I = {
+  mail: '<svg viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="m2.5 4.5 5.5 4 5.5-4"/></svg>',
+  cal: '<svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/></svg>',
+  bill: '<svg viewBox="0 0 16 16"><path d="M3.5 2h9v12l-2-1.2-1.5 1.2-1.5-1.2-1.5 1.2-2-1.2zM6 6h4M6 8.5h4"/></svg>',
+  tk: '<svg viewBox="0 0 16 16"><path d="M10.5 3a3 3 0 0 0-3 4L3 11.5 4.5 13 9 8.5a3 3 0 0 0 4-3l-1.8 1.8-1.7-.5-.5-1.7z"/></svg>',
+  ed: '<svg viewBox="0 0 16 16"><path d="M10.5 3 13 5.5 5.5 13H3v-2.5z"/></svg>',
+  doc: '<svg viewBox="0 0 16 16"><path d="M4 2h6l3 3v9H4zM9.5 2v3.5H13M6 8.5h5M6 11h5"/></svg>',
+  user: '<svg viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c.5-2.5 2.5-4 5-4s4.5 1.5 5 4"/></svg>',
+  x: '<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>'
+};
+const ST = { 合作中: ["var(--ok)", "var(--ok-bg)"], 洽谈中: ["var(--warn)", "var(--warn-bg)"], 已终止: ["var(--mute)", "var(--gray-bg)"] };
+const P = { 全称: "澜云科技（上海）有限公司", 状态: "合作中", 类型: "一级供应商", 负责人: "陆遥", 结算周期: "月结", 账期: "45 天", 签约主体: "集团采购中心", 合作起始: "2024-03-01", 官网: "lanyun.example", 备注: "H100 / A800 整机租赁，机房在嘉定" };
+const KEYS = [["基本信息", [["全称", "doc"], ["状态", "st"], ["类型", "sel", ["一级供应商", "二级供应商", "备选供应商"]], ["负责人", "user"], ["官网", "doc"]]], ["商务", [["结算周期", "sel", ["月结", "季结", "预付"]], ["账期", "doc"], ["签约主体", "doc"], ["合作起始", "cal"], ["备注", "doc"]]]];
+const PEOPLE = ["陆遥", "孙立", "陈婕", "黄筱"];
+const CONTRACTS = [
+  { id: "c1", no: "HT-2026-0318", name: "GPU 整机租赁框架协议", amt: "¥ 18,600,000", per: "2026-03-01 至 2027-02-28", st: "生效中", sc: ["var(--ok)", "var(--ok-bg)"], pts: ["H100 80G 整机 120 台，A800 整机 64 台", "SLA：月可用率 ≥ 99.5%，低于时按差额 10 倍返还当月租金", "故障整机 4 小时内响应，24 小时内更换", "结算：月结，账单日后 45 天内付款"], sign: "集团采购中心" },
+  { id: "c2", no: "HT-2025-1231", name: "机房托管补充协议", amt: "¥ 2,400,000", per: "2025-12-31 至 2026-12-31", st: "42 天后到期", sc: ["var(--warn)", "var(--warn-bg)"], pts: ["嘉定机房 B2 区 12 个机柜，单柜 12kW", "续签需提前 30 天书面通知", "电费按实际用量结算，单价 ¥ 0.82 / 度"], sign: "集团采购中心" }
+];
+const TICKETS = [
+  { id: "t1", no: "WO-20261114-007", name: "H100 节点 gn-h100-018 掉卡", st: "处理中", sc: ["var(--warn)", "var(--warn-bg)"], mach: "gn-h100-018 · 第 5 号卡", owner: "孙立", created: "11月14日 14:02", steps: [["已报修", "11月14日 14:02 · 孙立", 1], ["厂商确认故障", "11月18日 09:12 · 江岚", 1], ["备件到场", "预计 11月19日", 0], ["验收关闭", "", 0]] },
+  { id: "t2", no: "WO-20261109-021", name: "IB 交换机 ib-sw-07 丢包", st: "已解决", sc: ["var(--ok)", "var(--ok-bg)"], mach: "ib-sw-07 · 端口 31", owner: "陈婕", created: "11月9日 10:20", steps: [["已报修", "11月9日 10:20 · 陈婕", 1], ["厂商更换光模块", "11月9日 16:40 · 赵启明", 1], ["验收关闭", "11月10日 09:05 · 陈婕", 1]] },
+  { id: "t3", no: "WO-20261028-003", name: "10 月账单与结算单金额不符", st: "已解决", sc: ["var(--ok)", "var(--ok-bg)"], mach: "—", owner: "陆遥", created: "10月28日 11:30", steps: [["已报修", "10月28日 11:30 · 陆遥", 1], ["厂商核对", "10月29日 15:00 · 魏敏", 1], ["差额 ¥ 18,600 已冲销", "10月30日 10:12 · 魏敏", 1]] }
+];
+const CONTACTS = [
+  { id: "p1", name: "江岚", role: "客户经理", mail: "jiang.lan@lanyun.example", tel: "021-5550-0136", last: "11月17日", note: "合同、续签、SLA 补偿的第一对接人" },
+  { id: "p2", name: "赵启明", role: "技术支持负责人", mail: "zhao.qm@lanyun.example", tel: "021-5550-0178", last: "11月9日", note: "故障报修升级联系人，7×24" },
+  { id: "p3", name: "魏敏", role: "财务对账", mail: "wei.min@lanyun.example", tel: "021-5550-0152", last: "11月5日", note: "月度结算单、发票" }
+];
+const BILLS = [
+  { id: "b1", m: "2026 年 10 月", amt: 3502900, st: "待核对", sc: ["var(--warn)", "var(--warn-bg)"], due: "12-15", det: [["GPU 整机租赁", 3011400], ["机房托管", 388200], ["网络专线", 103300]] },
+  { id: "b2", m: "2026 年 9 月", amt: 3410200, st: "已付款", sc: ["var(--ok)", "var(--ok-bg)"], due: "11-14", det: [["GPU 整机租赁", 2938000], ["机房托管", 371400], ["网络专线", 100800]] },
+  { id: "b3", m: "2026 年 8 月", amt: 3288600, st: "已付款", sc: ["var(--ok)", "var(--ok-bg)"], due: "10-14", det: [["GPU 整机租赁", 2830600], ["机房托管", 359000], ["网络专线", 99000]] },
+  { id: "b4", m: "2026 年 7 月", amt: 3102800, st: "已付款", sc: ["var(--ok)", "var(--ok-bg)"], due: "09-14", det: [["GPU 整机租赁", 2670100], ["机房托管", 336300], ["网络专线", 96400]] },
+  { id: "b5", m: "2026 年 6 月", amt: 2935100, st: "已付款", sc: ["var(--ok)", "var(--ok-bg)"], due: "08-14", det: [["GPU 整机租赁", 2520800], ["机房托管", 320400], ["网络专线", 93900]] }
+];
+const LOG = [
+  { k: "tk", d: "11-18", t: "09:12", a: "工单", html: `工单 <span class="lk" data-o="t:t1">${I.tk}WO-20261114-007</span> 厂商已确认掉卡，备件明日到场`, snip: "江岚：已联系仓库调拨 H100 SXM 模组，预计明日上午送到嘉定机房，现场工程师配合更换。" },
+  { k: "mail", d: "11-17", t: "15:30", a: "邮件", html: `<b>江岚</b> 回复了邮件「11 月备件到货及 SLA 补偿说明」`, snip: "按合同 4.2 条，本月 gn-h100-018 停机累计 61 小时，可用率 99.2%，补偿金额将在 11 月账单中冲抵。" },
+  { k: "bill", d: "11-16", t: "10:00", a: "账单", html: `<span class="lk" data-o="b:b1">${I.bill}10 月账单</span> 已出账，¥ 3,502,900，待核对` },
+  { k: "tk", d: "11-14", t: "14:02", a: "工单", html: `<b>孙立</b> 创建工单 <span class="lk" data-o="t:t1">${I.tk}WO-20261114-007</span>`, snip: "gn-h100-018 第 5 号卡掉卡，已隔离节点，训练任务已迁移。" },
+  { k: "cal", d: "11-12", t: "16:00", a: "会议", html: `季度复盘会（线上，45 分钟），参会 4 人：陆遥、孙立、江岚、赵启明`, snip: "结论：新增 A800 × 16 的扩容意向，12 月初给报价；SLA 指标改为按周出报告。" },
+  { k: "tk", d: "11-09", t: "16:40", a: "工单", html: `工单 <span class="lk" data-o="t:t2">${I.tk}WO-20261109-021</span> 光模块已更换` },
+  { k: "mail", d: "11-05", t: "11:20", a: "邮件", html: `<b>魏敏</b> 发来 10 月结算单与发票`, snip: "附件：10 月结算单.xlsx、增值税专用发票 2 张。" },
+  { k: "tk", d: "10-30", t: "10:12", a: "工单", html: `工单 <span class="lk" data-o="t:t3">${I.tk}WO-20261028-003</span> 差额 ¥ 18,600 已冲销` },
+  { k: "cal", d: "10-20", t: "14:30", a: "会议", html: `合同续签沟通（线下），讨论 <span class="lk" data-o="c:c2">${I.doc}HT-2025-1231</span> 续签条款` }
+];
+let tab = "概览", filter = "全部", follow = false;
+const fm = (n) => "¥ " + n.toLocaleString("en-US");
+
+function renderHeader() {
+  const [c, b] = ST[P.状态]; $("#hs").style.cssText = `--c:${c};--b:${b}`; $("#hs").innerHTML = `<i></i>${P.状态}`;
+  $("#tabs").innerHTML = ["概览", "账单", "联系人"].map((t) => `<button class="tab${t === tab ? " on" : ""}" data-t="${t}">${t}<i>${t === "账单" ? BILLS.length : t === "联系人" ? CONTACTS.length : ""}</i></button>`).join("");
+}
+function renderBody() {
+  const el = $("#body"); renderHeader();
+  if (tab === "概览") {
+    el.innerHTML = `<aside class="props" id="props"></aside><section class="center"><div class="in" id="act"></div></section>`; renderProps(); renderAct();
+  } else if (tab === "账单") {
+    const tot = BILLS.reduce((a, b) => a + b.amt, 0), mx = Math.max(...BILLS.map((b) => b.amt));
+    el.innerHTML = `<section class="center" style="grid-column:1/-1"><div class="in" style="max-width:980px;margin:0 auto">
+      <div class="ctl"><div class="stat"><span>近 5 个月合计</span><b>${fm(tot)}</b></div><div class="stat"><span>最近一期</span><b>${fm(BILLS[0].amt)}<small>较上月 +${((BILLS[0].amt / BILLS[1].amt - 1) * 100).toFixed(1)}%</small></b></div><div class="stat"><span>待核对</span><b>${BILLS.filter((b) => b.st === "待核对").length}<small>期</small></b></div></div>
+      <table><thead><tr><th>账期</th><th>状态</th><th>金额</th><th class="r">付款截止</th></tr></thead><tbody>${BILLS.map((b) => `<tr class="rw" data-o="b:${b.id}"><td style="font-weight:500">${b.m}</td><td><span class="pill" style="--c:${b.sc[0]};--b:${b.sc[1]}"><i></i>${b.st}</span></td><td class="num"><span class="barc"><i style="width:${b.amt / mx * 100}%"></i></span>${fm(b.amt)}</td><td class="r num" style="color:var(--ink2)">2026-${b.due}</td></tr>`).join("")}</tbody></table></div></section>`;
+  } else {
+    el.innerHTML = `<section class="center" style="grid-column:1/-1"><div class="in" style="max-width:980px;margin:0 auto"><table><thead><tr><th>姓名</th><th>职务</th><th>邮箱</th><th>电话</th><th class="r">最近联系</th></tr></thead><tbody>${CONTACTS.map((c) => `<tr class="rw" data-o="p:${c.id}"><td><span style="display:inline-flex;align-items:center;gap:9px;font-weight:500"><span class="av" style="width:24px;height:24px;font-size:11px">${c.name[0]}</span>${c.name}</span></td><td style="color:var(--ink2)">${c.role}</td><td class="num" style="color:var(--ink2)">${c.mail}</td><td class="num" style="color:var(--ink2)">${c.tel}</td><td class="r num" style="color:var(--mute)">${c.last}</td></tr>`).join("")}</tbody></table></div></section>`;
+  }
+}
+function renderProps() {
+  let h = "";
+  KEYS.forEach(([g, rows]) => {
+    h += `<div class="grp"><h4>${g}</h4>`;
+    rows.forEach(([k, ty]) => {
+      let v = P[k];
+      if (k === "状态") { const [c, b] = ST[v]; v = `<span class="pill" style="--c:${c};--b:${b}"><i></i>${v}</span>`; }
+      else if (k === "负责人") v = `<span class="av">${P[k][0]}</span><span class="t">${P[k]}</span>`;
+      else v = `<span class="t">${v}</span>`;
+      const kind = k === "状态" || k === "类型" || k === "结算周期" || k === "负责人" ? "sel" : "txt";
+      h += `<div class="pr" data-k="${k}"><div class="k">${I[ty === "st" || ty === "sel" ? "ed" : ty] || I.doc}${k}</div><div class="v ${kind}" data-kind="${kind}">${v}</div></div>`;
+    });
+    h += "</div>";
+  });
+  h += `<div class="grp"><h4>关联记录</h4><div class="rel">` +
+    CONTRACTS.map((c) => `<button class="card" data-o="c:${c.id}"><span class="ic">${I.doc}</span><div><b>${c.name}</b><span class="s num">${c.no}</span></div><span class="pill" style="--c:${c.sc[0]};--b:${c.sc[1]}">${c.st}</span></button>`).join("") +
+    TICKETS.filter((t) => t.st !== "已解决").map((t) => `<button class="card" data-o="t:${t.id}"><span class="ic">${I.tk}</span><div><b>${t.name}</b><span class="s num">${t.no}</span></div><span class="pill" style="--c:${t.sc[0]};--b:${t.sc[1]}">${t.st}</span></button>`).join("") +
+    `</div></div>`;
+  $("#props").innerHTML = h;
+}
+function renderAct() {
+  const types = ["全部", "邮件", "会议", "账单", "工单", "修改"];
+  const cnt = (t) => t === "全部" ? LOG.length : LOG.filter((l) => l.a === t).length;
+  const list = LOG.filter((l) => filter === "全部" || l.a === filter);
+  let h = `<div class="ft"><h3>活动</h3>${types.map((t) => `<button class="chip${t === filter ? " on" : ""}" data-f="${t}">${t}<i>${cnt(t)}</i></button>`).join("")}</div><div class="tl">`;
+  let cur = "";
+  list.forEach((l, i) => {
+    if (l.d !== cur) { cur = l.d; h += `<div class="day">${l.d === "11-18" ? "今天 · " : ""}${+l.d.slice(0, 2)} 月 ${+l.d.slice(3)} 日</div>`; }
+    h += `<div class="it" style="animation-delay:${Math.min(i, 8) * 30}ms"><div class="dot ${l.k}">${I[l.k]}</div><div class="tx"><span class="tm">${l.t}</span><div class="ttl">${l.html}</div>${l.snip ? `<div class="snip">${l.snip}</div>` : ""}</div></div>`;
+  });
+  h += "</div>"; if (!list.length) h = h.replace('<div class="tl"></div>', '<div class="none">没有这一类活动</div>');
+  $("#act").innerHTML = h;
+}
+/* 内联编辑 */
+document.addEventListener("click", (e) => {
+  const v = e.target.closest(".pr .v");
+  if (v && !v.querySelector("input")) { const k = v.parentElement.dataset.k; v.dataset.kind === "sel" ? openMenu(v, k) : editText(v, k); return; }
+  const o = e.target.closest("[data-o]"); if (o) { openSl(o.dataset.o); return; }
+  const f = e.target.closest("[data-f]"); if (f) { filter = f.dataset.f; renderAct(); return; }
+  const t = e.target.closest(".tab"); if (t) { tab = t.dataset.t; closeSl(); renderBody(); return; }
+  if (!e.target.closest(".mn")) closeMenu();
+});
+function editText(v, k) {
+  closeMenu();
+  const inp = document.createElement("input"); inp.value = P[k]; v.replaceChildren(inp); inp.focus(); inp.select();
+  const done = (ok) => { if (!inp.parentElement) return; if (ok && inp.value.trim() && inp.value.trim() !== P[k]) setProp(k, inp.value.trim()); else renderProps(); };
+  inp.onkeydown = (e) => { if (e.key === "Enter") done(true); if (e.key === "Escape") done(false); };
+  inp.onblur = () => done(true);
+}
+function openMenu(v, k) {
+  closeMenu(); const opts = k === "状态" ? Object.keys(ST) : k === "负责人" ? PEOPLE : KEYS.flatMap((g) => g[1]).find((r) => r[0] === k)[2];
+  const m = document.createElement("div"); m.className = "mn"; const r = v.getBoundingClientRect(); m.style.left = r.left + "px"; m.style.top = r.bottom + 4 + "px";
+  m.innerHTML = opts.map((o) => `<button data-v="${o}">${o === P[k] ? '<svg viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5"/></svg>' : '<span style="width:15px"></span>'}${o}</button>`).join("");
+  m.onclick = (e) => { const b = e.target.closest("button"); if (!b) return; closeMenu(); if (b.dataset.v !== P[k]) setProp(k, b.dataset.v); };
+  document.body.appendChild(m);
+}
+const closeMenu = () => $$(".mn").forEach((m) => m.remove());
+function setProp(k, nv) {
+  const old = P[k]; P[k] = nv; renderHeader(); renderProps();
+  $(`.pr[data-k="${k}"] .v`).classList.add("flash");
+  LOG.unshift({ k: "ed", d: "11-18", t: "14:26", a: "修改", html: `<b>陆遥</b> 修改了 <b>${k}</b>：<span style="color:var(--mute);text-decoration:line-through">${old}</span> → ${nv}` });
+  filter = "全部"; renderAct(); toast(`已保存「${k}」`);
+}
+/* 滑出预览 */
+function openSl(ref) {
+  const [t, id] = ref.split(":"), sl = $("#sl"); let h = "", ttl = "", ic = I.doc;
+  if (t === "c") {
+    const c = CONTRACTS.find((x) => x.id === id); ttl = c.name; ic = I.doc;
+    h = `<dl><div><dt>合同编号</dt><dd class="num">${c.no}</dd></div><div><dt>状态</dt><dd><span class="pill" style="--c:${c.sc[0]};--b:${c.sc[1]}"><i></i>${c.st}</span></dd></div><div><dt>合同金额</dt><dd class="num">${c.amt}</dd></div><div><dt>期限</dt><dd class="num">${c.per}</dd></div><div><dt>签约主体</dt><dd>${c.sign}</dd></div></dl><h5>关键条款</h5><ul>${c.pts.map((p) => `<li>${p}</li>`).join("")}</ul><h5>附件</h5><div class="rel"><div class="card" style="cursor:default"><span class="ic">${I.doc}</span><div><b>${c.no}.pdf</b><span class="s">已盖章 · 2.4 MB</span></div></div></div>`;
+  } else if (t === "t") {
+    const k = TICKETS.find((x) => x.id === id); ttl = k.name; ic = I.tk;
+    h = `<dl><div><dt>工单编号</dt><dd class="num">${k.no}</dd></div><div><dt>状态</dt><dd><span class="pill" style="--c:${k.sc[0]};--b:${k.sc[1]}"><i></i>${k.st}</span></dd></div><div><dt>设备</dt><dd>${k.mach}</dd></div><div><dt>处理人</dt><dd>${k.owner}</dd></div><div><dt>创建时间</dt><dd class="num">${k.created}</dd></div></dl><h5>处理进度</h5><div class="steps">${k.steps.map((s) => `<div class="stp${s[2] ? "" : " wait"}"><i></i><div><b>${s[0]}</b><span>${s[1] || "待处理"}</span></div></div>`).join("")}</div>`;
+  } else if (t === "b") {
+    const b = BILLS.find((x) => x.id === id); ttl = b.m + " 账单"; ic = I.bill; const mx = Math.max(...b.det.map((d) => d[1]));
+    h = `<dl><div><dt>金额</dt><dd class="num" style="font-size:18px">${fm(b.amt)}</dd></div><div><dt>状态</dt><dd><span class="pill" style="--c:${b.sc[0]};--b:${b.sc[1]}"><i></i>${b.st}</span></dd></div><div><dt>付款截止</dt><dd class="num">2026-${b.due}</dd></div></dl><h5>费用构成</h5>` +
+      b.det.map((d) => `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between"><span>${d[0]}</span><span class="num" style="font-weight:500">${fm(d[1])}</span></div><div class="barc" style="display:block;width:100%;margin:7px 0 0"><i style="width:${d[1] / mx * 100}%"></i></div></div>`).join("") + `<h5>说明</h5><ul><li>金额已含 gn-h100-018 停机补偿的暂估冲抵项</li><li>核对后在「账单」页标记为已核对</li></ul>`;
+  } else {
+    const c = CONTACTS.find((x) => x.id === id); ttl = c.name; ic = I.user;
+    h = `<dl><div><dt>职务</dt><dd>${c.role}</dd></div><div><dt>邮箱</dt><dd class="num">${c.mail}</dd></div><div><dt>电话</dt><dd class="num">${c.tel}</dd></div><div><dt>最近联系</dt><dd>${c.last}</dd></div></dl><h5>备注</h5><ul><li>${c.note}</li></ul>`;
+  }
+  sl.innerHTML = `<div class="sh"><span class="ic">${ic}</span><h2>${ttl}</h2><button class="x" id="slx">${I.x}</button></div><div class="sb">${h}</div>`;
+  sl.classList.add("on"); $("#scrim").classList.add("on"); $("#slx").onclick = closeSl;
+}
+function closeSl() { $("#sl").classList.remove("on"); $("#scrim").classList.remove("on"); }
+$("#scrim").onclick = closeSl;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeSl(); closeMenu(); } });
+$("#follow").onclick = () => { follow = !follow; $("#follow span").textContent = follow ? "已关注" : "关注"; toast(follow ? "已关注，有新动态会通知你" : "已取消关注"); };
+$("#newlog").onclick = () => { tab = "概览"; renderBody(); LOG.unshift({ k: "ed", d: "11-18", t: "14:26", a: "修改", html: `<b>陆遥</b> 记录了一条跟进：备件到货后复核 gn-h100-018 性能`, snip: "下次跟进：11月19日 · 关注更换后的 NCCL 带宽测试。" }); filter = "全部"; renderAct(); toast("已添加跟进记录"); };
+let tt; function toast(s) { const t = $("#toast"); t.textContent = s; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 2000); }
+renderBody();
+</script>
+</body>
+</html>

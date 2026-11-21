@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>无限画布 · 流程白板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f8f7f4;--dot:#cfccc4;--ink:#22201c;--ink2:#6b675e;--sel:#ec3b82;--pop:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:Inter,"Noto Sans SC",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;user-select:none}
+button{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+svg{display:block;flex:none}
+#vp{position:fixed;inset:0;overflow:hidden;cursor:default;touch-action:none}
+#vp.hand,#vp.space{cursor:grab}#vp.panning{cursor:grabbing}
+#vp.place{cursor:crosshair}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.o{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.35;cursor:move}
+.o .t{outline:none;padding:6px 10px;white-space:pre-wrap;word-break:break-word;max-width:100%}
+.o.node{background:#fff;border:2.5px solid var(--ink);border-radius:14px;font-weight:600;font-size:16px;box-shadow:3px 4px 0 var(--ink)}
+.o.node.c-g{background:#cfeedd}.o.node.c-b{background:#d6e6ff}.o.node.c-y{background:#fff1b8}
+.o.dia{font-weight:600;font-size:15px}
+.o.dia svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.o.dia .t{position:relative;z-index:1;max-width:70%}
+.o.sticky{font-family:"Ma Shan Zheng","Noto Sans SC",cursive;font-size:21px;line-height:1.3;box-shadow:0 8px 14px -6px rgba(40,30,10,.3);border-radius:3px;align-items:flex-start;justify-content:flex-start;text-align:left}
+.o.sticky .t{padding:14px 16px}
+.o.sticky.y{background:#ffe98a}.o.sticky.p{background:#ffc4d6}.o.sticky.g{background:#c3ecd0}.o.sticky.b{background:#c4dcff}
+.o.text{font-size:30px;font-weight:700;color:var(--ink2);letter-spacing:4px;justify-content:flex-start;cursor:move}
+.o.text.small{font-size:18px;letter-spacing:1px;font-weight:600}
+.o.sel-by{box-shadow:0 0 0 3px var(--c),3px 4px 0 var(--ink)}
+.o.dia.sel-by{box-shadow:0 0 0 3px var(--c)}
+#cn{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
+#cn path.l{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}
+#cn text{font-size:13px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:5px}
+#selbox{position:absolute;border:1.5px solid var(--sel);pointer-events:none;display:none;z-index:5}
+#selbox i{position:absolute;width:var(--hs);height:var(--hs);background:#fff;border:1.5px solid var(--sel);border-radius:2px;pointer-events:auto;transform:translate(-50%,-50%)}
+#selbox .sz{position:absolute;top:100%;left:50%;transform:translate(-50%,10px) scale(var(--inv));transform-origin:50% 0;background:var(--sel);color:#fff;font-size:11px;padding:2px 7px;border-radius:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cur{position:absolute;z-index:9;pointer-events:none;transition:transform .09s linear}
+.cur svg{width:20px;height:20px;transform:scale(var(--inv));transform-origin:0 0}
+.cur b{position:absolute;left:14px;top:16px;transform:scale(var(--inv));transform-origin:0 0;font-size:12px;font-weight:600;color:#fff;padding:2px 8px;border-radius:9px;white-space:nowrap;background:var(--c)}
+/* chrome */
+.hd{position:fixed;left:14px;top:14px;display:flex;align-items:center;gap:10px;background:var(--pop);border-radius:12px;padding:6px 12px 6px 8px;box-shadow:0 1px 3px rgba(40,30,10,.12),0 0 0 1px rgba(40,30,10,.06);z-index:20}
+.hd i{width:28px;height:28px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.hd i svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hd b{font-size:14px;font-weight:600}.hd small{color:var(--ink2);font-size:12px}
+.share{position:fixed;right:14px;top:14px;display:flex;align-items:center;gap:10px;z-index:20}
+.avs{display:flex;background:var(--pop);border-radius:20px;padding:4px;box-shadow:0 1px 3px rgba(40,30,10,.12),0 0 0 1px rgba(40,30,10,.06)}
+.avs span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:600;margin-left:-6px;border:2px solid #fff}
+.avs span:first-child{margin-left:0}
+.btn{height:36px;padding:0 16px;border-radius:10px;background:var(--ink);color:#fff;font-weight:600;font-size:13px}
+.tool{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:flex;gap:2px;background:var(--pop);border-radius:14px;padding:5px;box-shadow:0 2px 6px rgba(40,30,10,.12),0 0 0 1px rgba(40,30,10,.07);z-index:20}
+.tool button{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;color:var(--ink2);position:relative}
+.tool button:hover{background:#f2f0ea}
+.tool button.on{background:var(--ink);color:#fff}
+.tool button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tool button kbd{position:absolute;right:4px;bottom:2px;font:inherit;font-size:9px;opacity:.5}
+.tool hr{width:1px;margin:8px 4px;border:0;background:#e5e2da}
+.zoom{position:fixed;right:14px;bottom:14px;z-index:20;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.mm{width:208px;height:136px;background:var(--pop);border-radius:12px;box-shadow:0 1px 3px rgba(40,30,10,.12),0 0 0 1px rgba(40,30,10,.06);position:relative;overflow:hidden;cursor:pointer}
+.mm div.r{position:absolute;background:#bdb8ab;border-radius:1px}
+.mm div.v{position:absolute;border:1.5px solid var(--sel);background:rgba(236,59,130,.08);border-radius:2px}
+.zb{display:flex;align-items:center;background:var(--pop);border-radius:10px;box-shadow:0 1px 3px rgba(40,30,10,.12),0 0 0 1px rgba(40,30,10,.06);height:34px}
+.zb button{height:34px;padding:0 11px;color:var(--ink2);font-size:13px;font-variant-numeric:tabular-nums}
+.zb button:hover{background:#f2f0ea;border-radius:8px}
+.zb #zp{min-width:58px;font-weight:600;color:var(--ink)}
+.help{position:fixed;left:14px;bottom:18px;font-size:11.5px;color:var(--ink2);z-index:20;line-height:1.7}
+.help span{background:rgba(255,255,255,.7);padding:0 4px}
+.demo{position:fixed;left:14px;bottom:70px;font-size:10px;color:#a8a49a;z-index:20}
+.toast{position:fixed;left:50%;top:22px;transform:translate(-50%,-10px);background:var(--ink);color:#fff;font-size:12.5px;padding:7px 14px;border-radius:9px;opacity:0;transition:.2s;z-index:30;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="vp"><canvas id="dots" style="position:absolute;inset:0"></canvas>
+  <div id="world">
+    <svg id="cn"><defs><marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1l8 4-8 4z" fill="#22201c"/></marker></defs><g id="cg"></g></svg>
+    <div id="objs"></div>
+    <div id="selbox"></div>
+    <div id="curs"></div>
+  </div>
+</div>
+<div class="hd"><i><svg viewBox="0 0 16 16"><circle cx="4" cy="4" r="1.8"/><circle cx="12" cy="4" r="1.8"/><circle cx="8" cy="12" r="1.8"/><path d="M5.5 5l1.8 5M10.5 5L8.7 10"/></svg></i><div><b>资源申请流程</b><br><small>草稿 · 已自动保存</small></div></div>
+<div class="share"><div class="avs"><span style="background:#ec3b82">我</span><span style="background:#2fa36b">夕</span><span style="background:#3b6fe0">泽</span></div><button class="btn" id="shareBtn">分享</button></div>
+<div class="tool" id="tool">
+  <button data-t="select" class="on" title="选择 V"><svg viewBox="0 0 20 20"><path d="M4.5 3l11 5.2-4.6 1.6-1.6 4.6z"/></svg><kbd>V</kbd></button>
+  <button data-t="hand" title="抓手 H"><svg viewBox="0 0 20 20"><path d="M7 10V4.5a1.3 1.3 0 012.6 0V9m0-1.5V3.5a1.3 1.3 0 012.6 0V9m0-3a1.3 1.3 0 012.6 0v6c0 3-2 5-5 5s-4.2-1.5-5-3.2L3.4 11a1.3 1.3 0 012.2-1.3L7 11.5"/></svg><kbd>H</kbd></button>
+  <hr>
+  <button data-t="node" title="流程框 R"><svg viewBox="0 0 20 20"><rect x="3" y="5" width="14" height="10" rx="3"/></svg><kbd>R</kbd></button>
+  <button data-t="dia" title="判断 D"><svg viewBox="0 0 20 20"><path d="M10 3l7 7-7 7-7-7z"/></svg><kbd>D</kbd></button>
+  <button data-t="sticky" title="便签 N"><svg viewBox="0 0 20 20"><path d="M4 4h12v8l-4 4H4z M12 16v-4h4"/></svg><kbd>N</kbd></button>
+  <button data-t="text" title="文字 T"><svg viewBox="0 0 20 20"><path d="M5 5h10M10 5v10M8 15h4"/></svg><kbd>T</kbd></button>
+  <button data-t="link" title="连线 L"><svg viewBox="0 0 20 20"><path d="M4 15L15 5M15 5h-5M15 5v5"/></svg><kbd>L</kbd></button>
+</div>
+<div class="zoom"><div class="mm" id="mm"></div><div class="zb"><button id="zo">−</button><button id="zp" title="点击回到 100%">100%</button><button id="zi">＋</button><button id="zf" title="适应画面">适应</button></div></div>
+<div class="help"><span>空格拖动或滚轮平移</span> · <span>⌘ 滚轮缩放</span> · <span>双击编辑文字</span> · <span>Delete 删除</span></div>
+<div class="demo">示例数据</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const vp=$("#vp"), world=$("#world"), objsEl=$("#objs"), cg=$("#cg");
+let nid=1; const mk=(o)=>Object.assign({id:"o"+nid++},o);
+let O=[
+ mk({k:"text",x:70,y:70,w:140,h:44,t:"① 申请"}), mk({k:"text",x:560,y:70,w:140,h:44,t:"② 审批"}), mk({k:"text",x:1090,y:70,w:140,h:44,t:"③ 交付"}),
+ mk({k:"node",x:70,y:236,w:150,h:68,t:"提交申请",c:"b"}),
+ mk({k:"node",x:290,y:236,w:160,h:68,t:"部门主管审批"}),
+ mk({k:"dia",x:510,y:212,w:200,h:116,t:"用量 > 64 卡？"}),
+ mk({k:"node",x:780,y:116,w:170,h:68,t:"资源委员会评审"}),
+ mk({k:"node",x:780,y:356,w:170,h:68,t:"自动通过",c:"g"}),
+ mk({k:"node",x:1020,y:236,w:150,h:68,t:"分配节点"}),
+ mk({k:"node",x:1240,y:236,w:150,h:68,t:"交付验收",c:"y"}),
+ mk({k:"sticky",x:300,y:420,w:230,h:128,t:"待确认：超过 64 卡是否要加财务会签？",s:"y"}),
+ mk({k:"sticky",x:790,y:30,w:200,h:96,t:"每周二、四集中评审",s:"p",hide:1}),
+ mk({k:"sticky",x:1030,y:380,w:220,h:116,t:"SLA：交付 2 个工作日内",s:"g"}),
+ mk({k:"sticky",x:60,y:380,w:200,h:116,t:"申请单字段缩到 5 项",s:"b"})
+];
+O=O.filter(o=>!o.hide);
+const byT=t=>O.find(o=>o.t===t).id;
+let C=[]; const link=(a,b,l)=>C.push({id:"c"+nid++,a:byT(a),b:byT(b),l});
+link("提交申请","部门主管审批"); link("部门主管审批","用量 > 64 卡？"); link("用量 > 64 卡？","资源委员会评审","是"); link("用量 > 64 卡？","自动通过","否");
+link("资源委员会评审","分配节点"); link("自动通过","分配节点"); link("分配节点","交付验收");
+let view={x:0,y:0,s:1}, sel=null, tool="select", linkFrom=null, spaceDown=false;
+const get=id=>O.find(o=>o.id===id);
+/* 渲染对象 */
+function objHTML(o){
+  const st=`left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px`;
+  if(o.k==="dia") return `<div class="o dia" data-id="${o.id}" style="${st}"><svg viewBox="0 0 ${o.w} ${o.h}" preserveAspectRatio="none"><path d="M${o.w/2} 1.5L${o.w-1.5} ${o.h/2}L${o.w/2} ${o.h-1.5}L1.5 ${o.h/2}Z" fill="#ffd9c7" stroke="#22201c" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg><div class="t">${esc(o.t)}</div></div>`;
+  return `<div class="o ${o.k} ${o.k==="sticky"?o.s:""} ${o.c?"c-"+o.c:""}" data-id="${o.id}" style="${st}"><div class="t">${esc(o.t)}</div></div>`;
+}
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function renderObjs(){ objsEl.innerHTML=O.map(objHTML).join(""); applySelBy(); }
+function patchObj(o){ const el=objsEl.querySelector(`[data-id="${o.id}"]`); if(!el) return; el.style.left=o.x+"px";el.style.top=o.y+"px";el.style.width=o.w+"px";el.style.height=o.h+"px"; if(o.k==="dia"){const p=el.querySelector("path");el.querySelector("svg").setAttribute("viewBox",`0 0 ${o.w} ${o.h}`);p.setAttribute("d",`M${o.w/2} 1.5L${o.w-1.5} ${o.h/2}L${o.w/2} ${o.h-1.5}L1.5 ${o.h/2}Z`)} }
+/* 连线 */
+function edge(o,tx,ty){
+  const cx=o.x+o.w/2, cy=o.y+o.h/2, dx=tx-cx, dy=ty-cy; if(!dx&&!dy) return [cx,cy];
+  let t; if(o.k==="dia") t=1/(Math.abs(dx)/(o.w/2)+Math.abs(dy)/(o.h/2)); else t=Math.min(Math.abs(dx)?(o.w/2)/Math.abs(dx):1e9, Math.abs(dy)?(o.h/2)/Math.abs(dy):1e9);
+  return [cx+dx*t+ (o.k==="dia"?0:0), cy+dy*t];
+}
+function renderCn(){
+  cg.innerHTML=C.map(c=>{const a=get(c.a),b=get(c.b); if(!a||!b) return ""; const bc=[b.x+b.w/2,b.y+b.h/2], ac=[a.x+a.w/2,a.y+a.h/2];
+    const p1=edge(a,bc[0],bc[1]), p2=edge(b,ac[0],ac[1]);
+    const mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
+    return `<path class="l" d="M${p1[0]} ${p1[1]}L${p2[0]} ${p2[1]}" marker-end="url(#ar)"/>${c.l?`<text x="${mx}" y="${my-6}" text-anchor="middle">${c.l}</text>`:""}`}).join("");
+}
+/* 视口 */
+function applyView(){
+  world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;
+  world.style.setProperty("--inv",1/view.s); world.style.setProperty("--hs",(9/view.s)+"px");
+  $("#zp").textContent=Math.round(view.s*100)+"%"; drawDots(); drawSel(); drawMM();
+}
+const cv=$("#dots"), cx=cv.getContext("2d");
+function drawDots(){
+  const dpr=devicePixelRatio||1; if(cv.width!==innerWidth*dpr){cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;cv.style.width=innerWidth+"px";cv.style.height=innerHeight+"px"}
+  cx.setTransform(dpr,0,0,dpr,0,0); cx.clearRect(0,0,innerWidth,innerHeight);
+  let g=24*view.s; while(g<14) g*=2; const ox=((view.x%g)+g)%g, oy=((view.y%g)+g)%g; cx.fillStyle="#cfccc4"; const r=Math.max(1,1.1*Math.min(1.4,view.s));
+  for(let x=ox;x<innerWidth;x+=g) for(let y=oy;y<innerHeight;y+=g){cx.beginPath();cx.arc(x,y,r,0,7);cx.fill()}
+}
+const toWorld=(px,py)=>[(px-view.x)/view.s,(py-view.y)/view.s];
+function zoomAt(px,py,f){ const ns=Math.max(.15,Math.min(3,view.s*f)); const [wx,wy]=toWorld(px,py); view.s=ns; view.x=px-wx*ns; view.y=py-wy*ns; applyView(); }
+function bounds(){ let a=1e9,b=1e9,c=-1e9,d=-1e9; O.forEach(o=>{a=Math.min(a,o.x);b=Math.min(b,o.y);c=Math.max(c,o.x+o.w);d=Math.max(d,o.y+o.h)}); return [a,b,c,d]; }
+function fit(anim){ const [a,b,c,d]=bounds(), w=c-a,h=d-b; const s=Math.min((innerWidth-120)/w,(innerHeight-220)/h,1.2); view.s=s; view.x=(innerWidth-w*s)/2-a*s; view.y=(innerHeight-h*s)/2-b*s+10; applyView(); }
+vp.addEventListener("wheel",e=>{ e.preventDefault(); if(e.ctrlKey||e.metaKey){ zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*.0025)); } else { view.x-=e.deltaX; view.y-=e.deltaY; applyView(); } },{passive:false});
+$("#zi").onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1.25); $("#zo").onclick=()=>zoomAt(innerWidth/2,innerHeight/2,.8);
+$("#zp").onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1/view.s); $("#zf").onclick=()=>fit();
+/* 选择框 */
+const selbox=$("#selbox");
+const HS=[["nw",0,0],["n",.5,0],["ne",1,0],["e",1,.5],["se",1,1],["s",.5,1],["sw",0,1],["w",0,.5]];
+selbox.innerHTML=HS.map(h=>`<i data-h="${h[0]}" style="left:${h[1]*100}%;top:${h[2]*100}%;cursor:${h[0]}-resize"></i>`).join("")+`<div class="sz"></div>`;
+function drawSel(){ const o=sel&&get(sel); if(!o){selbox.style.display="none";return} selbox.style.display="block"; selbox.style.left=o.x+"px";selbox.style.top=o.y+"px";selbox.style.width=o.w+"px";selbox.style.height=o.h+"px"; selbox.style.borderWidth=(1.5/view.s)+"px"; selbox.querySelector(".sz").textContent=Math.round(o.w)+" × "+Math.round(o.h); selbox.querySelectorAll("i").forEach(i=>i.style.borderWidth=(1.5/view.s)+"px"); }
+function select(id){ sel=id; drawSel(); }
+/* 指针 */
+let drag=null;
+vp.addEventListener("pointerdown",e=>{
+  if(e.target.closest(".t[contenteditable=true]")) return;
+  const isPan=spaceDown||tool==="hand"||e.button===1;
+  const h=e.target.closest("#selbox i"); const oe=e.target.closest(".o");
+  try{vp.setPointerCapture(e.pointerId)}catch(_){}
+  if(isPan){ drag={m:"pan",sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y}; vp.classList.add("panning"); return }
+  const [wx,wy]=toWorld(e.clientX,e.clientY);
+  if(["node","dia","sticky","text"].includes(tool)){ place(tool,wx,wy); return }
+  if(tool==="link"){ if(oe){ if(!linkFrom){linkFrom=oe.dataset.id;select(linkFrom);toast("再点击目标图形")} else if(linkFrom!==oe.dataset.id){C.push({id:"c"+nid++,a:linkFrom,b:oe.dataset.id,l:""});linkFrom=null;renderCn();setTool("select");toast("已连线")} } return }
+  if(h){ const o=get(sel); drag={m:"rs",h:h.dataset.h,sx:wx,sy:wy,o:{...o}}; return }
+  if(oe){ select(oe.dataset.id); const o=get(oe.dataset.id); drag={m:"mv",sx:wx,sy:wy,ox:o.x,oy:o.y}; return }
+  select(null); drag={m:"pan",sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y}; vp.classList.add("panning");
+});
+vp.addEventListener("pointermove",e=>{
+  if(!drag) return;
+  if(drag.m==="pan"){ view.x=drag.vx+e.clientX-drag.sx; view.y=drag.vy+e.clientY-drag.sy; applyView(); return }
+  const [wx,wy]=toWorld(e.clientX,e.clientY), o=get(sel); if(!o) return;
+  if(drag.m==="mv"){ o.x=Math.round(drag.ox+wx-drag.sx); o.y=Math.round(drag.oy+wy-drag.sy); }
+  else { const d=drag.h, p=drag.o, dx=wx-drag.sx, dy=wy-drag.sy; let x=p.x,y=p.y,w=p.w,hh=p.h; const MIN=44;
+    if(d.includes("e")) w=Math.max(MIN,p.w+dx); if(d.includes("s")) hh=Math.max(MIN,p.h+dy);
+    if(d.includes("w")){ w=Math.max(MIN,p.w-dx); x=p.x+p.w-w } if(d.includes("n")){ hh=Math.max(MIN,p.h-dy); y=p.y+p.h-hh }
+    Object.assign(o,{x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(hh)}); }
+  patchObj(o); renderCn(); drawSel(); drawMM();
+});
+const endDrag=()=>{drag=null;vp.classList.remove("panning")}; vp.addEventListener("pointerup",endDrag); vp.addEventListener("pointercancel",endDrag);
+vp.addEventListener("dblclick",e=>{ const oe=e.target.closest(".o"); if(!oe) return; const t=oe.querySelector(".t"); t.contentEditable="true"; t.style.userSelect="text"; t.focus(); const r=document.createRange(); r.selectNodeContents(t); const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+  t.onblur=()=>{ t.contentEditable="false"; const o=get(oe.dataset.id); o.t=t.innerText.trim()||o.t; renderCn(); drawMM(); }; t.onkeydown=ev=>{ev.stopPropagation(); if(ev.key==="Escape"||(ev.key==="Enter"&&!ev.shiftKey)){ev.preventDefault();t.blur()}} });
+function place(k,wx,wy){ const d={node:[160,68,"新流程框"],dia:[170,108,"判断？"],sticky:[210,120,"新便签"],text:[160,44,"标题"]}[k];
+  const o=mk({k,x:Math.round(wx-d[0]/2),y:Math.round(wy-d[1]/2),w:d[0],h:d[1],t:d[2],s:"y"}); O.push(o); renderObjs(); select(o.id); setTool("select"); drawMM(); }
+function setTool(t){ tool=t; linkFrom=null; document.querySelectorAll("#tool button").forEach(b=>b.classList.toggle("on",b.dataset.t===t)); vp.classList.toggle("hand",t==="hand"); vp.classList.toggle("place",["node","dia","sticky","text","link"].includes(t)); }
+$("#tool").onclick=e=>{const b=e.target.closest("button"); if(b) setTool(b.dataset.t)};
+document.addEventListener("keydown",e=>{
+  if(e.target.isContentEditable) return;
+  if(e.code==="Space"){ if(!spaceDown){spaceDown=true;vp.classList.add("space")} e.preventDefault(); return }
+  if((e.key==="Delete"||e.key==="Backspace")&&sel){ O=O.filter(o=>o.id!==sel); C=C.filter(c=>c.a!==sel&&c.b!==sel); sel=null; renderObjs(); renderCn(); drawSel(); drawMM(); return }
+  if(e.metaKey||e.ctrlKey){ if(e.key==="="||e.key==="+"){e.preventDefault();$("#zi").click()} if(e.key==="-"){e.preventDefault();$("#zo").click()} if(e.key==="0"){e.preventDefault();$("#zp").click()} return }
+  const m={v:"select",h:"hand",r:"node",d:"dia",n:"sticky",t:"text",l:"link"}[e.key.toLowerCase()]; if(m) setTool(m); if(e.key==="Escape"){setTool("select");select(null)}
+  if(sel&&e.key.startsWith("Arrow")){const o=get(sel),st=e.shiftKey?10:1; if(e.key==="ArrowLeft")o.x-=st; if(e.key==="ArrowRight")o.x+=st; if(e.key==="ArrowUp")o.y-=st; if(e.key==="ArrowDown")o.y+=st; patchObj(o);renderCn();drawSel();drawMM();e.preventDefault()}
+});
+document.addEventListener("keyup",e=>{ if(e.code==="Space"){spaceDown=false;vp.classList.remove("space")} });
+/* 小地图 */
+const mm=$("#mm");
+function mmT(){ const [a,b,c,d]=bounds(); const vx0=-view.x/view.s, vy0=-view.y/view.s, vx1=vx0+innerWidth/view.s, vy1=vy0+innerHeight/view.s; const x0=Math.min(a,vx0)-60, y0=Math.min(b,vy0)-60, x1=Math.max(c,vx1)+60, y1=Math.max(d,vy1)+60; const k=Math.min(208/(x1-x0),136/(y1-y0)); return {x0,y0,k,ox:(208-(x1-x0)*k)/2,oy:(136-(y1-y0)*k)/2,vx0,vy0,vx1,vy1} }
+function drawMM(){ const T=mmT(); mm._T=T; mm.innerHTML=O.map(o=>`<div class="r" style="left:${T.ox+(o.x-T.x0)*T.k}px;top:${T.oy+(o.y-T.y0)*T.k}px;width:${Math.max(2,o.w*T.k)}px;height:${Math.max(2,o.h*T.k)}px"></div>`).join("")+`<div class="v" style="left:${T.ox+(T.vx0-T.x0)*T.k}px;top:${T.oy+(T.vy0-T.y0)*T.k}px;width:${(T.vx1-T.vx0)*T.k}px;height:${(T.vy1-T.vy0)*T.k}px"></div>`; }
+let mmDrag=false; function mmGo(e){ const r=mm.getBoundingClientRect(), T=mm._T; const wx=(e.clientX-r.left-T.ox)/T.k+T.x0, wy=(e.clientY-r.top-T.oy)/T.k+T.y0; view.x=innerWidth/2-wx*view.s; view.y=innerHeight/2-wy*view.s; const keep=mm._T; applyViewKeep(keep) }
+function applyViewKeep(T){ world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`; drawDots(); drawSel();
+  const vx0=-view.x/view.s, vy0=-view.y/view.s; const v=mm.querySelector(".v"); v.style.left=T.ox+(vx0-T.x0)*T.k+"px"; v.style.top=T.oy+(vy0-T.y0)*T.k+"px"; }
+mm.addEventListener("pointerdown",e=>{mmDrag=true;try{mm.setPointerCapture(e.pointerId)}catch(_){}mmGo(e)}); mm.addEventListener("pointermove",e=>{if(mmDrag)mmGo(e)}); mm.addEventListener("pointerup",()=>{mmDrag=false;drawMM()});
+/* 协作者 */
+const CUR=[{n:"林夕",c:"#2fa36b",p:[[460,300],[820,140],[1050,260],[640,470]],i:0,x:460,y:300},{n:"阿泽",c:"#3b6fe0",p:[[330,500],[160,330],[880,400],[1260,330]],i:1,x:330,y:500}];
+$("#curs").innerHTML=CUR.map((c,i)=>`<div class="cur" id="cur${i}" style="--c:${c.c};transform:translate(${c.x}px,${c.y}px)"><svg viewBox="0 0 20 20"><path d="M3 2l13 6-5.5 1.8L8.5 16z" fill="${c.c}" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg><b>${c.n}</b></div>`).join("");
+function applySelBy(){ document.querySelectorAll(".o.sel-by").forEach(x=>{x.classList.remove("sel-by");x.style.removeProperty("--c")}); const el=objsEl.querySelector(`[data-id="${byT("用量 > 64 卡？")}"]`); if(el){el.classList.add("sel-by");el.style.setProperty("--c","#2fa36b")} }
+let lastT=0;
+function stepCur(){ CUR.forEach((c,i)=>{ const tgt=c.p[c.i%c.p.length]; const dx=tgt[0]-c.x, dy=tgt[1]-c.y, d=Math.hypot(dx,dy); if(d<6){c.i++;c.wait=40+Math.random()*60} else if(!c.wait||c.wait--<=0){ c.wait=0; const sp=Math.min(d,5+d*.02); c.x+=dx/d*sp; c.y+=dy/d*sp+Math.sin(performance.now()/400+i)*.3 } document.getElementById("cur"+i).style.transform=`translate(${c.x}px,${c.y}px)`; });
+  requestAnimationFrame(stepCur); }
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),1600)}
+$("#shareBtn").onclick=()=>toast("已复制协作链接（示意）");
+window.addEventListener("resize",()=>applyView());
+renderObjs(); renderCn(); fit(); stepCur();
+</script>
+</body>
+</html>

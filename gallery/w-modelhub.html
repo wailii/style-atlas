@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模型市场</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#faf9f5;--panel:#fff;--ink:#16181a;--ink2:#555b60;--mute:#989da1;--line:#e6e4dc;--line2:#efede6;--acc:#0b6b4f;--acc2:#0e8a66;--acc-bg:#e4f3ec;--hot:#ff5d2a;--r:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--bg)}
+body{font-family:Inter,"Noto Sans SC",sans-serif;font-size:13px;color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45}
+button,input,select{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+input[type=text],input[type=number]{cursor:text}
+.mono{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
+svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* 顶栏 */
+.top{position:sticky;top:0;z-index:20;height:58px;display:flex;align-items:center;gap:28px;padding:0 32px;background:rgba(250,249,245,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand i{width:26px;height:26px;border-radius:7px;background:var(--ink);display:grid;place-items:center;color:#fff}
+.brand i svg{width:15px;height:15px;stroke-width:2}
+.brand em{font-style:normal;color:var(--acc)}
+.nav{display:flex;gap:22px;color:var(--ink2);font-weight:500}
+.nav a{cursor:pointer;padding:19px 0;border-bottom:2px solid transparent}
+.nav a.on{color:var(--ink);border-color:var(--ink)}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;width:340px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mute)}
+.search input{flex:1;font-size:13px;color:var(--ink)}
+.search kbd{font:11px "JetBrains Mono";color:var(--mute);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.who{display:flex;align-items:center;gap:8px;color:var(--ink2)}
+.who b{width:28px;height:28px;border-radius:50%;background:var(--acc-bg);color:var(--acc);display:grid;place-items:center;font-size:12px}
+
+/* 页面 */
+.page{display:grid;grid-template-columns:268px 1fr;gap:0;max-width:1440px;margin:0 auto}
+.side{position:sticky;top:58px;align-self:start;height:calc(100vh - 58px);overflow:auto;padding:26px 24px 40px 32px;border-right:1px solid var(--line)}
+.side h4{font-size:11px;letter-spacing:.08em;color:var(--mute);font-weight:600;margin:0 0 10px;display:flex;justify-content:space-between;text-transform:uppercase}
+.side h4 button{font-size:11px;color:var(--acc);letter-spacing:0;text-transform:none;font-weight:500}
+.grp{margin-bottom:26px}
+.opt{display:flex;align-items:center;gap:9px;height:30px;cursor:pointer;color:var(--ink2);border-radius:6px;margin:0 -6px;padding:0 6px}
+.opt:hover{background:var(--line2)}
+.opt .bx{width:15px;height:15px;border-radius:4px;border:1.5px solid #c5c2b6;display:grid;place-items:center;background:#fff;transition:.12s}
+.opt.on{color:var(--ink);font-weight:500}
+.opt.on .bx{background:var(--acc);border-color:var(--acc)}
+.opt .bx svg{width:11px;height:11px;stroke:#fff;stroke-width:2.6;opacity:0}
+.opt.on .bx svg{opacity:1}
+.opt.rad .bx{border-radius:50%}
+.opt.rad.on .bx{background:#fff;border-color:var(--acc);box-shadow:inset 0 0 0 3.5px var(--acc)}
+.opt .n{margin-left:auto;font:11.5px "JetBrains Mono";color:var(--mute)}
+.opt.zero{opacity:.4}
+.mkmini{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
+
+.dual{position:relative;height:28px;margin:4px 4px 0}
+.dual .tr{position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--line)}
+.dual .fl{position:absolute;top:12px;height:4px;background:var(--acc);border-radius:2px}
+.dual input{position:absolute;left:-4px;width:calc(100% + 8px);top:0;height:28px;-webkit-appearance:none;appearance:none;background:none;pointer-events:none;margin:0}
+.dual input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--acc);box-shadow:0 1px 3px rgba(0,0,0,.15);cursor:grab}
+.dual input::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.1)}
+.pv{display:flex;justify-content:space-between;margin-top:6px;font:12px "JetBrains Mono";color:var(--ink2)}
+.caps{display:flex;flex-wrap:wrap;gap:6px}
+.cap{height:28px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink2);font-size:12.5px;transition:.12s}
+.cap:hover{border-color:#c5c2b6}
+.cap.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.main{padding:26px 32px 120px;min-width:0}
+.head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+.head h1{font-size:26px;letter-spacing:-.02em;font-weight:700}
+.head h1 span{color:var(--mute);font-weight:500;margin-left:8px;font-family:"JetBrains Mono";font-size:20px}
+.head p{color:var(--ink2);margin-top:3px}
+.tools{display:flex;gap:10px;align-items:center}
+.sort{display:flex;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--ink2)}
+.sort select{height:30px;font-weight:500;color:var(--ink);padding-right:4px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;background:#fff;padding:2px}
+.seg button{width:32px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--mute)}
+.seg button.on{background:var(--ink);color:#fff}
+
+/* 计算器 */
+.calc{display:flex;align-items:center;gap:18px;padding:14px 18px;background:var(--ink);color:#fff;border-radius:12px;margin-bottom:20px}
+.calc .t{display:flex;align-items:center;gap:8px;font-weight:600;white-space:nowrap}
+.calc .t svg{color:#7ee0b8}
+.field{display:flex;flex-direction:column;gap:2px}
+.field label{font-size:10.5px;color:#a9b0b5;letter-spacing:.04em}
+.field input{width:104px;height:30px;padding:0 9px;border-radius:6px;background:#2a2e31;color:#fff;font:500 13.5px "JetBrains Mono";border:1px solid #3a3f43}
+.field input:focus{border-color:#7ee0b8}
+.op{color:#6d7479;font:13px "JetBrains Mono";padding-top:14px}
+.calc .rank{margin-left:auto;display:flex;gap:8px;align-items:center}
+.calc .rank span{white-space:nowrap;color:#a9b0b5;font-size:11.5px;margin-right:2px}
+.calc .rk{display:flex;align-items:center;gap:7px;height:32px;padding:0 11px;border-radius:8px;background:#23272a;border:1px solid #34393c;white-space:nowrap;cursor:pointer}
+.calc .rk:hover{border-color:#7ee0b8}
+.calc .rk i{font:600 11px "JetBrains Mono";color:#7ee0b8;font-style:normal}
+.calc .rk b{font-weight:500}
+.calc .rk s{text-decoration:none;font:12.5px "JetBrains Mono";color:#d7dcdf}
+.calc button.go{height:32px;padding:0 13px;border-radius:8px;background:#7ee0b8;color:#0a3b2c;font-weight:600;white-space:nowrap}
+
+/* 卡片 */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 0;display:flex;flex-direction:column;transition:border-color .15s,transform .15s,box-shadow .15s;animation:rise .5s both}
+.na .card,.na .meter .bar i{animation:none}
+.card:hover{border-color:#bdb9aa;transform:translateY(-2px)}
+.card.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card header{display:flex;align-items:center;gap:10px}
+.mk{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;flex:none}
+.card h3{font-size:15.5px;font-weight:650;letter-spacing:-.01em;line-height:1.2}
+.card header p{color:var(--mute);font-size:11.5px;margin-top:1px}
+.cmp{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--mute);font-size:12px;cursor:pointer;padding:4px 6px;margin-right:-6px;border-radius:6px}
+.cmp:hover{background:var(--line2)}
+.cmp .bx{width:15px;height:15px;border-radius:4px;border:1.5px solid #c5c2b6;display:grid;place-items:center;background:#fff}
+.cmp .bx svg{width:11px;height:11px;stroke:#fff;stroke-width:2.6;opacity:0}
+.card.sel .cmp{color:var(--acc);font-weight:500}
+.card.sel .cmp .bx{background:var(--acc);border-color:var(--acc)}
+.card.sel .cmp .bx svg{opacity:1}
+.desc{margin:11px 0 13px;color:var(--ink2);font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
+.price{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line2);border-radius:8px;background:var(--bg)}
+.price>div{padding:8px 11px}
+.price>div+div{border-left:1px solid var(--line2)}
+.price small{display:block;font-size:10.5px;color:var(--mute);letter-spacing:.04em}
+.price b{font:600 19px "JetBrains Mono";letter-spacing:-.03em}
+.price b i{font-style:normal;font-size:12px;color:var(--mute);margin-right:1px;font-weight:500}
+.unit{grid-column:1/-1;border-top:1px solid var(--line2);padding:3px 11px;font-size:10.5px;color:var(--mute)}
+.meters{display:grid;gap:7px;margin:13px 0}
+.meter{display:grid;grid-template-columns:44px 1fr 62px;align-items:center;gap:8px;font-size:11.5px;color:var(--mute)}
+.meter .bar{height:5px;border-radius:3px;background:var(--line2);overflow:hidden}
+.meter .bar i{display:block;height:100%;background:var(--ink);border-radius:3px;transform-origin:left;animation:grow .7s .15s both}
+.meter.sp .bar i{background:var(--acc2)}
+@keyframes grow{from{transform:scaleX(0)}}
+.meter b{font:500 12px "JetBrains Mono";color:var(--ink);text-align:right}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.tag{height:21px;padding:0 8px;border-radius:5px;background:var(--line2);color:var(--ink2);font-size:11.5px;display:flex;align-items:center}
+.tag.open{background:var(--acc-bg);color:var(--acc)}
+.card footer{margin:auto -16px 0;padding:10px 16px;border-top:1px solid var(--line2);display:flex;justify-content:space-between;align-items:baseline;color:var(--mute);font-size:11.5px}
+.card footer b{font:600 15px "JetBrains Mono";color:var(--ink);letter-spacing:-.02em}
+.card footer b.best{color:var(--acc)}
+.card .ribbon{position:absolute;top:-1px;right:60px;font-size:10.5px;background:var(--hot);color:#fff;padding:1px 7px 2px;border-radius:0 0 5px 5px;font-weight:600}
+
+/* 列表视图 */
+.list .card{flex-direction:row;align-items:center;padding:12px 16px;gap:18px;border-radius:8px}
+.list .card:hover{transform:none}
+.list{display:flex;flex-direction:column;gap:8px}
+.list .card header{width:210px;flex:none}
+.list .card .desc{display:none}
+.list .card .price{width:200px;flex:none;margin-left:auto}
+.list .card .price .unit{display:none}
+.list .card .meters{width:210px;margin:0;flex:none}
+.list .card .tags{width:128px;margin:0;flex:none}
+.list .card footer{border:0;margin:0;padding:0;flex-direction:column;align-items:flex-end;width:84px;flex:none;gap:0;margin-right:0}
+.list .card .cmp{margin:0}
+.list .card .cmp{order:9}
+.list .card .ribbon{display:none}
+.empty{grid-column:1/-1;text-align:center;padding:80px 0;color:var(--mute)}
+.empty b{display:block;font-size:16px;color:var(--ink);margin-bottom:4px}
+
+/* 对比条 */
+.cbar{position:fixed;left:50%;bottom:22px;transform:translate(-50%,120px);z-index:30;display:flex;align-items:center;gap:14px;padding:10px 12px 10px 18px;background:var(--ink);color:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);white-space:nowrap}
+.cbar.show{transform:translate(-50%,0)}
+.cbar .sl{display:flex;gap:8px}
+.cbar .it{display:flex;align-items:center;gap:7px;padding:4px 6px 4px 5px;border-radius:8px;background:#2a2e31;font-size:12.5px}
+.cbar .it .mk{width:22px;height:22px;font-size:11px;border-radius:6px}
+.cbar .it button{color:#8a9196;display:grid;place-items:center}
+.cbar .it button:hover{color:#fff}
+.cbar .ph{width:100px;height:32px;border:1px dashed #4a5054;border-radius:8px;display:grid;place-items:center;color:#7b8287;font-size:11.5px}
+.cbar .n{color:#a9b0b5;font-size:12px}
+.cbar .btn{height:36px;padding:0 16px;border-radius:9px;background:#7ee0b8;color:#0a3b2c;font-weight:650}
+.cbar .btn:disabled{opacity:.35;cursor:not-allowed}
+.cbar .clr{color:#a9b0b5;font-size:12px}
+.mask{position:fixed;inset:0;z-index:40;background:rgba(22,24,26,.45);display:none;place-items:center;backdrop-filter:blur(3px)}
+.mask.show{display:grid}
+.dlg{width:min(1060px,calc(100vw - 80px));max-height:calc(100vh - 80px);overflow:auto;background:#fff;border-radius:16px;padding:26px 28px;animation:rise .3s both}
+.dlg h2{font-size:20px;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.dlg h2 button{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--ink2)}
+.dlg h2 button:hover{background:var(--line2)}
+.dlg>p{color:var(--mute);margin-bottom:16px}
+table.ct{width:100%;border-collapse:collapse}
+.ct th,.ct td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line2);vertical-align:middle}
+.ct thead th{border-bottom:1px solid var(--ink);padding-bottom:14px}
+.ct th:first-child{width:130px;color:var(--mute);font-weight:500;font-size:12px}
+.ct td{font:13px "JetBrains Mono"}
+.ct td.t{font-family:Inter,"Noto Sans SC"}
+.ct .nm{display:flex;align-items:center;gap:8px;font:650 14.5px Inter,"Noto Sans SC"}
+.ct .nm small{display:block;font-weight:400;color:var(--mute);font-size:11.5px}
+.ct td.best{color:var(--acc);font-weight:600}
+.ct td.best::after{content:" ★";font-size:10px}
+.ct .y{color:var(--acc)}.ct .nn{color:#c9c6b9}
+.foot{position:fixed;right:14px;bottom:6px;font-size:10px;color:var(--mute);z-index:5}
+@media(max-width:1280px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.calc{flex-wrap:wrap}.calc .rank{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><i><svg viewBox="0 0 24 24"><path d="M4 18V9M10 18V5M16 18v-7M21 18H3"/></svg></i>模型<em>集市</em></div>
+  <nav class="nav"><a class="on">全部模型</a><a>厂商</a><a>排行榜</a><a>接入文档</a></nav>
+  <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="text" placeholder="搜模型名、厂商、能力"><kbd>/</kbd></label>
+  <div class="who"><b>财</b>财务共享</div>
+</header>
+<div class="page">
+  <aside class="side">
+    <div class="grp"><h4>厂商 <button id="clrV">清空</button></h4><div id="vend"></div></div>
+    <div class="grp"><h4>上下文长度</h4><div id="ctx"></div></div>
+    <div class="grp"><h4>输入价格 <button id="clrP">重置</button></h4>
+      <div class="dual"><div class="tr"></div><div class="fl" id="fl"></div><input id="pmin" type="range" min="0" max="20" step="0.5" value="0"><input id="pmax" type="range" min="0" max="20" step="0.5" value="20"></div>
+      <div class="pv"><span id="pvL">¥0</span><span style="color:var(--mute)">元 / 百万 tokens</span><span id="pvR">¥20+</span></div></div>
+    <div class="grp"><h4>能力</h4><div class="caps" id="caps"></div></div>
+  </aside>
+  <main class="main">
+    <div class="head">
+      <div><h1>全部模型<span id="cnt">18</span></h1><p>价格按每百万 tokens 人民币计，速度为 8 点高峰实测的首字后输出速率。</p></div>
+      <div class="tools">
+        <label class="sort"><svg viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg><select id="sort"><option value="rec">综合推荐</option><option value="cost">预估月费 低到高</option><option value="pin">输入价格 低到高</option><option value="ctx">上下文 长到短</option><option value="tps">速度 快到慢</option></select></label>
+        <div class="seg"><button class="on" data-v="grid" title="卡片视图"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button><button data-v="list" title="列表视图"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
+      </div>
+    </div>
+    <section class="calc">
+      <div class="t"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M12 12h2M8 16h2M12 16h4"/></svg>价格计算器</div>
+      <div class="field"><label>每天调用</label><input id="cCalls" type="number" value="20000" min="0"></div><span class="op">×</span>
+      <div class="field"><label>单次输入 tokens</label><input id="cIn" type="number" value="2000" min="0"></div><span class="op">+</span>
+      <div class="field"><label>单次输出 tokens</label><input id="cOut" type="number" value="500" min="0"></div>
+      <div class="rank" id="rank"></div>
+      <button class="go" id="goCost">按月费排序</button>
+    </section>
+    <div id="out" class="grid"></div>
+  </main>
+</div>
+<div class="cbar" id="bar"><div class="sl" id="sl"></div><span class="n" id="cn"></span><button class="btn" id="open">开始对比</button><button class="clr" id="clrC">清空</button></div>
+<div class="mask" id="mask"><div class="dlg" id="dlg"></div></div>
+<div class="foot">示例数据</div>
+
+<script>
+const V={"星轨":["#0b6b4f","星"],"墨池":["#2b2d42","墨"],"青岚":["#2e7d9a","岚"],"北斗云":["#b4531a","斗"],"鹿鸣":["#8a4a8f","鹿"],"拾光":["#b0892a","光"]};
+const M=[
+["Vega-3 Ultra","星轨",1000,18,54,42,["推理","视觉","工具调用","长文本"],"旗舰多模态模型，擅长复杂推理、长文档分析和跨图文问答。","2026-09",0],
+["Vega-3 Flash","星轨",256,1.2,4.8,210,["视觉","工具调用","代码"],"低延迟版本，客服、检索增强和批量抽取的默认选择。","2026-09",0],
+["Vega-2 Mini","星轨",128,0.3,0.9,340,["代码","多语言"],"小尺寸高吞吐，适合分类、改写和结构化输出。","2026-05",0],
+["Ink-R1","墨池",128,4,16,58,["推理","代码","工具调用"],"带思维链的推理模型，数学、代码和规划任务表现稳定。","2026-08",0],
+["Ink-R1 Lite","墨池",64,0.8,3.2,120,["推理","代码"],"推理模型的轻量版，价格约为 R1 的五分之一。","2026-08",0],
+["Ink-Chat 72B","墨池",128,2,6,76,["多语言","工具调用","开源"],"通用对话模型，权重开放，可私有化部署。","2026-06",1],
+["Ink-Vision","墨池",64,5,15,45,["视觉","推理"],"图表、票据、截图理解，输出带坐标的结构化结果。","2026-07",0],
+["Qing-Coder 32B","青岚",128,1.5,4.5,95,["代码","工具调用","开源"],"代码补全与仓库级修改，支持 80 余种语言。","2026-07",1],
+["Qing-VL 72B","青岚",32,3.5,10.5,52,["视觉","多语言","开源"],"开源视觉语言模型，中文文档与手写体识别较强。","2026-04",1],
+["Qing-Base 7B","青岚",32,0.1,0.2,480,["多语言","开源"],"7B 基座，单卡可跑，适合微调和边缘部署。","2026-02",1],
+["Dipper-Long","北斗云",2000,8,24,36,["长文本","工具调用"],"两百万 tokens 上下文，整库代码和整本合同一次读完。","2026-10",0],
+["Dipper-Turbo","北斗云",128,0.6,1.8,260,["工具调用","多语言"],"工具调用成功率高，适合做 Agent 的执行层。","2026-08",0],
+["Dipper-Reason","北斗云",200,12,48,31,["推理","工具调用","长文本"],"面向复杂任务拆解的推理模型，支持并行工具调用。","2026-10",0],
+["Lumen-Pro","鹿鸣",200,6,20,64,["视觉","多语言","工具调用"],"十余种语言互译与图文生成，海外业务常用。","2026-09",0],
+["Lumen-Air","鹿鸣",128,0.5,1.5,300,["多语言"],"翻译、摘要、客服话术润色的低价选项。","2026-06",0],
+["Shi-Max","拾光",512,9,27,48,["长文本","推理","视觉"],"五十万 tokens 上下文，长报告问答和跨文档对比。","2026-10",0],
+["Shi-Code Pro","拾光",256,3,9,88,["代码","工具调用"],"面向 IDE 与 CI 的代码模型，支持函数级补全。","2026-09",0],
+["Shi-Edge 3B","拾光",16,0.05,0.1,620,["开源","多语言"],"端侧小模型，手机和工控机上可直接运行。","2026-03",1]
+].map((a,i)=>({id:i,name:a[0],v:a[1],ctx:a[2],pin:a[3],pout:a[4],tps:a[5],caps:a[6],desc:a[7],date:a[8],open:!!a[9]||a[6].includes("开源"),rec:i}));
+const CAPS=["推理","视觉","工具调用","代码","长文本","多语言","开源"];
+const CTXS=[["不限",0],["≥ 32K",32],["≥ 128K",128],["≥ 512K",512],["≥ 1M",1000]];
+const st={v:new Set(),ctx:0,pmin:0,pmax:20,caps:new Set(),q:"",sort:"rec",view:"grid",cmp:[]};
+const $=s=>document.querySelector(s);
+const ck='<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
+const fmtK=k=>k>=1000?(k/1000)+"M":k+"K";
+const money=n=>"¥"+Math.round(n).toLocaleString("zh-CN");
+const p2=n=>n<1?n.toFixed(2):n.toFixed(n%1?2:2);
+const calcCost=m=>{const c=+$("#cCalls").value||0,i=+$("#cIn").value||0,o=+$("#cOut").value||0;return c*30*(i*m.pin+o*m.pout)/1e6};
+function pass(m,skip){
+  if(skip!=="v"&&st.v.size&&!st.v.has(m.v))return false;
+  if(skip!=="ctx"&&m.ctx<st.ctx)return false;
+  if(skip!=="p"&&(m.pin<st.pmin||(st.pmax<20&&m.pin>st.pmax)))return false;
+  if(skip!=="c"&&[...st.caps].some(c=>!m.caps.includes(c)&&!(c==="开源"&&m.open)))return false;
+  if(st.q){const s=(m.name+m.v+m.caps.join("")+m.desc).toLowerCase();if(!s.includes(st.q.toLowerCase()))return false}
+  return true;
+}
+function side(){
+  $("#vend").innerHTML=Object.keys(V).map(v=>{const n=M.filter(m=>m.v===v&&pass(m,"v")).length;return `<div class="opt ${st.v.has(v)?"on":""} ${n?"":"zero"}" data-v="${v}"><span class="bx">${ck}</span><span class="mkmini" style="background:${V[v][0]}">${V[v][1]}</span>${v}<span class="n">${n}</span></div>`}).join("");
+  $("#ctx").innerHTML=CTXS.map(([t,k])=>{const n=M.filter(m=>m.ctx>=k&&pass(m,"ctx")).length;return `<div class="opt rad ${st.ctx===k?"on":""}" data-k="${k}"><span class="bx"></span>${t}<span class="n">${n}</span></div>`}).join("");
+  $("#caps").innerHTML=CAPS.map(c=>`<button class="cap ${st.caps.has(c)?"on":""}" data-c="${c}">${c}</button>`).join("");
+  const a=st.pmin,b=st.pmax;$("#fl").style.left=a/20*100+"%";$("#fl").style.width=(b-a)/20*100+"%";
+  $("#pvL").textContent="¥"+a;$("#pvR").textContent="¥"+b+(b>=20?"+":"");
+}
+function sorted(list){
+  const s=st.sort,f={rec:(a,b)=>a.rec-b.rec,cost:(a,b)=>calcCost(a)-calcCost(b),pin:(a,b)=>a.pin-b.pin,ctx:(a,b)=>b.ctx-a.ctx,tps:(a,b)=>b.tps-a.tps}[s];
+  return list.slice().sort(f);
+}
+function card(m,i,minCost){
+  const c=calcCost(m),sel=st.cmp.includes(m.id),lg=x=>Math.max(4,Math.log(x/8)/Math.log(2000/8)*100);
+  return `<article class="card ${sel?"sel":""}" data-id="${m.id}" style="animation-delay:${Math.min(i,9)*35}ms">
+  <header><span class="mk" style="background:${V[m.v][0]}">${V[m.v][1]}</span><div><h3>${m.name}</h3><p>${m.v} · ${m.date}</p></div>
+  <label class="cmp" data-cmp="${m.id}"><span class="bx">${ck}</span>对比</label></header>
+  <p class="desc">${m.desc}</p>
+  <div class="price"><div><small>输入</small><b><i>¥</i>${p2(m.pin)}</b></div><div><small>输出</small><b><i>¥</i>${p2(m.pout)}</b></div><span class="unit">元 / 百万 tokens</span></div>
+  <div class="meters"><div class="meter"><span>上下文</span><div class="bar"><i style="width:${lg(m.ctx)}%"></i></div><b>${fmtK(m.ctx)}</b></div>
+  <div class="meter sp"><span>速度</span><div class="bar"><i style="width:${Math.min(100,m.tps/6.5)}%"></i></div><b>${m.tps} t/s</b></div></div>
+  <div class="tags">${m.caps.map(c=>`<span class="tag ${c==="开源"?"open":""}">${c}</span>`).join("")}</div>
+  <footer><span>每月约</span><b class="${c===minCost?"best":""}">${money(c)}</b></footer></article>`;
+}
+function render(){
+  const list=sorted(M.filter(m=>pass(m)));
+  const min=Math.min(...list.map(calcCost));
+  $("#cnt").textContent=list.length;
+  const o=$("#out");o.className=st.view==="list"?"list":"grid";
+  o.innerHTML=list.length?list.map((m,i)=>card(m,i,min)).join(""):`<div class="empty"><b>没有符合条件的模型</b>放宽价格区间，或清空部分能力标签。</div>`;
+  side();
+  const top=M.filter(m=>pass(m)).sort((a,b)=>calcCost(a)-calcCost(b)).slice(0,2);
+  $("#rank").innerHTML=`<span>最省</span>`+top.map((m,i)=>`<div class="rk" data-id="${m.id}"><i>${i+1}</i><b>${m.name}</b><s>${money(calcCost(m))}/月</s></div>`).join("");
+  bar();
+}
+function bar(){
+  const b=$("#bar");b.classList.toggle("show",st.cmp.length>0);
+  $("#sl").innerHTML=st.cmp.map(id=>{const m=M[id];return `<div class="it"><span class="mk" style="background:${V[m.v][0]}">${V[m.v][1]}</span>${m.name}<button data-rm="${id}"><svg viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`}).join("")+(st.cmp.length<4?`<div class="ph">最多 4 个</div>`:"");
+  $("#cn").textContent=`已选 ${st.cmp.length} / 4`;$("#open").disabled=st.cmp.length<2;
+}
+function compare(){
+  const L=st.cmp.map(i=>M[i]);const rows=[
+    ["厂商",m=>m.v,null,1],["上下文",m=>fmtK(m.ctx),m=>m.ctx,-1],["输出速度",m=>m.tps+" tok/s",m=>m.tps,-1],
+    ["输入价格",m=>"¥"+p2(m.pin),m=>m.pin,1],["输出价格",m=>"¥"+p2(m.pout),m=>m.pout,1],["预估月费",m=>money(calcCost(m)),m=>calcCost(m),1],
+    ["视觉",m=>m.caps.includes("视觉")?'<span class="y">支持</span>':'<span class="nn">—</span>'],["工具调用",m=>m.caps.includes("工具调用")?'<span class="y">支持</span>':'<span class="nn">—</span>'],["推理",m=>m.caps.includes("推理")?'<span class="y">支持</span>':'<span class="nn">—</span>'],["开放权重",m=>m.open?'<span class="y">是</span>':'<span class="nn">—</span>']];
+  $("#dlg").innerHTML=`<h2>模型对比<button id="x"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2><p>预估月费按计算器当前设定：每天 ${(+$("#cCalls").value).toLocaleString("zh-CN")} 次，单次输入 ${$("#cIn").value}、输出 ${$("#cOut").value} tokens。星标为该行最优。</p>
+  <table class="ct"><thead><tr><th></th>${L.map(m=>`<th><div class="nm"><span class="mk" style="background:${V[m.v][0]};width:28px;height:28px;font-size:13px">${V[m.v][1]}</span><div>${m.name}<small>${m.date}</small></div></div></th>`).join("")}</tr></thead><tbody>${rows.map(([n,f,k,dir])=>{
+    let best=-1;if(k){const vals=L.map(k);const t=dir===1?Math.min(...vals):Math.max(...vals);if(new Set(vals).size>1)best=vals.indexOf(t)}
+    return `<tr><th>${n}</th>${L.map((m,i)=>`<td class="${k?"":"t"} ${i===best?"best":""}">${f(m)}</td>`).join("")}</tr>`}).join("")}</tbody></table>`;
+  $("#mask").classList.add("show");$("#x").onclick=()=>$("#mask").classList.remove("show");
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-v],[data-k],[data-c],[data-cmp],[data-rm],.rk");
+  if(e.target.id==="mask")$("#mask").classList.remove("show");
+  if(!t)return;
+  if(t.matches(".opt[data-v]")){const v=t.dataset.v;st.v.has(v)?st.v.delete(v):st.v.add(v)}
+  else if(t.matches(".opt[data-k]"))st.ctx=+t.dataset.k;
+  else if(t.matches(".cap")){const c=t.dataset.c;st.caps.has(c)?st.caps.delete(c):st.caps.add(c)}
+  else if(t.matches("[data-cmp]")){e.preventDefault();const id=+t.dataset.cmp,i=st.cmp.indexOf(id);if(i>=0)st.cmp.splice(i,1);else if(st.cmp.length<4)st.cmp.push(id);else return}
+  else if(t.matches("[data-rm]"))st.cmp=st.cmp.filter(x=>x!==+t.dataset.rm);
+  else if(t.matches(".rk")){st.q=M[+t.dataset.id].name;$("#q").value=st.q}
+  render();
+});
+$("#clrV").onclick=()=>{st.v.clear();render()};
+$("#clrC").onclick=()=>{st.cmp=[];render()};
+$("#clrP").onclick=()=>{st.pmin=0;st.pmax=20;$("#pmin").value=0;$("#pmax").value=20;render()};
+$("#open").onclick=compare;
+$("#q").oninput=e=>{st.q=e.target.value.trim();render()};
+$("#sort").onchange=e=>{st.sort=e.target.value;render()};
+$("#goCost").onclick=()=>{st.sort="cost";$("#sort").value="cost";render()};
+["#cCalls","#cIn","#cOut"].forEach(s=>$(s).oninput=render);
+$("#pmin").oninput=e=>{st.pmin=Math.min(+e.target.value,st.pmax-0.5);e.target.value=st.pmin;render()};
+$("#pmax").oninput=e=>{st.pmax=Math.max(+e.target.value,st.pmin+0.5);e.target.value=st.pmax;render()};
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{st.view=b.dataset.v;document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));render()});
+addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement.tagName!=="INPUT"){e.preventDefault();$("#q").focus()}if(e.key==="Escape")$("#mask").classList.remove("show")});
+render();setTimeout(()=>document.body.classList.add('na'),1500);
+</script>
+</body>
+</html>

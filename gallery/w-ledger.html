@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>账本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Noto+Serif+SC:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--desk:#e4dac0;--paper:#f8f2e0;--paper2:#f3ecd7;--ink:#1f2a44;--ink2:#4d5670;--mute:#8d8a7c;--rule:rgba(46,66,104,.2);--rule2:rgba(46,66,104,.1);--red:#b3261e;--redbg:rgba(179,38,30,.07)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--desk)}
+body{font-family:"Source Serif 4","Noto Serif SC",serif;font-size:14px;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0;outline:none;cursor:pointer}
+input{cursor:text}
+.n{font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum","lnum"}
+.hand{font-family:"Ma Shan Zheng","Noto Serif SC",cursive}
+svg{display:block}
+
+.desk{height:100%;display:flex;align-items:center;justify-content:center;padding:26px 64px 26px 30px;position:relative}
+.book{position:relative;display:grid;grid-template-columns:460px 1fr;width:100%;max-width:1346px;height:100%;max-height:848px;perspective:2400px;filter:drop-shadow(0 18px 24px rgba(60,45,20,.22))}
+.page{background:var(--paper);position:relative;min-height:0}
+.l{border-radius:6px 0 0 6px;padding:34px 36px 28px 44px;border-right:1px solid rgba(46,66,104,.25);display:flex;flex-direction:column;overflow:hidden}
+.l::after{content:"";position:absolute;right:0;top:0;bottom:0;width:14px;background:var(--paper2);opacity:.9}
+.r{border-radius:0 6px 6px 0;padding:34px 44px 24px 36px;display:flex;flex-direction:column;overflow:hidden;transform-origin:left center;backface-visibility:hidden}
+.r.out{animation:turn .26s cubic-bezier(.5,0,.9,.6) forwards}
+.r.in{animation:turnin .3s cubic-bezier(.2,.7,.3,1) both}
+@keyframes turn{to{transform:rotateY(-86deg);filter:brightness(.9)}}
+@keyframes turnin{from{transform:rotateY(-86deg);filter:brightness(.9)}to{transform:none}}
+
+/* 左页 */
+.no{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.2em;color:var(--mute);border-bottom:1px solid var(--rule);padding-bottom:8px}
+.l h1{font-size:34px;font-weight:700;letter-spacing:.12em;margin:16px 0 2px;line-height:1.2}
+.l .sub{color:var(--ink2);font-size:14px;letter-spacing:.08em}
+.big{margin:16px 0 4px;padding:16px 0 12px;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule)}
+.big small{display:block;font-size:11px;letter-spacing:.2em;color:var(--mute);margin-bottom:2px}
+.big .v{font-size:46px;font-weight:600;letter-spacing:-.01em;line-height:1.1;position:relative;display:inline-block}
+.big .v i{font-style:normal;font-size:22px;margin-right:4px;color:var(--ink2);font-weight:500}
+.big .v u{position:absolute;left:0;right:0;bottom:-5px;height:5px;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);text-decoration:none}
+.big .v.corr{color:var(--ink)}
+.sumt{width:100%;border-collapse:collapse;margin-top:14px}
+.sumt caption{text-align:left;font-size:11px;letter-spacing:.2em;color:var(--mute);padding-bottom:4px}
+.sumt td{height:28px;border-bottom:1px solid var(--rule2);font-size:13.5px}
+.sumt td:last-child{text-align:right}
+.sumt tr.t td{border-bottom:1.5px solid var(--ink);border-top:1px solid var(--ink);font-weight:600}
+.sumt .bar{display:inline-block;height:4px;background:var(--ink);opacity:.55;vertical-align:middle;margin-left:8px;transition:width .5s}
+.stampwrap{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;padding-top:12px}
+.sign{font-size:12px;color:var(--ink2);line-height:1.8}
+.sign b{font-family:"Ma Shan Zheng";font-weight:400;font-size:22px;color:var(--ink);margin-left:6px}
+.sign .ln{display:inline-block;width:90px;border-bottom:1px solid var(--ink2);margin-left:4px;vertical-align:baseline;text-align:center}
+.stamp{width:88px;height:88px;transform:rotate(-12deg);opacity:.82}
+
+/* 右页 */
+.rh{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:10px}
+.rh h2{font-size:22px;letter-spacing:.14em;font-weight:700}
+.rh h2 small{font-size:12px;letter-spacing:.1em;color:var(--mute);font-weight:400;margin-left:10px}
+.pg{display:flex;align-items:center;gap:6px;color:var(--ink2);font-size:12px}
+.pg button{width:26px;height:26px;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center}
+.pg button:hover{background:var(--paper2)}
+.pg button:disabled{opacity:.3;cursor:default}
+.hd,.row{display:grid;grid-template-columns:50px 1fr 76px 118px 118px 128px;align-items:center}
+.hd{border-top:1.5px solid var(--ink);border-bottom:1px solid var(--ink);height:44px;font-size:12px;letter-spacing:.2em;color:var(--ink2);position:relative}
+.hd .g{grid-column:4/6;text-align:center;border-bottom:1px solid var(--rule);height:20px;line-height:20px;margin-top:-1px}
+.hd div{padding:0 8px}
+.hd2{display:grid;grid-template-columns:50px 1fr 76px 118px 118px 128px;font-size:12px;letter-spacing:.2em;color:var(--ink2);height:22px;line-height:22px;border-bottom:1px solid var(--ink)}
+.hd2 div{padding:0 8px}
+.rt{text-align:right}
+.body{flex:1;min-height:0;overflow-y:auto;position:relative;border-left:0;scrollbar-width:thin;scrollbar-color:rgba(46,66,104,.25) transparent}
+.body::before{content:"";position:absolute;left:49px;top:0;bottom:0;width:4px;border-left:1px solid rgba(179,38,30,.55);border-right:1px solid rgba(179,38,30,.55);pointer-events:none}
+.ent{border-bottom:1px solid var(--rule2)}
+.row{height:36px;cursor:pointer;position:relative}
+.row:hover{background:rgba(31,42,68,.045)}
+.row>div{padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .d{color:var(--ink2);font-size:13px;padding-left:2px;text-align:center}
+.row .v{font-size:12px;color:var(--mute)}
+.row .m{font-size:14.5px}
+.row .num{text-align:right;font-size:14.5px}
+.row .bal{font-weight:500}
+.ent.open .row{background:var(--paper2)}
+.ent.open .row::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ink)}
+del{color:var(--red);text-decoration-thickness:1.5px;opacity:.8}
+.new{color:var(--red);font-weight:600}
+.note{font-family:"Ma Shan Zheng";color:var(--red);font-size:15px;margin-left:8px}
+.row.corr{height:54px}
+.cr{color:var(--ink2)}
+.vch{display:none;grid-template-columns:240px 1fr;gap:26px;padding:16px 18px 18px 62px;border-top:1px dashed var(--rule)}
+.ent.open .vch{display:grid;animation:drop .22s both}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.vch .info{font-size:13px;line-height:1.9;color:var(--ink2)}
+.vch .info dl{display:grid;grid-template-columns:70px 1fr;margin-bottom:8px}
+.vch .info dt{color:var(--mute);font-size:12px;letter-spacing:.1em}
+.vch .info dd{color:var(--ink)}
+.vch .acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pen{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid var(--red);color:var(--red);border-radius:2px;font-size:13px;letter-spacing:.1em}
+.pen:hover{background:var(--redbg)}
+.pen svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.fix{display:flex;align-items:center;gap:8px;color:var(--red)}
+.fix input{width:130px;height:30px;border-bottom:1.5px solid var(--red);text-align:right;font-size:15px;color:var(--red);font-weight:600;padding:0 4px}
+.fix button{height:28px;padding:0 10px;border:1px solid var(--red);border-radius:2px;font-size:12.5px}
+.fix button.go{background:var(--red);color:#fff}
+.att{display:flex;gap:12px;align-items:flex-start}
+.att .th{border:1px solid var(--rule);background:#fffdf5;padding:3px;box-shadow:1px 2px 0 rgba(46,66,104,.08)}
+.att .cap{font-size:11px;color:var(--mute);text-align:center;margin-top:2px;letter-spacing:.1em}
+.foot{border-top:1.5px solid var(--ink);padding-top:0;margin-top:0}
+.tot{display:grid;grid-template-columns:50px 1fr 76px 118px 118px 128px;height:46px;align-items:center;font-weight:600;font-size:15px}
+.tot>div{padding:0 8px}
+.tot .lb{grid-column:1/4;letter-spacing:.5em}
+.tot .num{text-align:right;position:relative}
+.tot .num span{display:inline-block;position:relative;padding-bottom:3px}
+.tot .num span::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:4px;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+.cb{position:absolute;right:-48px;top:70px;display:flex;flex-direction:column;gap:6px;z-index:3}
+.tab{width:48px;height:56px;background:#d3c6a3;border:1px solid rgba(60,45,20,.25);border-left:0;border-radius:0 8px 8px 0;display:grid;place-items:center;font-size:13px;color:#4a4228;transition:.15s;position:relative;left:-4px;cursor:pointer;line-height:1.2;text-align:center}
+.tab small{display:block;font-size:10px;opacity:.7}
+.tab:hover{left:0}
+.tab.on{background:var(--paper);left:0;width:54px;margin-right:-6px;font-weight:700;color:var(--ink)}
+.tab.on::before{content:"";position:absolute;left:-2px;top:0;bottom:0;width:4px;background:var(--paper)}
+.tab.cur::after{content:"";position:absolute;right:7px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+.fn{position:absolute;left:20px;bottom:5px;font-size:10px;color:var(--mute);letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="book" id="book">
+    <section class="page l" id="left"></section>
+    <section class="page r" id="right"></section>
+    <nav class="cb" id="tabs"></nav>
+  </div>
+</div>
+<div class="fn">示例数据</div>
+<script>
+// 示例数据：部门月度账单。借方 = 当月发生费用，贷方 = 冲减（退还、抵扣）
+const MONTHS=[6,7,8,9,10,11];
+const DEPT="算法平台部", ACCOUNTANT="林素", TODAY="11-20";
+const ITEMS=[
+ ["GPU 训练集群 · A800 × 64 包月","计算",[286000,302000],"集群 train-a / 64 卡","按月包年折算"],
+ ["GPU 训练集群 · A800 弹性扩容","计算",[18000,64000],"集群 train-a / 弹性","按小时计费"],
+ ["GPU 推理 · H800 在线服务","计算",[96000,128000],"服务 infer-h / 16 卡","按小时计费"],
+ ["对象存储 · 标准层","存储",[12400,18800],"桶 corpus-main","按 GB·月"],
+ ["云盘 · SSD 数据盘","存储",[6200,9100],"128 块 / 4TB","按容量计费"],
+ ["公网带宽 · 峰值计费","网络",[4800,9600],"出口 200Mbps","按峰值带宽"],
+ ["专线 · 北京—上海","网络",[15000,15000],"专线 DX-0213","固定月费"],
+ ["容器服务 · 托管节点费","平台",[3600,5200],"集群 k8s-prod","按节点数"],
+ ["Token 调用 · 内部模型网关","平台",[8200,22400],"网关 gw-llm","按调用量"],
+ ["跨区数据传输","网络",[2100,6800],"北京 → 上海","按 GB"]
+];
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function build(m){
+  const r=rng(m*7919+13), ents=[]; let id=0;
+  const days=[1,1,2,3,5,7,9,12,15,18,21,24,28];
+  ITEMS.forEach((it,i)=>{
+    const a=it[2][0],b=it[2][1], amt=Math.round((a+(b-a)*r())/10)*10+ Math.round(r()*90)*1;
+    ents.push({id:id++,day:Math.min(days[i]+ (i>6?1:0),m===2?28:30),memo:it[0],cat:it[1],debit:amt,credit:0,res:it[3],basis:it[4]});
+  });
+  [["闲置节点退还",["计算"],8800,26000],["代金券抵扣",["平台"],5000,10000],["内部分摊冲回",["网络"],1200,4200]].forEach((c,i)=>{
+    if(i===0&&r()<.15)return; ents.push({id:id++,day:[19,22,26][i],memo:c[0],cat:c[1][0],debit:0,credit:Math.round((c[2]+(c[3]-c[2])*r())/10)*10,res:"冲减单",basis:"月末核对后冲减"});
+  });
+  ents.sort((a,b)=>a.day-b.day||a.id-b.id);
+  ents.forEach((e,i)=>e.no=String(m).padStart(2,"0")+"-"+String(i+1).padStart(3,"0"));
+  return ents;
+}
+const DATA={};MONTHS.forEach(m=>DATA[m]=build(m));
+const CORR={}; // CORR[m][id]={old,nw,side,by,date}
+let cur=10, openId=null, editing=false;
+const $=s=>document.querySelector(s);
+const yuan=n=>n.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const eff=(m,e)=>{const c=(CORR[m]||{})[e.id];return c?{...e,[c.side]:c.nw}:e};
+const totals=m=>{let d=0,c=0;DATA[m].forEach(e=>{const x=eff(m,e);d+=x.debit;c+=x.credit});return{d,c,b:d-c}};
+const shown={d:0,c:0,b:0};
+function roll(el,key,to,fmt){
+  const from=shown[key];shown[key]=to;if(from===to){el.textContent=fmt(to);return}
+  const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/450),e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1)requestAnimationFrame(f)})(t0);
+}
+function voucher(e,m){
+  const W=236,H=176,r=rng(e.id*31+m);let bars="",x=18;while(x<150){const w=1+Math.floor(r()*3);bars+=`<rect x="${x}" y="146" width="${w}" height="14" fill="#1f2a44"/>`;x+=w+1+Math.floor(r()*3)}
+  let zig="M0 "+(H-8);for(let i=0;i<=W;i+=8)zig+=` L${i+4} ${H} L${i+8} ${H-8}`;zig+=` L${W} 0 L0 0 Z`;
+  const amt=e.debit||e.credit;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><path d="${zig}" fill="#fffdf6" stroke="#cfc6ad"/>
+  <text x="18" y="24" font-size="11" font-weight="700" fill="#1f2a44" letter-spacing="2">云舟科技 · 结算单</text>
+  <text x="18" y="38" font-size="8" fill="#8d8a7c" letter-spacing="1">NO.${e.no}-${(9000+e.id*37)}</text>
+  <line x1="18" y1="45" x2="218" y2="45" stroke="#1f2a44" stroke-width="1"/>
+  <text x="18" y="62" font-size="9.5" fill="#4d5670">${e.memo.length>16?e.memo.slice(0,16)+"…":e.memo}</text>
+  <text x="18" y="78" font-size="9" fill="#8d8a7c">${e.res}</text>
+  <text x="18" y="94" font-size="9" fill="#8d8a7c">计费 ${m}月01日–${m}月${m===2?28:30}日</text>
+  <line x1="18" y1="103" x2="218" y2="103" stroke="#cfc6ad" stroke-dasharray="2 2"/>
+  <text x="18" y="124" font-size="10" fill="#4d5670">${e.credit?"冲减金额":"应付金额"}</text>
+  <text x="218" y="125" font-size="14" font-weight="700" text-anchor="end" fill="#1f2a44">¥${yuan(amt)}</text>${bars}
+  <g transform="translate(186 84) rotate(-14)" opacity=".8"><circle r="19" fill="none" stroke="#b3261e" stroke-width="1.6"/><circle r="15.5" fill="none" stroke="#b3261e" stroke-width=".6"/><text y="4" font-size="12" font-weight="700" text-anchor="middle" fill="#b3261e" letter-spacing="1">已核</text></g></svg>`;
+}
+function usage(e,m){
+  const r=rng(e.id*17+m*3);let pts=[];for(let i=0;i<14;i++)pts.push(18+r()*34);
+  const d=pts.map((y,i)=>`${i?"L":"M"}${8+i*13} ${64-y}`).join(" ");
+  return `<svg width="190" height="80" viewBox="0 0 190 80"><rect width="190" height="80" fill="#fffdf6"/><text x="8" y="12" font-size="8" fill="#8d8a7c" letter-spacing="1">用量明细 · 日</text>
+  ${[24,40,56].map(y=>`<line x1="8" x2="182" y1="${y+6}" y2="${y+6}" stroke="#e6dfc8"/>`).join("")}<path d="${d}" fill="none" stroke="#1f2a44" stroke-width="1.2"/>
+  <text x="8" y="76" font-size="7.5" fill="#8d8a7c">${m}/01</text><text x="182" y="76" font-size="7.5" fill="#8d8a7c" text-anchor="end">${m}/${m===2?28:30}</text></svg>`;
+}
+const penIc='<svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16l-1 4zM14 6l3 3"/></svg>';
+function extra(t){
+  const pm=MONTHS.includes(cur-1)?totals(cur-1).b:null,cs=Object.entries(CORR[cur]||{});
+  const ch=pm?((t.b-pm)/pm*100):0;
+  return `<table class="sumt n"><caption>环　比</caption>${pm?`<tr><td>上月应付</td><td>${yuan(pm)}</td></tr>`:""}<tr><td>本月应付</td><td>${yuan(t.b)}</td></tr>${pm?`<tr><td>增减</td><td>${ch>=0?"+":""}${ch.toFixed(1)}%</td></tr>`:""}</table>
+  <table class="sumt n"><caption>订　正　记　录</caption>${cs.length?cs.map(([id,c])=>{const e=DATA[cur].find(x=>x.id==id);return `<tr><td>${e.no}　<del>${yuan(c.old)}</del></td><td class="new">${yuan(c.nw)}</td></tr>`}).join(""):`<tr><td style="color:var(--mute)">本月暂无订正</td><td></td></tr>`}</table>`;
+}
+function renderLeft(){
+  const t=totals(cur),cats={};DATA[cur].forEach(e=>{const x=eff(cur,e);cats[x.cat]=(cats[x.cat]||0)+x.debit-x.credit});
+  const mx=Math.max(...Object.values(cats));
+  $("#left").innerHTML=`<div class="no"><span>NO. ${String(2600+cur)}</span><span>${DEPT} · 部门账</span></div>
+  <h1>月度账单</h1><div class="sub">${DEPT}　2026 年 ${cur} 月${cur===11?"（未结）":""}</div>
+  <div class="big"><small>本月应付余额（元）</small><div class="v n"><i>¥</i><span id="bigv">${yuan(t.b)}</span><u></u></div></div>
+  <table class="sumt n"><caption>科　目　汇　总</caption>${Object.entries(cats).map(([k,v])=>`<tr><td>${k}</td><td>${yuan(v)}<span class="bar" style="width:${Math.max(4,v/mx*70)}px"></span></td></tr>`).join("")}
+  <tr class="t"><td>合　计</td><td>${yuan(t.b)}</td></tr></table>
+  ${extra(t)}
+  <div class="stampwrap"><div class="sign">制表<b>${ACCOUNTANT}</b><br>复核<span class="ln"></span><br>${cur<11?"已于 "+(cur+1)+" 月 5 日结账":"当月未结账，数字随订正更新"}</div>
+  <svg class="stamp" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#b3261e" stroke-width="3"/><circle cx="50" cy="50" r="40" fill="none" stroke="#b3261e" stroke-width="1"/><text x="50" y="45" font-size="17" font-weight="700" text-anchor="middle" fill="#b3261e" letter-spacing="3">${cur<11?"已结账":"待结账"}</text><line x1="22" x2="78" y1="53" y2="53" stroke="#b3261e"/><text x="50" y="71" font-size="11" text-anchor="middle" fill="#b3261e" class="n">2026.${String(cur).padStart(2,"0")}</text></svg></div>`;
+}
+function renderRight(){
+  const L=DATA[cur];let bal=0;
+  const rows=L.map(e0=>{
+    const c=(CORR[cur]||{})[e0.id],e=eff(cur,e0);bal+=e.debit-e.credit;
+    const cell=(side,v)=>{ if(c&&c.side===side)return `<del class="n">${yuan(c.old)}</del><br><span class="new n">${yuan(c.nw)}</span>`; return v?yuan(v):""};
+    const o=openId===e0.id;
+    return `<div class="ent ${o?"open":""}" data-id="${e0.id}"><div class="row ${c?"corr":""}"><div class="d n">${String(cur).padStart(2,"0")}/${String(e0.day).padStart(2,"0")}</div><div class="m">${e0.memo}${c?`<span class="note">订正 ${c.by} ${c.date}</span>`:""}</div><div class="v n">${e0.no}</div><div class="num n">${cell("debit",e.debit)}</div><div class="num n cr">${cell("credit",e.credit)}</div><div class="num n bal">${yuan(bal)}</div></div>
+    <div class="vch"><div class="att"><div><div class="th">${voucher(e,cur)}</div><div class="cap">凭证 ${e0.no}</div></div></div>
+    <div class="info"><dl><dt>资　源</dt><dd>${e0.res}</dd><dt>计费方式</dt><dd>${e0.basis}</dd><dt>科　目</dt><dd>${e0.cat}</dd><dt>负责人</dt><dd>${["陈砚","周以安","吴桐","郑清"][e0.id%4]}</dd></dl>
+      <div class="att" style="margin-bottom:10px"><div><div class="th">${usage(e,cur)}</div></div></div>
+      <div class="acts">${editing&&o?`<div class="fix">订正为<input id="fixv" class="n" value="${(e0.debit||e0.credit)}" inputmode="numeric"><button class="go" data-a="ok">签署</button><button data-a="no">取消</button></div>`:`<button class="pen" data-a="fix">${penIc}订正金额</button>${c?`<button class="pen" style="border-color:var(--ink2);color:var(--ink2)" data-a="undo">撤销订正</button>`:""}`}</div></div></div></div>`;
+  }).join("");
+  const t=totals(cur);
+  $("#right").innerHTML=`<div class="rh"><h2>明细分类账<small>${DEPT} · 2026 年 ${cur} 月</small></h2><div class="pg"><button id="prev" ${cur===MONTHS[0]?"disabled":""} title="上一月（←）"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button><span class="n">${cur} / 11 月</span><button id="next" ${cur===MONTHS[MONTHS.length-1]?"disabled":""} title="下一月（→）"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button></div></div>
+  <div class="hd"><div style="text-align:center">日期</div><div>摘　要</div><div>凭证</div><div class="g">发　生　额</div><div style="display:none"></div><div class="rt">余　额</div></div>
+  <div class="hd2"><div></div><div></div><div></div><div class="rt">借方</div><div class="rt">贷方</div><div></div></div>
+  <div class="body" id="body">${rows}</div>
+  <div class="foot"><div class="tot n"><div class="lb">合　计</div><div class="num"><span id="td">${yuan(shown.d)}</span></div><div class="num"><span id="tc">${yuan(shown.c)}</span></div><div class="num"><span id="tb">${yuan(shown.b)}</span></div></div></div>`;
+  roll($("#td"),"d",t.d,yuan);roll($("#tc"),"c",t.c,yuan);roll($("#tb"),"b",t.b,yuan);
+}
+function renderTabs(){
+  $("#tabs").innerHTML=MONTHS.map(m=>`<button class="tab ${m===cur?"on":""} ${m===11?"cur":""}" data-m="${m}"><span class="n">${m}月</span></button>`).join("");
+}
+function refresh(){renderLeft();renderRight();renderTabs()}
+function goto(m){
+  if(m===cur||!MONTHS.includes(m))return;
+  const r=$("#right");r.classList.remove("in");r.classList.add("out");
+  setTimeout(()=>{cur=m;openId=null;editing=false;shown.d=shown.c=shown.b=0;refresh();const rr=$("#right");rr.classList.remove("out");rr.classList.add("in");setTimeout(()=>rr.classList.remove("in"),400)},250);
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest(".tab,#prev,#next,.row,[data-a]");if(!t)return;
+  if(t.matches(".tab"))return goto(+t.dataset.m);
+  if(t.id==="prev")return goto(cur-1);if(t.id==="next")return goto(cur+1);
+  if(t.matches(".row")){const id=+t.parentNode.dataset.id;openId=openId===id?null:id;editing=false;return renderRight2()}
+  const a=t.dataset.a,e0=DATA[cur].find(x=>x.id===openId);
+  if(a==="fix"){editing=true;renderRight2();setTimeout(()=>{const i=$("#fixv");i&&(i.focus(),i.select())},20)}
+  if(a==="no"){editing=false;renderRight2()}
+  if(a==="undo"){delete CORR[cur][openId];refresh2()}
+  if(a==="ok"){const v=Math.round(parseFloat($("#fixv").value.replace(/,/g,""))*100)/100;const side=e0.debit?"debit":"credit";
+    if(!isFinite(v)||v<0||v===e0[side]){editing=false;return renderRight2()}
+    (CORR[cur]=CORR[cur]||{})[openId]={old:e0[side],nw:v,side,by:ACCOUNTANT,date:TODAY};editing=false;refresh2()}
+});
+function renderRight2(){const y=$("#body")?$("#body").scrollTop:0;renderRight();$("#body").scrollTop=y;const o=document.querySelector(".ent.open");if(o){const b=$("#body"),rt=o.offsetTop,h=o.offsetHeight;if(rt+h>b.scrollTop+b.clientHeight)b.scrollTop=rt+h-b.clientHeight+6}}
+function refresh2(){const y=$("#body").scrollTop,prev=shown.b;renderLeft();renderRight();$("#body").scrollTop=y;const t=totals(cur),bv=$("#bigv"),t0=performance.now();(function f(t1){const k=Math.min(1,(t1-t0)/450),q=1-Math.pow(1-k,3);bv.textContent=yuan(prev+(t.b-prev)*q);if(k<1)requestAnimationFrame(f)})(t0)}
+addEventListener("keydown",e=>{if(e.target.tagName==="INPUT"){if(e.key==="Enter")document.querySelector('[data-a=ok]')?.click();if(e.key==="Escape")document.querySelector('[data-a=no]')?.click();return}
+  if(e.key==="ArrowLeft")goto(cur-1);if(e.key==="ArrowRight")goto(cur+1)});
+refresh();
+setTimeout(()=>{openId=DATA[cur][2].id;renderRight2()},700);
+</script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>观测墙 · GPU 集群监控</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#111214; --panel:#17191c; --head:#1b1d21; --line:#2b2e33; --line2:#222529; --ink:#d9dce1; --ink2:#a0a6ae; --mute:#6f757e;
+    --s1:#4db6ac; --s2:#a99bf0; --s3:#82a6e8; --ok:#4fb26b; --warn:#e3b341; --crit:#ea5a51; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--bg); }
+  body { font-family:"Inter","Noto Sans SC",sans-serif; font-size:12px; color:var(--ink); -webkit-font-smoothing:antialiased; min-width:1100px; }
+  button,input { font:inherit; color:inherit; background:none; border:0; cursor:pointer; outline:none; }
+  .mono { font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; }
+  svg { display:block; }
+  ::-webkit-scrollbar { width:8px; height:8px; } ::-webkit-scrollbar-thumb { background:#2e3237; border-radius:4px; }
+
+  .top { position:sticky; top:0; z-index:40; background:var(--bg); border-bottom:1px solid var(--line); height:46px; display:flex; align-items:center; gap:14px; padding:0 12px; }
+  .brand { display:flex; align-items:center; gap:8px; font-weight:600; font-size:13px; }
+  .brand svg { width:20px; height:20px; }
+  .brand span.s { color:var(--mute); font-weight:400; }
+  .vars { display:flex; gap:8px; margin-left:6px; }
+  .var { display:flex; height:26px; border:1px solid var(--line); border-radius:2px; overflow:hidden; position:relative; }
+  .var > i { font-style:normal; padding:0 8px; display:flex; align-items:center; background:var(--head); color:var(--ink2); border-right:1px solid var(--line); font-size:11.5px; }
+  .var > button { padding:0 8px 0 9px; display:flex; align-items:center; gap:8px; min-width:92px; justify-content:space-between; }
+  .var > button:hover { background:#1e2125; }
+  .var svg { width:10px; height:10px; color:var(--mute); }
+  .menu { position:absolute; top:28px; left:-1px; min-width:calc(100% + 2px); background:#1d2024; border:1px solid #3a3e44; border-radius:2px; z-index:60; padding:3px 0; box-shadow:0 8px 24px #000a; }
+  .menu button { display:block; width:100%; text-align:left; padding:5px 12px; white-space:nowrap; color:var(--ink2); }
+  .menu button:hover { background:#272b30; color:var(--ink); }
+  .menu button.on { color:var(--s1); }
+  .sp { flex:1; }
+  .range { display:flex; border:1px solid var(--line); border-radius:2px; height:26px; }
+  .range button { padding:0 11px; color:var(--ink2); font-family:"JetBrains Mono"; font-size:11.5px; border-right:1px solid var(--line); }
+  .range button:last-child { border-right:0; }
+  .range button:hover { color:var(--ink); background:#1e2125; }
+  .range button.on { background:#2a2f34; color:#fff; box-shadow:inset 0 -2px 0 var(--s1); }
+  .win { color:var(--mute); font-size:11.5px; }
+  .tb { height:26px; padding:0 9px; border:1px solid var(--line); border-radius:2px; color:var(--ink2); display:flex; align-items:center; gap:6px; font-size:11.5px; }
+  .tb:hover { background:#1e2125; color:var(--ink); }
+  .tb svg { width:13px; height:13px; }
+  .live { display:flex; align-items:center; gap:6px; color:var(--mute); font-size:11.5px; }
+  .live i { width:6px; height:6px; border-radius:50%; background:var(--ok); animation:pl 2s infinite; }
+  @keyframes pl { 50% { opacity:.25; } }
+
+  #wrap { padding:8px 12px 40px; }
+  #grid { position:relative; }
+  .pn { position:absolute; background:var(--panel); border:1px solid var(--line); border-radius:2px; display:flex; flex-direction:column; overflow:hidden;
+    transition:left .18s, top .18s, width .18s, height .18s; animation:in .5s both; }
+  @keyframes in { from { opacity:0; transform:translateY(6px); } }
+  .pn.dragging, .pn.resizing { transition:none; z-index:30; border-color:#55595f; box-shadow:0 12px 32px #000b; opacity:.96; }
+  .ph { height:26px; flex:none; display:flex; align-items:center; gap:6px; padding:0 8px 0 10px; cursor:grab; border-bottom:1px solid var(--line2); user-select:none; }
+  .pn.dragging .ph { cursor:grabbing; }
+  .ph .t { font-size:11.5px; font-weight:500; color:var(--ink2); display:flex; align-items:center; gap:5px; cursor:pointer; white-space:nowrap; }
+  .ph .t:hover { color:#fff; }
+  .ph .t svg { width:11px; height:11px; opacity:0; transition:opacity .15s; }
+  .ph .t:hover svg { opacity:.9; }
+  .ph .u { margin-left:auto; color:var(--mute); font-size:10.5px; font-family:"JetBrains Mono"; }
+  .pb { flex:1; min-height:0; position:relative; }
+  .rz { position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize; z-index:5; opacity:0; transition:opacity .15s; }
+  .pn:hover .rz { opacity:1; }
+  .rz::after { content:""; position:absolute; right:3px; bottom:3px; width:7px; height:7px; border-right:1.5px solid #7b8189; border-bottom:1.5px solid #7b8189; }
+  .ph-ph { position:absolute; border:1px dashed #5b6168; background:#ffffff08; border-radius:2px; transition:all .15s; z-index:1; display:none; }
+  .pn.fs { position:fixed !important; left:24px !important; top:60px !important; width:calc(100vw - 48px) !important; height:calc(100vh - 84px) !important; z-index:80; transition:none; animation:none; box-shadow:0 0 0 100vmax #000c; }
+  .pn.fs .rz { display:none; } .pn.fs .ph { cursor:default; }
+  .fshint { display:none; margin-left:12px; color:var(--mute); font-size:11px; }
+  .pn.fs .fshint { display:inline; }
+
+  /* stat */
+  .stat { height:100%; display:flex; align-items:flex-end; padding:8px 10px 8px; gap:6px; }
+  .stat .v { flex:none; padding-bottom:2px; }
+  .stat .big { font-family:"JetBrains Mono"; font-size:28px; font-weight:500; line-height:1; letter-spacing:-.02em; }
+  .stat .big small { font-size:12px; color:var(--mute); margin-left:3px; letter-spacing:0; }
+  .stat .d { margin-top:6px; font-size:10.5px; color:var(--mute); font-family:"JetBrains Mono"; white-space:nowrap; }
+  .stat .sk { flex:1; min-width:0; height:100%; }
+  .stat .sk svg { width:100%; height:100%; }
+  .warn { color:var(--warn); } .crit { color:var(--crit); }
+
+  /* ts */
+  .chart { position:absolute; inset:0; }
+  .chart svg { position:absolute; inset:0; width:100%; height:100%; }
+  .tip { position:absolute; top:26px; pointer-events:none; background:#202328ee; border:1px solid #444950; border-radius:2px; padding:5px 8px; font-size:11px; display:none; z-index:6; white-space:nowrap; }
+  .tip b { display:block; font-weight:500; color:var(--ink2); margin-bottom:3px; font-family:"JetBrains Mono"; font-size:10.5px; }
+  .tip div { display:flex; gap:7px; align-items:center; }
+  .tip div span:last-child { margin-left:auto; padding-left:12px; font-family:"JetBrains Mono"; }
+  .lg { position:absolute; left:40px; top:3px; display:flex; gap:12px; font-size:10.5px; color:var(--ink2); z-index:3; pointer-events:none; }
+  .lg span { display:flex; gap:5px; align-items:center; }
+  .lg i { width:8px; height:2px; display:block; }
+  .lg em { font-style:normal; font-family:"JetBrains Mono"; color:var(--ink); }
+  .ax { fill:var(--mute); font-size:10px; font-family:"JetBrains Mono"; }
+  .rv { animation:rv .9s cubic-bezier(.3,.6,.3,1) both; transform-box:fill-box; transform-origin:left; }
+  @keyframes rv { from { transform:scaleX(0); } }
+
+  /* bars */
+  .bars { padding:8px 10px; display:flex; flex-direction:column; gap:7px; height:100%; overflow:auto; }
+  .br { display:grid; grid-template-columns:58px 1fr 38px; gap:8px; align-items:center; font-size:11px; }
+  .br span:first-child { color:var(--ink2); font-family:"JetBrains Mono"; font-size:10.5px; }
+  .br .tr { height:10px; background:#202327; position:relative; }
+  .br .tr i { position:absolute; left:0; top:0; bottom:0; background:#5b8f8a; transition:width .6s; }
+  .br .tr u { position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--warn); opacity:.7; }
+  .br em { font-style:normal; text-align:right; font-family:"JetBrains Mono"; }
+
+  /* table */
+  .tw { height:100%; overflow:auto; }
+  table { width:100%; border-collapse:collapse; font-size:11.5px; }
+  th { position:sticky; top:0; background:var(--head); text-align:left; font-weight:500; color:var(--mute); padding:0 10px; height:24px; font-size:10.5px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  td { height:27px; padding:0 10px; border-bottom:1px solid var(--line2); white-space:nowrap; color:var(--ink2); }
+  tr:hover td { background:#1c1f23; }
+  td.r, th.r { text-align:right; }
+  .tag { font-size:10.5px; padding:1px 6px; border:1px solid #3a3e44; border-radius:2px; color:var(--ink2); }
+  .tag.run { color:var(--s1); border-color:#2d5a56; }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:7px; vertical-align:0; }
+  .al { cursor:pointer; }
+  .al.ack td { opacity:.45; }
+  .al .ab { font-size:10.5px; color:var(--ink2); border:1px solid #3a3e44; padding:1px 7px; border-radius:2px; }
+  .al:hover .ab { color:#fff; border-color:#6a6f76; }
+  .note { font-size:10px; color:#5d636b; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 20 20" fill="none" stroke="#d9dce1" stroke-width="1.4"><rect x="2" y="2" width="16" height="16"/><path d="M2 13l4-4 3 3 4-6 5 5" stroke="#4db6ac"/></svg>
+    观测墙 <span class="s">/ GPU 集群总览</span>
+  </div>
+  <div class="vars" id="vars"></div>
+  <div class="sp"></div>
+  <span class="win mono" id="win"></span>
+  <div class="range" id="range"></div>
+  <button class="tb" id="reset"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="1.5" width="4.5" height="4.5"/><rect x="8" y="1.5" width="4.5" height="4.5"/><rect x="1.5" y="8" width="4.5" height="4.5"/><rect x="8" y="8" width="4.5" height="4.5"/></svg>重置布局</button>
+  <div class="live"><i></i><span class="mono">30s</span></div><span class="note">示例数据</span>
+</header>
+<div id="wrap"><div id="grid"></div></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const el = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
+const ICON = { exp:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M7 1h4v4M5 11H1V7M11 1L7 5M1 11l4-4"/></svg>', chev:'<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 3.5l3 3 3-3"/></svg>' };
+
+/* ---------- 随机与数据 ---------- */
+function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+
+const CLUSTERS = { "华北-A": ["A1", "A2", "A3"], "华东-B": ["B1", "B2"], "西南-C": ["C1", "C2"] };
+const RANGES = { "15m": 15 * 60e3, "1h": 3600e3, "6h": 6 * 3600e3, "24h": 24 * 3600e3, "7d": 7 * 24 * 3600e3 };
+const NOW = Date.UTC(2026, 10, 20, 14, 32, 0);
+const N = 120;
+const S = { cluster: "华北-A", room: "全部机房", range: "1h" };
+let D = null;
+
+function series(r, base, amp, cycles, noise, spikes, lo, hi) {
+  const ph1 = r() * 6.28, ph2 = r() * 6.28, out = []; let n = 0;
+  const sp = Array.from({ length: spikes }, () => ({ c: r() * N, w: 3 + r() * 5, h: 5 + r() * 9 }));
+  for (let i = 0; i < N; i++) {
+    n = n * 0.82 + (r() - .5) * noise;
+    let v = base + amp * (Math.sin(i / N * 6.28 * cycles + ph1) * .65 + Math.sin(i / N * 6.28 * cycles * 2.3 + ph2) * .35) + n;
+    for (const s of sp) v += s.h * Math.exp(-((i - s.c) ** 2) / (2 * s.w * s.w));
+    out.push(Math.max(lo, Math.min(hi, v)));
+  }
+  return out;
+}
+function compute() {
+  const seed = hash(S.cluster + S.room + S.range), r = rng(seed);
+  const cyc = { "15m": 1.3, "1h": 1.8, "6h": 2.4, "24h": 3, "7d": 7 }[S.range];
+  const off = (hash(S.cluster) % 9) - 4 + (S.room === "全部机房" ? 0 : (hash(S.room) % 7) - 3);
+  const span = RANGES[S.range], t = Array.from({ length: N }, (_, i) => NOW - span + span * i / (N - 1));
+  const pools = ["训练池", "推理池", "开发池"], w = [.55, .3, .15];
+  const util = [series(r, 83 + off, 8, cyc, 5, 2, 20, 99.5), series(r, 60 + off, 15, cyc, 6, 1, 10, 99), series(r, 33 + off, 13, cyc, 8, 1, 3, 90)];
+  const mem = [series(r, 79 + off, 9, cyc, 4, 2, 30, 99), series(r, 68 + off, 8, cyc, 4, 1, 25, 96), series(r, 40 + off, 10, cyc, 6, 0, 8, 90)];
+  const temp = util.map((u, k) => u.map((v, i) => 38 + v * [.5, .43, .36][k] + 2 * Math.sin(i * .7 + k)));
+  const pw = util[0].map((_, i) => 40 + util[0][i] * 3.4 + util[1][i] * 1.6 + util[2][i] * .5 + 70 + 4 * Math.sin(i * .9));
+  const q = series(r, 34, 14, cyc * .8, 6, 2, 4, 120).map(Math.round);
+  const wavg = (arr) => arr[0].map((_, i) => arr.reduce((s, a, k) => s + a[i] * w[k], 0));
+  const rooms = S.room === "全部机房" ? CLUSTERS[S.cluster] : [S.room];
+  const nodes = []; rooms.forEach((rm) => { const m = S.room === "全部机房" ? Math.ceil(8 / rooms.length) : 8; for (let k = 0; k < m; k++) nodes.push({ name: `n-${rm.toLowerCase()}-${String(3 + Math.floor(r() * 40)).padStart(2, "0")}`, v: 38 + r() * 60 }); });
+  nodes.sort((a, b) => b.v - a.v);
+  D = { t, pools, util, mem, temp, pw, q, utilAvg: wavg(util), memAvg: wavg(mem), tmax: temp[0].map((_, i) => Math.max(...temp.map((a) => a[i]))), nodes: nodes.slice(0, 8), rooms };
+}
+const fmtT = (ts, full) => { const d = new Date(ts), p = (n) => String(n).padStart(2, "0"); const hm = `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+  if (S.range === "15m") return hm + ":" + p(d.getUTCSeconds()); if (S.range === "7d") return `${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${hm}`; return (full ? `${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ` : "") + hm; };
+
+/* ---------- 告警 / 作业数据 ---------- */
+const ALERTS = [
+  { c: "华北-A", rm: "A1", sev: "crit", t: "GPU 温度持续高于 88°C", n: "n-a1-17", ago: "4 分钟前" },
+  { c: "华北-A", rm: "A2", sev: "warn", t: "显存占用超过 92%", n: "n-a2-09", ago: "11 分钟前" },
+  { c: "华北-A", rm: "A1", sev: "warn", t: "NVLink 重传率升高", n: "n-a1-03", ago: "26 分钟前" },
+  { c: "华北-A", rm: "A3", sev: "warn", t: "机柜进风温度 31°C", n: "r-a3-05", ago: "42 分钟前" },
+  { c: "华东-B", rm: "B1", sev: "crit", t: "PDU 功率逼近上限", n: "r-b1-02", ago: "7 分钟前" },
+  { c: "华东-B", rm: "B2", sev: "warn", t: "作业排队超过 30 分钟", n: "q-train", ago: "18 分钟前" },
+  { c: "西南-C", rm: "C1", sev: "warn", t: "GPU ECC 单比特错误", n: "n-c1-21", ago: "35 分钟前" },
+  { c: "西南-C", rm: "C2", sev: "warn", t: "利用率低于 10% 超过 2 小时", n: "n-c2-11", ago: "1 小时前" },
+];
+const JOBS = [
+  ["J-48213", "pretrain-13b-v3", "训练", 256, "—", "运行"], ["J-48220", "sft-dialog-1118", "训练", 64, "—", "运行"], ["J-48231", "rlhf-reward-v2", "训练", 128, "12 分钟", "排队"],
+  ["J-48236", "embed-finetune-zh", "训练", 16, "9 分钟", "排队"], ["J-48240", "serve-chat-72b", "推理", 32, "—", "运行"], ["J-48244", "vision-clip-640", "训练", 96, "6 分钟", "排队"],
+  ["J-48251", "eval-bench-nightly", "开发", 8, "3 分钟", "排队"], ["J-48255", "notebook-lin", "开发", 2, "—", "运行"], ["J-48259", "distill-7b-0916", "训练", 48, "2 分钟", "排队"],
+];
+
+/* ---------- 面板定义 ---------- */
+const COL = 12, GAP = 8, RH = 28;
+const DEF = [
+  { id: "s1", title: "GPU 平均利用率", type: "stat", x: 0, y: 0, w: 2, h: 3 }, { id: "s2", title: "显存占用", type: "stat", x: 2, y: 0, w: 2, h: 3 },
+  { id: "s3", title: "最高温度", type: "stat", x: 4, y: 0, w: 2, h: 3 }, { id: "s4", title: "集群功耗", type: "stat", x: 6, y: 0, w: 2, h: 3 },
+  { id: "s5", title: "排队作业", type: "stat", x: 8, y: 0, w: 2, h: 3 }, { id: "s6", title: "未确认告警", type: "stat", x: 10, y: 0, w: 2, h: 3 },
+  { id: "util", title: "GPU 利用率", type: "ts", x: 0, y: 3, w: 4, h: 8 }, { id: "mem", title: "显存使用率", type: "ts", x: 4, y: 3, w: 4, h: 8 }, { id: "temp", title: "GPU 温度", type: "ts", x: 8, y: 3, w: 4, h: 8 },
+  { id: "pw", title: "集群功耗", type: "ts", x: 0, y: 11, w: 4, h: 8 }, { id: "bars", title: "节点利用率 Top 8", type: "bars", x: 4, y: 11, w: 3, h: 8 }, { id: "jobs", title: "作业队列", type: "jobs", x: 7, y: 11, w: 5, h: 8 },
+  { id: "alerts", title: "告警", type: "alerts", x: 0, y: 19, w: 12, h: 6 },
+];
+const TS = {
+  util: { unit: "%", names: () => D.pools, data: () => D.util, thr: 90, dom: [0, 100], col: ["--s1", "--s2", "--s3"], f: (v) => v.toFixed(1) },
+  mem: { unit: "%", names: () => D.pools, data: () => D.mem, thr: 90, dom: [0, 100], col: ["--s1", "--s2", "--s3"], f: (v) => v.toFixed(1) },
+  temp: { unit: "°C", names: () => D.pools, data: () => D.temp, thr: 85, dom: [40, 100], col: ["--s1", "--s2", "--s3"], f: (v) => v.toFixed(1) },
+  pw: { unit: "kW", names: () => ["总功耗"], data: () => [D.pw], thr: 560, dom: null, col: ["--s1"], f: (v) => v.toFixed(0) },
+};
+const items = DEF.map((d) => ({ ...d }));
+const grid = $("#grid"), phEl = el('<div class="ph-ph"></div>');
+grid.appendChild(phEl);
+let colW = 100;
+const px = { l: (x) => x * (colW + GAP), w: (w) => w * colW + (w - 1) * GAP, t: (y) => y * (RH + GAP), h: (h) => h * RH + (h - 1) * GAP };
+
+function hit(a, b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
+function compact(fixed) {
+  const placed = fixed ? [fixed] : [];
+  [...items].filter((i) => i !== fixed).sort((a, b) => a.y - b.y || a.x - b.x).forEach((it) => { let y = 0; while (placed.some((p) => hit(p, { ...it, y }))) y++; it.y = y; placed.push(it); });
+}
+function place(it, skip) {
+  const e = it.el; e.style.width = px.w(it.w) + "px"; e.style.height = px.h(it.h) + "px";
+  if (!skip) { e.style.left = px.l(it.x) + "px"; e.style.top = px.t(it.y) + "px"; }
+}
+function layout(skip) {
+  colW = (grid.clientWidth - (COL - 1) * GAP) / COL;
+  items.forEach((it) => place(it, it === skip));
+  const bottom = Math.max(...items.map((i) => i.y + i.h)); grid.style.height = px.t(bottom) + "px";
+}
+
+/* ---------- 构建面板 ---------- */
+items.forEach((it, k) => {
+  const e = el(`<section class="pn" style="animation-delay:${k * 45}ms"><div class="ph"><span class="t">${it.title}${ICON.exp}</span><span class="fshint">Esc 退出全屏</span><span class="u"></span></div><div class="pb"></div><div class="rz"></div></section>`);
+  it.el = e; it.body = $(".pb", e); grid.appendChild(e);
+  if (it.type === "ts") { it.body.innerHTML = '<div class="chart"><svg></svg><div class="lg"></div><div class="tip"></div></div>'; $(".u", e).textContent = TS[it.id].unit; }
+  if (it.type === "bars") $(".u", e).textContent = "按均值";
+  if (it.type === "jobs") $(".u", e).textContent = "按等待时长";
+  new ResizeObserver(() => { if (D) renderPanel(it, false); }).observe(it.body);
+  bindDrag(it);
+});
+
+/* ---------- 渲染 ---------- */
+const pad = (n) => String(n).padStart(2, "0");
+function tone(v, w, c) { return v >= c ? "crit" : v >= w ? "warn" : ""; }
+function spark(it, arr, th, animate) {
+  const sk = $(".sk svg", it.body); if (!sk) return;
+  const W = sk.clientWidth || 100, H = sk.clientHeight || 40, lo = Math.min(...arr), hi = Math.max(...arr), rg = hi - lo || 1;
+  const pts = arr.map((v, i) => [i / (arr.length - 1) * W, H - 3 - (v - lo) / rg * (H - 8)]);
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join("");
+  sk.innerHTML = `<g class="${animate ? "rv" : ""}"><path d="${d}L${W} ${H}L0 ${H}Z" fill="#4db6ac" opacity=".1"/><path d="${d}" fill="none" stroke="#4db6ac" stroke-width="1.2"/></g>`;
+}
+function renderStat(it, animate) {
+  const L = N - 1; let big, unit, d, cls = "", arr;
+  const delta = (a, f, u) => { const x = a[L] - a[0]; return `${x >= 0 ? "+" : ""}${x.toFixed(f)}${u} 较区间起点`; };
+  if (it.id === "s1") { big = D.utilAvg[L].toFixed(1); unit = "%"; cls = tone(D.utilAvg[L], 85, 95); d = delta(D.utilAvg, 1, " pt"); arr = D.utilAvg; }
+  if (it.id === "s2") { big = D.memAvg[L].toFixed(1); unit = "%"; cls = tone(D.memAvg[L], 85, 92); d = delta(D.memAvg, 1, " pt"); arr = D.memAvg; }
+  if (it.id === "s3") { big = D.tmax[L].toFixed(0); unit = "°C"; cls = tone(D.tmax[L], 80, 88); d = `阈值 85°C · 区间峰值 ${Math.max(...D.tmax).toFixed(0)}`; arr = D.tmax; }
+  if (it.id === "s4") { big = D.pw[L].toFixed(0); unit = "kW"; cls = tone(D.pw[L], 540, 590); d = `上限 620 kW · ${(D.pw[L] / 6.2).toFixed(0)}%`; arr = D.pw; }
+  if (it.id === "s5") { big = D.q[L]; unit = "个"; cls = tone(D.q[L], 45, 80); d = delta(D.q, 0, " 个"); arr = D.q; }
+  if (it.id === "s6") { const a = alertList(); const n = a.filter((x) => !x.ack).length, c = a.filter((x) => !x.ack && x.sev === "crit").length; big = n; unit = "条"; cls = c ? "crit" : n ? "warn" : ""; d = `严重 ${c} · 警告 ${n - c}`; arr = null; }
+  it.body.innerHTML = `<div class="stat"><div class="v"><div class="big ${cls}">${big}<small>${unit}</small></div><div class="d">${d}</div></div>${arr ? '<div class="sk"><svg></svg></div>' : ""}</div>`;
+  if (arr) spark(it, arr, 0, animate);
+}
+let uid = 0;
+const geo = {};
+function renderTS(it, animate) {
+  const cfg = TS[it.id], box = $(".chart", it.body), svg = $("svg", box), W = box.clientWidth, H = box.clientHeight; if (!W || !H) return;
+  const data = cfg.data(), names = cfg.names(), L = 40, R = 10, T = 22, B = 20, pw = W - L - R, ph = H - T - B;
+  let [lo, hi] = cfg.dom || [Math.floor((Math.min(...data[0]) - 25) / 50) * 50, Math.ceil((Math.max(...data[0], cfg.thr) + 15) / 50) * 50];
+  const X = (i) => L + i / (N - 1) * pw, Y = (v) => T + ph - (v - lo) / (hi - lo) * ph;
+  const step = (hi - lo) / 4; let g = "";
+  for (let k = 0; k <= 4; k++) { const v = lo + step * k, y = Y(v); g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="#25282d"/><text class="ax" x="${L - 6}" y="${y + 3}" text-anchor="end">${Math.round(v)}</text>`; }
+  for (let k = 0; k < 6; k++) { const i = Math.round(k / 5 * (N - 1)); g += `<text class="ax" x="${Math.min(Math.max(X(i), L + 14), W - R - 18)}" y="${H - 5}" text-anchor="middle">${fmtT(D.t[i])}</text>`; }
+  const ty = Y(cfg.thr), id = "c" + (++uid);
+  g += `<rect x="${L}" y="${T}" width="${pw}" height="${Math.max(0, ty - T)}" fill="#ea5a51" opacity=".05"/>`;
+  g += `<line x1="${L}" x2="${W - R}" y1="${ty}" y2="${ty}" stroke="#e3b341" stroke-width="1" stroke-dasharray="4 3" opacity=".8"/><text class="ax" x="${W - R - 3}" y="${ty - 4}" text-anchor="end" fill="#e3b341" style="fill:#e3b341">${cfg.thr}${cfg.unit}</text>`;
+  g += `<defs><clipPath id="${id}a"><rect x="${L}" y="${T - 4}" width="${pw}" height="${Math.max(0, ty - T + 4)}"/></clipPath></defs>`;
+  let lines = "";
+  data.forEach((a, k) => { const d = a.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join(""), c = `var(${cfg.col[k]})`;
+    lines += `<path d="${d}" fill="none" stroke="${c}" stroke-width="1.25"/><path d="${d}" fill="none" stroke="#ea5a51" stroke-width="1.6" clip-path="url(#${id}a)"/>`; });
+  g += `<g class="${animate ? "rv" : ""}">${lines}</g>`;
+  g += `<line class="cx" y1="${T}" y2="${T + ph}" stroke="#aeb4bc" stroke-width="1" opacity="0" stroke-dasharray="2 2"/>` + data.map((_, k) => `<circle class="cd" r="3" fill="var(${cfg.col[k]})" stroke="#111" opacity="0"/>`).join("");
+  g += `<rect class="hov" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  svg.innerHTML = g;
+  geo[it.id] = { X, Y, L, pw, W, data, names, cfg, box };
+  box.querySelector(".lg").innerHTML = names.map((n, k) => `<span><i style="background:var(${cfg.col[k]})"></i>${n}<em class="lv" data-k="${k}"></em></span>`).join("");
+  const hov = $(".hov", svg);
+  hov.onmousemove = (e) => { const r = svg.getBoundingClientRect(); cursor(Math.max(0, Math.min(N - 1, Math.round((e.clientX - r.left - L) / pw * (N - 1))))); };
+  hov.onmouseleave = () => cursor(null);
+  cursor(cur);
+}
+let cur = null;
+function cursor(i) {
+  cur = i;
+  for (const id in geo) { const g = geo[id]; if (!g.box.isConnected) continue;
+    const cx = $(".cx", g.box), tip = $(".tip", g.box), cds = g.box.querySelectorAll(".cd");
+    g.box.querySelectorAll(".lv").forEach((e) => { const k = +e.dataset.k; e.textContent = g.cfg.f(g.data[k][i ?? N - 1]) + g.cfg.unit; });
+    if (i == null) { cx.setAttribute("opacity", 0); cds.forEach((c) => c.setAttribute("opacity", 0)); tip.style.display = "none"; continue; }
+    const x = g.X(i); cx.setAttribute("x1", x); cx.setAttribute("x2", x); cx.setAttribute("opacity", 1);
+    cds.forEach((c, k) => { c.setAttribute("cx", x); c.setAttribute("cy", g.Y(g.data[k][i])); c.setAttribute("opacity", 1); });
+    tip.innerHTML = `<b>${fmtT(D.t[i], true)}</b>` + g.data.map((a, k) => `<div><i style="width:8px;height:2px;background:var(${g.cfg.col[k]})"></i><span>${g.names[k]}</span><span style="color:${a[i] >= g.cfg.thr ? "var(--crit)" : "var(--ink)"}">${g.cfg.f(a[i])}${g.cfg.unit}</span></div>`).join("");
+    tip.style.display = "block"; const flip = x > g.W * .6; tip.style.left = flip ? "auto" : x + 12 + "px"; tip.style.right = flip ? g.W - x + 12 + "px" : "auto";
+  }
+}
+function renderBars(it) {
+  it.body.innerHTML = `<div class="bars">${D.nodes.map((n) => { const c = n.v >= 95 ? "var(--crit)" : n.v >= 85 ? "var(--warn)" : "#5b8f8a"; return `<div class="br"><span>${n.name}</span><div class="tr"><i style="width:${n.v}%;background:${c}"></i><u style="left:85%"></u></div><em class="${n.v >= 95 ? "crit" : n.v >= 85 ? "warn" : ""}">${n.v.toFixed(1)}</em></div>`; }).join("")}</div>`;
+}
+function renderJobs(it) {
+  const k = hash(S.cluster + S.room) % JOBS.length, rows = JOBS.slice(k).concat(JOBS.slice(0, k));
+  it.body.innerHTML = `<div class="tw"><table><thead><tr><th>作业</th><th>名称</th><th>队列</th><th class="r">卡数</th><th class="r">等待</th><th>状态</th></tr></thead><tbody>${rows.map((r) => `<tr><td class="mono">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="r mono">${r[3]}</td><td class="r mono">${r[4]}</td><td><span class="tag ${r[5] === "运行" ? "run" : ""}">${r[5]}</span></td></tr>`).join("")}</tbody></table></div>`;
+}
+const acks = new Set();
+function alertList() { return ALERTS.filter((a) => a.c === S.cluster && (S.room === "全部机房" || a.rm === S.room)).map((a) => ({ ...a, ack: acks.has(a.n + a.t) })); }
+function renderAlerts(it) {
+  const col = { crit: "var(--crit)", warn: "var(--warn)" }, nm = { crit: "严重", warn: "警告" }, a = alertList();
+  it.body.innerHTML = `<div class="tw"><table><thead><tr><th style="width:90px">级别</th><th>告警</th><th style="width:140px">对象</th><th style="width:110px">触发于</th><th class="r" style="width:90px">操作</th></tr></thead><tbody>${a.length ? a.map((x, i) => `<tr class="al ${x.ack ? "ack" : ""}" data-i="${i}"><td><i class="dot" style="background:${col[x.sev]}"></i>${nm[x.sev]}</td><td style="color:var(--ink)">${x.t}</td><td class="mono">${x.n}</td><td>${x.ago}</td><td class="r"><span class="ab">${x.ack ? "已确认" : "确认"}</span></td></tr>`).join("") : '<tr><td colspan="5" style="text-align:center;color:var(--mute);height:80px">当前范围内没有告警</td></tr>'}</tbody></table></div>`;
+  $(".u", it.el).textContent = a.filter((x) => !x.ack).length + " 条未确认";
+  it.body.querySelectorAll(".al").forEach((tr) => tr.onclick = () => { const x = a[+tr.dataset.i], k = x.n + x.t; acks.has(k) ? acks.delete(k) : acks.add(k); renderPanel(it, false); renderPanel(items.find((p) => p.id === "s6"), false); });
+}
+function renderPanel(it, animate) { ({ stat: renderStat, ts: renderTS, bars: renderBars, jobs: renderJobs, alerts: renderAlerts })[it.type](it, animate); }
+function renderAll(animate) { compute(); items.forEach((it) => renderPanel(it, animate)); $("#win").textContent = fmtT(D.t[0], true) + "  →  " + fmtT(D.t[N - 1], true); }
+
+/* ---------- 拖动、缩放、全屏 ---------- */
+function bindDrag(it) {
+  const e = it.el;
+  $(".ph", e).addEventListener("pointerdown", (ev) => {
+    if (e.classList.contains("fs") || ev.button) return;
+    const sx = ev.clientX, sy = ev.clientY, ol = px.l(it.x), ot = px.t(it.y), onTitle = !!ev.target.closest(".t"); let moved = false;
+    const mv = (m) => {
+      const dx = m.clientX - sx, dy = m.clientY - sy;
+      if (!moved && Math.hypot(dx, dy) < 4) return;
+      if (!moved) { moved = true; e.classList.add("dragging"); phEl.style.display = "block"; }
+      e.style.left = ol + dx + "px"; e.style.top = ot + dy + "px";
+      const gx = Math.max(0, Math.min(COL - it.w, Math.round((ol + dx) / (colW + GAP)))), gy = Math.max(0, Math.round((ot + dy) / (RH + GAP)));
+      if (gx !== it.x || gy !== it.y) { it.x = gx; it.y = gy; compact(it); layout(it); }
+      Object.assign(phEl.style, { left: px.l(it.x) + "px", top: px.t(it.y) + "px", width: px.w(it.w) + "px", height: px.h(it.h) + "px" });
+    };
+    const up = () => {
+      document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up);
+      if (!moved) { if (onTitle) fullscreen(it, true); return; }
+      e.classList.remove("dragging"); phEl.style.display = "none"; compact(null); layout();
+    };
+    document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
+  });
+  $(".rz", e).addEventListener("pointerdown", (ev) => {
+    ev.stopPropagation(); ev.preventDefault();
+    const sx = ev.clientX, sy = ev.clientY, ow = px.w(it.w), oh = px.h(it.h);
+    e.classList.add("resizing"); phEl.style.display = "block";
+    const mv = (m) => {
+      const W = ow + m.clientX - sx, H = oh + m.clientY - sy;
+      e.style.width = W + "px"; e.style.height = H + "px";
+      const gw = Math.max(2, Math.min(COL - it.x, Math.round((W + GAP) / (colW + GAP)))), gh = Math.max(3, Math.round((H + GAP) / (RH + GAP)));
+      if (gw !== it.w || gh !== it.h) { it.w = gw; it.h = gh; compact(it); layout({ ...it, el: e }.el && it); }
+      Object.assign(phEl.style, { left: px.l(it.x) + "px", top: px.t(it.y) + "px", width: px.w(it.w) + "px", height: px.h(it.h) + "px" });
+      e.style.width = W + "px"; e.style.height = H + "px";
+    };
+    const up = () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); e.classList.remove("resizing"); phEl.style.display = "none"; compact(null); layout(); };
+    document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
+  });
+}
+let fsItem = null;
+function fullscreen(it, on) {
+  if (fsItem) { fsItem.el.classList.remove("fs"); fsItem = null; }
+  if (on) { it.el.classList.add("fs"); fsItem = it; }
+  setTimeout(() => items.forEach((p) => p.type === "ts" && renderPanel(p, false)), 30);
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (fsItem) fullscreen(fsItem, false); closeMenu(); } });
+
+/* ---------- 顶栏 ---------- */
+let openMenu = null;
+function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+document.addEventListener("click", (e) => { if (!e.target.closest(".var")) closeMenu(); });
+function buildVars() {
+  const box = $("#vars"); box.innerHTML = "";
+  [["集群", "cluster", Object.keys(CLUSTERS)], ["机房", "room", ["全部机房", ...CLUSTERS[S.cluster]]]].forEach(([label, key, opts]) => {
+    const v = el(`<div class="var"><i>${label}</i><button>${S[key]}${ICON.chev}</button></div>`);
+    $("button", v).onclick = (e) => { e.stopPropagation(); const had = openMenu && openMenu.parentNode === v; closeMenu(); if (had) return;
+      const m = el(`<div class="menu">${opts.map((o) => `<button class="${o === S[key] ? "on" : ""}">${o}</button>`).join("")}</div>`);
+      m.querySelectorAll("button").forEach((b, k) => b.onclick = (ev) => { ev.stopPropagation(); S[key] = opts[k]; if (key === "cluster") S.room = "全部机房"; closeMenu(); buildVars(); renderAll(true); });
+      v.appendChild(m); openMenu = m; };
+    box.appendChild(v);
+  });
+}
+function buildRange() {
+  const box = $("#range"); box.innerHTML = Object.keys(RANGES).map((k) => `<button class="${k === S.range ? "on" : ""}" data-k="${k}">${k}</button>`).join("");
+  box.querySelectorAll("button").forEach((b) => b.onclick = () => { S.range = b.dataset.k; buildRange(); renderAll(true); });
+}
+$("#reset").onclick = () => { DEF.forEach((d, i) => Object.assign(items[i], { x: d.x, y: d.y, w: d.w, h: d.h })); layout(); };
+window.addEventListener("resize", () => layout());
+buildVars(); buildRange(); layout(); renderAll(true);
+</script>
+</body>
+</html>

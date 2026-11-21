@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>需求审阅 · 专注单色</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fdfdfc; --ink: #1a1a1a; --ink2: #6b6b68; --faint: #b9b9b5; --acc: #0f766e; --acc-bg: rgba(15,118,110,.14); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body { font-family: "Source Serif 4", "Noto Serif SC", serif; color: var(--ink); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  body.idle, body.idle * { cursor: none !important; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .ui { font-family: Inter, "Noto Sans SC", sans-serif; }
+
+  /* 顶栏：平时隐身，鼠标动一下才出现 */
+  .top { position: fixed; left: 0; right: 0; top: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; font-size: 13px; color: var(--ink2); background: var(--paper); z-index: 20; transition: opacity .7s ease; }
+  .top .nm { color: var(--ink); font-weight: 500; }
+  .top .nm span { color: var(--faint); margin-left: 10px; font-weight: 400; }
+  .top .r { display: flex; gap: 26px; align-items: center; }
+  .top button { color: var(--ink2); padding: 4px 0; border-bottom: 1px solid transparent; }
+  .top button:hover { color: var(--ink); }
+  .top button.on { color: var(--acc); border-bottom-color: var(--acc); }
+  .bot { position: fixed; left: 0; right: 0; bottom: 0; height: 52px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 12.5px; color: var(--ink2); background: var(--paper); z-index: 20; font-variant-numeric: tabular-nums; transition: opacity .7s ease; }
+  .bot i { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); }
+  body.idle .top, body.idle .bot { opacity: 0; }
+  .credit { position: fixed; right: 14px; bottom: 6px; font: 10px Inter; color: var(--faint); z-index: 21; transition: opacity .7s; }
+  body.idle .credit { opacity: 0; }
+
+  /* 版面：三栏，正文居中，批注在右侧页边 */
+  .sheet { display: grid; grid-template-columns: minmax(40px, 1fr) 680px minmax(260px, 1fr); padding: 120px 0 180px; }
+  article { grid-column: 2; position: relative; }
+  .margin { grid-column: 3; position: relative; padding-left: 44px; }
+  h1 { font: 700 40px/1.3 "Noto Serif SC", serif; letter-spacing: -.01em; margin-bottom: 14px; }
+  .meta { font: 400 13px/1 Inter, "Noto Sans SC"; color: var(--ink2); margin-bottom: 56px; }
+  article h2 { font: 600 19px/1.5 "Noto Sans SC", Inter, sans-serif; margin: 52px 0 16px; letter-spacing: .01em; }
+  article p, article li { font-size: 18px; line-height: 2.05; margin-bottom: 22px; letter-spacing: .01em; }
+  article ul { list-style: none; margin-bottom: 22px; }
+  article li { padding-left: 1.4em; position: relative; margin-bottom: 6px; }
+  article li::before { content: "–"; position: absolute; left: 0; color: var(--faint); }
+  .blk { transition: opacity .5s ease; }
+  body.focus .blk:not(.cur) { opacity: .2; }
+  body.focus .blk:not(.cur):hover { opacity: .45; }
+  mark { background: var(--acc-bg); color: inherit; border-bottom: 1.5px solid var(--acc); padding: 1px 0; cursor: pointer; transition: background .2s; }
+  mark.hot { background: rgba(15,118,110,.3); }
+  ::selection { background: rgba(15,118,110,.22); }
+  .num { font-family: Inter; font-variant-numeric: tabular-nums; font-size: .92em; }
+
+  /* 页边批注 */
+  .note { position: absolute; left: 44px; right: 40px; font: 400 13px/1.65 Inter, "Noto Sans SC", sans-serif; color: var(--ink); padding: 2px 0 2px 14px; border-left: 2px solid var(--acc); opacity: .9; transition: top .35s cubic-bezier(.2,.7,.2,1), opacity .5s, background .2s; }
+  body.focus .note:not(.cur) { opacity: .25; }
+  .note.hot { opacity: 1 !important; }
+  .note .who { color: var(--ink2); font-size: 11.5px; margin-bottom: 2px; display: flex; justify-content: space-between; }
+  .note .who button { color: var(--faint); font-size: 11.5px; opacity: 0; transition: opacity .15s; }
+  .note:hover .who button { opacity: 1; }
+  .note .who button:hover { color: var(--acc); }
+  .note textarea { width: 100%; border: 0; outline: 0; resize: none; font: inherit; background: none; color: var(--ink); height: 52px; padding: 0; }
+  .note .hint { color: var(--faint); font-size: 11px; }
+  .pop { position: fixed; z-index: 30; display: none; background: var(--ink); color: #fff; font: 500 12.5px Inter, "Noto Sans SC"; border-radius: 6px; padding: 6px 12px; }
+  .pop.show { display: block; }
+  .pop button { color: #fff; }
+  .pop::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 8px; height: 8px; background: var(--ink); transform: translateX(-50%) rotate(45deg); }
+</style>
+</head>
+<body class="focus">
+<div class="top ui" id="top">
+  <div class="nm">推理服务多租户配额<span>需求文档 · 审阅中</span></div>
+  <div class="r"><button id="bFocus" class="on">焦点模式</button><button id="bNotes">批注 <b id="nCnt" style="font-weight:500">4</b></button></div>
+</div>
+<div class="bot ui" id="bot"><span id="wc"></span><i></i><span id="rt"></span></div>
+<div class="credit">示例数据</div>
+<div class="pop ui" id="pop"><button id="popBtn">批注</button></div>
+
+<div class="sheet">
+  <article id="doc">
+    <h1 class="blk">推理服务多租户配额</h1>
+    <div class="meta blk">草稿 v0.3　·　陆遥　·　11 月 18 日更新</div>
+
+    <h2 class="blk">背景</h2>
+    <p class="blk">目前各业务线共用同一个推理集群，调用量由各自的 Key 隔离，但没有统一的配额。10 月 12 日，搜索部的一次批量回流在四小时内占满了 <span class="num">62%</span> 的 H100 算力，平台部的在线问答延迟从 <span class="num">0.9</span> 秒升到 <span class="num">4.3</span> 秒，用户侧出现了超时。</p>
+    <p class="blk">现有做法是出问题之后人工通知对方限流。这个办法依赖值班同事的响应速度，而且只能事后处理。</p>
+
+    <h2 class="blk">目标</h2>
+    <p class="blk">每个租户拥有一份明确的配额，超出配额的请求排队或被拒绝，不影响其他租户。配额由部门负责人申请、平台管理员审批后生效，生效时间不晚于次日零点。</p>
+    <ul class="blk">
+      <li>在线业务的 P95 延迟不受其他租户的批量任务影响。</li>
+      <li>配额使用情况每小时可查，月底与费用账单对得上。</li>
+      <li>临时扩容可以在一个工作日内完成。</li>
+    </ul>
+
+    <h2 class="blk">配额模型</h2>
+    <p class="blk">配额按两个维度计量：每分钟请求数（RPM）和每分钟令牌数（TPM）。任一维度触顶即视为超额。每个租户可以为不同模型分别设置上限，未单独设置的模型使用租户默认值。</p>
+    <p class="blk">在线与离线流量分成两个优先级。在线流量始终先于离线流量调度，离线流量只使用在线业务空出来的容量，当整体利用率超过 <span class="num">85%</span> 时离线任务暂停派发。</p>
+
+    <h2 class="blk">超额处理</h2>
+    <p class="blk">在线请求超额后直接返回 429，并在响应头带上重置时间。离线请求超额后进入队列，队列保留 6 小时，超时的任务退回给提交人，不自动重试。</p>
+    <p class="blk">租户的用量达到配额的 <span class="num">80%</span> 时，向部门负责人发送一次提醒；达到 <span class="num">100%</span> 时再发一次，同一天内不重复发送。</p>
+
+    <h2 class="blk">待确认</h2>
+    <p class="blk">月初是否清零，还是允许上月未用完的额度顺延，需要和财务确认。另外，共享给多个部门的模型，配额记在哪一个部门名下，目前没有结论。</p>
+  </article>
+  <div class="margin" id="margin"></div>
+</div>
+
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+const doc = $('#doc'), margin = $('#margin'), pop = $('#pop');
+const blocks = [...doc.querySelectorAll('.blk')];
+let cur = blocks[3];
+const notes = [];   // {mark, el, who, text}
+
+/* ---------- 焦点模式 ---------- */
+function setCur(b) { if (!b) return; cur = b; blocks.forEach(x => x.classList.toggle('cur', x === b)); notes.forEach(n => n.el.classList.toggle('cur', b.contains(n.mark))); }
+blocks.forEach(b => b.addEventListener('mousedown', () => setCur(b)));
+$('#bFocus').onclick = e => { document.body.classList.toggle('focus'); e.target.classList.toggle('on'); };
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const i = blocks.indexOf(cur) + (e.key === 'ArrowDown' ? 1 : -1); const b = blocks[Math.max(0, Math.min(blocks.length - 1, i))]; setCur(b); const r = b.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 100) scrollBy({ top: r.top - innerHeight * .35, behavior: 'smooth' }); }
+});
+document.addEventListener('selectionchange', () => {
+  const s = getSelection(); if (!s.rangeCount) return;
+  const n = s.anchorNode && (s.anchorNode.nodeType === 3 ? s.anchorNode.parentElement : s.anchorNode); const b = n && n.closest && n.closest('.blk');
+  if (b) setCur(b); stats();
+});
+
+/* ---------- 鼠标不动 2 秒，工具栏淡出 ---------- */
+let idleT;
+const wake = () => { document.body.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => { if (!document.activeElement || document.activeElement.tagName !== 'TEXTAREA') document.body.classList.add('idle'); }, 2000); };
+addEventListener('mousemove', wake); addEventListener('scroll', wake, { passive: true });
+addEventListener('keydown', e => { if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') wake(); });
+
+/* ---------- 字数和阅读时间 ---------- */
+const count = t => { const cn = (t.match(/[一-鿿]/g) || []).length; const en = (t.replace(/[一-鿿]/g, ' ').match(/[A-Za-z0-9]+(?:[.,][0-9]+)?/g) || []).length; return cn + en; };
+function stats() {
+  const sel = getSelection().toString(), all = count(doc.innerText);
+  $('#wc').textContent = sel.trim() ? `已选 ${count(sel)} 字 / 共 ${all.toLocaleString('en-US')} 字` : `${all.toLocaleString('en-US')} 字`;
+  const m = all / 400; $('#rt').textContent = `阅读约 ${m < 1 ? '不到 1' : Math.ceil(m)} 分钟`;
+}
+
+/* ---------- 批注 ---------- */
+function layout() {
+  const base = margin.getBoundingClientRect().top + scrollY; let last = -1e9;
+  notes.slice().sort((a, b) => a.mark.getBoundingClientRect().top - b.mark.getBoundingClientRect().top).forEach(n => {
+    let y = n.mark.getBoundingClientRect().top + scrollY - base - 2; if (y < last + 8) y = last + 8; n.el.style.top = y + 'px'; last = y + n.el.offsetHeight;
+  });
+  $('#nCnt').textContent = notes.length;
+}
+function addNote(mark, who, text, editing) {
+  const el = document.createElement('div'); el.className = 'note';
+  const n = { mark, el, who, text };
+  const render = () => {
+    el.innerHTML = `<div class="who"><span>${who}</span><button>删除</button></div>` + (n.editing ? `<textarea placeholder="写下批注"></textarea><div class="hint">回车保存，Esc 取消</div>` : `<div>${n.text.replace(/</g, '&lt;')}</div>`);
+    $('button', el).onclick = () => { notes.splice(notes.indexOf(n), 1); el.remove(); const p = mark.parentNode; while (mark.firstChild) p.insertBefore(mark.firstChild, mark); mark.remove(); p.normalize(); layout(); stats(); };
+    const ta = $('textarea', el);
+    if (ta) { setTimeout(() => ta.focus(), 30); ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (ta.value.trim()) { n.text = ta.value.trim(); n.editing = false; render(); layout(); } else $('button', el).click(); } if (e.key === 'Escape') $('button', el).click(); }; ta.oninput = layout; }
+  };
+  n.editing = editing; render(); margin.appendChild(el); notes.push(n);
+  const on = v => { mark.classList.toggle('hot', v); el.classList.toggle('hot', v); };
+  mark.onmouseenter = el.onmouseenter = () => on(true); mark.onmouseleave = el.onmouseleave = () => on(false);
+  mark.onclick = () => { setCur(mark.closest('.blk')); };
+  layout(); return n;
+}
+function markText(blk, text, who, note) {
+  const w = document.createTreeWalker(blk, NodeFilter.SHOW_TEXT); let t;
+  while ((t = w.nextNode())) { const i = t.data.indexOf(text); if (i >= 0) { const r = document.createRange(); r.setStart(t, i); r.setEnd(t, i + text.length); const m = document.createElement('mark'); r.surroundContents(m); addNote(m, who, note, false); return; } }
+}
+const P = [...doc.querySelectorAll('p.blk')];
+markText(P[0], '四小时内占满了', '林夕', '这里要写清是哪几个模型，运维那边有日志。');
+markText(P[1], '只能事后处理', '陈默', '上个月有两次，都是用户先发现的。');
+markText(P[3], '任一维度触顶即视为超额', '周岚', 'TPM 按输入加输出合计，还是只算输出？需要定。');
+markText(P[5], '队列保留 6 小时', '陈默', '6 小时从哪来的？离线任务夜间跑，建议 12 小时。');
+
+const showPop = () => {
+  const s = getSelection(); if (!s.rangeCount || s.isCollapsed) { pop.classList.remove('show'); return; }
+  const r = s.getRangeAt(0), a = r.startContainer.nodeType === 3 ? r.startContainer.parentElement : r.startContainer, b = r.endContainer.nodeType === 3 ? r.endContainer.parentElement : r.endContainer;
+  const blk = a.closest && a.closest('.blk'); if (!blk || blk !== (b.closest && b.closest('.blk')) || !blk.matches('p, li') || a.closest('mark')) { pop.classList.remove('show'); return; }
+  const rc = r.getBoundingClientRect(); pop.style.left = (rc.left + rc.width / 2 - 32) + 'px'; pop.style.top = (rc.top - 42) + 'px'; pop.classList.add('show');
+};
+document.addEventListener('mouseup', () => setTimeout(showPop, 10));
+document.addEventListener('mousedown', e => { if (!pop.contains(e.target)) pop.classList.remove('show'); });
+addEventListener('scroll', () => pop.classList.remove('show'), { passive: true });
+pop.addEventListener('mousedown', e => e.preventDefault());
+$('#popBtn').onclick = () => {
+  const s = getSelection(); if (!s.rangeCount || s.isCollapsed) return;
+  const r = s.getRangeAt(0), m = document.createElement('mark'); m.appendChild(r.extractContents()); r.insertNode(m); s.removeAllRanges();
+  pop.classList.remove('show'); addNote(m, '陆遥', '', true); stats();
+};
+$('#bNotes').onclick = () => { const n = notes[0]; if (n) scrollTo({ top: n.mark.getBoundingClientRect().top + scrollY - 260, behavior: 'smooth' }); };
+addEventListener('resize', layout); addEventListener('load', () => { layout(); stats(); });
+document.fonts && document.fonts.ready.then(() => { layout(); stats(); });
+setCur(cur); stats(); layout();
+window.__q = { setCur, blocks };
+})();
+</script>
+</body>
+</html>

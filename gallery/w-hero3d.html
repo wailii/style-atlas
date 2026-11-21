@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nodo Watch 2 · 3D 英雄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8eaee;--ink:#0f1115;--ink2:#5a5f6b;--mute:#9298a5;--line:rgba(15,17,21,.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:Inter,"Noto Sans SC",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;cursor:grab;touch-action:pan-y}
+#gl.drag{cursor:grabbing}
+#ov{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+nav{position:fixed;top:0;left:0;right:0;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 44px;z-index:5;font-size:13px}
+.brand{font-weight:600;letter-spacing:.14em;font-size:14px}
+nav ul{list-style:none;display:flex;gap:30px;color:var(--ink2)}nav a{color:inherit;text-decoration:none}nav ul a:hover{color:var(--ink)}
+nav .buy{font-weight:500;border:1px solid var(--ink);border-radius:99px;padding:7px 16px;color:var(--ink);transition:.2s}nav .buy:hover{background:var(--ink);color:#fff}
+.title{position:fixed;left:0;right:0;top:80px;text-align:center;z-index:3;pointer-events:none;transition:opacity .6s,transform .6s}
+.title h1{font-size:60px;font-weight:300;letter-spacing:-.03em;line-height:1.1}
+.title h1 b{font-weight:600}
+.title p{font-size:16px;color:var(--ink2);margin-top:10px;font-weight:300;letter-spacing:.04em}
+.cap{position:fixed;left:72px;top:50%;transform:translateY(-50%);width:300px;z-index:3;pointer-events:none;opacity:0;transition:opacity .5s,transform .5s}
+.cap.on{opacity:1}.cap.r{left:auto;right:72px}
+.cap small{font-size:12px;letter-spacing:.16em;color:var(--mute)}
+.cap h2{font-size:34px;font-weight:300;letter-spacing:-.02em;line-height:1.25;margin:10px 0 12px}
+.cap h2 b{font-weight:600}
+.cap p{font-size:14px;color:var(--ink2);line-height:1.8;font-weight:300}
+.dock{position:fixed;left:0;right:0;bottom:34px;z-index:5;display:flex;flex-direction:column;align-items:center;gap:16px;transition:opacity .5s}
+.opts{display:flex;align-items:center;gap:34px}
+.sw{display:flex;gap:14px;align-items:center}
+.sw button{width:28px;height:28px;border-radius:50%;border:1px solid rgba(15,17,21,.18);background:var(--c);cursor:pointer;position:relative;transition:transform .25s}
+.sw button:hover{transform:scale(1.12)}
+.sw button.on:after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid var(--ink)}
+.cn{font-size:13px;color:var(--ink);min-width:72px}
+.seg{display:flex;border:1px solid var(--line);border-radius:99px;padding:3px;font-size:12.5px;background:rgba(255,255,255,.5)}
+.seg button{border:0;background:none;padding:6px 16px;border-radius:99px;cursor:pointer;color:var(--ink2);font:inherit;transition:.25s}
+.seg button.on{background:var(--ink);color:#fff}
+.hint{font-size:12px;color:var(--mute);letter-spacing:.08em;display:flex;align-items:center;gap:8px}
+.hint i{display:inline-block;width:1px;height:14px;background:var(--mute);animation:dr 1.6s ease-in-out infinite;transform-origin:top}
+@keyframes dr{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(0);transform-origin:bottom}}
+.spacer{height:500vh}
+.dots{position:fixed;right:36px;top:50%;transform:translateY(-50%);z-index:5;display:flex;flex-direction:column;gap:12px}
+.dots a{width:6px;height:6px;border-radius:50%;background:rgba(15,17,21,.22);transition:.3s;display:block}.dots a.on{background:var(--ink);transform:scale(1.5)}
+#load{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .8s .1s,visibility .9s;font-size:12px;letter-spacing:.2em;color:var(--ink2)}
+#load.done{opacity:0;visibility:hidden}
+#load .bar{width:180px;height:2px;background:rgba(15,17,21,.12);overflow:hidden}#load .bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .2s}
+#load b{font-weight:500;font-size:34px;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:300}
+.cl,.cl2{paint-order:stroke;stroke:#e8eaee;stroke-width:5px;stroke-linejoin:round}.cl{font:400 12.5px Inter,"Noto Sans SC";fill:var(--ink)}.cl2{font:300 12px "Noto Sans SC";fill:var(--ink2)}
+.src{position:fixed;left:44px;bottom:16px;font-size:11px;color:var(--mute);z-index:5}
+</style></head><body>
+<div id="load"><b id="pct">0%</b><div class="bar"><i id="bar"></i></div>载入模型</div>
+<canvas id="gl"></canvas>
+<svg id="ov"></svg>
+<nav><div class="brand">NODO</div><ul><li><a href="#">Watch 2</a></li><li><a href="#">功能</a></li><li><a href="#">表带</a></li><li><a href="#">对比</a></li></ul><a class="buy" href="#">购买 · ¥2,499 起</a></nav>
+<div class="title" id="title"><h1><b>Nodo Watch</b> 2</h1><p>一天的数据，收进一块表</p></div>
+<div class="cap" id="cap"><small id="cs"></small><h2 id="ch"></h2><p id="cp"></p></div>
+<div class="dots" id="dots"></div>
+<div class="dock" id="dock"><div class="opts"><div class="sw" id="sw"></div><span class="cn" id="cn"></span><div class="seg" id="seg"><button class="on" data-m="gloss">亮面</button><button data-m="matte">哑光</button></div></div>
+<div class="hint"><i></i>拖动旋转 · 向下滚动</div></div>
+<div class="src">示意模型 · Eric Chadwick，CC-BY 4.0 · 示例数据</div>
+<div class="spacer"></div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/three-GLTFLoader.js"></script>
+<script src="vendor/three-RoomEnvironment.js"></script>
+<script>
+const $=(s)=>document.querySelector(s),$$=(s)=>[...document.querySelectorAll(s)];
+const cv=$('#gl'),NS='http://www.w3.org/2000/svg';
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,preserveDrawingBuffer:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.05;
+const scene=new THREE.Scene();
+scene.environment=new THREE.PMREMGenerator(R).fromScene(new THREE.RoomEnvironment(),0.04).texture;
+const cam=new THREE.PerspectiveCamera(26,1,.05,50);
+const key=new THREE.DirectionalLight(0xffffff,.7);key.position.set(2,3,4);scene.add(key);
+const fill=new THREE.DirectionalLight(0xdfe6ff,.35);fill.position.set(-3,1,2);scene.add(fill);
+// 柔和接触阴影：画一张柔边椭圆贴图放在模型下方
+const sc=document.createElement('canvas');sc.width=sc.height=256;{const g=sc.getContext('2d'),gr=g.createRadialGradient(128,128,0,128,128,128);gr.addColorStop(0,'rgba(20,24,34,.55)');gr.addColorStop(.45,'rgba(20,24,34,.22)');gr.addColorStop(1,'rgba(20,24,34,0)');g.fillStyle=gr;g.fillRect(0,0,256,256)}
+const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));
+shadow.rotation.x=-Math.PI/2;scene.add(shadow);
+const pivot=new THREE.Group(),holder=new THREE.Group();scene.add(holder);holder.add(pivot);
+let model=null,mats={},meshes=[];
+const VAR={white:{name:'云母白',suf:'',c:'#f2f2ee'},gold:{name:'香槟金',suf:' Gold',c:'#d9bf86'},green:{name:'薄荷绿',suf:' Green',c:'#9bd1b4'},red:{name:'珊瑚红',suf:' Red',c:'#d0463b'}};
+let variant='gold',finish='gloss';
+// ---------- 加载（带进度） ----------
+const pct=$('#pct'),bar=$('#bar');
+
+new THREE.GLTFLoader().load('models/ChronographWatch.glb',async gltf=>{
+  const js=gltf.parser.json;const all=await Promise.all(js.materials.map((_,i)=>gltf.parser.getDependency('material',i)));all.forEach(m=>mats[m.name]=m);
+  model=gltf.scene;const b=new THREE.Box3().setFromObject(model),sz=b.getSize(new THREE.Vector3()),ct=b.getCenter(new THREE.Vector3()),k=1/sz.y;
+  model.scale.setScalar(k);model.position.set(-ct.x*k,-ct.y*k,-ct.z*k);pivot.add(model);sz0=sz.clone().multiplyScalar(k);
+  model.traverse(o=>{if(o.isMesh){o.userData.base=o.material.name.replace(/ (Gold|Green|Red)$/,'');meshes.push(o)}});
+  Object.values(mats).forEach(m=>{if(/Glass/.test(m.name)){m.transmission=0;m.transparent=true;m.opacity=.16;m.roughness=.03;m.envMapIntensity=2;m.depthWrite=false}});
+  model.updateMatrixWorld(true);computeAnchors();window.__size=sz.clone().multiplyScalar(k);
+  apply();ready=true;
+  pct.textContent='100%';bar.style.width='100%';setTimeout(()=>{$('#load').classList.add('done');t0=performance.now()},250);
+},x=>{if(x.total){const p=Math.round(x.loaded/x.total*100);pct.textContent=p+'%';bar.style.width=p+'%'}},e=>{pct.textContent='加载失败'});
+let ready=false,t0=0;
+function pts(name){const o=meshes.find(m=>m.userData.base===name),a=o.geometry.attributes.position,out=[],v=new THREE.Vector3();for(let i=0;i<a.count;i+=2){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);out.push(v.clone())}return out}
+function computeAnchors(){
+  const bp=new THREE.Box3();pts('Band Carbon Fiber').forEach(v=>bp.expandByPoint(v));const bc=bp.getCenter(new THREE.Vector3());
+  const gl=new THREE.Box3();pts('Glass Face').forEach(v=>gl.expandByPoint(v));const gc=gl.getCenter(new THREE.Vector3());
+  const bm=pts('Button Metal');const mx=Math.max(...bm.map(v=>v.x));const side=bm.filter(v=>v.x>mx-.16).sort((a,b)=>a.y-b.y);
+  const cl=[];side.forEach(v=>{const c=cl[cl.length-1];if(c&&v.y-c.last<.06){c.n++;c.sum.add(v);c.last=v.y}else cl.push({n:1,sum:v.clone(),last:v.y})});
+  const cs=cl.filter(c=>c.n>3).map(c=>c.sum.clone().multiplyScalar(1/c.n));
+  cs.sort((a,b)=>Math.abs(a.y)-Math.abs(b.y));const crown=cs[0]||new THREE.Vector3(mx,0,0),btn=cs.filter(c=>c.y>crown.y+.05).sort((a,b)=>a.y-b.y)[0]||cs[1]||crown;
+  ANCH[1]=[{p:[crown.x,crown.y,crown.z],l:'表冠',s:'触感反馈 · 每格一震',side:-1},{p:[btn.x,btn.y,btn.z],l:'侧键',s:'可自定义计时与通话',side:-1}];
+  ANCH[2]=[{p:[bc.x-.1,bc.y+.12,bp.min.z],l:'碳纤维编织',s:'双层 · 亲肤内衬',side:1}];
+  ANCH[3]=[{p:[gc.x,gc.y+.06,gc.z],l:'蓝宝石玻璃',s:'2,000 尼特',side:1}];}
+
+// ---------- 配色 / 材质 ----------
+function apply(){const s=VAR[variant].suf;
+  meshes.forEach(o=>{const base=o.userData.base,want=mats[base+s]||mats[base];if(o.material!==want)o.material=want;
+    const m=o.material;if(/Bezel|Button Metal|Clasp|Backplate/.test(base)){m.userData.r0=m.userData.r0??m.roughness;m.userData.m0=m.userData.m0??m.metalness;m.roughness=finish==='matte'?Math.min(1,m.userData.r0+.42):m.userData.r0;m.envMapIntensity=finish==='matte'?.7:1.2}})}
+$('#sw').innerHTML=Object.entries(VAR).map(([k,v])=>`<button data-v="${k}" style="--c:${v.c}" class="${k===variant?'on':''}" title="${v.name}"></button>`).join('');
+$('#cn').textContent=VAR[variant].name;
+$('#sw').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;variant=b.dataset.v;$$('#sw button').forEach(x=>x.classList.toggle('on',x===b));$('#cn').textContent=VAR[variant].name;apply();bump=1});
+$('#seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;finish=b.dataset.m;$$('#seg button').forEach(x=>x.classList.toggle('on',x===b));apply();bump=1});
+let bump=0;
+// ---------- 滚动关键帧 ----------
+const D=Math.PI/180;
+const KF=[{yaw:-18*D,pitch:6*D,s:1,x:0,y:0},{yaw:-90*D,pitch:3*D,s:1.12,x:-.12,y:0},{yaw:158*D,pitch:6*D,s:1.12,x:.12,y:0},{yaw:-22*D,pitch:-48*D,s:1.02,x:.1,y:-.05},{yaw:-14*D,pitch:8*D,s:.92,x:0,y:0}];
+const CAPS=[null,{s:'01 · 交互',h:'旋转表冠与<b>两颗按键</b>',p:'表冠带触感反馈，每转一格轻震一次。两颗侧键可自定义为计时与通话。'},{s:'02 · 表带',h:'<b>编织纹</b>碳纤维表带',p:'双层结构，外层碳纤维编织，内层亲肤硅胶。出汗、游泳、洗手都不用摘。'},{s:'03 · 表面',h:'<b>1.9 英寸</b>常亮屏',p:'蓝宝石玻璃覆盖，阳光下 2,000 尼特。抬腕即亮，放下即熄。'},{s:'04 · 选择',h:'四种配色，<b>两种质感</b>',p:'表带与表壳同步换色。亮面与哑光可在下方切换。'}];
+const ANCH=[[],[],[],[],[]];let sz0=null;
+let sp=0; // 滚动进度 0..4
+const ease=u=>u*u*(3-2*u);
+function keyframe(p){const i=Math.min(KF.length-2,Math.floor(p)),u=ease(Math.min(1,p-i)),a=KF[i],b=KF[i+1],o={};for(const k in a)o[k]=a[k]+(b[k]-a[k])*u;return o}
+// ---------- 拖动 + 惯性 ----------
+let dragging=false,lx=0,ly=0,vx=0,vy=0,offY=0,offX=0,lastDrag=0;
+cv.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;vx=vy=0;cv.classList.add('drag');cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;vx=dx*.0085;vy=dy*.0085;offY+=vx;offX=Math.max(-1,Math.min(1,offX+vy));lastDrag=performance.now()});
+const up=()=>{dragging=false;cv.classList.remove('drag')};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+// ---------- 引线 ----------
+const ov=$('#ov');let leaders=[];
+function buildLeaders(i){ov.innerHTML='';leaders=ANCH[i].map(a=>{const g=document.createElementNS(NS,'g');g.style.opacity=0;g.style.transition='opacity .35s';
+  g.innerHTML=`<circle r="4.5" fill="none" stroke="#0f1115" stroke-width="1.2"/><circle r="1.8" fill="#0f1115"/><polyline fill="none" stroke="#0f1115" stroke-width="1" points="0,0 0,0"/><text class="cl" x="0" y="0"></text><text class="cl2" x="0" y="0"></text>`;ov.appendChild(g);return{a,g}})}
+let curStage=-1;
+function setStage(i){if(i===curStage)return;curStage=i;buildLeaders(i);$$('#dots a').forEach((d,k)=>d.classList.toggle('on',k===i));
+  const c=CAPS[i],cap=$('#cap');cap.classList.toggle('r',i===1);if(c){cap.classList.remove('on');setTimeout(()=>{$('#cs').textContent=c.s;$('#ch').innerHTML=c.h;$('#cp').textContent=c.p;cap.classList.add('on')},180)}else cap.classList.remove('on');
+  $('#title').style.opacity=i===0?1:0;$('#title').style.transform=i===0?'none':'translateY(-14px)'}
+$('#dots').innerHTML=KF.map((_,i)=>`<a href="#" data-i="${i}"></a>`).join('');
+$('#dots').addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.preventDefault();const H=document.documentElement.scrollHeight-innerHeight;scrollTo({top:H*(+a.dataset.i)/(KF.length-1),behavior:'smooth'})});
+addEventListener('scroll',()=>{const H=document.documentElement.scrollHeight-innerHeight;sp=H>0?scrollY/H*(KF.length-1):0},{passive:true});
+// ---------- 渲染循环 ----------
+let cur={yaw:KF[0].yaw,pitch:KF[0].pitch,s:1,x:0,y:0},spin=0;
+function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}resize();addEventListener('resize',resize);
+const v3=new THREE.Vector3();
+function frame(now){requestAnimationFrame(frame);
+  if(!ready){R.render(scene,cam);return}
+  const dt=Math.min(.05,(now-(frame.l||now))/1000);frame.l=now;
+  const tgt=keyframe(sp);
+  // 松手后惯性，闲置 2.2 秒后偏移回到 0
+  if(!dragging){offY+=vx;offX=Math.max(-1,Math.min(1,offX+vy));vx*=.94;vy*=.94;if(now-lastDrag>2200){offY*=.965;offX*=.965}}
+  const intro=Math.min(1,(now-t0)/1600),ie=1-Math.pow(1-intro,3);
+  cur.yaw+=(tgt.yaw-cur.yaw)*.09;cur.pitch+=(tgt.pitch-cur.pitch)*.09;cur.s+=(tgt.s-cur.s)*.09;cur.x+=(tgt.x-cur.x)*.09;cur.y+=(tgt.y-cur.y)*.09;
+  bump*=.9;
+  pivot.rotation.set(cur.pitch+offX,cur.yaw+offY+(1-ie)*-.9,0,'YXZ');
+  const sc2=cur.s*(.86+.14*ie)*(1+bump*.02);holder.scale.setScalar(sc2);holder.position.set(cur.x,cur.y,0);
+  const dist=(1/.54)/2/Math.tan(cam.fov*D/2)*(cam.aspect<1.2?1.5:1);cam.position.set(0,0,dist);cam.lookAt(0,0,0);
+  shadow.position.set(cur.x,-.62*sc2+cur.y*.2,0);shadow.scale.set(.78*sc2*(1-Math.abs(Math.sin(cur.pitch))*.3),.34*sc2,1);shadow.material.opacity=ie*.9;
+  holder.visible=true;R.render(scene,cam);
+  // 引线：模型转到位后才出现
+  const st=Math.round(sp);setStage(st);
+  const settled=Math.abs(cur.yaw-tgt.yaw)<.05&&Math.abs(cur.pitch-tgt.pitch)<.05&&Math.abs(sp-st)<.12&&Math.abs(offY)<.15&&Math.abs(offX)<.15;
+  const W=innerWidth,H=innerHeight,sz=window.__size;
+  leaders.forEach(({a,g})=>{v3.set(a.p[0],a.p[1],a.p[2]);pivot.localToWorld(v3);v3.project(cam);const x=(v3.x*.5+.5)*W,y=(-v3.y*.5+.5)*H;
+    const idx=leaders.findIndex(q=>q.a===a),dirn=a.side||1,lx=x+dirn*(dirn>0?270:200),ly=y+(leaders.length>1?(idx?30:-30):-26);
+    const pl=g.querySelector('polyline'),ts=g.querySelectorAll('text'),cs=g.querySelectorAll('circle');
+    cs.forEach(c=>{c.setAttribute('cx',x);c.setAttribute('cy',y)});pl.setAttribute('points',`${x},${y} ${x+dirn*40},${ly} ${lx},${ly}`);
+    const tx=lx+dirn*10,ta=dirn>0?'start':'end';ts.forEach(t=>t.setAttribute('text-anchor',ta));ts[0].setAttribute('x',tx);ts[0].setAttribute('y',ly-3);ts[0].textContent=a.l;ts[1].setAttribute('x',tx);ts[1].setAttribute('y',ly+15);ts[1].textContent=a.s;
+    g.style.opacity=settled&&ie>.99?1:0});
+}
+requestAnimationFrame(frame);
+</script></body></html>

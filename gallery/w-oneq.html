@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一问一答表单 · GPU 资源申请</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #15120e; --bg: #f7e08a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: "Inter", "Noto Sans SC", sans-serif; color: var(--ink); background: var(--bg); transition: background-color .55s ease; -webkit-font-smoothing: antialiased; user-select: none; }
+  button, input, textarea { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+  input, textarea { cursor: text; user-select: text; }
+  svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .prog { position: fixed; left: 0; top: 0; right: 0; height: 7px; background: rgba(21,18,14,.12); z-index: 10; }
+  .prog i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .5s cubic-bezier(.3,.9,.3,1); }
+  .tb { position: fixed; left: 0; right: 0; top: 7px; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; z-index: 9; }
+  .tb .lg { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+  .tb .lg i { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; } .tb .lg svg { width: 14px; height: 14px; stroke: var(--bg); stroke-width: 2.2; }
+  .tb .ct { font: 500 14px "IBM Plex Mono", monospace; letter-spacing: .02em; }
+  .stage { position: fixed; inset: 0; display: grid; place-items: center; padding: 72px 48px 90px; overflow: hidden; }
+  .bignum { position: absolute; right: 4vw; bottom: -4vw; font: 800 min(36vw, 520px)/1 "Inter"; letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 2px rgba(21,18,14,.14); pointer-events: none; transition: opacity .4s; }
+  .q { position: relative; width: min(900px, 100%); animation: inUp .5s cubic-bezier(.2,.9,.25,1) both; }
+  .q.out { animation: outUp .28s ease-in both; }
+  .q.back { animation-name: inDown; } .q.out.back { animation-name: outDown; }
+  @keyframes inUp { from { opacity: 0; transform: translateY(70px); } to { opacity: 1; transform: none; } }
+  @keyframes outUp { to { opacity: 0; transform: translateY(-70px); } }
+  @keyframes inDown { from { opacity: 0; transform: translateY(-70px); } to { opacity: 1; transform: none; } }
+  @keyframes outDown { to { opacity: 0; transform: translateY(70px); } }
+  .qn { display: flex; align-items: center; gap: 10px; font: 700 20px "Inter"; margin-bottom: 22px; }
+  .qn svg { width: 22px; height: 22px; stroke-width: 2.4; }
+  .qt { font-family: "Inter", "Noto Sans SC"; font-weight: 900; font-size: 58px; line-height: 1.18; letter-spacing: -.02em; }
+  .qs { font-size: 21px; margin-top: 14px; opacity: .72; line-height: 1.55; font-weight: 500; }
+  .opts { margin-top: 38px; display: grid; gap: 10px; width: min(520px, 100%); }
+  .opts.two { grid-template-columns: 1fr 1fr; width: min(820px, 100%); }
+  .op { display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 18px 0 12px; border-radius: 12px; font-size: 21px; font-weight: 700; text-align: left; background: rgba(255,255,255,.34); box-shadow: inset 0 0 0 2px rgba(21,18,14,.55); transition: background .15s, transform .12s, box-shadow .15s; }
+  .op:hover { background: rgba(255,255,255,.62); transform: translateX(4px); }
+  .op .k { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font: 700 14px "Inter"; background: rgba(255,255,255,.7); box-shadow: inset 0 0 0 2px rgba(21,18,14,.55); flex: none; transition: all .15s; }
+  .op.on { background: var(--ink); color: var(--bg); box-shadow: none; transform: none; }
+  .op.on .k { background: var(--bg); color: var(--ink); box-shadow: none; }
+  .op small { margin-left: auto; font: 500 13px "Inter", "Noto Sans SC"; opacity: .65; }
+  .in { margin-top: 34px; width: min(780px, 100%); font: 700 44px "Inter", "Noto Sans SC"; border: 0; border-bottom: 3px solid rgba(21,18,14,.55); padding: 6px 0 12px; transition: border-color .2s; }
+  .in::placeholder { color: rgba(21,18,14,.32); font-weight: 500; } .in:focus { border-bottom-color: var(--ink); }
+  textarea.in { font-size: 28px; font-weight: 500; line-height: 1.5; resize: none; height: 150px; }
+  .act { margin-top: 30px; display: flex; align-items: center; gap: 16px; }
+  .ok { height: 52px; padding: 0 26px; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: 20px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; transition: transform .12s; }
+  .ok:hover { transform: translateY(-2px); } .ok:active { transform: scale(.97); }
+  .ok svg { width: 22px; height: 22px; stroke-width: 3; }
+  .hint { font-size: 15px; opacity: .7; font-weight: 500; } .hint b { font: 700 14px "Inter"; }
+  .err { color: #a01616; font-weight: 700; font-size: 17px; display: none; align-items: center; gap: 8px; } .err.on { display: flex; animation: shake .4s; }
+  @keyframes shake { 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+  .nav { position: fixed; right: 44px; bottom: 36px; display: flex; gap: 8px; z-index: 9; align-items: center; }
+  .nav button { width: 48px; height: 48px; border-radius: 12px; background: var(--ink); color: var(--bg); display: grid; place-items: center; transition: transform .12s, opacity .2s; } .nav button:hover { transform: translateY(-2px); } .nav button:disabled { opacity: .25; pointer-events: none; }
+  .nav svg { width: 22px; height: 22px; stroke-width: 2.6; }
+  .demo { position: fixed; left: 48px; bottom: 36px; font-size: 11px; opacity: .55; }
+
+  .sum { width: min(1040px, 100%); display: grid; grid-template-columns: 1fr 360px; gap: 56px; align-items: start; }
+  .sum h2 { font-weight: 900; font-size: 46px; line-height: 1.2; letter-spacing: -.02em; }
+  .rows { margin-top: 26px; border-top: 3px solid var(--ink); }
+  .rw { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1.5px solid rgba(21,18,14,.3); }
+  .rw span { font-size: 15px; font-weight: 700; opacity: .6; } .rw b { font-size: 22px; font-weight: 800; }
+  .rw button { font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 8px; box-shadow: inset 0 0 0 2px rgba(21,18,14,.5); transition: all .15s; } .rw button:hover { background: var(--ink); color: var(--bg); }
+  .rw.skip b { opacity: .45; font-weight: 500; font-size: 17px; }
+  .cost { padding: 28px; border-radius: 20px; background: var(--ink); color: var(--bg); }
+  .cost span { font-size: 14px; font-weight: 700; opacity: .7; } .cost b { display: block; font: 800 54px/1.1 "Inter"; letter-spacing: -.03em; margin: 10px 0 6px; font-variant-numeric: tabular-nums; } .cost b small { font-size: 22px; margin-right: 4px; font-weight: 700; }
+  .cost p { font-size: 14px; opacity: .75; line-height: 1.7; }
+  .cost .ok { background: var(--bg); color: var(--ink); width: 100%; justify-content: center; margin-top: 22px; }
+  .done { text-align: left; }
+  .done svg.ck { width: 120px; height: 120px; stroke-width: 5; } .done svg.ck circle { stroke-dasharray: 340; stroke-dashoffset: 340; animation: dr .8s .1s ease forwards; } .done svg.ck path { stroke-dasharray: 80; stroke-dashoffset: 80; animation: dr .5s .7s ease forwards; } @keyframes dr { to { stroke-dashoffset: 0; } }
+  .done .id { margin-top: 26px; display: inline-block; font: 500 22px "IBM Plex Mono", monospace; padding: 10px 18px; border-radius: 10px; box-shadow: inset 0 0 0 2px var(--ink); }
+  .done .again { margin-top: 30px; font-weight: 800; font-size: 18px; border-bottom: 3px solid var(--ink); padding-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="prog"><i id="pb"></i></div>
+<div class="tb"><div class="lg"><i><svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="2"/><path d="M6 1.5v1.5M10 1.5v1.5M6 13v1.5M10 13v1.5"/></svg></i>算力申请</div><div class="ct" id="ct"></div></div>
+<div class="stage" id="stage"></div>
+<div class="nav"><button id="up" aria-label="上一题"><svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg></button><button id="dn" aria-label="下一题"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></div>
+<div class="demo">示例数据</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const COLORS = ["#f7e08a", "#b9e3cc", "#ffb59a", "#d5c5f6", "#ffd8a6", "#cfe5a0", "#f5c2d3", "#f7e08a"];
+const Q = [
+  { id: "dept", t: "你来自哪个部门？", s: "资源会记到这个部门的额度里。", type: "choice", opts: ["算法一部", "多模态组", "语音组", "推荐算法", "数据平台", "其他"], two: 1 },
+  { id: "use", t: "这次要用 GPU 做什么？", s: "不同用途会走不同的审批和调度队列。", type: "choice", opts: ["模型训练", "在线推理", "评测与实验", "开发调试"] },
+  { id: "days", t: "预计要训练多少天？", s: "按任务实际时长估计就行，不够后面可以续期。", type: "choice", opts: ["1–3 天", "4–7 天", "8–14 天", "15–30 天", "30 天以上"], when: (a) => a.use === "模型训练" },
+  { id: "gpu", t: "需要哪种 GPU？", s: "括号里是当前资源池的空闲卡数。", type: "choice", opts: ["H100 80G", "A800 80G", "L20 48G", "昇腾 910B"], sub: ["空闲 24 卡", "空闲 40 卡", "空闲 96 卡", "空闲 16 卡"] },
+  { id: "num", t: "需要多少张卡？", s: "按 8 卡整机分配，选最接近的。", type: "choice", opts: ["8 卡", "16 卡", "32 卡", "64 卡"], two: 1 },
+  { id: "start", t: "希望什么时候开始？", s: "审批通过后会按这个时间准备环境。", type: "choice", opts: ["本周内", "下周", "两周后", "还没定"] },
+  { id: "name", t: "怎么称呼你？", s: "审批结果会发给你，写真名方便同事识别。", type: "text", ph: "输入姓名", req: 1 },
+  { id: "note", t: "还有什么要补充的吗？", s: "比如框架版本、数据位置、特殊网络需求。可以直接跳过。", type: "long", ph: "在这里输入…", req: 0 }
+];
+const PRICE = { "H100 80G": 50, "A800 80G": 28, "L20 48G": 12, "昇腾 910B": 22 }, DAYS = { "1–3 天": 2, "4–7 天": 5.5, "8–14 天": 11, "15–30 天": 22, "30 天以上": 35 };
+const A = {}; let cur = 0, mode = "q", editing = false, busy = false, id = "GR-20261118-0207";
+const vis = () => Q.filter((q) => !q.when || q.when(A));
+const idxVis = (i) => vis().indexOf(Q[i]);
+const CHK = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>', ARR = '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const colorOf = (i) => COLORS[i % COLORS.length];
+
+function show(dir) {
+  const st = $("#stage"), old = st.firstElementChild, back = dir === "back";
+  const draw = () => {
+    st.innerHTML = ""; const el = document.createElement("div");
+    if (mode === "q") renderQ(el); else if (mode === "sum") renderSum(el); else renderDone(el);
+    if (back) el.classList.add("back"); st.appendChild(el);
+    const bn = document.createElement("div"); bn.className = "bignum"; st.appendChild(bn); if (mode === "q") bn.textContent = String(idxVis(cur) + 1).padStart(2, "0");
+    const f = el.querySelector("input,textarea"); if (f) setTimeout(() => f.focus(), 350);
+    busy = false; progress();
+  };
+  document.body.style.setProperty("--bg", mode === "q" ? colorOf(idxVis(cur)) : mode === "sum" ? "#f3efe6" : "#b9e3cc");
+  if (old) { busy = true; old.classList.add("out"); if (back) old.classList.add("back"); $(".bignum") && ($(".bignum").style.opacity = 0); setTimeout(draw, 260); } else draw();
+}
+function progress() {
+  const v = vis(); let p = 0;
+  if (mode === "q") p = idxVis(cur) / (v.length + 1); else if (mode === "sum") p = v.length / (v.length + 1); else p = 1;
+  $("#pb").style.width = p * 100 + "%";
+  $("#ct").textContent = mode === "q" ? `${idxVis(cur) + 1} / ${v.length}` : mode === "sum" ? "确认" : "完成";
+  $("#up").disabled = mode === "done" || (mode === "q" && idxVis(cur) === 0); $("#dn").disabled = mode !== "q" || !answered(Q[cur]);
+}
+const answered = (q) => q.req === 0 || (A[q.id] !== undefined && String(A[q.id]).trim() !== "");
+function renderQ(el) {
+  const q = Q[cur]; el.className = "q"; const n = idxVis(cur) + 1;
+  let body = "";
+  if (q.type === "choice") body = `<div class="opts${q.two ? " two" : ""}">${q.opts.map((o, i) => `<button class="op${A[q.id] === o ? " on" : ""}" data-i="${i}"><span class="k">${String.fromCharCode(65 + i)}</span>${o}${q.sub ? `<small>${q.sub[i]}</small>` : ""}</button>`).join("")}</div>`;
+  else if (q.type === "text") body = `<input class="in" id="inp" placeholder="${q.ph}" value="${A[q.id] || ""}" maxlength="12" autocomplete="off">`;
+  else body = `<textarea class="in" id="inp" placeholder="${q.ph}">${A[q.id] || ""}</textarea>`;
+  el.innerHTML = `<div class="qn">${n}${ARR}</div><h1 class="qt">${q.t}</h1><p class="qs">${q.s}</p>${body}
+    <div class="act">${q.type === "choice" ? "" : `<button class="ok" id="ok">${q.req === 0 && !A[q.id] ? "跳过" : "确定"}${CHK}</button>`}<span class="hint">${q.type === "choice" ? "按 <b>A</b>–<b>" + String.fromCharCode(64 + q.opts.length) + "</b> 选择，选完自动下一题" : q.type === "long" ? "<b>Shift + Enter</b> 换行，<b>Enter</b> 确定" : "按 <b>Enter ↵</b> 确定"}</span><span class="err" id="err">请先${q.type === "choice" ? "选择一个选项" : "填写内容"}</span></div>`;
+  el.querySelectorAll(".op").forEach((b) => (b.onclick = () => choose(+b.dataset.i)));
+  const ok = el.querySelector("#ok"); if (ok) ok.onclick = submitQ;
+  const inp = el.querySelector("#inp"); if (inp) { inp.oninput = () => { A[q.id] = inp.value; if (ok) ok.firstChild.textContent = q.req === 0 && !inp.value.trim() ? "跳过" : "确定"; progress(); }; inp.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitQ(); } }; }
+}
+function choose(i) {
+  if (busy || mode !== "q") return; const q = Q[cur]; if (q.type !== "choice" || i >= q.opts.length) return;
+  A[q.id] = q.opts[i]; document.querySelectorAll(".op").forEach((b, k) => b.classList.toggle("on", k === i)); progress();
+  busy = true; setTimeout(() => { busy = false; next(); }, 380);
+}
+function submitQ() { if (busy) return; const q = Q[cur]; if (!answered(q)) { const e = $("#err"); e.classList.remove("on"); void e.offsetWidth; e.classList.add("on"); return; } next(); }
+function next() {
+  if (mode !== "q") return;
+  // 条件题：用途改成非训练后清掉天数
+  if (A.use !== "模型训练") delete A.days;
+  let i = cur + 1; while (i < Q.length && Q[i].when && !Q[i].when(A)) i++;
+  if (editing) { const miss = Q.findIndex((q, k) => (!q.when || q.when(A)) && !answered(q)); if (miss >= 0) { cur = miss; } else { editing = false; mode = "sum"; } show(); return; }
+  if (i >= Q.length) { mode = "sum"; show(); return; }
+  cur = i; show();
+}
+function prev() {
+  if (busy) return;
+  if (mode === "sum") { mode = "q"; cur = Q.length - 1; show("back"); return; }
+  if (mode !== "q") return;
+  let i = cur - 1; while (i >= 0 && Q[i].when && !Q[i].when(A)) i--; if (i < 0) return; cur = i; show("back");
+}
+function cost() { const days = A.use === "模型训练" ? DAYS[A.days] || 0 : 30, n = parseInt(A.num); return PRICE[A.gpu] * n * 24 * days; }
+function renderSum(el) {
+  el.className = "q sum";
+  const rows = [["部门", "dept"], ["用途", "use"], ["训练时长", "days"], ["GPU 型号", "gpu"], ["卡数", "num"], ["开始时间", "start"], ["申请人", "name"], ["补充说明", "note"]];
+  const c = cost(), days = A.use === "模型训练" ? A.days : "30 天（非训练按 30 天估）";
+  el.innerHTML = `<div><h2>确认一下你的申请</h2><div class="rows">${rows.map(([l, k]) => {
+    const q = Q.find((x) => x.id === k), hide = q.when && !q.when(A);
+    return `<div class="rw${hide ? " skip" : ""}"><span>${l}</span><b>${hide ? "不需要" : A[k] ? A[k] : "未填写"}</b>${hide ? "<i></i>" : `<button data-k="${k}">修改</button>`}</div>`;
+  }).join("")}</div></div>
+  <div class="cost"><span>预估费用</span><b><small>¥</small>${c.toLocaleString("en-US")}</b><p>${A.gpu} × ${A.num} · ${days}<br>按合同价 ¥ ${PRICE[A.gpu]} / 卡·时计算</p><button class="ok" id="sub">提交申请${CHK}</button></div>`;
+  el.querySelectorAll(".rw button").forEach((b) => (b.onclick = () => { cur = Q.findIndex((q) => q.id === b.dataset.k); editing = true; mode = "q"; show("back"); }));
+  el.querySelector("#sub").onclick = () => { mode = "done"; show(); };
+}
+function renderDone(el) {
+  el.className = "q done";
+  el.innerHTML = `<svg class="ck" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54"/><path d="m34 62 18 18 36-40"/></svg><h1 class="qt" style="margin-top:22px">申请已提交</h1><p class="qs">${A.name}，审批结果会在 1 个工作日内通过飞书通知你。</p><div class="id">${id}</div><br><button class="again" id="again">再申请一次</button>`;
+  el.querySelector("#again").onclick = () => { Object.keys(A).forEach((k) => delete A[k]); cur = 0; mode = "q"; editing = false; show("back"); };
+}
+$("#up").onclick = prev; $("#dn").onclick = () => { if (mode === "q" && answered(Q[cur])) next(); };
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+  const tag = document.activeElement.tagName, inField = tag === "INPUT" || tag === "TEXTAREA";
+  if (mode === "q" && !inField) {
+    if (/^[a-z]$/i.test(e.key)) choose(e.key.toUpperCase().charCodeAt(0) - 65);
+    else if (e.key === "Enter") { e.preventDefault(); submitQ(); }
+  } else if (mode === "sum" && e.key === "Enter") { mode = "done"; show(); }
+  if (e.key === "ArrowUp" && !inField) { e.preventDefault(); prev(); }
+  if (e.key === "ArrowDown" && !inField && mode === "q" && answered(Q[cur])) { e.preventDefault(); next(); }
+});
+show();
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 //
 //   node tools/snap.mjs                         截全部参考页 → gallery/shots/<id>.png
 //   node tools/snap.mjs lineart riso            只截这几个
+//   node tools/snap.mjs w-ledger                桌面 Web 风格（w- 开头）默认 1440×900、scale 1
 //   node tools/snap.mjs --url http://… out.png  截任意网址
 //   node tools/snap.mjs --file path/x.html out.png   截本地页面（自动起服务）
 // 选项：--w 390 --h 844 --wait 7000 --scale 2
@@ -59,8 +60,11 @@ async function main() {
   else if (fileArg) { srv = await serve(dirname(resolve(fileArg))); jobs.push({ url: `http://127.0.0.1:${srv.address().port}/${basename(fileArg)}`, out: resolve(args[0] || "shot.png") }); }
   else {
     srv = await serve(GAL); mkdirSync(join(GAL, "shots"), { recursive: true });
-    const ids = args.length ? args : readdirSync(GAL).filter((f) => /^s-.*\.html$/.test(f)).map((f) => f.slice(2, -5));
-    jobs = ids.map((id) => ({ url: `http://127.0.0.1:${srv.address().port}/s-${id}.html`, out: join(GAL, "shots", `${id}.png`) }));
+    const ids = args.length ? args : readdirSync(GAL).filter((f) => /^[sw]-.*\.html$/.test(f)).map((f) => (f.startsWith("w-") ? f.slice(0, -5) : f.slice(2, -5)));
+    const sized = (k) => process.argv.includes(k);
+    jobs = ids.map((id) => id.startsWith("w-")
+      ? { url: `http://127.0.0.1:${srv.address().port}/${id}.html`, out: join(GAL, "shots", `${id}.png`), w: sized("--w") ? W : 1440, h: sized("--h") ? H : 900, scale: sized("--scale") ? SCALE : 1 }
+      : { url: `http://127.0.0.1:${srv.address().port}/s-${id}.html`, out: join(GAL, "shots", `${id}.png`) });
   }
   const prof = mkdtempSync(join(tmpdir(), "snap-"));
   const port = 9300 + Math.floor(Math.random() * 500);
@@ -85,7 +89,7 @@ async function main() {
     const { result: { targetId } } = await send("Target.createTarget", { url: "about:blank" });
     const { result: { sessionId: s } } = await send("Target.attachToTarget", { targetId, flatten: true });
     await send("Page.enable", {}, s);
-    await send("Emulation.setDeviceMetricsOverride", { width: W, height: H, deviceScaleFactor: SCALE, mobile: false }, s);
+    await send("Emulation.setDeviceMetricsOverride", { width: job.w || W, height: job.h || H, deviceScaleFactor: job.scale || SCALE, mobile: false }, s);
     await send("Emulation.setFocusEmulationEnabled", { enabled: true }, s);
     await send("Page.navigate", { url: job.url }, s);
     await sleep(WAIT);

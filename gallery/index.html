@@ -54,6 +54,14 @@
   .all .phone .scr { border-radius: 25px; transform: scale(.5); }
   .all figcaption { font-size: 13px; font-weight: 700; cursor: pointer; }
   .all figcaption span { font-weight: 400; color: var(--mute); margin-right: 6px; }
+  .desk { flex: none; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 30px 60px -34px rgba(0,0,0,.35); overflow: hidden; }
+  .desk .bar { height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: #ecebe7; border-bottom: 1px solid var(--line); }
+  .desk .bar i { width: 10px; height: 10px; border-radius: 50%; background: #d4d3ce; }
+  .desk .dscr { width: 1440px; height: 900px; transform-origin: top left; }
+  .desk iframe { width: 1440px; height: 900px; border: 0; display: block; }
+  .all.web { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .all .shot { width: 100%; aspect-ratio: 16 / 10; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
+  .all .shot img { width: 100%; height: 100%; object-fit: cover; object-position: top left; display: block; }
   [hidden] { display: none !important; }
   @media (max-width: 1180px) { header .sub { display: none; } .info { width: 290px; } .one { gap: 24px; } }
   @media (max-width: 900px) {
@@ -70,8 +78,10 @@
 <body>
 <header>
   <h1 id="ttl">风格图鉴</h1>
-  <span class="sub">同一个 AI 热点精选页 · 10 月 22 日晚热榜的真数据和封面 · 每种都照着一个火的 Opus 5.5 视频提示词或 skill</span>
+  <span class="sub" id="sub"></span>
   <span class="sp"></span>
+  <button class="hb" id="appBtn">手机</button>
+  <button class="hb" id="webBtn">桌面 Web</button>
   <button class="hb" id="allBtn">全部</button>
   <button class="hb" id="replay">重播</button>
 </header>
@@ -80,56 +90,86 @@
   <div class="stage">
     <section class="one" id="one">
       <div class="phone" id="ph"><div class="scr" id="scr"><iframe id="fr" title="样例"></iframe></div></div>
+      <div class="desk" id="dk" hidden><div class="bar"><i></i><i></i><i></i></div><div class="dscr" id="dscr"><iframe id="dfr" title="样例"></iframe></div></div>
       <aside class="info" id="info"></aside>
     </section>
     <section class="all" id="all" hidden></section>
   </div>
 </div>
-<script src="styles.js"></script>
+<script src="styles.js?v=1.7.0"></script>
 <script>
 const $ = (id) => document.getElementById(id);
-const groups = [...new Set(STYLES.map((s) => s.group))];
+const isWeb = (s) => s.id.startsWith("w-");
+const SETS = { app: STYLES.filter((s) => !isWeb(s)), web: STYLES.filter(isWeb) };
 $("ttl").textContent = `风格图鉴 · ${STYLES.length} 种`;
-$("side").innerHTML = groups.map((g) => `<h4>${g}</h4>` + STYLES.map((s, i) => (s.group === g ? `<button data-id="${s.id}"><span>${i + 1}</span><b>${s.name}</b></button>` : "")).join("")).join("");
-let cur = null;
+$("appBtn").textContent = `手机 · ${SETS.app.length}`;
+$("webBtn").textContent = `桌面 Web · ${SETS.web.length}`;
+let cur = null, mode = "app";
+function renderSide() {
+  const list = SETS[mode], groups = [...new Set(list.map((s) => s.group))];
+  $("side").innerHTML = groups.map((g) => `<h4>${g}</h4>` + list.map((s, i) => (s.group === g ? `<button data-id="${s.id}"><span>${i + 1}</span><b>${s.name}</b></button>` : "")).join("")).join("");
+  $("sub").textContent = mode === "web"
+    ? "桌面 Web · 1440×900 · 每种一个不同的产品场景 · 规格里写了能搬到后台产品上的交互做法"
+    : "同一个 AI 热点精选页 · 10 月 22 日晚热榜的真数据和封面 · 每种都照着一个火的 Opus 5.5 视频提示词或 skill";
+  $("appBtn").classList.toggle("on", mode === "app");
+  $("webBtn").classList.toggle("on", mode === "web");
+}
 function fit() {
   if (cur === "all") return;
-  const narrow = innerWidth <= 900, H = narrow ? 700 : innerHeight - 56 - 32, s = Math.min(H / 864, (innerWidth - (narrow ? 32 : 600)) / 410, 1);
+  const narrow = innerWidth <= 900;
+  if (mode === "web") {
+    const s = Math.min((innerHeight - 56 - 32 - 30) / 900, (innerWidth - (narrow ? 32 : 196 + 340 + 92)) / 1440, 1);
+    $("dscr").style.transform = `scale(${s})`;
+    $("dk").style.width = 1440 * s + 2 + "px"; $("dk").style.height = 900 * s + 30 + "px";
+    return;
+  }
+  const H = narrow ? 700 : innerHeight - 56 - 32, s = Math.min(H / 864, (innerWidth - (narrow ? 32 : 600)) / 410, 1);
   $("scr").style.transform = `scale(${s})`;
   $("ph").style.width = 390 * s + 20 + "px"; $("ph").style.height = 844 * s + 20 + "px";
 }
-function show(id) {
-  cur = id;
+function show(key) {
+  const [id, m] = key.split("@");
+  if (id === "all") mode = m === "web" ? "web" : "app";
+  else { const s0 = STYLES.find((x) => x.id === id); if (!s0) return show(SETS.app[0].id); mode = isWeb(s0) ? "web" : "app"; }
+  cur = id; renderSide();
   document.querySelectorAll(".side button").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
   $("allBtn").classList.toggle("on", id === "all");
+  const list = SETS[mode];
   if (id === "all") {
-    $("one").hidden = true; $("all").hidden = false; $("fr").src = "about:blank";
-    $("all").innerHTML = STYLES.map((s, i) => `<figure><div class="phone"><div class="scr"><iframe loading="lazy" src="${s.file}" title="${s.name}"></iframe></div></div><figcaption data-id="${s.id}"><span>${i + 1}</span>${s.name}</figcaption></figure>`).join("");
-    $("all").querySelectorAll("figcaption").forEach((c) => (c.onclick = () => go(c.dataset.id)));
+    $("one").hidden = true; $("all").hidden = false; $("fr").src = "about:blank"; $("dfr").src = "about:blank";
+    $("all").classList.toggle("web", mode === "web");
+    $("all").innerHTML = mode === "web"
+      ? list.map((s, i) => `<figure><div class="shot" data-id="${s.id}"><img loading="lazy" src="shots/${s.id}.png" alt="${s.name}"></div><figcaption data-id="${s.id}"><span>${i + 1}</span>${s.name}</figcaption></figure>`).join("")
+      : list.map((s, i) => `<figure><div class="phone"><div class="scr"><iframe loading="lazy" src="${s.file}" title="${s.name}"></iframe></div></div><figcaption data-id="${s.id}"><span>${i + 1}</span>${s.name}</figcaption></figure>`).join("");
+    $("all").querySelectorAll("[data-id]").forEach((c) => (c.onclick = () => go(c.dataset.id)));
     return;
   }
-  const s = STYLES.find((x) => x.id === id), n = STYLES.indexOf(s) + 1;
+  const s = STYLES.find((x) => x.id === id), n = list.indexOf(s) + 1, web = mode === "web";
   $("all").hidden = true; $("all").innerHTML = ""; $("one").hidden = false;
-  $("fr").src = s.file;
+  $("ph").hidden = web; $("dk").hidden = !web;
+  $("fr").src = web ? "about:blank" : s.file; $("dfr").src = web ? s.file : "about:blank";
   $("info").innerHTML = `
-    <div class="k">${n} / ${STYLES.length} · ${s.group}</div>
+    <div class="k">${n} / ${list.length} · ${s.group}</div>
     <h2>${s.name}</h2>
     <div class="one-line">${s.line}</div>
-    <h3>照着哪条视频提示词 / skill</h3>
+    <h3>${web ? "参考了谁" : "照着哪条视频提示词 / skill"}</h3>
     <div class="src">${s.from.map(([t, d, u]) => (u ? `<a href="${u}" target="_blank" rel="noopener"><b>${t}</b><span>${d}</span></a>` : `<a><b>${t}</b><span>${d}</span></a>`)).join("")}</div>
     ${s.more ? `<h3>别的媒介</h3><div class="src">${s.more.map(([t, d, f]) => `<a href="${f}" target="_blank" rel="noopener"><b>${t}</b><span>${d}</span></a>`).join("")}</div>` : ""}
     <h3>招牌动效</h3><ul>${s.moves.map((m) => `<li>${m}</li>`).join("")}</ul>
     <h3>可以点的</h3><ul>${s.tap.map((m) => `<li>${m}</li>`).join("")}</ul>
-    <h3>适合</h3><div>${s.fit}</div>`;
+    <h3>适合</h3><div>${s.fit}</div>
+    ${web ? `<h3>规格（含「学什么交互」）</h3><div class="src"><a href="../styles/${s.id}.md" target="_blank" rel="noopener"><b>styles/${s.id}.md</b><span>直接抄的参数、一眼认出、学什么交互</span></a></div>` : ""}`;
   fit();
 }
 const go = (id) => { location.hash = id; };
-addEventListener("hashchange", () => show(location.hash.slice(1) || STYLES[0].id));
+addEventListener("hashchange", () => show(location.hash.slice(1) || SETS.app[0].id));
 $("side").onclick = (e) => { const b = e.target.closest("button"); if (b) go(b.dataset.id); };
-$("allBtn").onclick = () => go("all");
-$("replay").onclick = () => { if (cur === "all") show("all"); else { const f = $("fr"), src = f.src; f.src = "about:blank"; setTimeout(() => (f.src = src), 30); } };
+$("appBtn").onclick = () => go(SETS.app[0].id);
+$("webBtn").onclick = () => go(SETS.web.length ? SETS.web[0].id : "all@web");
+$("allBtn").onclick = () => go(mode === "web" ? "all@web" : "all");
+$("replay").onclick = () => { if (cur === "all") show(location.hash.slice(1)); else { const f = mode === "web" ? $("dfr") : $("fr"), src = f.src; f.src = "about:blank"; setTimeout(() => (f.src = src), 30); } };
 addEventListener("resize", fit);
-show(location.hash.slice(1) || STYLES[0].id);
+show(location.hash.slice(1) || SETS.app[0].id);
 </script>
 </body>
 </html>

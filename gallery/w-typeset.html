@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>排版后台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--ink:#000;--g1:#555;--g2:#8c8c8c;--g3:#d9d9d9;--red:#e4002b;--m:40px;--gut:20px}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0}
+html,body{height:100%;overflow:hidden;background:#fff}
+body{font-family:"Inter Tight","Noto Sans SC",sans-serif;color:var(--ink);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+button,a{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-decoration:none;outline:none}
+.n{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.g{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--gut);padding:0 var(--m)}
+.app{height:100vh;display:grid;grid-template-rows:48px 168px 46px 1fr 26px}
+
+.top{align-items:center;font-size:12px;letter-spacing:.02em}
+.top .a{grid-column:1/4;font-weight:700}
+.top nav{grid-column:4/9;display:flex;gap:22px;color:var(--g2)}
+.top nav a:hover{color:var(--ink)}
+.top nav a.on{color:var(--ink)}
+.top .z{grid-column:9/13;text-align:left;color:var(--g2)}
+
+.hero{align-items:end;border-top:2px solid var(--ink);padding-top:6px}
+.hero h1{grid-column:1/8;font-size:122px;line-height:1;letter-spacing:-.05em;font-weight:900;margin-left:-6px;margin-bottom:6px;font-family:"Inter Tight","Noto Sans SC"}
+.hero .nu{grid-column:8/13;display:flex;align-items:flex-end;gap:18px}
+.hero .nu b{font-size:160px;line-height:.86;letter-spacing:-.06em;font-weight:800;margin-bottom:0;margin-left:-8px;min-width:210px}
+.hero .nu span{font-size:13px;line-height:1.35;color:var(--g1);padding-bottom:6px}
+.hero .nu span i{display:block;font-style:normal;font-weight:700;color:var(--ink);font-size:20px;letter-spacing:-.01em}
+.flt{align-items:center;border-top:1px solid var(--ink);font-size:14px}
+.flt .f{grid-column:1/8;display:flex;gap:0;align-items:center}
+.flt .f a{padding:0;color:var(--g2);transition:color .12s}
+.flt .f a:hover{color:var(--ink)}
+.flt .f a.on{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:8px}
+.flt .f s{text-decoration:none;color:var(--g3);margin:0 11px}
+.flt .f a sup{font-size:10px;color:var(--g2);margin-left:3px;font-weight:400;vertical-align:top;position:relative;top:-2px}
+.flt .r{grid-column:8/13;display:flex;justify-content:space-between;color:var(--g2);font-size:12px}
+.flt .r b{color:var(--ink);font-weight:500}
+
+.main{min-height:0;border-top:1px solid var(--ink)}
+.main.g{align-items:stretch}
+.tbl{grid-column:1/8;min-height:0;display:flex;flex-direction:column;margin-left:-14px}
+.th,.tr{display:grid;grid-template-columns:70px 78px 1fr 76px 70px 76px;column-gap:10px;align-items:baseline}
+.th{padding-left:14px;height:34px;align-items:center;font-size:12px;color:var(--g2);border-bottom:1px solid var(--g3);flex:none}
+.th button{text-align:left;color:var(--g2);font-size:12px;padding:0;white-space:nowrap;transition:color .12s}
+.th button:hover{color:var(--ink)}
+.th button.on{color:var(--ink);font-weight:700}
+.th .rt{text-align:right}
+.th button.on b{font-weight:400;margin-left:3px}
+.rows{padding-left:14px;overflow:auto;flex:1;min-height:0;scrollbar-width:none}
+.rows::-webkit-scrollbar{display:none}
+.tr{height:38px;align-items:center;border-bottom:1px solid var(--g3);cursor:pointer;position:relative;font-size:14px;transition:none}
+.tr>*{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .id{color:var(--g1);font-size:13px}
+.tr .rt{text-align:right;font-weight:500}
+.tr .u{font-size:11px;color:var(--g2);margin-left:2px;font-weight:400}
+.tr:hover{font-weight:500}
+.tr.sel{font-weight:700}
+.tr.sel::before{content:"";position:absolute;left:-12px;top:50%;width:7px;height:7px;margin-top:-3.5px;background:var(--red)}
+.st{font-size:13px}
+.st.s0{color:var(--red);font-weight:700}
+.st.s1{color:var(--ink)}
+.st.s2{color:var(--g2)}
+.st.s3{color:var(--g2);text-decoration:line-through}
+
+.det{grid-column:8/13;border-left:1px solid var(--ink);margin-left:-10px;padding-left:19px;min-height:0;overflow:auto;scrollbar-width:none;padding-top:10px}
+.det::-webkit-scrollbar{display:none}
+.det .k{display:flex;justify-content:space-between;font-size:12px;color:var(--g2)}
+.det .k b{color:var(--ink);font-weight:700}
+.det .q{display:flex;align-items:flex-end;gap:12px;margin-top:6px}
+.det .q b{font-size:150px;line-height:.82;letter-spacing:-.06em;font-weight:800;min-width:150px}
+.det .q span{font-size:15px;line-height:1.3;padding-bottom:4px;font-weight:700}
+.det .q span small{display:block;font-weight:400;color:var(--g2);font-size:12px}
+.det h2{font-size:24px;line-height:1.2;letter-spacing:-.02em;font-weight:700;margin:16px 0 14px}
+.kv{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;border-top:1px solid var(--ink)}
+.kv div{padding:7px 0 8px;border-bottom:1px solid var(--g3)}
+.kv dt{font-size:11px;color:var(--g2)}
+.kv dd{font-size:14px;font-weight:500}
+.why{margin:14px 0 12px;font-size:13px;color:var(--g1);line-height:1.6}
+.tl{font-size:12.5px;border-top:1px solid var(--ink)}
+.tl p{display:grid;grid-template-columns:50px 1fr;padding:5px 0;border-bottom:1px solid var(--g3)}
+.tl p span{color:var(--g2)}
+.tl p.now{font-weight:700}
+.tl p.now em{font-style:normal;color:var(--red)}
+.act{display:flex;gap:26px;margin:14px 0 6px;font-size:15px;font-weight:700}
+.act a{border-bottom:3px solid var(--ink);padding-bottom:2px}
+.act a:hover{color:var(--red);border-color:var(--red)}
+.act a.q2{color:var(--g1);border-color:var(--g3);font-weight:500}
+.fin{font-size:12px;color:var(--g2);margin:14px 0 18px}
+.foot{align-items:center;font-size:10.5px;color:var(--g2);border-top:1px solid var(--g3)}
+.foot span:first-child{grid-column:1/8}
+.fade{animation:fd .22s both}
+@keyframes fd{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top g"><div class="a">资源申请 / RA</div><nav><a class="on">申请</a><a>审批</a><a>台账</a><a>账单</a></nav><div class="z n">2026 年 11 月 20 日 · 周五</div></header>
+  <section class="hero g"><h1>资源申请</h1><div class="nu"><b class="n" id="big">0</b><span><i id="bl">全部</i><span id="bs"></span></span></div></section>
+  <div class="flt g"><div class="f" id="flt"></div><div class="r"><span>排序</span><b id="sortl"></b></div></div>
+  <main class="main g">
+    <section class="tbl"><div class="th" id="th"></div><div class="rows" id="rows"></div></section>
+    <aside class="det" id="det"></aside>
+  </main>
+  <footer class="foot g"><span>示例数据　↑ ↓ 切换申请</span><span style="grid-column:8/13">点列标题排序</span></footer>
+</div>
+<script>
+const NAMES=["陈砚","周以安","吴桐","郑清","林素","许知远","蒋明","沈眠","韩露","唐一","顾北","孟夏"];
+const DEPTS=["算法平台部","基础模型组","语音组","数据工程部","评测中心","推荐算法组"];
+const PROJ=["多模态预训练 第三阶段","推理服务扩容","代码模型微调","评测集群临时扩容","数据清洗流水线","语音合成训练","检索召回重建索引","强化学习环境池","长文本继续预训练","对齐数据标注平台"];
+const RES=[["GPU · H800","卡",[8,64]],["GPU · A800","卡",[8,32]],["GPU · 昇腾 910B","卡",[16,128]],["GPU · L40S","卡",[2,16]],["CPU · 通用型","核",[64,512]],["并行文件存储","TB",[20,200]]];
+const REGION=["北京一区","上海二区","贵阳三区"];
+const STS=["待审","审批中","已交付","已驳回"];
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const r=rng(20261120),D=[];
+for(let i=0;i<38;i++){
+  const rs=RES[Math.floor(r()*RES.length)],q=Math.round((rs[2][0]+(rs[2][1]-rs[2][0])*r())/(rs[1]==="卡"?8:rs[1]==="核"?32:10))*(rs[1]==="卡"?8:rs[1]==="核"?32:10)||rs[2][0];
+  const day=20-Math.floor(i*0.46+r()*0.6),dur=[7,14,30,60,90][Math.floor(r()*5)];
+  const stp=r();const s=day>=19?(stp<.6?0:1):day>=15?(stp<.25?0:stp<.55?1:stp<.9?2:3):(stp<.04?1:stp<.86?2:3);
+  D.push({no:"RA-"+String(412-i).padStart(4,"0"),who:NAMES[Math.floor(r()*NAMES.length)],dept:DEPTS[Math.floor(r()*DEPTS.length)],proj:PROJ[Math.floor(r()*PROJ.length)],res:rs[0],unit:rs[1],q,day,dur,st:s,region:REGION[Math.floor(r()*3)],price:rs[1]==="卡"?(rs[0].includes("H800")?19.8:rs[0].includes("A800")?13.5:rs[0].includes("910B")?9.6:6.2):rs[1]==="核"?0.12:0.09});
+}
+D.forEach(d=>{d.cost=Math.round(d.q*d.dur*(d.unit==="卡"?24:d.unit==="核"?24:30)*d.price)});
+const WHY=["训练任务排期已定，现有额度不足，需在周内到位。","线上流量增长，推理副本需翻倍，希望分两批交付。","评测周期集中，临时扩容，用完即释放。","新数据版本上线，需要独立存储与计算隔离。","对齐实验并行度提高，原集群排队过长。"];
+let filter=-1,sortK="day",sortDir=-1,sel=D[0].no;
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,"0");
+const date=d=>"11-"+pad(d.day);
+const roll=(el,to)=>{const from=+el.dataset.v||0;el.dataset.v=to;const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/420),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(f)})(t0)};
+const money=n=>"¥ "+n.toLocaleString("zh-CN");
+function list(){
+  let L=D.filter(d=>filter<0||d.st===filter);
+  const key={day:d=>d.day,no:d=>d.no,who:d=>d.who,res:d=>d.res,q:d=>d.q,st:d=>d.st}[sortK];
+  L=L.slice().sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==="string"?x.localeCompare(y,"zh"):x-y;return (c||b.day-a.day||a.no.localeCompare(b.no))*(sortK==="day"?sortDir:sortDir)});
+  return L;
+}
+const HEAD=[["no","编号"],["who","申请人"],["res","资源"],["q","数量","rt"],["st","状态"],["day","日期"]];
+function head(){
+  $("#th").innerHTML=HEAD.map(([k,t,c])=>`<button data-k="${k}" class="${sortK===k?"on":""} ${c||""}">${t}${sortK===k?`<b>${sortDir<0?"↓":"↑"}</b>`:""}</button>`).join("");
+  $("#sortl").textContent=HEAD.find(h=>h[0]===sortK)[1]+" "+(sortDir<0?"↓":"↑");
+}
+function flt(){
+  const c=i=>D.filter(d=>i<0||d.st===i).length;
+  $("#flt").innerHTML=[-1,0,1,2,3].map((i,j)=>`${j?"<s>·</s>":""}<a data-f="${i}" class="${filter===i?"on":""}">${i<0?"全部":STS[i]}<sup class="n">${c(i)}</sup></a>`).join("");
+  roll($("#big"),c(filter));
+  $("#bl").textContent=(filter<0?"全部申请":STS[filter]+"的申请");
+  const L=list();$("#bs").textContent="GPU 卡合计 "+L.filter(d=>d.unit==="卡").reduce((a,b)=>a+b.q,0)+" 张";
+}
+function rows(){
+  const L=list();
+  if(!L.find(d=>d.no===sel)&&L[0])sel=L[0].no;
+  $("#rows").innerHTML=L.map(d=>`<div class="tr ${d.no===sel?"sel":""}" data-no="${d.no}"><span class="id n">${d.no}</span><span>${d.who}</span><span>${d.res}</span><span class="rt n">${d.q}<span class="u">${d.unit}</span></span><span class="st s${d.st}">${STS[d.st]}</span><span class="n">${date(d)}</span></div>`).join("");
+}
+function detail(anim){
+  const d=D.find(x=>x.no===sel);if(!d)return;
+  const tl=[["11-"+pad(d.day),"提交",0]];
+  if(d.st>=1)tl.push(["11-"+pad(Math.min(20,d.day+1)),"部门主管同意",0]);
+  if(d.st===0)tl.push(["现在","等待部门主管",1]);
+  if(d.st===1)tl.push(["现在","等待资源负责人",1]);
+  if(d.st===2){tl.push(["11-"+pad(Math.min(20,d.day+2)),"资源负责人同意",0]);tl.push(["11-"+pad(Math.min(20,d.day+3)),"已交付，开通 "+d.q+d.unit,0])}
+  if(d.st===3)tl.push(["11-"+pad(Math.min(20,d.day+2)),"资源负责人驳回：额度不足",0]);
+  $("#det").innerHTML=`<div class="${anim?"fade":""}"><div class="k"><b class="n">${d.no}</b><span class="st s${d.st}" style="font-weight:700">${STS[d.st]}</span></div>
+  <div class="q"><b class="n" id="dq" data-v="${anim?0:d.q}">${anim?0:d.q}</b><span>${d.unit}<small>${d.res}</small></span></div>
+  <h2>${d.proj}</h2>
+  <dl class="kv"><div><dt>申请人</dt><dd>${d.who}</dd></div><div><dt>部门</dt><dd>${d.dept}</dd></div><div><dt>使用时长</dt><dd class="n">${d.dur} 天</dd></div><div><dt>机房</dt><dd>${d.region}</dd></div><div><dt>预估费用</dt><dd class="n" id="dc" data-v="0">${money(d.cost)}</dd></div><div><dt>提交日期</dt><dd class="n">2026-${date(d)}</dd></div></dl>
+  <p class="why">${WHY[(d.q+d.day)%WHY.length]}</p>
+  <div class="tl">${tl.map(t=>`<p class="${t[2]?"now":""}"><span class="n">${t[0]}</span><em style="font-style:normal">${t[1]}</em></p>`).join("")}</div>
+  ${d.st<2?`<div class="act"><a data-a="ok">同意</a><a data-a="no" class="q2">驳回</a></div>`:`<div class="fin">${d.st===2?"已完成交付":"已驳回，申请人可修改后重新提交"}</div>`}</div>`;
+  if(anim)roll($("#dq"),d.q);
+}
+function all(a){head();flt();rows();detail(a)}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-k],[data-f],.tr,[data-a]");if(!t)return;
+  if(t.dataset.k){const k=t.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=k==="day"||k==="q"?-1:1}head();$("#sortl").textContent=HEAD.find(h=>h[0]===k)[1]+" "+(sortDir<0?"↓":"↑");rows();detail(false)}
+  else if(t.dataset.f!==undefined){filter=+t.dataset.f;flt();rows();detail(true)}
+  else if(t.dataset.no){sel=t.dataset.no;document.querySelectorAll(".tr").forEach(x=>x.classList.toggle("sel",x===t));detail(true)}
+  else if(t.dataset.a){const d=D.find(x=>x.no===sel);d.st=t.dataset.a==="ok"?(d.st===0?1:2):3;flt();rows();detail(true)}
+});
+addEventListener("keydown",e=>{if(e.key!=="ArrowDown"&&e.key!=="ArrowUp")return;e.preventDefault();const L=list(),i=L.findIndex(d=>d.no===sel),n=L[Math.max(0,Math.min(L.length-1,i+(e.key==="ArrowDown"?1:-1)))];if(n){sel=n.no;rows();detail(true);const el=document.querySelector(".tr.sel");el&&el.scrollIntoView({block:"nearest"})}});
+all(true);
+</script>
+</body>
+</html>

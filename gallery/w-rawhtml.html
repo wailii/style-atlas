@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器申请与查询 - 内网工具</title>
+<style>
+/* 全部样式就这些：系统字体、默认控件、默认链接色 */
+body{font-family:Verdana,Geneva,"PingFang SC","Microsoft YaHei",sans-serif;font-size:10pt;margin:8px 12px}
+table{border-collapse:collapse}
+.grid td,.grid th{border:1px solid #999}
+a.v:link,a.v{color:#551a8b}
+small{font-size:8pt}
+</style>
+</head>
+<body>
+
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td>
+<h1 style="margin:2px 0;font-size:18pt">机器申请与查询 <small style="font-weight:normal">v0.9 (beta)</small></h1>
+<small>内网运维小工具。有问题找运维值班，分机 8087。</small>
+</td><td align="right" valign="top"><small>当前用户：陈砚 [<a href="#logout" data-k="logout">退出</a>]<br>示例数据</small></td></tr>
+</table>
+<hr>
+
+<div id="result"></div>
+
+<p>
+[<a href="#query" data-k="nav-q">查询机器</a>]
+[<a href="#apply" data-k="nav-a">申请机器</a>]
+[<a href="#mine" data-k="nav-m">我的申请</a>]
+[<a href="#faq" data-k="nav-f">常见问题</a>]
+[<a href="#spec" data-k="nav-s">机型说明</a>]
+[<a href="#log" data-k="nav-l">更新记录</a>]
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr valign="top">
+<td>
+
+<h2 id="apply">申请机器</h2>
+<form id="applyForm" method="get" action="">
+<input type="hidden" name="act" value="apply">
+<fieldset style="max-width:640px">
+<legend>填写申请单</legend>
+<table cellpadding="4">
+<tr><td align="right"><label for="who">申请人：</label></td><td><input type="text" id="who" name="who" size="14" value="陈砚" required></td>
+<td align="right"><label for="dept">部门：</label></td><td><select id="dept" name="dept"><option>算法平台部</option><option>基础模型组</option><option>语音组</option><option>数据工程部</option><option>评测中心</option></select></td></tr>
+<tr><td align="right" valign="top">机型：</td><td colspan="3">
+<label><input type="radio" name="type" value="H800" checked> H800 80G</label>
+<label><input type="radio" name="type" value="A800"> A800 80G</label>
+<label><input type="radio" name="type" value="910B"> 昇腾 910B</label>
+<label><input type="radio" name="type" value="L40S"> L40S 48G</label>
+<label><input type="radio" name="type" value="CPU"> 纯 CPU</label></td></tr>
+<tr><td align="right"><label for="n">数量（台）：</label></td><td><input type="number" id="n" name="n" min="1" max="32" value="2" style="width:5em" required></td>
+<td align="right"><label for="days">时长：</label></td><td><select id="days" name="days"><option value="7">7 天</option><option value="14" selected>14 天</option><option value="30">30 天</option><option value="90">90 天</option></select></td></tr>
+<tr><td align="right"><label for="room">机房：</label></td><td colspan="3"><select id="room" name="room"><option>北京一区</option><option>上海二区</option><option>贵阳三区</option></select> <small>（贵阳三区暂无 H800）</small></td></tr>
+<tr><td align="right" valign="top"><label for="why">用途：</label></td><td colspan="3"><textarea id="why" name="why" rows="3" cols="46" required>多模态模型第三阶段预训练，数据已就绪，需要两台 8 卡机。</textarea></td></tr>
+<tr><td></td><td colspan="3"><label><input type="checkbox" name="ok" value="1" checked required> 我已阅读<a href="#rule" data-k="rule">《资源使用规范》</a></label></td></tr>
+<tr><td></td><td colspan="3"><input type="submit" id="submit" value="提交申请"> <input type="reset" value="重填"></td></tr>
+</table>
+</fieldset>
+</form>
+
+<h2 id="query">查询机器</h2>
+<form id="qForm" method="get" action="">
+<input type="hidden" name="act" value="query">
+关键字：<input type="text" name="q" size="20" placeholder="主机名 / IP / 负责人">
+状态：<select name="st"><option value="">全部</option><option>运行中</option><option>空闲</option><option>维修中</option><option>已回收</option></select>
+<input type="submit" value="查询">
+</form>
+<p><small id="qinfo"></small></p>
+<table class="grid" cellpadding="4" id="mt">
+<thead><tr bgcolor="#eeeeee" id="mh"></tr></thead>
+<tbody id="mb"></tbody>
+</table>
+<p><small>点表头排序，再点一次倒序。点主机名看详情。</small></p>
+
+<h2 id="mine">我的申请</h2>
+<p><small>记录保存在本机浏览器里，换电脑看不到。</small></p>
+<table class="grid" cellpadding="4">
+<thead><tr bgcolor="#eeeeee"><th>单号</th><th>机型</th><th>数量</th><th>时长</th><th>机房</th><th>状态</th></tr></thead>
+<tbody id="mineb"></tbody>
+</table>
+
+<h2 id="spec">机型说明</h2>
+<details>
+<summary>H800 80G：8 卡整机，适合大模型训练</summary>
+<p>8 × H800 SXM，2TB 内存，8 × 400G 网卡。单台日均 ¥475。每个机房库存以「查询机器」中的空闲数为准。</p>
+</details>
+<details>
+<summary>A800 80G：8 卡整机，适合微调和推理</summary>
+<p>8 × A800 SXM，1TB 内存，4 × 200G 网卡。单台日均 ¥324。</p>
+</details>
+<details>
+<summary>昇腾 910B：8 卡整机，需使用 CANN 镜像</summary>
+<p>8 × 910B，1TB 内存。框架请用平台提供的镜像，自带环境不保证能跑。单台日均 ¥230。</p>
+</details>
+<details>
+<summary>L40S 48G：4 卡机，适合小模型和图像任务</summary>
+<p>4 × L40S，512GB 内存。单台日均 ¥100。</p>
+</details>
+
+<h2 id="faq">常见问题</h2>
+<details open>
+<summary>申请多久能批下来？</summary>
+<p>部门主管一个工作日内，资源负责人一个工作日内。超过 2 天没动静，请联系值班。</p>
+</details>
+<details>
+<summary>到期了机器会怎么处理？</summary>
+<p>到期前 3 天邮件提醒。到期后 24 小时内数据保留，之后回收，不可恢复。</p>
+</details>
+<details>
+<summary>能不能中途退还？</summary>
+<p>可以，在「我的申请」里联系值班，按实际使用天数结算。</p>
+</details>
+
+<h2 id="log">更新记录</h2>
+<ul>
+<li>2026-11-18　修复按 IP 查询时漏掉空格的问题</li>
+<li>2026-11-09　新增贵阳三区机房</li>
+<li>2026-10-27　表头点击排序</li>
+<li>2026-09-30　第一个能用的版本</li>
+</ul>
+
+</td>
+<td width="24">&nbsp;</td>
+<td width="260" valign="top">
+<h3 style="margin-top:20px">公告</h3>
+<table cellpadding="6" border="1" bordercolor="#cc9900" style="border-collapse:collapse" bgcolor="#ffffcc"><tr><td>
+<b>11-22（周六）</b> 北京一区机房例行断电检修，08:00–12:00 北京一区全部机器不可用。<br>请提前保存训练 checkpoint。
+</td></tr></table>
+<h3>最近申请</h3>
+<ol id="recent" style="padding-left:22px"></ol>
+<h3>链接</h3>
+<ul style="padding-left:18px">
+<li><a href="#a1" data-k="l1">监控大盘</a></li>
+<li><a href="#a2" data-k="l2">账单查询</a></li>
+<li><a href="#a3" data-k="l3">镜像仓库</a></li>
+<li><a href="#a4" data-k="l4">运维值班表</a></li>
+</ul>
+</td>
+</tr>
+</table>
+
+<hr>
+<p align="center"><small>您是第 <b>00137</b> 位访问者　|　最后更新：2026-11-18　|　建议使用 1024×768 以上分辨率　|　本页大小约 9 KB</small></p>
+
+<script>
+var M=[
+["gpu-bj-a01","H800","172.20.1.11","北京一区","陈砚","运行中","2026-12-02"],
+["gpu-bj-a02","H800","172.20.1.12","北京一区","周以安","运行中","2026-12-02"],
+["gpu-bj-a03","H800","172.20.1.13","北京一区","吴桐","空闲","—"],
+["gpu-bj-b07","A800","172.20.2.27","北京一区","郑清","运行中","2026-11-26"],
+["gpu-bj-b08","A800","172.20.2.28","北京一区","林素","维修中","—"],
+["gpu-sh-c02","A800","172.30.1.42","上海二区","许知远","运行中","2027-01-15"],
+["gpu-sh-c03","A800","172.30.1.43","上海二区","许知远","运行中","2027-01-15"],
+["gpu-sh-d11","910B","172.30.3.61","上海二区","蒋明","空闲","—"],
+["gpu-gy-e01","910B","172.24.1.5","贵阳三区","沈眠","运行中","2026-12-20"],
+["gpu-gy-e02","910B","172.24.1.6","贵阳三区","沈眠","运行中","2026-12-20"],
+["gpu-gy-f04","L40S","172.24.2.34","贵阳三区","韩露","运行中","2026-11-30"],
+["gpu-bj-g09","L40S","172.20.4.19","北京一区","唐一","已回收","—"],
+["cpu-bj-h01","CPU","172.20.5.3","北京一区","顾北","运行中","2027-03-01"],
+["cpu-sh-h12","CPU","172.30.5.18","上海二区","孟夏","空闲","—"]
+];
+var H=["主机名","机型","内网 IP","机房","负责人","状态","到期日"];
+var key=0,dir=1,qs=new URLSearchParams(location.search);
+var VK="rawhtml-visited",vis;
+try{vis=JSON.parse(localStorage.getItem(VK)||"null")}catch(e){}
+if(!vis)vis=["gpu-bj-a03","nav-f","l2"];
+function save(){try{localStorage.setItem(VK,JSON.stringify(vis))}catch(e){}}
+function mark(){
+  var a=document.querySelectorAll("a[data-k]");
+  for(var i=0;i<a.length;i++)if(vis.indexOf(a[i].getAttribute("data-k"))>=0)a[i].className="v";
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function head(){
+  var h="";
+  for(var i=0;i<H.length;i++)h+='<th align="left"><a href="#sort-'+i+'" data-sort="'+i+'" style="text-decoration:'+(key===i?"underline":"underline")+'">'+H[i]+'</a>'+(key===i?(dir>0?" ↑":" ↓"):"")+'</th>';
+  document.getElementById("mh").innerHTML=h;
+}
+function body(){
+  var q=(qs.get("q")||"").toLowerCase(),st=qs.get("st")||"",L=M.filter(function(r){
+    return (!q||r.join(" ").toLowerCase().indexOf(q)>=0)&&(!st||r[5]===st)});
+  L.sort(function(a,b){var x=a[key],y=b[key];return(x<y?-1:x>y?1:0)*dir});
+  var o="";
+  for(var i=0;i<L.length;i++){
+    var r=L[i];o+="<tr>";
+    for(var j=0;j<r.length;j++){
+      if(j===0)o+='<td><a href="#host-'+r[0]+'" data-k="'+r[0]+'">'+r[0]+'</a></td>';
+      else if(j===5)o+='<td>'+(r[5]==="维修中"?'<font color="#cc0000">'+r[5]+'</font>':r[5])+'</td>';
+      else o+="<td>"+esc(r[j])+"</td>";
+    }
+    o+="</tr>";
+  }
+  document.getElementById("mb").innerHTML=o||'<tr><td colspan="7">没有符合条件的机器。</td></tr>';
+  document.getElementById("qinfo").innerHTML=(q||st?"条件：关键字「"+esc(q)+"」 状态「"+esc(st||"全部")+"」，":"")+"共 "+L.length+" 台。";
+  mark();
+}
+function mine(){
+  var L;try{L=JSON.parse(localStorage.getItem("rawhtml-mine")||"[]")}catch(e){L=[]}
+  var seed=[["REQ-20261112-003","A800",4,"30 天","上海二区","已交付"],["REQ-20261105-011","H800",2,"14 天","北京一区","已交付"]];
+  var A=L.concat(seed),o="",r="";
+  for(var i=0;i<A.length;i++){var a=A[i];o+="<tr><td>"+a[0]+"</td><td>"+a[1]+"</td><td>"+a[2]+"</td><td>"+a[3]+"</td><td>"+a[4]+"</td><td>"+a[5]+"</td></tr>"}
+  document.getElementById("mineb").innerHTML=o;
+  for(var k=0;k<Math.min(5,A.length);k++)r+="<li>"+a2(A[k])+"</li>";
+  document.getElementById("recent").innerHTML=r;
+}
+function a2(a){return a[0].slice(4)+" "+a[1]+" × "+a[2]+"（"+a[5]+"）"}
+// 表单提交后（GET 带回参数）：页面顶部一行结果
+if(qs.get("act")==="apply"){
+  var no="REQ-20261120-"+String(14+Math.floor(Math.random()*0)).padStart(3,"0");
+  var rec=[no,qs.get("type"),qs.get("n"),qs.get("days")+" 天",qs.get("room"),"待审批"],L;
+  try{L=JSON.parse(localStorage.getItem("rawhtml-mine")||"[]")}catch(e){L=[]}
+  if(!L.length||L[0][0]!==no||L[0][1]!==rec[1]||L[0][2]!==rec[2]){L.unshift(rec);try{localStorage.setItem("rawhtml-mine",JSON.stringify(L.slice(0,6)))}catch(e){}}
+  document.getElementById("result").innerHTML='<table border="1" cellpadding="6" style="border-collapse:collapse" bordercolor="#339933" bgcolor="#ddffdd" width="100%"><tr><td><b>申请已提交。</b>单号 '+no+'：'+esc(qs.get("who"))+'（'+esc(qs.get("dept"))+'）申请 '+esc(qs.get("type"))+' × '+esc(qs.get("n"))+' 台，'+esc(qs.get("days"))+' 天，'+esc(qs.get("room"))+'。审批结果会发邮件，也可以在「我的申请」里看。</td></tr></table>';
+}else if(qs.get("act")==="query"){
+  document.getElementById("result").innerHTML='<table border="1" cellpadding="6" style="border-collapse:collapse" bordercolor="#999999" bgcolor="#f0f0f0" width="100%"><tr><td>查询完成。</td></tr></table>';
+}
+document.addEventListener("click",function(e){
+  var t=e.target;while(t&&t.tagName!=="A")t=t.parentNode;if(!t)return;
+  var k=t.getAttribute("data-k"),s=t.getAttribute("data-sort");
+  if(s!==null){e.preventDefault();var n=+s;if(key===n)dir=-dir;else{key=n;dir=1}head();body();return}
+  if(k){if(vis.indexOf(k)<0){vis.push(k);save()}t.className="v";
+    for(var i=0;i<M.length;i++)if(M[i][0]===k)document.getElementById("qinfo").innerHTML="<b>"+k+"</b>　机型 "+M[i][1]+"　IP "+M[i][2]+"　"+M[i][3]+"　负责人 "+M[i][4]+"　状态 "+M[i][5]+"　到期 "+M[i][6]}
+});
+head();body();mine();
+</script>
+</body>
+</html>

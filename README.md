@@ -1,22 +1,23 @@
-# 风格图鉴 · 70 种视觉风格
+# 风格图鉴 · 120 种视觉风格
 
-**70 种风格 · 9 组 · 70 份规格 · 70 个能点的参考页 · 70 张标准截图**
+**120 种风格：70 种手机 + 50 种桌面 Web · 120 份规格 · 120 个能点的参考页 · 120 张标准截图**
 
-给 AI agent 用的视觉风格库（style-atlas），一共 70 种风格。做 App、网页、视频、海报、PPT 时，跟 Claude Code 或 Codex 说一句「用浮世绘风格」，它会读这种风格的规格，原样抄色值和字体，用现成的代码处理图片，做完截图和标准图对一遍。
+给 AI agent 用的视觉风格库（style-atlas），一共 120 种风格：70 种手机页面，50 种桌面 Web。做 App、网页、视频、海报、PPT 时，跟 Claude Code 或 Codex 说一句「用浮世绘风格」，它会读这种风格的规格，原样抄色值和字体，用现成的代码处理图片，做完截图和标准图对一遍。
 
 让 AI 自己做界面，做出来常常是同一个样子：米白底、白卡片、圆角、一个强调色。这套库把每种风格写成能照着做的规则和代码，换风格时不用靠形容词碰运气。
 
-[在线看 70 种（手机也能打开）](https://wailii.github.io/style-atlas/gallery/) · [安装](#安装) · [风格清单](#风格清单)
+[在线看 120 种（右上角切手机 / 桌面 Web）](https://wailii.github.io/style-atlas/gallery/) · [安装](#安装) · [风格清单](#风格清单)
 
 **最近更新**
 
+- **1.7.0 · 桌面 Web（71–120）**：50 种 1440×900 的桌面风格，每种一个不同的产品场景，33 种偏工具和后台（观测墙、日志探针、成本透镜、机房立面、键盘优先、块文档、字段表格、泳道看板、Agent 运行台、模型市场、账本、排版后台…），17 种偏发布和品牌（发布会、暗场极光、暖纸衬线、滚动叙事、3D 英雄、工业面板…）。规格多一节「学什么交互」，写了每条做法放到后台产品上怎么用。按要做的页面挑见 [web.md](web.md)
 - **1.6.0 · 写实 · 影像（61–70）**：产品棚拍、写实材质、设备实拍、电影剧照、纪实摄影、原相机、时尚大片、生活方式、俯拍平铺、卫星实景。真照片（带真实 EXIF）、实时 PBR 3D、真镜头效果。用法和素材规则见 [realistic.md](realistic.md)
 - **1.5.0 · 电影 · 漫画叙事（51–60）**：朱墨剧场、漫画分镜、黑色漫画、美漫宇宙、红幕剧场、意式招贴、新艺术、三渲二、线网幻视、黑白木刻。朱墨剧场附一个可滚动、按住推进的 3D 体验页 [`gallery/x-crimson.html`](gallery/x-crimson.html)（能直接出 1080p 视频）和一个 Dashboard [`gallery/d-crimson.html`](gallery/d-crimson.html)。要「炫」时先看 [cinematic.md](cinematic.md)
 - 完整记录见 [CHANGELOG.md](CHANGELOG.md)
 
-<img src=".github/readme/all-70.jpg" alt="70 种风格的参考页截图">
+<img src=".github/readme/all-70.jpg" alt="70 种手机风格的参考页截图">
 
-同一份数据（2026 年 10 月 22 日晚的 AI 热点热榜，8 条新闻和 4 张封面）按 70 种风格各做了一遍。每个参考页都是 390×844 的手机页面，按钮和列表都能点，在线版能看到动效。
+手机版：同一份数据（2026 年 10 月 22 日晚的 AI 热点热榜，8 条新闻和 4 张封面）按 70 种风格各做了一遍。每个参考页都是 390×844 的手机页面，按钮和列表都能点，在线版能看到动效。桌面 Web 版见[桌面 Web 风格清单](#桌面-web-风格清单)。
 
 ## 安装
 
@@ -209,6 +210,98 @@ node tools/snap.mjs --file gallery/x-crimson.html --video mezzanotte.mp4 --w 192
 | 69 | [俯拍平铺](https://wailii.github.io/style-atlas/gallery/#flatlay) | 正上方拍桌面，物件按网格摆，真影子 | 电商、开箱、文具数码 |
 | 70 | [卫星实景](https://wailii.github.io/style-atlas/gallery/#satellite) | 真航拍地图，黄框关注区、尺寸线、剖面、网格坐标 | 地理、物流、城市、调查报道 |
 
+
+## 桌面 Web 风格清单
+
+50 种分 5 组，编号接着手机版往下排。每种一个不同的产品场景，参考页 1440×900、都能点。按要做的页面挑（概览、台账、账单、审批、申请表单、模型平台）见 [web.md](web.md)。
+
+<img src=".github/readme/all-web.jpg" alt="50 种桌面 Web 风格的参考页截图">
+
+### 监控与数据
+
+<img src=".github/readme/web-g1.jpg" alt="Web · 监控与数据">
+
+| # | 风格 | 样子 | 适合做 |
+|---|---|---|---|
+| 71 | [观测墙](https://wailii.github.io/style-atlas/gallery/#w-observatory) | 深灰底监控大盘：全局时间范围联动、共享十字线、阈值着色、面板可拖可缩可全屏 | GPU 集群、网关、计费实时大盘，值班大屏。 |
+| 72 | [日志探针](https://wailii.github.io/style-atlas/gallery/#w-telemetry) | 白底单紫色日志检索：facet 条数联动、直方图拖选、点行出 trace 瀑布抽屉 | 日志、审计记录、调用明细、工单流水的检索页。 |
+| 73 | [成本透镜](https://wailii.github.io/style-atlas/gallery/#w-costlens) | 米色纸面费用分析：大金额排版、按天堆叠大图、分组依据切换、环比瀑布、异常点说明 | 云账单、算力成本、预算对账的分析页。 |
+| 74 | [产品洞察](https://wailii.github.io/style-atlas/gallery/#w-funnel) | 灰米底黑粗边的产品分析：一句话配置、漏斗点开看流失用户、留存三角热力表 | 用户行为分析、审批流转化、续用率等分析页。 |
+| 75 | [交易终端](https://wailii.github.io/style-atlas/gallery/#w-ticker) | 黑底琥珀字多窗格行情终端：命令行功能码、数字跳动闪色、F 键切窗格、点行换分时图 | 实时行情、成交流水、值班大屏等键盘优先的页面。 |
+| 76 | [拓扑图](https://wailii.github.io/style-atlas/gallery/#w-topology) | 服务依赖拓扑：带健康环的圆、线宽是流量、只有出错才有颜色，面板浮在图上 | 服务依赖、数据血缘、链路排障、影响面分析 |
+| 77 | [机房立面](https://wailii.github.io/style-atlas/gallery/#w-rack) | 机柜 U 位立面图：细线工程图风格，一键换着色依据，点服务器看 8 张卡 | 机房、仓库货架、座位与车位、资产台账的位置视图 |
+| 78 | [地图调度](https://wailii.github.io/style-atlas/gallery/#w-mapops) | 全屏地图加六边形热力：面板浮在图上，底部时间轴一拖，全国算力负载跟着变 | 机房分布、网点和门店、运力调度、基站覆盖 |
+
+### 效率与协作
+
+<img src=".github/readme/web-g2.jpg" alt="Web · 效率与协作">
+
+| # | 风格 | 样子 | 适合做 |
+|---|---|---|---|
+| 79 | [键盘优先](https://wailii.github.io/style-atlas/gallery/#w-keyboard) | 极细灰阶的需求列表：自绘状态图标、焦点行、J/K 走、X 多选、S 改状态、⌘K 搜一切 | 需求池、工单、审批、告警、任何以列表为主的后台 |
+| 80 | [块文档](https://wailii.github.io/style-atlas/gallery/#w-blocks) | 大留白的需求文档：封面和图标、衬线标题、悬停才出现的块手柄、/ 唤出块菜单、内嵌数据库三种视图 | 需求文档、会议纪要、知识库、运维手册、详情页的区块化 |
+| 81 | [字段表格](https://wailii.github.io/style-atlas/gallery/#w-fieldgrid) | 像电子表格的资源台账：字段类型图标、彩色单选标签、左侧视图列表、分组小计、记录卡 | 资产台账、供应商清单、采购记录、巡检记录、配额维护 |
+| 82 | [无限画布](https://wailii.github.io/style-atlas/gallery/#w-canvas) | 点阵底的流程白板：浮动工具条、8 点选中框、会走动的协作者光标、小地图和缩放 | 流程设计器、架构图、评审白板、机房平面图、审批流编辑 |
+| 83 | [泳道看板](https://wailii.github.io/style-atlas/gallery/#w-swimlane) | 资源交付看板：阶段为列、负责人为泳道，列头带 WIP 上限，停滞卡片变淡标天数 | 交付流程、工单与审批、采购跟进、招聘进度 |
+| 84 | [日程网格](https://wailii.github.io/style-atlas/gallery/#w-timegrid) | 周视图：半透明色块、当前时间红线、一句话新建日程，用来排 GPU 预约和评审 | 资源预约、会议室、值班排班、发布窗口 |
+| 85 | [分拣收件](https://wailii.github.io/style-atlas/gallery/#w-triage) | 三栏收件箱：J/K 移动、E 归档滑走、H 稍后，预览里直接同意 / 驳回，清空有线条空状态 | 审批、告警、交付通知、工单待办 |
+| 86 | [关系记录](https://wailii.github.io/style-atlas/gallery/#w-record) | 供应商记录页：左边属性点哪改哪，右边活动时间线，合同和工单点开从右侧滑出 | 供应商档案、客户档案、设备和合同详情 |
+| 87 | [工单会话](https://wailii.github.io/style-atlas/gallery/#w-helpdesk) | 报修工作台：队列按 SLA 倒计时排序，回复框切内部备注变黄，输入 # 插快捷回复 | 故障报修、IT 服务台、客服工单、审批待办 |
+
+### 开发者与 AI
+
+<img src=".github/readme/web-g3.jpg" alt="Web · 开发者与 AI">
+
+| # | 风格 | 样子 | 适合做 |
+|---|---|---|---|
+| 88 | [黑白控制台](https://wailii.github.io/style-atlas/gallery/#w-mono) | 纯黑白灰加 1px 线，只有状态点有颜色：推理服务卡片、部署列表和实时构建日志 | 部署和 CI/CD、任务队列、开发者控制台、模型服务管理 |
+| 89 | [开发者文档](https://wailii.github.io/style-atlas/gallery/#w-devdocs) | 三栏文档：右侧深色代码栏随正文滚动换示例，参数可展开，语言全页同切 | 接口文档、SDK 手册、配置项手册 |
+| 90 | [编辑器](https://wailii.github.io/style-atlas/gallery/#w-ide) | 深色编辑器加 AI 助手：改动以内联红绿 diff 落地，逐块接受或拒绝 | 配置与规则编辑、批量改动预览、带 AI 的工具 |
+| 91 | [块终端](https://wailii.github.io/style-atlas/gallery/#w-blockterm) | 每条命令连输出是一个块：可选中、复制、折叠，报错块能让 AI 解释 | 运维控制台、查询台、部署日志 |
+| 92 | [对话与产物](https://wailii.github.io/style-atlas/gallery/#w-artifact) | 左窄对话右宽产物：文档逐块写出，有版本和对比，选中文字就地改写 | AI 写报告、方案、申请单，需要反复修改的交付物 |
+| 93 | [Agent 运行台](https://wailii.github.io/style-atlas/gallery/#w-agentrun) | 一次 Agent 执行的轨迹：步骤树、甘特耗时条、输入输出 JSON，Token 和成本随步骤累计 | Agent 与工作流调试、链路追踪、流水线耗时、审批时效分析 |
+| 94 | [模型市场](https://wailii.github.io/style-atlas/gallery/#w-modelhub) | 左筛选右卡片，价格用等宽大字，顶部计算器让月费随调用量变 | 机型目录、云产品选购、套餐对比、模型列表 |
+| 95 | [命令启动器](https://wailii.github.io/style-atlas/gallery/#w-launcher) | 真照片上的磨砂玻璃命令面板：模糊匹配、右侧预览、⌘K 动作菜单、内置计算器 | 后台全局搜索、运维动作面板、AI 产品入口 |
+
+### 后台换个活法
+
+<img src=".github/readme/web-g4.jpg" alt="Web · 后台换个活法">
+
+| # | 风格 | 样子 | 适合做 |
+|---|---|---|---|
+| 96 | [账本](https://wailii.github.io/style-atlas/gallery/#w-ledger) | 纸质账簿：横线账页、借贷两栏、双下划线合计，订正用红笔划掉重写 | 部门账单、对账单、预算台账、库存流水 |
+| 97 | [排版后台](https://wailii.github.io/style-atlas/gallery/#w-typeset) | 零卡片零阴影零圆角，靠字号和网格分层，巨大数字和 12 栏对齐 | 申请单、审批单、工单、台账的列表加详情 |
+| 98 | [原生网页](https://wailii.github.io/style-atlas/gallery/#w-rawhtml) | 系统字体、原生控件、蓝链接紫已访问，几乎没有 CSS | 运维小工具、内部表单、数据查询页 |
+| 99 | [网页桌面](https://wailii.github.io/style-atlas/gallery/#w-webos) | 真照片壁纸上浮着可拖可叠的窗口，底部是会放大的 Dock | 要同时盯几份数据的值班台、分析工作台 |
+| 100 | [空间玻璃](https://wailii.github.io/style-atlas/gallery/#w-spatial) | 真照片上悬浮着磨砂玻璃窗，近大远小，鼠标一动带视差 | 个人工作区、大屏或头显上的轻量信息面板 |
+| 101 | [支付后台](https://wailii.github.io/style-atlas/gallery/#w-payments) | 金额币种小、整数大、小数灰；主图悬停并排读本期和上期；点交易行滑出事件时间线 | 收款首页、费用概览、对账页、订单与结算 |
+| 102 | [专注单色](https://wailii.github.io/style-atlas/gallery/#w-quiet) | 白纸黑字一种强调色，界面平时隐身，只留下正文和页边批注 | 需要集中精力的阅读、写作、文档审阅 |
+| 103 | [一问一答表单](https://wailii.github.io/style-atlas/gallery/#w-oneq) | GPU 资源申请：一屏一题、超大字、A/B/C 字母键选项、按答案条件跳题，最后汇总可点回某题修改 | 资源申请、入驻、问卷、报修入口 |
+
+### 发布与品牌
+
+<img src=".github/readme/web-g5.jpg" alt="Web · 发布与品牌">
+
+| # | 风格 | 样子 | 适合做 |
+|---|---|---|---|
+| 104 | [发布会](https://wailii.github.io/style-atlas/gallery/#w-keynote) | 黑白交替的长页，一张 3D 推理卡随滚动放大、旋转，规格用超大数字 | 产品或版本发布页、年度报告、重要功能介绍 |
+| 105 | [暗场极光](https://wailii.github.io/style-atlas/gallery/#w-aurora) | 近黑底上流动的冷色光场和细网格，截图透视入场，卡片边框被指针点亮 | 开发者工具、AI 产品、命令行工具的落地页 |
+| 106 | [暖纸衬线](https://wailii.github.io/style-atlas/gallery/#w-warmpaper) | 米色纸、衬线大标题、橙褐色一种强调、手绘线稿随滚动描出来 | 研究机构首页、白皮书、年度报告、需要信任感的品牌页 |
+| 107 | [功能格](https://wailii.github.io/style-atlas/gallery/#w-featuregrid) | 大小不一的白格子，每格里一段会动的小演示，点开展成全宽详情 | SaaS 功能介绍页、更新发布页、后台能力总览 |
+| 108 | [滚动叙事](https://wailii.github.io/style-atlas/gallery/#w-scrolly) | 左文右图，图贴住屏幕，滚到哪一段，同一批数据点就飞成哪种图 | 数据新闻、运营月报、年度复盘、方案说明 |
+| 109 | [动态字排](https://wailii.github.io/style-atlas/gallery/#w-kinetic) | 整屏一个巨型单词，字母随鼠标变粗变宽，黑白加荧光黄绿 | 活动站、展览、发布会、作品集首页 |
+| 110 | [3D 英雄](https://wailii.github.io/style-atlas/gallery/#w-hero3d) | 浅灰底、居中的真 3D 产品、柔和影子，拖动能转，滚动自动换角度并标注 | 消费电子、硬件产品首页，设备详情的 3D 视图 |
+| 111 | [工业面板](https://wailii.github.io/style-atlas/gallery/#w-hardware) | 浅灰底、橙色圆点，一台能玩的合成器产品页 | 产品官网、设备控制台、参数调试页 |
+| 112 | [复古系统](https://wailii.github.io/style-atlas/gallery/#w-retroos) | 灰色立体窗口和像素图标，一台能玩的虚拟电脑 | 个人主页、作品集、怀旧小游戏、演示页 |
+| 113 | [科幻 HUD](https://wailii.github.io/style-atlas/gallery/#w-hud) | 深底青色单色线，数据中心指挥大屏 | 数据中心、调度、监控大屏、发布会开场 |
+| 114 | [极繁贴纸](https://wailii.github.io/style-atlas/gallery/#w-maximal) | 撞色、粗黑边、满屏贴纸，一场市集的活动页 | 活动页、市集、潮流发布、校园和儿童产品 |
+| 115 | [游戏启动器](https://wailii.github.io/style-atlas/gallery/#w-gamehub) | 深底大图轮播，悬停放大并换整页背景的游戏库 | 游戏库、影音库、课程库、模型库的首页 |
+| 116 | [音乐播放器](https://wailii.github.io/style-atlas/gallery/#w-player) | 封面取色铺满整页，歌词逐行高亮滚动，波形进度条可拖，队列可排序 | 音乐、播客、课程回放、会议录音回放；后台里适合做带逐字稿的回放页 |
+| 117 | [商品页](https://wailii.github.io/style-atlas/gallery/#w-store) | 左边可转可放大的三维产品，右边描边卡片选配置，价格实时滚动，滚过后底部升起购买栏 | 硬件、家电、服装、订阅套餐、云主机规格选择；后台里适合做资源申请、套餐选择 |
+| 118 | [作品集](https://wailii.github.io/style-atlas/gallery/#w-folio) | 整行大字的项目列表，悬停时预览图带延迟跟着光标，点进去用整屏色块转场 | 个人作品集、工作室站、摄影集、发布会页；后台里借悬停预览和同页转场 |
+| 119 | [一位抖动](https://wailii.github.io/style-atlas/gallery/#w-dither) | 黑、白加一种黄，照片实时抖成 1-bit 点阵，页面上有一个能转的曲柄 | 独立游戏、小硬件、开源工具、技术大会页；后台里借滑杆实时和悬停预览 |
+| 120 | [新闻门户](https://wailii.github.io/style-atlas/gallery/#w-newsfront) | 报纸头版：衬线大报头、细线分栏、实时更新条、吸顶栏目导航、纸色白色切换 | 资讯门户、公告栏、知识库首页、发布说明；后台里借吸顶导航和同页详情 |
+
 ## 规格结构
 
 每种风格一份规格 `styles/<id>.md`，小节是固定的：
@@ -224,6 +317,7 @@ node tools/snap.mjs --file gallery/x-crimson.html --video mezzanotte.mp4 --w 192
 | 换到别的东西上 | 落到网页、视频、海报上时改哪些 |
 | 容易做坏 | 常见的走样和对应的改法 |
 | 参考实现 | 参考页里对应的函数名 |
+| 学什么交互（桌面 Web 才有） | 3～5 条能搬到别的产品上的做法：做法、为什么好用、放到后台产品上怎么用 |
 
 部分风格还有「底和纹理」「线和形」两节。下面是浮世绘「直接抄」一节的原文：
 
@@ -289,14 +383,15 @@ node tools/check.mjs
 
 ```
 SKILL.md          agent 读的入口：风格目录、选风格的办法、工作步骤
-styles/<id>.md    70 份风格规格
+styles/<id>.md    70 份手机风格规格；styles/w-<id>.md 50 份桌面 Web 规格
+web.md            桌面 Web 50 种：五组、按要做的页面挑、外观被设计系统定死时只搬交互
 realistic.md      写实精选：10 种写实风格怎么用、素材从哪来、怎么不造假
 cinematic.md      炫酷精选：22 种冲击力最强的风格，按网页 / 设计 / Dashboard / 视频 / App 分好
 media.md          落到 App、网页、视频、动画、海报时怎么改
 mixing.md         混搭规则
 ENGINES.md        图片处理和动效函数的用法
 DATA.md           参考页的数据格式，怎么换成自己的内容
-gallery/          参考页 s-<id>.html、视频参考 v-collage.html、朱墨剧场体验页 x-crimson.html 和 Dashboard d-crimson.html、共用代码、标准截图 shots/
+gallery/          手机参考页 s-<id>.html、桌面参考页 w-<id>.html、视频参考 v-collage.html、朱墨剧场体验页 x-crimson.html 和 Dashboard d-crimson.html、共用代码、标准截图 shots/
 tools/            截图工具 snap.mjs、完整性检查 check.mjs
 ```
 

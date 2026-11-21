@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>对话与产物 · 资源助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#fbfbf9; --paper:#fff; --line:#e8e8e4; --line2:#d9d9d3; --ink:#1b1d24; --tx:#3a3e49; --mute:#868b97; --acc:#2b3a8f; --acc-bg:#edeffb; --add:#e5f4ea; --addc:#2a7a4c; --del:#fdecec; --delc:#b23b3b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--paper); }
+  body { font: 14px/1.65 "Inter","Noto Sans SC",sans-serif; color: var(--tx); -webkit-font-smoothing: antialiased; }
+  button, input, textarea { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  svg.i { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .app { height: 100vh; display: grid; grid-template-columns: 404px minmax(0,1fr); }
+
+  .chat { background: var(--bg); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .ch { height: 52px; flex: none; display: flex; align-items: center; gap: 9px; padding: 0 22px; font-weight: 600; color: var(--ink); }
+  .ch svg { color: var(--acc); width: 17px; height: 17px; }
+  .ch span { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--mute); }
+  .msgs { flex: 1; overflow-y: auto; padding: 8px 22px 12px; scrollbar-width: thin; scrollbar-color: #dcdcd6 transparent; }
+  .u { margin: 20px 0 0 auto; width: fit-content; max-width: 88%; background: #efefea; color: var(--ink); padding: 8px 13px; border-radius: 12px; font-size: 14px; }
+  .a { margin-top: 14px; color: var(--tx); font-size: 14px; line-height: 1.75; }
+  .a p + p { margin-top: 8px; }
+  .a code { font: 12.5px "Inter"; background: #efefea; padding: 0 5px; border-radius: 4px; }
+  .card { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line2); border-radius: 11px; background: var(--paper); text-align: left; transition: border-color .15s, box-shadow .15s; position: relative; }
+  .card:hover { border-color: #b8bac5; }
+  .card.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc); }
+  .card .ic { width: 34px; height: 40px; border: 1px solid var(--line2); border-radius: 5px; background: #fafaf8; display: grid; align-content: center; gap: 3px; padding: 0 6px; flex: none; }
+  .card .ic i { height: 2px; background: #c9cad2; border-radius: 1px; } .card .ic i:first-child { width: 60%; background: var(--acc); }
+  .card b { display: block; font-weight: 600; color: var(--ink); font-size: 13.5px; line-height: 1.35; }
+  .card small { color: var(--mute); font-size: 12px; }
+  .card .go { margin-left: auto; font-size: 12px; color: var(--acc); font-weight: 500; white-space: nowrap; }
+  .caret::after { content: ""; display: inline-block; width: 7px; height: 14px; background: var(--acc); margin-left: 2px; vertical-align: -2px; animation: bl 1s steps(2) infinite; }
+  @keyframes bl { 50% { opacity: 0; } }
+  .inp { flex: none; margin: 0 18px 18px; border: 1px solid var(--line2); border-radius: 14px; background: var(--paper); padding: 10px 12px 8px 14px; }
+  .inp:focus-within { border-color: #9da3d6; }
+  .inp input { width: 100%; cursor: text; font-size: 14px; }
+  .inp .ft { display: flex; align-items: center; margin-top: 8px; color: var(--mute); font-size: 12px; }
+  .inp .snd { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; }
+  .inp .snd svg { width: 14px; height: 14px; stroke-width: 2; }
+
+  .pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; background: var(--paper); }
+  .ph { height: 52px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 22px 0 28px; border-bottom: 1px solid var(--line); }
+  .ph .t { font-weight: 600; color: var(--ink); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ver { display: flex; background: #f0f0ec; border-radius: 8px; padding: 2px; }
+  .ver button { height: 26px; min-width: 38px; padding: 0 10px; border-radius: 6px; font: 500 12.5px "Inter"; color: var(--mute); }
+  .ver button.on { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .ver button:hover:not(.on) { color: var(--ink); }
+  .ph .sp { flex: 1; }
+  .tg { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line2); font-size: 12.5px; color: var(--tx); }
+  .tg:hover { background: #f6f6f3; }
+  .tg i { width: 24px; height: 14px; border-radius: 8px; background: #d4d5db; position: relative; transition: background .15s; }
+  .tg i::after { content: ""; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: left .15s; }
+  .tg.on i { background: var(--acc); } .tg.on i::after { left: 12px; }
+  .tg:disabled { opacity: .4; cursor: default; }
+  .ib { height: 30px; padding: 0 10px; display: flex; align-items: center; gap: 6px; border-radius: 8px; color: var(--tx); font-size: 12.5px; }
+  .ib:hover { background: #f1f1ed; }
+  .ib.ok { color: var(--addc); }
+
+  .scroll { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #dcdcd6 transparent; }
+  .doc { max-width: 760px; margin: 0 auto; padding: 44px 40px 120px; font-family: "Noto Sans SC","Inter",sans-serif; }
+  .doc h1 { font: 700 30px/1.3 "Noto Serif SC",serif; color: var(--ink); letter-spacing: -.005em; }
+  .doc .sub { margin-top: 6px; color: var(--mute); font-size: 13px; }
+  .doc h2 { font: 600 19px/1.4 "Noto Serif SC",serif; color: var(--ink); margin-top: 34px; }
+  .doc p.p { margin-top: 12px; font-size: 15px; line-height: 1.85; color: var(--tx); }
+  .doc .li { margin-top: 8px; padding-left: 20px; position: relative; font-size: 15px; line-height: 1.8; }
+  .doc .li::before { content: ""; position: absolute; left: 5px; top: 13px; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); }
+  .blkx { position: relative; margin-left: -14px; padding-left: 14px; border-left: 3px solid transparent; border-radius: 2px; }
+  .blkx.add { background: var(--add); border-left-color: var(--addc); }
+  .blkx.del { background: var(--del); border-left-color: var(--delc); color: #7e3030; }
+  .blkx.del * { text-decoration: line-through; text-decoration-color: rgba(178,59,59,.5); }
+  .fadein { animation: fi .45s ease both; }
+  @keyframes fi { from { opacity: 0; transform: translateY(6px); } }
+  .met { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 14px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+  .met > div { padding: 14px 16px 14px 0; } .met > div + div { padding-left: 16px; border-left: 1px solid var(--line); }
+  .met small { display: block; font-size: 12px; color: var(--mute); }
+  .met b { display: block; margin-top: 2px; font: 600 28px/1.2 "Source Serif 4","Noto Serif SC",serif; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .met b span { font: 500 13px "Inter"; color: var(--mute); margin-left: 3px; }
+  .met em { font-style: normal; font-size: 12px; color: var(--addc); }
+  .met em.dn { color: var(--delc); }
+  table.t { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  table.t th { text-align: left; font-weight: 500; font-size: 12px; color: var(--mute); padding: 8px 10px 8px 0; border-bottom: 1px solid var(--ink); }
+  table.t td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line); }
+  table.t th.r, table.t td.r { text-align: right; padding-right: 0; padding-left: 10px; }
+  table.t tr.tot td { font-weight: 600; color: var(--ink); border-bottom: 0; }
+  .up { color: var(--delc); } .dn2 { color: var(--addc); }
+  .chart { margin-top: 18px; } .chart svg { width: 100%; height: 190px; display: block; overflow: visible; }
+  .chart .bar { transform-origin: bottom; transform-box: fill-box; animation: gr .7s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes gr { from { transform: scaleY(0); } }
+  .chart text { font: 12px "Inter","Noto Sans SC"; fill: var(--mute); } .chart text.v { fill: var(--ink); font-weight: 500; }
+  .cap { margin-top: 6px; font-size: 12px; color: var(--mute); }
+
+  .sel { position: fixed; z-index: 30; display: none; background: var(--ink); border-radius: 9px; padding: 3px; gap: 1px; box-shadow: 0 8px 24px rgba(20,22,40,.28); }
+  .sel.on { display: flex; }
+  .sel button { height: 28px; padding: 0 11px; color: #e9eaf0; font-size: 12.5px; border-radius: 6px; display: flex; align-items: center; gap: 5px; }
+  .sel button:hover { background: #343848; color: #fff; }
+  .sel::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 8px; height: 8px; background: var(--ink); transform: translateX(-50%) rotate(45deg); }
+  .foot { position: absolute; right: 14px; bottom: 8px; font-size: 10.5px; color: var(--mute); }
+  mark.flash { background: #fff3b0; border-radius: 3px; animation: fl 1.4s ease forwards; }
+  @keyframes fl { to { background: transparent; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="chat">
+    <div class="ch"><svg class="i" viewBox="0 0 16 16"><path d="M8 1.5l1.4 3.6 3.6 1.4-3.6 1.4L8 11.5 6.6 7.9 3 6.5l3.6-1.4z"/></svg>资源助手<span>示例数据</span></div>
+    <div class="msgs" id="msgs"></div>
+    <div class="inp"><input id="ain" placeholder="继续提要求，比如「加一张按卡型的表」" autocomplete="off"><div class="ft"><span>回车发送</span><button class="snd" id="snd"><svg class="i" viewBox="0 0 16 16"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/></svg></button></div></div>
+  </section>
+  <section class="pane">
+    <div class="ph">
+      <div class="t" id="ptitle"></div>
+      <div class="ver" id="ver"></div>
+      <div class="sp"></div>
+      <button class="tg" id="diff"><i></i>对比上一版</button>
+      <button class="ib" id="replay"><svg class="i" viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.5v2.8h-2.8"/></svg>重新写出</button>
+      <button class="ib" id="copy"><svg class="i" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg><span>复制</span></button>
+    </div>
+    <div class="scroll" id="scroll"><div class="doc" id="doc"></div></div>
+    <div class="foot">示例数据</div>
+  </section>
+</div>
+<div class="sel" id="sel"><button data-a="rewrite"><svg class="i" viewBox="0 0 16 16"><path d="M3 13l1-3.5L11.5 2l2.5 2.5L6.5 12z"/></svg>改写</button><button data-a="short"><svg class="i" viewBox="0 0 16 16"><path d="M3 5h10M3 8h6M3 11h8"/></svg>缩短</button><button data-a="ask"><svg class="i" viewBox="0 0 16 16"><path d="M8 1.5l1.4 3.6 3.6 1.4-3.6 1.4L8 11.5 6.6 7.9 3 6.5l3.6-1.4z"/></svg>问 AI</button></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- 数据：两份产物，月报有三个版本 ---------- */
+const DEPT = [["算法一部", 98.2, 34.3, 8.4, 68.5], ["算法二部", 71.5, 25.0, 3.1, 59.1], ["数据中台", 46.8, 16.3, -5.2, 52.6], ["平台研发", 38.9, 13.6, 12.7, 64.0], ["其他", 31.0, 10.8, 1.9, 55.2]];
+const T = (id, k, t) => ({ id, k, t });
+const H1 = T("h1", "h1", "2025 年 10 月资源使用月报"), SUB = T("sub", "sub", "统计周期 10 月 1 日至 31 日 · 全集群 GPU 资源池");
+const MET = { id: "met", k: "met", items: [["GPU 平均利用率", "61.5", "%", "较 9 月 +2.6 个百分点", 1], ["总费用", "286.4", "万元", "环比 +4.4%", 0], ["在用 GPU", "1,240", "卡", "较 9 月 +96 卡", 1], ["闲置卡时占比", "9.8", "%", "较 9 月 −1.7 个百分点", 1]] };
+const TBL = { id: "tbl", k: "tbl", head: ["部门", "费用（万元）", "占比", "环比", "GPU 利用率"], rows: DEPT };
+const CHT = { id: "cht", k: "cht", data: DEPT };
+const S1 = "10 月全集群 GPU 平均利用率为 61.5%，较 9 月提升 2.6 个百分点；总费用 286.4 万元，环比增长 4.4%。费用增长主要来自平台研发和算法一部的训练作业增加，数据中台因下线两个批处理任务，费用下降 5.2%。";
+const S2 = "整体看，训练卡紧张而推理卡有闲置，需要在下月调整两类资源池的配比，并优先处理利用率低于 50% 的节点。";
+const clone = o => JSON.parse(JSON.stringify(o));
+const V1 = [H1, SUB, T("h2a", "h2", "摘要"), T("s1", "p", S1), T("s2", "p", S2), T("h2b", "h2", "关键指标"), MET, T("h2c", "h2", "数据口径"), T("n1", "p", "费用按分钟计费汇总，含 GPU、存储和网络；利用率为周期内逐分钟的加权平均，不含维护窗口。")].map(clone);
+const V2 = [H1, SUB, T("h2a", "h2", "摘要"), T("s1", "p", S1), T("s2", "p", S2), T("h2b", "h2", "关键指标"), MET, T("h2d", "h2", "部门费用"), CHT, T("cap", "cap", "图：10 月各部门费用，单位万元"), TBL, T("h2c", "h2", "数据口径"), T("n1", "p", "费用按分钟计费汇总，含 GPU、存储和网络；利用率为周期内逐分钟的加权平均，不含维护窗口。环比为 10 月与 9 月同口径对比。")].map(clone);
+const V3 = [H1, SUB, T("h2a", "h2", "摘要"), T("s1", "p", "10 月 GPU 平均利用率 61.5%，较 9 月提升 2.6 个百分点；总费用 286.4 万元，环比增长 4.4%，增量主要来自平台研发和算法一部。"), T("h2b", "h2", "关键指标"), MET, T("h2d", "h2", "部门费用"), CHT, T("cap", "cap", "图：10 月各部门费用，单位万元"), TBL, T("h2e", "h2", "建议"), T("r1", "li", "把数据中台利用率低于 50% 的 6 个节点转入推理池，预计每月节省 7 万元。"), T("r2", "li", "平台研发费用环比增长 12.7%，对其 11 月新增训练作业设置并发上限。"), T("r3", "li", "训练池扩容 64 张 A100 前，先回收闲置超过 14 天的预留资源。"), T("h2c", "h2", "数据口径"), T("n1", "p", "费用按分钟计费汇总，含 GPU、存储和网络；利用率为周期内逐分钟的加权平均，不含维护窗口。环比为 10 月与 9 月同口径对比。")].map(clone);
+const R1 = [T("h1", "h1", "A100 80G 训练池扩容申请"), T("sub", "sub", "申请部门：平台研发、算法一部 · 草稿"), T("a", "h2", "申请内容"), T("l1", "li", "扩容规模：64 张 A100 80G，分两批到位，每批 32 张。"), T("l2", "li", "用途：大模型继续预训练与对齐实验，11 月至 12 月连续使用。"), T("l3", "li", "资金来源：从 10 月节省的闲置资源费用中调剂，不新增预算。"), T("b", "h2", "依据"), T("p1", "p", "10 月训练池利用率达 68.5%，排队作业平均等待 5.2 小时；推理池利用率仅 52.6%，存在可转用的空闲节点。"), T("c", "h2", "风险"), T("p2", "p", "新增卡数需要机房供电余量支持，机柜按 A100 的 6.5 kW 满载估算，待机房确认。")].map(clone);
+const ART = {
+  report: { title: "10 月资源使用月报", versions: [V1, V2, V3] },
+  req: { title: "A100 扩容申请", versions: [R1] },
+};
+const CARDS = [["report", 0, "加上各部门费用明细和环比", "已生成月报，包含摘要、关键指标和数据口径。"], ["report", 1, "", ""], ["report", 2, "", ""], ["req", 0, "", ""]];
+
+/* ---------- 对话 ---------- */
+const msgs = $("#msgs");
+const cardHTML = (a, v) => `<button class="card" data-a="${a}" data-v="${v}"><span class="ic"><i></i><i></i><i></i></span><span><b>${ART[a].title}</b><small>文档${ART[a].versions.length > 1 ? " · v" + (v + 1) : ""}</small></span><span class="go">打开产物</span></button>`;
+const SEED = [
+  ["u", "生成 10 月的资源使用月报"], ["a", "<p>已生成月报：摘要、四项关键指标、数据口径。</p>", ["report", 0]],
+  ["u", "加上各部门费用明细和环比"], ["a", "<p>加了一张部门费用柱状图和明细表，环比按 9 月同口径计算。</p>", ["report", 1]],
+  ["u", "摘要太长了，缩短一些，再加几条建议"], ["a", "<p>摘要压成一段，删掉了原因说明；新增三条建议，放在部门费用之后。</p>", ["report", 2]],
+  ["u", "把建议整理成一份给领导的扩容申请"], ["a", "<p>新建了一份申请单草稿，依据和风险单独列出。</p>", ["req", 0]],
+];
+function seedChat() { msgs.innerHTML = SEED.map(([r, h, c]) => r === "u" ? `<div class="u">${esc(h)}</div>` : `<div class="a">${h}${c ? cardHTML(c[0], c[1]) : ""}</div>`).join(""); msgs.scrollTop = msgs.scrollHeight; }
+msgs.addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openArt(c.dataset.a, +c.dataset.v, true); });
+function markCards() { document.querySelectorAll(".card").forEach(c => c.classList.toggle("on", c.dataset.a === cur.a && +c.dataset.v === cur.v)); }
+function say(role, html) { msgs.insertAdjacentHTML("beforeend", role === "u" ? `<div class="u">${esc(html)}</div>` : `<div class="a">${html}</div>`); msgs.scrollTop = msgs.scrollHeight; return msgs.lastElementChild; }
+function timed(ms, fn, my) { return new Promise(res => { const t0 = performance.now(); (function tick() { if (my && my !== token) return res(); const p = Math.min(1, (performance.now() - t0) / ms); fn(p); if (p >= 1) res(); else setTimeout(tick, 16); })(); }); }
+async function aiType(html) { const el = say("a", ""); el.classList.add("caret"); await timed(Math.max(900, html.length * 14), p => { el.innerHTML = html.slice(0, Math.floor(p * html.length)).replace(/<[^>]*$/, ""); msgs.scrollTop = msgs.scrollHeight; }); el.innerHTML = html; el.classList.remove("caret"); }
+function ask(q) { if (!q.trim()) return; say("u", q); const r = /缩短|精简/.test(q) ? "<p>选中产物里的一段文字，点「缩短」就能就地压缩。</p>" : /版本|对比/.test(q) ? "<p>右上角可以切换 v1、v2、v3，打开「对比上一版」会用绿色标出新增、红色标出删除。</p>" : "<p>示例页的产物由上面四轮对话生成。你可以在右侧选中文字试试改写、缩短，或切换版本。</p>"; setTimeout(() => aiType(r), 300); }
+$("#ain").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { ask(e.target.value); e.target.value = ""; } });
+$("#snd").addEventListener("click", () => { ask($("#ain").value); $("#ain").value = ""; });
+
+/* ---------- 产物渲染 ---------- */
+let cur = { a: "report", v: 2 }, diffOn = false, token = 0;
+const doc = $("#doc");
+function blockEl(b, st, anim) {
+  const w = document.createElement("div"); w.className = "blkx" + (st ? " " + st : "") + (anim ? " fadein" : ""); w.dataset.id = b.id;
+  const t = b.k;
+  if (t === "h1") w.innerHTML = `<h1></h1>`; else if (t === "sub") w.innerHTML = `<p class="sub"></p>`; else if (t === "h2") w.innerHTML = `<h2></h2>`; else if (t === "p") w.innerHTML = `<p class="p"></p>`; else if (t === "li") w.innerHTML = `<div class="li"></div>`; else if (t === "cap") w.innerHTML = `<p class="cap"></p>`;
+  if (["h1", "sub", "h2", "p", "li", "cap"].includes(t)) { w.dataset.txt = "1"; w.firstElementChild.textContent = b.t; return w; }
+  if (t === "met") w.innerHTML = `<div class="met">${b.items.map(([l, v, u, d, good]) => `<div><small>${l}</small><b>${v}<span>${u}</span></b><em class="${good ? "" : ""}">${d}</em></div>`).join("")}</div>`;
+  if (t === "tbl") w.innerHTML = `<table class="t"><tr>${b.head.map((h, i) => `<th class="${i ? "r" : ""}">${h}</th>`).join("")}</tr>${b.rows.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1].toFixed(1)}</td><td class="r">${r[2].toFixed(1)}%</td><td class="r ${r[3] > 0 ? "up" : "dn2"}">${r[3] > 0 ? "+" : "−"}${Math.abs(r[3]).toFixed(1)}%</td><td class="r">${r[4].toFixed(1)}%</td></tr>`).join("")}<tr class="tot"><td>合计</td><td class="r">286.4</td><td class="r">100.0%</td><td class="r up">+4.4%</td><td class="r">61.5%</td></tr></table>`;
+  if (t === "cht") { const bw = 84, gap = 64, x0 = -2; w.innerHTML = `<div class="chart"><svg viewBox="0 0 760 190">${[0, 50, 100].map(v => `<line x1="0" x2="760" y1="${150 - v * 1.3}" y2="${150 - v * 1.3}" stroke="#e8e8e4"/><text x="760" y="${146 - v * 1.3}" text-anchor="end">${v}</text>`).join("")}${b.data.map((d, i) => { const h = d[1] * 1.3, x = x0 + i * (bw + gap) + 36; return `<rect class="bar" style="animation-delay:${i * 70}ms" x="${x}" y="${150 - h}" width="${bw}" height="${h}" rx="2" fill="${i === 4 ? "#b9bccb" : "#2b3a8f"}"/><text class="v" x="${x + bw / 2}" y="${144 - h}" text-anchor="middle">${d[1].toFixed(1)}</text><text x="${x + bw / 2}" y="172" text-anchor="middle">${d[0]}</text>`; }).join("")}</svg></div>`; }
+  return w;
+}
+function merged(a, v) { // 返回 [{b, st}]，st: '' | add | del
+  const nw = ART[a].versions[v], old = diffOn && v > 0 ? ART[a].versions[v - 1] : null;
+  if (!old) return nw.map(b => ({ b, st: "" }));
+  const oid = new Map(old.map(b => [b.id, b])), nid = new Set(nw.map(b => b.id)), out = [];
+  const delAfter = {}; let prev = null; old.forEach(b => { if (nid.has(b.id)) prev = b.id; else (delAfter[prev || "_start"] = delAfter[prev || "_start"] || []).push(b); });
+  (delAfter._start || []).forEach(b => out.push({ b, st: "del" }));
+  nw.forEach(b => { const o = oid.get(b.id); if (!o) out.push({ b, st: "add" }); else if (JSON.stringify(o) !== JSON.stringify(b)) { out.push({ b: o, st: "del" }); out.push({ b, st: "add" }); } else out.push({ b, st: "" }); (delAfter[b.id] || []).forEach(x => out.push({ b: x, st: "del" })); });
+  return out;
+}
+function chrome() {
+  const A = ART[cur.a]; $("#ptitle").textContent = A.title;
+  $("#ver").innerHTML = A.versions.length > 1 ? A.versions.map((_, i) => `<button class="${i === cur.v ? "on" : ""}" data-v="${i}">v${i + 1}</button>`).join("") : '<button class="on">v1</button>';
+  $("#diff").disabled = cur.v === 0; $("#diff").classList.toggle("on", diffOn && cur.v > 0);
+  markCards();
+}
+function openArt(a, v, stream) { cur = { a, v }; if (v === 0) diffOn = false; chrome(); stream ? streamDoc() : renderDoc(); }
+function renderDoc() { token++; doc.innerHTML = ""; merged(cur.a, cur.v).forEach(({ b, st }) => doc.appendChild(blockEl(b, st))); }
+async function streamDoc() {
+  const my = ++token; doc.innerHTML = ""; $("#scroll").scrollTop = 0;
+  const items = merged(cur.a, cur.v).map(({ b, st }) => { const el = blockEl(b, st, true); const tx = el.dataset.txt ? el.firstElementChild : null; const full = tx ? tx.textContent : ""; if (tx) tx.textContent = ""; el.style.display = "none"; doc.appendChild(el); return { el, tx, full, cost: tx ? full.length : 36 }; });
+  const total = items.reduce((n, i) => n + i.cost, 0); let acc = 0; items.forEach(i => { i.start = acc; acc += i.cost; });
+  await timed(2600, p => { const u = p * total; items.forEach(i => { if (u >= i.start) { i.el.style.display = ""; if (i.tx) i.tx.textContent = i.full.slice(0, Math.max(0, Math.floor(u - i.start))); } }); }, my);
+  if (my === token) items.forEach(i => { i.el.style.display = ""; if (i.tx) i.tx.textContent = i.full; });
+}
+$("#ver").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (!b) return; cur.v = +b.dataset.v; if (cur.v === 0) diffOn = false; chrome(); renderDoc(); });
+$("#diff").addEventListener("click", () => { diffOn = !diffOn; chrome(); renderDoc(); });
+$("#replay").addEventListener("click", streamDoc);
+$("#copy").addEventListener("click", () => { const txt = doc.innerText; try { navigator.clipboard.writeText(txt); } catch (_) {} const b = $("#copy"); b.classList.add("ok"); b.lastElementChild.textContent = "已复制"; setTimeout(() => { b.classList.remove("ok"); b.lastElementChild.textContent = "复制"; }, 1400); });
+
+/* ---------- 选中文字：改写 / 缩短 / 问 AI ---------- */
+const sel = $("#sel"); let selInfo = null;
+function hideSel() { sel.classList.remove("on"); }
+document.addEventListener("mouseup", e => {
+  if (e.target.closest("#sel")) return;
+  setTimeout(() => {
+    const s = getSelection(); const txt = s.toString().trim();
+    if (!txt || !s.rangeCount) return hideSel();
+    const r = s.getRangeAt(0), host = (r.commonAncestorContainer.nodeType === 3 ? r.commonAncestorContainer.parentElement : r.commonAncestorContainer).closest(".blkx[data-id]");
+    if (!host || !doc.contains(host) || host.classList.contains("del") || !host.dataset.txt) return hideSel();
+    selInfo = { id: host.dataset.id, txt: s.toString() };
+    const rc = r.getBoundingClientRect(); sel.classList.add("on");
+    sel.style.left = Math.max(8, rc.left + rc.width / 2 - sel.offsetWidth / 2) + "px"; sel.style.top = (rc.top - sel.offsetHeight - 10) + "px";
+  }, 0);
+});
+document.addEventListener("mousedown", e => { if (!e.target.closest("#sel")) hideSel(); });
+$("#scroll").addEventListener("scroll", hideSel);
+const SYN = [["较 9 月", "相比 9 月"], ["提升", "上升"], ["增长", "上涨"], ["主要来自", "主要由"], ["优先处理", "先处理"], ["建议", "推荐"], ["需要", "应当"], ["预计", "预估"]];
+function rewrite(t) { let o = t; SYN.forEach(([a, b]) => { o = o.split(a).join(b); }); return o === t ? t.replace(/，/, "，也就是说，") : o; }
+function shorten(t) { const parts = t.split(/[，；]/); if (parts.length < 2 || t.length < 16) return t.length > 10 ? t.slice(0, Math.ceil(t.length * .6)) : t; return parts.slice(0, Math.max(1, Math.ceil(parts.length / 2))).join("，").replace(/[，。]$/, ""); }
+sel.addEventListener("mousedown", e => e.preventDefault());
+sel.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !selInfo) return;
+  const a = b.dataset.a, blk = ART[cur.a].versions[cur.v].find(x => x.id === selInfo.id); hideSel();
+  if (a === "ask") { getSelection().removeAllRanges(); ask0("关于「" + selInfo.txt.slice(0, 24) + (selInfo.txt.length > 24 ? "…" : "") + "」，依据是什么？"); return; }
+  if (!blk || !blk.t.includes(selInfo.txt)) return;
+  const nt = a === "rewrite" ? rewrite(selInfo.txt) : shorten(selInfo.txt);
+  blk.t = blk.t.replace(selInfo.txt, nt); getSelection().removeAllRanges();
+  const keep = $("#scroll").scrollTop; renderDoc(); $("#scroll").scrollTop = keep;
+  const el = doc.querySelector(`[data-id="${blk.id}"] > *`); if (el) { const i = blk.t.indexOf(nt); el.innerHTML = esc(blk.t.slice(0, i)) + `<mark class="flash">${esc(nt)}</mark>` + esc(blk.t.slice(i + nt.length)); }
+});
+function ask0(q) { say("u", q); setTimeout(() => aiType("<p>这句话的数据来自 10 月的调度日志与计费明细：利用率按逐分钟采样加权，费用按分钟计费汇总，环比和 9 月同口径比较。需要的话我可以把依据列成脚注。</p>"), 300); }
+
+seedChat(); chrome(); streamDoc();
+</script>
+</body>
+</html>

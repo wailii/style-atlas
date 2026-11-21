@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>成本透镜 · 月度费用分析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f6f3ec; --ink:#23211c; --ink2:#5f5b51; --mute:#8f8a7d; --line:#ddd8cb; --line2:#e9e5da; --acc:#0f6b6b; --up:#d8553c;
+    --c1:#0f6b6b; --c2:#d99a2b; --c3:#d8553c; --c4:#3d5a9b; --c5:#8a4f9e; --c6:#c3bdae; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:"Instrument Sans","Noto Sans SC",sans-serif; font-size:13px; -webkit-font-smoothing:antialiased; min-width:1100px; }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; outline:none; }
+  .num { font-family:"Instrument Sans",sans-serif; font-variant-numeric:tabular-nums; }
+  svg { display:block; }
+  .page { max-width:1440px; margin:0 auto; padding:0 48px 60px; }
+  .top { height:60px; display:flex; align-items:center; gap:36px; border-bottom:1px solid var(--line); }
+  .wm { display:flex; align-items:center; gap:10px; font-family:"Noto Serif SC",serif; font-weight:600; font-size:17px; letter-spacing:.04em; }
+  .wm svg { width:24px; height:24px; }
+  .tabs { display:flex; gap:26px; height:100%; }
+  .tabs button { color:var(--ink2); position:relative; font-size:13.5px; }
+  .tabs button.on { color:var(--ink); font-weight:500; } .tabs button.on::after { content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--ink); }
+  .sp { flex:1; }
+  .per { color:var(--ink2); font-size:12.5px; } .per b { color:var(--ink); font-weight:500; }
+
+  .sum { display:flex; align-items:flex-end; gap:56px; padding:30px 0 6px; }
+  .lab { color:var(--mute); font-size:12px; letter-spacing:.06em; margin-bottom:6px; }
+  .big { display:flex; align-items:baseline; gap:6px; }
+  .big .cur { font-family:"Fraunces",serif; font-size:30px; color:var(--ink2); }
+  .big .n { font-family:"Fraunces",serif; font-size:84px; font-weight:400; line-height:.95; letter-spacing:-.03em; font-variant-numeric:lining-nums; }
+  .big .u { font-size:22px; color:var(--ink2); font-family:"Noto Serif SC",serif; margin-left:2px; }
+  .kv { display:flex; gap:44px; padding-bottom:8px; }
+  .kv div b { display:block; font-family:"Fraunces",serif; font-size:24px; font-weight:400; letter-spacing:-.01em; }
+  .kv div b small { font-size:13px; color:var(--ink2); margin-left:2px; font-family:"Noto Sans SC"; }
+  .kv div span { color:var(--mute); font-size:12px; }
+  .up { color:var(--up); } .down { color:var(--acc); }
+
+  .ctl { display:flex; align-items:center; gap:14px; padding:22px 0 12px; }
+  .ctl .lb { color:var(--mute); font-size:12px; }
+  .seg { display:flex; gap:4px; }
+  .seg button { height:30px; padding:0 14px; border-radius:15px; color:var(--ink2); border:1px solid transparent; }
+  .seg button:hover { border-color:var(--line); }
+  .seg button.on { background:var(--ink); color:#fff; }
+  .legend { margin-left:auto; display:flex; gap:16px; }
+  .legend button { display:flex; align-items:center; gap:6px; color:var(--ink2); font-size:12px; padding:3px 0; }
+  .legend button:hover { color:var(--ink); }
+  .legend i { width:9px; height:9px; border-radius:2px; }
+  .legend button.dim { opacity:.35; }
+
+  .chartw { position:relative; border-top:1px solid var(--line); }
+  #chart { width:100%; height:330px; }
+  .ax { fill:var(--mute); font-size:11px; font-family:"Instrument Sans"; }
+  .grow { transform-box:fill-box; transform-origin:bottom; animation:g .6s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes g { from { transform:scaleY(0); } }
+  .seg-r { cursor:pointer; transition:opacity .15s; }
+  .seg-r:hover { filter:brightness(1.08); }
+  .tip { position:absolute; pointer-events:none; background:#23211c; color:#f4f1e8; border-radius:6px; padding:9px 11px; font-size:12px; min-width:200px; display:none; z-index:10; line-height:1.6; box-shadow:0 8px 24px #0003; }
+  .tip b { font-weight:500; display:block; margin-bottom:3px; font-size:12.5px; }
+  .tip .r { display:flex; align-items:center; gap:7px; } .tip .r i { width:8px; height:8px; border-radius:2px; } .tip .r span:last-child { margin-left:auto; padding-left:16px; font-variant-numeric:tabular-nums; }
+  .tip .tot { border-top:1px solid #ffffff2a; margin-top:4px; padding-top:4px; display:flex; justify-content:space-between; font-weight:500; }
+  .flag { cursor:pointer; }
+  .flag circle { transition:r .15s; }
+  .pop { position:absolute; width:330px; background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 14px 40px #3b2f1a26; padding:14px 16px 12px; z-index:12; display:none; }
+  .pop h5 { font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; } .pop h5 i { width:8px; height:8px; border-radius:50%; background:var(--up); }
+  .pop p { color:var(--ink2); line-height:1.6; margin:6px 0 8px; }
+  .pop .ln { display:flex; justify-content:space-between; padding:5px 0; border-top:1px solid var(--line2); font-size:12px; }
+  .pop .ln span:first-child { color:var(--ink2); } .pop .ln b { font-weight:500; }
+  .pop .x { position:absolute; right:10px; top:10px; width:20px; height:20px; color:var(--mute); }
+  .pop .go { margin-top:8px; color:var(--acc); font-weight:500; }
+
+  .low { display:grid; grid-template-columns:7fr 5fr; gap:56px; padding-top:34px; }
+  .low h3 { font-family:"Noto Serif SC",serif; font-size:17px; font-weight:600; margin-bottom:4px; }
+  .low .hs { color:var(--mute); font-size:12px; margin-bottom:12px; min-height:18px; }
+  .tags { display:flex; gap:8px; align-items:center; min-height:30px; margin-bottom:6px; flex-wrap:wrap; }
+  .tag { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 4px 0 11px; border:1px solid var(--ink); border-radius:13px; font-size:12px; animation:pop .2s both; }
+  @keyframes pop { from { transform:scale(.85); opacity:0; } }
+  .tag button { width:18px; height:18px; border-radius:50%; display:grid; place-items:center; } .tag button:hover { background:var(--ink); color:#fff; } .tag svg { width:8px; height:8px; }
+  .tags .clr { color:var(--acc); font-size:12px; margin-left:4px; }
+  .tags .hint { color:var(--mute); font-size:12px; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:right; font-weight:400; color:var(--mute); font-size:11.5px; padding:0 0 8px; border-bottom:1px solid var(--ink); }
+  th:first-child { text-align:left; }
+  td { height:38px; text-align:right; border-bottom:1px solid var(--line2); }
+  td:first-child { text-align:left; }
+  tr.r { cursor:pointer; } tr.r:hover td { background:#efebe0; }
+  td .nm { display:flex; align-items:center; gap:9px; } td .nm i { width:9px; height:9px; border-radius:2px; flex:none; }
+  td.amt { font-family:"Fraunces",serif; font-size:15px; }
+  .share { display:inline-flex; align-items:center; gap:8px; width:110px; justify-content:flex-end; }
+  .share i { display:block; height:4px; background:var(--ink); opacity:.75; border-radius:2px; }
+  tr.tt td { font-weight:600; border-bottom:0; border-top:1px solid var(--ink); }
+  .exp { margin-top:12px; color:var(--acc); font-size:12.5px; }
+  #wf { width:100%; height:330px; }
+  .wtip { position:absolute; pointer-events:none; background:#23211c; color:#f4f1e8; border-radius:6px; padding:8px 11px; font-size:12px; display:none; z-index:10; line-height:1.6; }
+  .note { position:fixed; right:12px; bottom:6px; font-size:10px; color:var(--mute); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <div class="wm"><svg viewBox="0 0 24 24" fill="none" stroke="#23211c" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21" stroke-linecap="round"/><path d="M7.5 12.5v-2M10 12.5v-4.5M12.5 12.5v-3M15 12.5v-5" stroke="#0f6b6b" stroke-linecap="round"/></svg>成本透镜</div>
+    <div class="tabs"><button class="on">费用分析</button><button data-d>预算</button><button data-d>标签管理</button><button data-d>报告</button></div>
+    <div class="sp"></div><div class="per">账期 <b>2026 年 10 月</b> · 币种 CNY</div>
+  </div>
+
+  <div class="sum">
+    <div><div class="lab">本月费用合计</div><div class="big"><span class="cur">¥</span><span class="n" id="bn">0</span><span class="u">万</span></div></div>
+    <div class="kv" id="kv"></div>
+  </div>
+
+  <div class="ctl">
+    <span class="lb">分组依据</span><div class="seg" id="seg"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="chartw"><svg id="chart"></svg><div class="tip" id="tip"></div><div class="pop" id="pop"></div></div>
+
+  <div class="low">
+    <div>
+      <h3 id="tt">费用构成</h3><div class="hs" id="ths"></div>
+      <div class="tags" id="tags"></div>
+      <table><thead><tr><th>名称</th><th>费用 (¥)</th><th>占比</th><th>较上月</th><th>日均 (¥)</th></tr></thead><tbody id="tb"></tbody></table>
+      <button class="exp" id="csv">导出 CSV</button>
+    </div>
+    <div style="position:relative"><h3>环比变化</h3><div class="hs" id="whs"></div><svg id="wf"></svg><div class="wtip" id="wtip"></div></div>
+  </div>
+</div>
+<div class="note">示例数据</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+
+/* ---------- 数据立方体：月 × 日 × 部门 × 厂商 × 资源类型 × 项目 ---------- */
+const DEPT = [["算法中心", 1], ["推荐平台部", .8], ["数据平台部", .55], ["基础架构部", .46], ["多模态组", .42], ["搜索工程部", .3], ["风控中心", .18], ["实验室", .12]];
+const VEND = [["穹云", 1], ["澜海云", .78], ["自建机房", .9], ["北辰算力", .5], ["星河租赁", .34], ["迅帆", .14]];
+const TYPE = [["GPU 实例", 1], ["CPU 实例", .24], ["对象存储", .15], ["网络带宽", .1], ["块存储", .08], ["数据库", .06], ["其他服务", .03]];
+const PROJ = { "算法中心": ["星图预训练", "对齐与评测"], "推荐平台部": ["精排模型 v7", "图召回"], "数据平台部": ["特征仓库", "离线数仓"], "基础架构部": ["调度系统", "镜像仓库"], "多模态组": ["视觉大模型", "语音合成"], "搜索工程部": ["语义检索", "查询改写"], "风控中心": ["反欺诈模型"], "实验室": ["预研 A", "预研 B"] };
+const DIMS = [["dept", "部门"], ["vend", "厂商"], ["type", "资源类型"], ["proj", "项目"]];
+const CUBE = [];
+(function () {
+  const R = rng(1031);
+  for (const mon of [9, 10]) { const days = mon === 9 ? 30 : 31, mf = mon === 9 ? .94 : 1;
+    for (let d = 1; d <= days; d++) for (const [dn, dw] of DEPT) for (const [vn, vw] of VEND) for (const [tn, tw] of TYPE) {
+      const hv = hash(dn + vn + tn), pairOk = (tn === "GPU 实例" ? (hv % 7 < 4) : (hv % 5 < 2)) || (vn === "穹云");
+      if (!pairOk) continue;
+      const ps = PROJ[dn], pr = ps[hash(dn + tn) % ps.length];
+      const wk = new Date(Date.UTC(2026, mon - 1, d)).getUTCDay(), wkf = (wk === 0 || wk === 6) ? (tn === "GPU 实例" ? .96 : .78) : 1;
+      const trend = 1 + (d / days - .5) * .08 * (hv % 3 - 1), gpuUp = tn === "GPU 实例" && dn === "算法中心" ? 1 + d / days * (mon === 10 ? .12 : .05) : 1;
+      let amt = dw * vw * tw * (hv % 9 + 4) * (.86 + R() * .28) * wkf * trend * gpuUp * mf * 1000;
+      CUBE.push({ m: mon, d, dept: dn, vend: vn, type: tn, proj: pr, amt });
+    } }
+  const tot = CUBE.filter((r) => r.m === 10).reduce((a, r) => a + r.amt, 0), k = 2846310 / tot;
+  CUBE.forEach((r) => { r.amt = Math.round(r.amt * k);
+    if (r.m === 10 && r.d === 17 && r.dept === "多模态组" && r.vend === "穹云" && r.type === "GPU 实例") r.amt += 118000;
+    if (r.m === 10 && r.d === 8 && r.dept === "数据平台部" && r.vend === "穹云" && r.type === "对象存储") r.amt += 72000; });
+})();
+const OCT = CUBE.filter((r) => r.m === 10), SEP = CUBE.filter((r) => r.m === 9);
+const sum = (a) => a.reduce((s, r) => s + r.amt, 0);
+
+/* ---------- 状态 ---------- */
+const S = { dim: "dept", fv: null, fday: null };
+const COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)", "var(--c6)"];
+const fmtWan = (v, d = 1) => (v / 10000).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtY = (v) => Math.round(v).toLocaleString("en-US");
+const dimName = (k) => DIMS.find((x) => x[0] === k)[1];
+function groups(dim) {
+  const t = {}; OCT.forEach((r) => t[r[dim]] = (t[r[dim]] || 0) + r.amt);
+  const rank = Object.entries(t).sort((a, b) => b[1] - a[1]).map((x) => x[0]), top = rank.slice(0, 5);
+  return { top, key: (r) => top.includes(r[dim]) ? r[dim] : "其他", names: rank.length > 5 ? [...top, "其他"] : top };
+}
+const colorOf = (G, n) => COLORS[n === "其他" ? 5 : G.names.indexOf(n)];
+
+/* ---------- 汇总 ---------- */
+const totOct = sum(OCT), totSep = sum(SEP);
+function renderSum() {
+  const dl = totOct - totSep, byDay = Array.from({ length: 31 }, (_, i) => sum(OCT.filter((r) => r.d === i + 1)));
+  const mx = Math.max(...byDay), mxd = byDay.indexOf(mx) + 1;
+  $("#kv").innerHTML = `<div><b>${dl >= 0 ? "+" : "−"}${fmtWan(Math.abs(dl))}<small>万</small></b><span>较 9 月 <i class="${dl >= 0 ? "up" : "down"}" style="font-style:normal">${dl >= 0 ? "↑" : "↓"} ${(Math.abs(dl) / totSep * 100).toFixed(1)}%</i></span></div>
+  <div><b>${fmtWan(totOct / 31)}<small>万 / 天</small></b><span>日均费用</span></div>
+  <div><b>${fmtWan(mx)}<small>万</small></b><span>峰值日 10 月 ${mxd} 日</span></div>`;
+  const t0 = performance.now(), target = totOct / 10000;
+  (function f(t) { const p = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - p, 3); $("#bn").textContent = (target * e).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); if (p < 1) requestAnimationFrame(f); })(t0);
+}
+
+/* ---------- 主图 ---------- */
+const ANOM = [{ day: 8, why: "跨区域数据拷贝产生出口流量，对象存储当日费用约为平日的 14 倍。" }, { day: 17, why: "竞价实例被回收后回退到按需计费，GPU 实例当日费用约为平日的 10 倍以上。" }];
+let hidden = new Set(), chartG = null;
+function anomInfo(a) {
+  const day = OCT.filter((r) => r.d === a.day), others = OCT.filter((r) => r.d !== a.day), cells = {};
+  day.forEach((r) => { const k = [r.dept, r.vend, r.type].join(" · "); cells[k] = { d: (cells[k]?.d || 0) + r.amt }; });
+  Object.keys(cells).forEach((k) => { const [x, y, z] = k.split(" · "); cells[k].avg = sum(others.filter((r) => r.dept === x && r.vend === y && r.type === z)) / 30; cells[k].ex = cells[k].d - cells[k].avg; });
+  const top = Object.entries(cells).sort((p, q) => q[1].ex - p[1].ex).slice(0, 3), total = sum(day), avg = sum(others) / 30;
+  return { top, total, avg };
+}
+function renderChart(animate = true) {
+  const svg = $("#chart"), W = svg.clientWidth, H = 330, L = 44, R = 6, T = 30, B = 26, pw = W - L - R, ph = H - T - B, G = groups(S.dim); chartG = G;
+  const days = Array.from({ length: 31 }, (_, i) => { const o = {}; G.names.forEach((n) => o[n] = 0); OCT.filter((r) => r.d === i + 1).forEach((r) => o[G.key(r)] += r.amt); return o; });
+  const tots = days.map((o) => G.names.reduce((s, n) => s + (hidden.has(n) ? 0 : o[n]), 0));
+  const step = 40000, top = Math.ceil(Math.max(...tots) / step) * step, Y = (v) => T + ph - v / top * ph, bw = pw / 31;
+  let g = "";
+  for (let v = 0; v <= top; v += top / 4) { const y = Y(v); g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${v === 0 ? "#23211c" : "#e4dfd2"}"/><text class="ax" x="${L - 8}" y="${y + 4}" text-anchor="end">${v === 0 ? "0" : fmtWan(v, 0) + " 万"}</text>`; }
+  days.forEach((o, i) => {
+    let y0 = Y(0), x = L + i * bw + bw * .14, w = bw * .72;
+    const dimmed = S.fday && S.fday !== i + 1;
+    G.names.forEach((n) => { if (hidden.has(n)) return; const h = o[n] / top * ph; if (h <= 0) return; y0 -= h;
+      const on = (!S.fv || S.fv === n) && !dimmed;
+      g += `<rect class="seg-r ${animate ? "grow" : ""}" data-d="${i + 1}" data-n="${n}" x="${x}" y="${y0}" width="${w}" height="${Math.max(.5, h - .8)}" fill="${colorOf(G, n)}" opacity="${on ? 1 : .22}" style="animation-delay:${i * 14}ms"/>`; });
+    if ((i + 1) % 2 === 1 || i === 30) g += `<text class="ax" x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${i + 1}</text>`;
+  });
+  g += `<text class="ax" x="${L}" y="${H - 8}" text-anchor="end" style="display:none"></text>`;
+  ANOM.forEach((a) => { const cx = L + (a.day - 1) * bw + bw / 2, cy = Y(tots[a.day - 1]) - 14; g += `<g class="flag" data-day="${a.day}"><line x1="${cx}" x2="${cx}" y1="${cy + 7}" y2="${cy + 12}" stroke="#d8553c"/><circle cx="${cx}" cy="${cy}" r="8" fill="#d8553c"/><path d="M${cx} ${cy - 3.6}v4.2M${cx} ${cy + 3.2}v.1" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></g>`; });
+  svg.innerHTML = g;
+  $("#legend").innerHTML = G.names.map((n) => `<button class="${hidden.has(n) ? "dim" : ""}" data-n="${n}"><i style="background:${colorOf(G, n)}"></i>${n}</button>`).join("");
+  $("#legend").querySelectorAll("button").forEach((b) => b.onclick = () => { b.dataset.n; hidden.has(b.dataset.n) ? hidden.delete(b.dataset.n) : hidden.add(b.dataset.n); if (hidden.size === G.names.length) hidden.clear(); renderChart(false); });
+  const tip = $("#tip"), box = $(".chartw");
+  svg.querySelectorAll(".seg-r").forEach((r) => {
+    r.onmousemove = (e) => { const d = +r.dataset.d, o = days[d - 1], bx = box.getBoundingClientRect();
+      tip.innerHTML = `<b>10 月 ${d} 日</b>` + G.names.filter((n) => !hidden.has(n)).map((n) => `<div class="r" style="${n === r.dataset.n ? "font-weight:600" : "opacity:.75"}"><i style="background:${colorOf(G, n)}"></i><span>${n}</span><span>${fmtY(o[n])}</span></div>`).join("") + `<div class="tot"><span>合计</span><span>¥ ${fmtY(tots[d - 1])}</span></div>`;
+      tip.style.display = "block"; const tx = e.clientX - bx.left + 16; tip.style.left = (tx > bx.width - 240 ? tx - 250 : tx) + "px"; tip.style.top = Math.max(0, e.clientY - bx.top - 40) + "px"; };
+    r.onmouseleave = () => tip.style.display = "none";
+    r.onclick = () => { S.fv = r.dataset.n; S.fday = +r.dataset.d; $("#pop").style.display = "none"; renderAll(false); };
+  });
+  svg.querySelectorAll(".flag").forEach((f) => f.onclick = (e) => { e.stopPropagation(); openPop(+f.dataset.day, f, bw); });
+}
+function openPop(day, el, bw) {
+  const a = ANOM.find((x) => x.day === day), info = anomInfo(a), pop = $("#pop"), bx = $(".chartw").getBoundingClientRect(), fr = el.getBoundingClientRect();
+  pop.innerHTML = `<button class="x" id="px">✕</button><h5><i></i>10 月 ${day} 日 费用异常</h5><p>当日合计 ¥ ${fmtY(info.total)}，是其余日均值 ¥ ${fmtY(info.avg)} 的 ${(info.total / info.avg).toFixed(1)} 倍。${a.why}</p>` +
+    info.top.map(([k, v]) => `<div class="ln"><span>${k}</span><b>+¥ ${fmtY(v.ex)}</b></div>`).join("") + `<button class="go" id="pgo">只看这一天 →</button>`;
+  pop.style.display = "block"; let left = fr.left - bx.left + 20; if (left > bx.width - 350) left = fr.left - bx.left - 350; pop.style.left = left + "px"; pop.style.top = "36px";
+  $("#px").onclick = () => pop.style.display = "none"; $("#pgo").onclick = () => { S.fday = day; S.fv = null; pop.style.display = "none"; renderAll(false); };
+}
+document.addEventListener("click", (e) => { if (!e.target.closest("#pop") && !e.target.closest(".flag")) $("#pop").style.display = "none"; });
+
+/* ---------- 表格 ---------- */
+let tableRows = [];
+function renderTable() {
+  const G = groups(S.dim), filtered = S.fv || S.fday;
+  let cur = OCT, prev = SEP;
+  if (S.fv) { cur = cur.filter((r) => G.key(r) === S.fv); prev = prev.filter((r) => G.key(r) === S.fv); }
+  if (S.fday) { cur = cur.filter((r) => r.d === S.fday); prev = []; }
+  const dim2 = S.dim === "type" ? "dept" : "type", GK = filtered ? groups(dim2) : G, kdim = filtered ? dim2 : S.dim;
+  const agg = (rows) => { const o = {}; rows.forEach((r) => { const k = GK.key(r); o[k] = (o[k] || 0) + r.amt; }); return o; };
+  const a = agg(cur), b = agg(prev), total = sum(cur), ptotal = sum(prev), ndays = S.fday ? 1 : 31;
+  const names = (GK.names).filter((n) => a[n]).sort((x, y) => (n(x) - n(y)));
+  function n(x) { return -(a[x] || 0) + (x === "其他" ? 1e12 : 0); }
+  tableRows = names.map((nm) => [nm, a[nm], a[nm] / total, S.fday ? null : (b[nm] ? a[nm] / b[nm] - 1 : null), a[nm] / ndays]);
+  const dc = (v) => v == null ? '<span style="color:var(--mute)">—</span>' : `<span class="${v >= 0 ? "up" : "down"}">${v >= 0 ? "↑" : "↓"} ${(Math.abs(v) * 100).toFixed(1)}%</span>`;
+  $("#tb").innerHTML = names.map((nm) => `<tr class="r" data-n="${nm}"><td><div class="nm"><i style="background:${colorOf(GK, nm)}"></i>${nm}</div></td><td class="amt">${fmtY(a[nm])}</td><td><span class="share"><i style="width:${a[nm] / total * 70}px"></i>${(a[nm] / total * 100).toFixed(1)}%</span></td><td>${dc(S.fday ? null : (b[nm] ? a[nm] / b[nm] - 1 : null))}</td><td class="amt">${fmtY(a[nm] / ndays)}</td></tr>`).join("")
+    + `<tr class="tt"><td>合计</td><td class="amt">${fmtY(total)}</td><td>100%</td><td>${dc(S.fday ? null : ptotal ? total / ptotal - 1 : null)}</td><td class="amt">${fmtY(total / ndays)}</td></tr>`;
+  $("#tt").textContent = filtered ? `${[S.fv, S.fday ? `10 月 ${S.fday} 日` : null].filter(Boolean).join(" · ")} 的构成` : `按${dimName(S.dim)}的费用构成`;
+  $("#ths").textContent = filtered ? `再按${dimName(kdim)}拆开，合计 ¥ ${fmtY(total)}` : `共 ${names.length} 项，其余合并为「其他」`;
+  $("#tags").innerHTML = filtered ? [S.fv ? [`${dimName(S.dim)}：${S.fv}`, "fv"] : null, S.fday ? [`10 月 ${S.fday} 日`, "fday"] : null].filter(Boolean).map(([t, k]) => `<span class="tag">${t}<button data-k="${k}"><svg viewBox="0 0 8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 1l6 6M7 1L1 7"/></svg></button></span>`).join("") + `<button class="clr" id="clr">清除全部</button>` : `<span class="hint">点主图里的色块，或点下面的行，按筛选查看明细</span>`;
+  $("#tags").querySelectorAll(".tag button").forEach((x) => x.onclick = () => { S[x.dataset.k] = null; renderAll(false); });
+  const c = $("#clr"); if (c) c.onclick = () => { S.fv = S.fday = null; renderAll(false); };
+  $("#tb").querySelectorAll("tr.r").forEach((tr) => tr.onclick = () => { if (!filtered) { S.fv = tr.dataset.n; renderAll(false); } });
+}
+$("#csv").onclick = () => { const csv = "名称,费用,占比,较上月,日均\n" + tableRows.map((r) => [r[0], r[1], (r[2] * 100).toFixed(1) + "%", r[3] == null ? "" : (r[3] * 100).toFixed(1) + "%", Math.round(r[4])].join(",")).join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "成本明细.csv"; a.click(); };
+
+/* ---------- 环比瀑布 ---------- */
+function renderWF() {
+  const svg = $("#wf"), W = svg.clientWidth, H = 330, G = groups(S.dim), L = 8, R = 8, T = 26, B = 52, pw = W - L - R, ph = H - T - B;
+  const agg = (rows) => { const o = {}; G.names.forEach((n) => o[n] = 0); rows.forEach((r) => o[G.key(r)] += r.amt); return o; }, a = agg(OCT), b = agg(SEP);
+  const deltas = G.names.map((n) => ({ n, d: a[n] - b[n], a: a[n], b: b[n] })).sort((x, y) => y.d - x.d);
+  const items = [{ n: "9 月", v: totSep, t: 1 }, ...deltas.map((x) => ({ n: x.n, d: x.d, x })), { n: "10 月", v: totOct, t: 1 }];
+  let run = totSep, lo = Infinity, hi = -Infinity; items.forEach((it) => { if (it.t) { lo = Math.min(lo, it.v); hi = Math.max(hi, it.v); } else { lo = Math.min(lo, run, run + it.d); hi = Math.max(hi, run, run + it.d); run += it.d; } });
+  const base = Math.floor((lo - (hi - lo) * .6) / 100000) * 100000, top = Math.ceil((hi + (hi - lo) * .12) / 50000) * 50000, Y = (v) => T + ph - (v - base) / (top - base) * ph, bw = pw / items.length;
+  let g = `<line x1="${L}" x2="${W - R}" y1="${Y(base)}" y2="${Y(base)}" stroke="#23211c"/><text class="ax" x="${L}" y="${H - 4}" >纵轴自 ¥ ${fmtWan(base, 0)} 万起</text>`; run = totSep;
+  items.forEach((it, i) => {
+    const x = L + i * bw + bw * .16, w = bw * .68; let y1, y2, col, lab;
+    if (it.t) { y1 = Y(it.v); y2 = Y(base); col = "#23211c"; lab = fmtWan(it.v); } else { const s = run, e = run + it.d; y1 = Y(Math.max(s, e)); y2 = Y(Math.min(s, e)); col = it.d >= 0 ? "var(--up)" : "var(--acc)"; lab = (it.d >= 0 ? "+" : "−") + fmtWan(Math.abs(it.d)); run = e; }
+    g += `<rect class="${"grow"}" data-i="${i}" x="${x}" y="${y1}" width="${w}" height="${Math.max(1.5, y2 - y1)}" fill="${col}" style="animation-delay:${i * 50}ms;cursor:default"/>`;
+    g += `<text class="ax" x="${x + w / 2}" y="${y1 - 6}" text-anchor="middle" style="fill:#23211c;font-weight:500">${lab}</text>`;
+    const nm = it.n.length > 5 ? it.n.slice(0, 5) + "…" : it.n; g += `<text class="ax" x="${x + w / 2}" y="${H - 22}" text-anchor="middle" style="fill:#5f5b51">${nm}</text>`;
+    if (i < items.length - 1) { const yy = Y(it.t ? it.v : run); g += `<line x1="${x + w}" x2="${x + bw + bw * .16 - bw * .16 + bw * .16}" y1="${yy}" y2="${yy}" stroke="#b9b3a3" stroke-dasharray="2 2"/>`; }
+  });
+  svg.innerHTML = g;
+  const inc = deltas.filter((x) => x.d > 0).reduce((s, x) => s + x.d, 0);
+  $("#whs").textContent = `按${dimName(S.dim)}拆分：9 月 ¥ ${fmtWan(totSep)} 万 → 10 月 ¥ ${fmtWan(totOct)} 万，上升项合计 +${fmtWan(inc)} 万`;
+  const wt = $("#wtip"), bx = svg.parentNode.getBoundingClientRect();
+  svg.querySelectorAll("rect").forEach((r) => { const it = items[+r.dataset.i]; r.onmousemove = (e) => {
+    wt.innerHTML = it.t ? `<b>${it.n}</b>¥ ${fmtY(it.v)}` : `<b>${it.n}</b>9 月 ¥ ${fmtY(it.x.b)}<br>10 月 ¥ ${fmtY(it.x.a)}<br>变化 ${it.d >= 0 ? "+" : "−"}¥ ${fmtY(Math.abs(it.d))}（${it.x.b ? (it.d / it.x.b * 100).toFixed(1) : "—"}%）`;
+    wt.style.display = "block"; wt.style.left = Math.min(e.clientX - bx.left + 14, bx.width - 190) + "px"; wt.style.top = e.clientY - bx.top - 20 + "px"; }; r.onmouseleave = () => wt.style.display = "none"; });
+}
+
+/* ---------- 总控 ---------- */
+function renderSeg() { $("#seg").innerHTML = DIMS.map(([k, n]) => `<button class="${k === S.dim ? "on" : ""}" data-k="${k}">${n}</button>`).join(""); $("#seg").querySelectorAll("button").forEach((b) => b.onclick = () => { S.dim = b.dataset.k; S.fv = null; hidden.clear(); renderSeg(); renderAll(true); }); }
+function renderAll(animate) { renderChart(animate); renderTable(); renderWF(); }
+document.querySelectorAll("[data-d]").forEach((b) => b.onclick = () => {});
+window.addEventListener("resize", () => renderAll(false));
+renderSum(); renderSeg(); renderAll(true);
+</script>
+</body>
+</html>

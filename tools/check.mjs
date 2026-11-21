@@ -14,18 +14,20 @@ let bad = 0;
 const fail = (m) => { bad++; console.log("✗", m); };
 
 const pages = readdirSync(G).filter((f) => /^s-.*\.html$/.test(f)).map((f) => f.slice(2, -5));
+const webPages = readdirSync(G).filter((f) => /^w-.*\.html$/.test(f)).map((f) => f.slice(0, -5));
 const skill = read("SKILL.md"), stylesJs = read("gallery/styles.js");
-for (const id of pages) {
+for (const id of [...pages, ...webPages]) {
+  const web = id.startsWith("w-");
   if (!existsSync(join(ROOT, "styles", `${id}.md`))) fail(`${id}: 缺 styles/${id}.md`);
   else {
     const md = read(`styles/${id}.md`);
-    for (const s of SECTIONS) if (!md.includes(s)) fail(`${id}: 规格缺「${s.slice(3)}」`);
+    for (const s of web ? [...SECTIONS, "## 学什么交互"] : SECTIONS) if (!md.includes(s)) fail(`${id}: 规格缺「${s.slice(3)}」`);
     if (!/出处：/.test(md)) fail(`${id}: 规格缺出处`);
   }
   if (!existsSync(join(G, "shots", `${id}.png`))) fail(`${id}: 缺标准截图 gallery/shots/${id}.png（跑 node tools/snap.mjs ${id}）`);
   if (!stylesJs.includes(`id: "${id}"`)) fail(`${id}: gallery/styles.js 里没有这一项`);
   if (!new RegExp(`\\|\\s*${id}\\s*\\|`).test(skill)) fail(`${id}: SKILL.md 目录表里没有这一行`);
-  const html = readFileSync(join(G, `s-${id}.html`), "utf8");
+  const html = readFileSync(join(G, web ? `${id}.html` : `s-${id}.html`), "utf8");
   for (const m of html.matchAll(/src="([^"]+\.js)"/g)) if (!/^https?:/.test(m[1]) && !existsSync(join(G, m[1]))) fail(`${id}: 引用的 ${m[1]} 不存在`);
 }
 for (const f of readdirSync(G).filter((f) => /^v-.*\.html$/.test(f))) {
@@ -34,11 +36,11 @@ for (const f of readdirSync(G).filter((f) => /^v-.*\.html$/.test(f))) {
   if (!/window\.seek\s*=/.test(html)) fail(`${f}: 视频页没有 window.seek`);
   if (!existsSync(join(G, "shots")) || !readdirSync(join(G, "shots")).some((x) => x.startsWith(f.replace(/\.html$/, "-")))) fail(`${f}: 缺标准帧 shots/${f.replace(/\.html$/, "")}-<t>.png`);
 }
-for (const f of readdirSync(join(ROOT, "styles"))) if (!pages.includes(f.replace(/\.md$/, ""))) fail(`styles/${f} 没有对应的参考页`);
+for (const f of readdirSync(join(ROOT, "styles"))) if (![...pages, ...webPages].includes(f.replace(/\.md$/, ""))) fail(`styles/${f} 没有对应的参考页`);
 for (const f of ["gallery/common.js", "gallery/engines.js", "gallery/styles.js", "tools/snap.mjs"]) {
   try { execFileSync(process.execPath, ["--check", join(ROOT, f)], { stdio: "pipe" }); } catch (e) { fail(`${f} 语法错：${String(e.stderr).split("\n")[0]}`); }
 }
 const ver = existsSync(join(ROOT, "VERSION")) ? read("VERSION").trim() : "?";
 if (!read("CHANGELOG.md").includes(`## ${ver}`)) fail(`CHANGELOG.md 里没有当前版本 ${ver}`);
-console.log(bad ? `\n${bad} 处问题` : `✓ ${pages.length} 种风格齐全，版本 ${ver}`);
+console.log(bad ? `\n${bad} 处问题` : `✓ ${pages.length + webPages.length} 种风格齐全（手机 ${pages.length}、桌面 Web ${webPages.length}），版本 ${ver}`);
 process.exit(bad ? 1 : 0);

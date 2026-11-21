@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>糊涂节 2026 · 小玩意儿创作者市集</title>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&family=Rubik+Mono+One&family=Noto+Sans+SC:wght@500;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--cream:#fff1d6;--k:#111;--red:#ff4a2b;--blue:#2d4bff;--yel:#ffd21a;--pink:#ff90cf;--grn:#17c964;--vio:#8b5cff;--f:"ZCOOL KuaiLe","Noto Sans SC",sans-serif;--h:"Ma Shan Zheng","Noto Sans SC",cursive;--m:"Rubik Mono One","Noto Sans SC",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--cream);overflow-x:hidden}
+body{font:500 15px/1.5 "Noto Sans SC",sans-serif;color:var(--k);background:var(--cream);overflow-x:hidden;min-width:1100px}
+#bgd{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.mq{height:38px;background:var(--k);color:var(--cream);overflow:hidden;white-space:nowrap;position:relative;z-index:3;display:flex;align-items:center;transform:rotate(-.0deg)}
+.mq div{display:inline-block;animation:mq 22s linear infinite;font:400 17px var(--f);letter-spacing:.06em}
+.mq b{color:var(--yel);margin:0 14px;font-weight:400}
+@keyframes mq{to{transform:translateX(-50%)}}
+.hero{position:relative;height:862px;z-index:2}
+nav{position:absolute;left:44px;right:44px;top:22px;display:flex;align-items:center;gap:14px;z-index:6}
+.logo{font:400 28px var(--f);background:var(--k);color:var(--yel);padding:4px 16px;border-radius:10px;transform:rotate(-3deg)}
+.pill{font:400 18px var(--f);padding:6px 20px;border:3px solid var(--k);border-radius:99px;background:#fff;cursor:pointer;box-shadow:4px 4px 0 var(--k);transition:transform .12s;user-select:none}
+.pill:hover{animation:wig .45s}
+.pill:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--k)}
+.pill.y{background:var(--yel)}.pill.p{background:var(--pink)}.pill.g{background:var(--grn)}
+nav .sp{flex:1}
+@keyframes wig{0%{transform:rotate(0) scale(1)}20%{transform:rotate(-6deg) scale(1.08)}40%{transform:rotate(5deg) scale(1.1)}60%{transform:rotate(-4deg) scale(1.08)}80%{transform:rotate(2deg) scale(1.05)}100%{transform:rotate(0) scale(1)}}
+.title{position:absolute;left:52px;top:112px;z-index:4;white-space:nowrap}
+.title .row{display:flex;gap:4px}
+.ch{display:inline-block;font:400 236px/.95 var(--f);color:var(--k);padding:0 6px;border-radius:30px;-webkit-text-stroke:0;position:relative;cursor:pointer;transform:rotate(var(--r))}
+.ch.a{background:var(--yel)}.ch.b{background:var(--pink)}.ch.c{background:var(--blue);color:#fff}
+.ch{border:5px solid var(--k);box-shadow:10px 10px 0 var(--k)}
+.ch.j{animation:jmp .6s cubic-bezier(.3,1.6,.5,1)}
+.ch:hover{animation:jmp .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes jmp{0%{transform:translateY(0) rotate(var(--r))}35%{transform:translateY(-46px) rotate(calc(var(--r) * -1.5)) scale(1.04)}70%{transform:translateY(6px) rotate(var(--r)) scale(.98)}100%{transform:translateY(0) rotate(var(--r))}}
+.sub{display:inline-block;margin:36px 0 0 14px;background:var(--k);color:#fff;font:400 44px var(--f);padding:6px 24px;transform:rotate(-2deg);border-radius:6px;position:relative}
+.sub em{font-style:normal;color:var(--yel)}
+.note{position:absolute;font:400 30px var(--h);color:var(--k);z-index:5;pointer-events:none;white-space:nowrap}
+.tk{position:absolute;left:852px;top:104px;width:430px;z-index:4;background:#fff;border:5px solid var(--k);border-radius:22px;box-shadow:10px 10px 0 var(--k);transform:rotate(2.5deg);display:flex}
+.tk .l{flex:1;padding:18px 20px 20px;border-right:4px dashed var(--k)}
+.tk .r{width:92px;background:var(--red);color:#fff;font:400 22px var(--f);writing-mode:vertical-rl;text-align:center;padding:12px 0;letter-spacing:.2em;border-radius:0 16px 16px 0}
+.tk small{font:400 14px var(--m);color:#555;letter-spacing:.04em}
+.tk h3{font:400 52px/1 var(--f);margin:8px 0 6px}
+.tk p{font-size:15px;font-weight:900;line-height:1.5}
+.cta{margin-top:14px;display:inline-block;font:400 30px var(--f);background:var(--yel);padding:8px 26px;border:4px solid var(--k);border-radius:16px;box-shadow:6px 6px 0 var(--k);cursor:pointer;user-select:none}
+.cta:hover{animation:wig .5s}
+.cta:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--k)}
+.cnt{display:inline-block;margin-left:10px;font:400 14px var(--m)}
+.pol{position:absolute;z-index:3;background:#fff;border:4px solid var(--k);padding:10px 10px 36px;box-shadow:7px 7px 0 var(--k);width:224px;cursor:grab}
+.pol img{display:block;width:100%;height:170px;object-fit:cover;border:3px solid var(--k);pointer-events:none}
+.pol span{position:absolute;left:12px;bottom:8px;font:400 24px var(--h)}
+.pol i{position:absolute;left:50%;top:-16px;width:80px;height:26px;margin-left:-40px;background:rgba(255,210,26,.85);border:2px solid var(--k);transform:rotate(-4deg)}
+.cap{position:absolute;left:44px;bottom:8px;font-size:11px;color:#444;z-index:5}
+.st{position:absolute;z-index:5;cursor:grab;touch-action:none;user-select:none;filter:drop-shadow(5px 5px 0 var(--k))}
+.st.dr{cursor:grabbing;z-index:60}
+.st svg{display:block;overflow:visible;pointer-events:none}
+.st.back{transition:transform .7s cubic-bezier(.3,2.1,.5,1)}
+.pop{animation:pop .5s cubic-bezier(.3,2,.5,1)}
+@keyframes pop{from{opacity:0;scale:.2}to{opacity:1;scale:1}}
+.spin{animation:sp 9s linear infinite;transform-origin:center}
+@keyframes sp{to{transform:rotate(360deg)}}
+section.sc{position:relative;z-index:2;padding:70px 44px}
+section.sc h2{font:400 84px/1 var(--f);display:inline-block;background:var(--k);color:#fff;padding:2px 26px;transform:rotate(-1.5deg);border-radius:12px;margin-bottom:40px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.cd{border:5px solid var(--k);border-radius:24px;padding:22px 24px 24px;box-shadow:9px 9px 0 var(--k);background:#fff;transition:transform .2s cubic-bezier(.3,2,.5,1)}
+.cd:hover{transform:translate(-4px,-6px) rotate(-1deg);box-shadow:13px 15px 0 var(--k)}
+.cd:nth-child(3n+1){background:var(--pink)}.cd:nth-child(3n+2){background:var(--grn)}.cd:nth-child(3n){background:var(--yel)}
+.cd small{font:400 15px var(--m)}.cd h4{font:400 36px/1.15 var(--f);margin:8px 0}.cd p{font-weight:900}
+footer{position:relative;z-index:2;background:var(--k);color:var(--cream);padding:50px 44px;font:400 60px/1.1 var(--f)}
+footer small{display:block;font:500 12px "Noto Sans SC";margin-top:20px;color:#999}
+</style>
+</head>
+<body>
+<canvas id="bgd"></canvas>
+<div class="mq"><div id="mqi"></div></div>
+<section class="hero" id="hero">
+  <nav><div class="logo">糊涂节</div><div class="pill y">日程</div><div class="pill p">摊位</div><div class="pill g">门票</div><div class="pill">地图</div><div class="sp"></div><div class="pill" style="background:var(--red);color:#fff">登录</div></nav>
+  <div class="title" id="tt">
+    <div class="row"><span class="ch a" style="--r:-3deg">糊</span><span class="ch b" style="--r:2.5deg">涂</span><span class="ch c" style="--r:-2deg">节</span></div>
+    <div class="sub">小玩意儿创作者市集 <em>第 3 届</em></div>
+  </div>
+  <div class="note" style="left:70px;top:408px;transform:rotate(-4deg);display:none"></div>
+  <div class="tk" id="tk"><div class="l"><small>11.28 FRI — 11.29 SAT</small><h3>两天，<br>500 个摊</h3><p>上海 · 徐汇滨江 3 号仓库<br>10:00 — 20:00，不排队，不收门票。</p><div class="cta" id="cta">领免费票<span class="cnt" id="cnt">已领 12,847</span></div></div><div class="r">ADMIT ONE</div></div>
+  <div class="pol" style="left:880px;top:508px;transform:rotate(-5deg)"><i></i><img src="img/real/rawcam-dogs.jpg" alt=""><span>狗狗也能入场</span></div>
+  <div class="pol" style="left:1070px;top:560px;transform:rotate(4deg)"><i style="background:rgba(255,144,207,.9)"></i><img src="img/real/rawcam-cheers.jpg" alt=""><span>碰杯！</span></div>
+  <div class="pol" style="left:640px;top:600px;transform:rotate(-2deg);width:208px"><i style="background:rgba(23,201,100,.85)"></i><img src="img/real/campaign-sun.jpg" alt=""><span>晒太阳摊</span></div>
+  <div class="cap">示意图 · Spencer Davis / Nathan Dumlao / Baylee Gramling · 示例数据</div>
+</section>
+<section class="sc"><h2>两天都有啥</h2>
+ <div class="cards">
+  <div class="cd"><small>FRI 10:00</small><h4>开市鼓点</h4><p>全场敲锅盖。谁敲得最响，谁的摊位今天免费加一张桌子。</p></div>
+  <div class="cd"><small>FRI 14:00</small><h4>手作工作坊 × 12</h4><p>刺绣、陶泥、做耳环、给旧书包上色。报名现场排，名额不多。</p></div>
+  <div class="cd"><small>FRI 19:00</small><h4>摊主夜谈</h4><p>十位摊主讲讲自己是怎么靠一个小玩意儿活下来的。</p></div>
+  <div class="cd"><small>SAT 11:00</small><h4>交换日</h4><p>带一样不用的东西来，换一样别人不要的。不换钱。</p></div>
+  <div class="cd"><small>SAT 15:00</small><h4>宠物游行</h4><p>狗、猫、一只会走路的鹦鹉。穿得越离谱越好。</p></div>
+  <div class="cd"><small>SAT 18:30</small><h4>闭市大抽奖</h4><p>凭免费票抽签，奖品是摊主们捐的各种怪东西。</p></div>
+ </div></section>
+<footer>别犹豫，来逛。<small>示例数据 · 虚构活动 · 页面内的贴纸都可以拖动，点空白处会长出新的</small></footer>
+
+<script>
+window.__e=[];addEventListener("error",e=>__e.push(e.message+" @"+e.lineno));
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const COL=["#ff4a2b","#2d4bff","#ffd21a","#ff90cf","#17c964","#8b5cff","#fff"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+$("#mqi").innerHTML=("<span>免费入场</span><b>✦</b><span>500 个摊位</span><b>✦</b><span>11.28 — 11.29</span><b>✦</b><span>徐汇滨江</span><b>✦</b><span>带狗来</span><b>✦</b>").repeat(8);
+// ---- 背景点阵（canvas）
+(function(){const c=$("#bgd");function d(){c.width=innerWidth;c.height=document.body.scrollHeight;const x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);x.fillStyle="rgba(17,17,17,.10)";for(let j=0;j<c.height;j+=26)for(let i=(j/26%2)*13;i<c.width;i+=26){x.beginPath();x.arc(i,j,2.2,0,7);x.fill()}}
+ d();addEventListener("resize",d);setTimeout(d,1500)})();
+// ---- 贴纸工厂（SVG 手写）
+const S4='stroke="#111" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
+function burst(n,r1,r2){let p="";for(let i=0;i<n*2;i++){const a=i*Math.PI/n,r=i%2?r1:r2;p+=(i?"L":"M")+(100+Math.cos(a)*r).toFixed(1)+" "+(100+Math.sin(a)*r).toFixed(1)}return p+"Z"}
+const F={
+ burst:(c,t)=>`<svg width="150" height="150" viewBox="0 0 200 200"><path d="${burst(14,66,96)}" fill="${c}" ${S4}/><text x="100" y="96" text-anchor="middle" font-family="ZCOOL KuaiLe" font-size="38" fill="#111">${t||"第 3 届"}</text><text x="100" y="130" text-anchor="middle" font-family="Rubik Mono One" font-size="16" fill="#111">2026</text></svg>`,
+ smile:(c)=>`<svg width="110" height="110" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="${c}" ${S4}/><circle cx="42" cy="48" r="7" fill="#111"/><circle cx="78" cy="48" r="7" fill="#111"/><path d="M30 70q30 34 60 0" fill="none" ${S4}/></svg>`,
+ bolt:(c)=>`<svg width="90" height="130" viewBox="0 0 90 130"><path d="M52 6 8 74h30l-8 50 52-72H48z" fill="${c}" ${S4}/></svg>`,
+ flower:(c)=>`<svg width="130" height="130" viewBox="0 0 130 130">${[0,1,2,3,4,5,6,7].map(i=>{const a=i*Math.PI/4;return `<circle cx="${65+Math.cos(a)*34}" cy="${65+Math.sin(a)*34}" r="22" fill="${c}" ${S4}/>`}).join("")}<circle cx="65" cy="65" r="20" fill="#ffd21a" ${S4}/></svg>`,
+ heart:(c)=>`<svg width="110" height="100" viewBox="0 0 110 100"><path d="M55 92C10 62 6 30 24 16c14-10 28-4 31 12 3-16 17-22 31-12 18 14 14 46-31 76z" fill="${c}" ${S4}/></svg>`,
+ badge:(c)=>`<svg width="170" height="170" viewBox="0 0 170 170"><circle cx="85" cy="85" r="78" fill="${c}" ${S4}/><g class="spin"><defs><path id="cp${Math.random().toString(36).slice(2,6)}" d=""/></defs></g><circle cx="85" cy="85" r="46" fill="#fff" ${S4}/><text x="85" y="82" text-anchor="middle" font-family="ZCOOL KuaiLe" font-size="26">免费</text><text x="85" y="108" text-anchor="middle" font-family="ZCOOL KuaiLe" font-size="26">入场</text></svg>`,
+ cloud:(c,t)=>`<svg width="190" height="120" viewBox="0 0 190 120"><path d="M40 98C8 98 4 62 30 56c-2-28 34-40 52-22 14-22 54-14 56 14 34-2 44 38 14 50-8 4-20 2-30 2z" fill="${c}" ${S4}/><text x="96" y="76" text-anchor="middle" font-family="ZCOOL KuaiLe" font-size="25">${t||"限量 500 摊"}</text></svg>`,
+ arrow:()=>`<svg width="190" height="110" viewBox="0 0 190 110"><path d="M8 20C50 0 80 60 112 40S150 30 168 64" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/><path d="M142 66l28-4-12-26" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><text x="12" y="98" font-family="Ma Shan Zheng" font-size="28" fill="#111">往下滑，看日程</text></svg>`,
+ sun:(c)=>`<svg width="130" height="130" viewBox="0 0 130 130">${Array.from({length:12},(_,i)=>{const a=i*Math.PI/6;return `<path d="M${65+Math.cos(a)*44} ${65+Math.sin(a)*44}L${65+Math.cos(a)*62} ${65+Math.sin(a)*62}" ${S4}/>`}).join("")}<circle cx="65" cy="65" r="34" fill="${c}" ${S4}/><circle cx="54" cy="60" r="4" fill="#111"/><circle cx="76" cy="60" r="4" fill="#111"/><path d="M52 74q13 12 26 0" fill="none" ${S4}/></svg>`,
+ bubble:(c,t)=>`<svg width="170" height="110" viewBox="0 0 170 110"><path d="M20 10h130a14 14 0 0 1 14 14v40a14 14 0 0 1-14 14H80L52 104V78H20A14 14 0 0 1 6 64V24A14 14 0 0 1 20 10z" fill="${c}" ${S4}/><text x="85" y="56" text-anchor="middle" font-family="ZCOOL KuaiLe" font-size="30">${t||"来嘛来嘛"}</text></svg>`,
+ star:(c)=>`<svg width="100" height="100" viewBox="0 0 200 200"><path d="${burst(5,40,95).replace(/Z$/,"Z")}" fill="${c}" ${S4} transform="rotate(-18 100 100)"/></svg>`,
+ eye:()=>`<svg width="130" height="80" viewBox="0 0 130 80"><path d="M6 40C30 6 100 6 124 40 100 74 30 74 6 40z" fill="#fff" ${S4}/><circle cx="65" cy="40" r="20" fill="#2d4bff" ${S4}/><circle cx="65" cy="40" r="8" fill="#111"/></svg>`
+};
+const SPAWN=[["burst"],["smile"],["bolt"],["flower"],["heart"],["sun"],["star"],["bubble","来嘛来嘛"],["bubble","嗨！"],["cloud","买买买"],["eye"]];
+// ---- 拖动：松手回弹
+function bindDrag(el){
+  let sx,sy,dr=false;el._dx=0;el._dy=0;
+  el.addEventListener("pointerdown",e=>{e.stopPropagation();dr=true;const z=el._z||1;sx=e.clientX-el._dx*z;sy=e.clientY-el._dy*z;el.setPointerCapture(e.pointerId);el.classList.add("dr");el.classList.remove("back");el.style.transition="none"});
+  el.addEventListener("pointermove",e=>{if(!dr)return;const z=el._z||1;el._dx=(e.clientX-sx)/z;el._dy=(e.clientY-sy)/z;apply(el,1.08)});
+  const up=()=>{if(!dr)return;dr=false;el.classList.remove("dr");el.style.transition="";el.classList.add("back");el._dx=0;el._dy=0;apply(el,1)};
+  el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up)}
+function apply(el,s){el.style.transform=`translate(${el._dx}px,${el._dy}px) rotate(${el._r}deg) scale(${s})`}
+function addSticker(parent,html,x,y,r,cls){const d=document.createElement("div");d.className="st "+(cls||"");if(parent===document.body)x=Math.max(0,Math.min(x,innerWidth-200));d.style.left=x+"px";d.style.top=y+"px";d._r=r;d.innerHTML=html;d.style.transform=`rotate(${r}deg)`;parent.appendChild(d);bindDrag(d);if(parent===hero)d._z=ZM;return d}
+const hero=$("#hero");const ZM=Math.min(1,innerWidth/1440);if(ZM<1)hero.style.zoom=ZM;
+// 固定贴纸（位置按设计稿）
+[[F.burst("#ff4a2b"),1236,98,12],[F.smile("#ffd21a"),520,50,-10],[F.bolt("#ff90cf"),30,620,-14],[F.flower("#17c964"),380,636,8],[F.heart("#ff4a2b"),760,420,-12],
+ [F.badge("#ffd21a"),1210,380,10],[F.cloud("#fff","限量 500 摊"),640,448,-5],[F.arrow(),130,688,-4],[F.sun("#ffd21a"),1300,740,-6],[F.bubble("#ff90cf","来嘛来嘛"),210,540,-7],[F.star("#2d4bff"),20,330,15],[F.eye(),1290,590,-8],[F.smile("#17c964"),1300,236,14]]
+ .forEach(([h,x,y,r])=>addSticker(hero,h,x,y,r));
+// 贴纸旋转圆环文字
+$$("svg").forEach(()=>{});
+// 宝丽来也可拖
+$$(".pol").forEach(p=>{p._r=parseFloat(p.style.transform.match(/-?[\d.]+/)[0]);p.style.zIndex=3;p._z=ZM;bindDrag(p);p.classList.add("st");p.style.filter="none";p.style.cursor="grab"});
+// ---- 点空白撒贴纸
+document.addEventListener("pointerdown",e=>{if(!e.target.closest||e.target.closest(".st,.pill,.cta,.tk,.ch,.cd,.pol"))return;
+  const [k,t]=pick(SPAWN);const d=addSticker(document.body,F[k](pick(COL.slice(0,6)),t),e.pageX-55,e.pageY-55,Math.round(Math.random()*40-20),"pop");d.style.zIndex=40;d.style.position="absolute"});
+// ---- 标题字母逐个跳
+const chs=$$(".ch");function wave(){chs.forEach((c,i)=>setTimeout(()=>{c.classList.remove("j");void c.offsetWidth;c.classList.add("j")},i*160))}
+setTimeout(wave,400);setInterval(wave,3200);
+chs.forEach(c=>c.addEventListener("animationend",()=>c.classList.remove("j")));
+// ---- 按钮
+let n=12847;$("#cta").onclick=()=>{n++;$("#cnt").textContent="已领 "+n.toLocaleString("en-US");const b=$("#tk").getBoundingClientRect();
+  for(let i=0;i<5;i++){const [k,t]=pick(SPAWN);const d=addSticker(document.body,F[k](pick(COL.slice(0,6)),t),b.left+scrollX+Math.random()*340,b.top+scrollY+Math.random()*180-40,Math.round(Math.random()*50-25),"pop");d.style.zIndex=40;d.style.animationDelay=i*70+"ms"}};
+$$(".pill").forEach(p=>p.addEventListener("click",()=>{$("section.sc").scrollIntoView({behavior:"smooth"})}));
+// 进场：贴纸依次弹出
+$$("#hero .st").forEach((s,i)=>{s.animate([{opacity:0,scale:.2},{opacity:1,scale:1}],{duration:500,delay:300+i*70,easing:"cubic-bezier(.3,2,.5,1)",fill:"backwards"})});
+</script>
+</body>
+</html>

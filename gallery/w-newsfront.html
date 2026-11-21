@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>信号日报 · 科技与人工智能头版</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;900&family=Noto+Sans+SC:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#fff1e5;--ink:#33302e;--head:#1a1817;--mute:#807973;--rule:#cdbfb3;--rule2:#e0d3c7;--acc:#990f3d;--up:#0f7a4b;--dn:#b4231a;--soft:#f6e4d3}
+body.white{--bg:#fff;--ink:#333;--head:#111;--mute:#767676;--rule:#cfcfcf;--rule2:#e6e6e6;--soft:#f3f3f3}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:60px}
+body{font:400 15px/1.6 "Noto Sans SC",system-ui,sans-serif;color:var(--ink);background:var(--bg);transition:background .4s,color .4s;min-width:1180px}
+a{color:inherit;text-decoration:none}
+.sf{font-family:"Noto Serif SC","Songti SC",serif}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1360px;margin:0 auto;padding:0 40px}
+.util{display:flex;align-items:center;gap:22px;height:38px;font-size:12px;color:var(--mute);border-bottom:1px solid var(--rule2)}
+.util .sp{margin-left:auto}
+.util button{font:inherit;color:var(--ink);background:none;border:0;cursor:pointer}
+.util button:hover{color:var(--acc)}
+.tog{display:inline-flex;border:1px solid var(--rule);border-radius:14px;overflow:hidden;font-size:12px}
+.tog button{padding:2px 12px;color:var(--mute)}
+.tog button.on{background:var(--head);color:var(--bg)}
+.mast{text-align:center;padding:20px 0 14px;border-bottom:3px double var(--head);position:relative}
+.mast h1{font-family:"Noto Serif SC",serif;font-weight:900;font-size:74px;line-height:1.05;letter-spacing:.14em;color:var(--head);padding-left:.14em}
+.mast .en{font-family:"Playfair Display",serif;font-style:italic;font-weight:700;font-size:17px;letter-spacing:.3em;color:var(--mute);margin-top:4px;text-transform:uppercase}
+.mast .ed{position:absolute;left:0;bottom:16px;font-size:12px;color:var(--mute);text-align:left;line-height:1.5}
+.mast .wx{position:absolute;right:0;bottom:16px;font-size:12px;color:var(--mute);text-align:right;line-height:1.5}
+.live{display:flex;align-items:center;height:38px;border-bottom:1px solid var(--rule);overflow:hidden;font-size:13.5px}
+.live .lb{flex:none;display:flex;align-items:center;gap:8px;font-weight:700;color:var(--acc);padding-right:16px;border-right:1px solid var(--rule);margin-right:16px;height:100%;letter-spacing:.06em}
+.live .lb i{width:8px;height:8px;border-radius:50%;background:var(--acc);animation:pl 1.4s infinite}
+@keyframes pl{50%{opacity:.2}}
+.live .vp{flex:1;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,#000 94%,transparent);mask-image:linear-gradient(90deg,#000 94%,transparent)}
+.live .tr{display:inline-block;animation:mq 90s linear 6s infinite}
+.live:hover .tr{animation-play-state:paused}
+@keyframes mq{to{transform:translateX(-50%)}}
+.live .tr a{margin-right:38px;cursor:pointer}
+.live .tr a b{font-family:"IBM Plex Mono";font-weight:500;color:var(--mute);margin-right:8px;font-size:12px}
+.live .tr a:hover span{text-decoration:underline;text-underline-offset:3px}
+.live .up{flex:none;margin-left:14px;color:var(--mute);font-size:12px}
+nav.sec{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--head);transition:background .4s,box-shadow .3s}
+nav.sec.stuck{box-shadow:0 1px 0 var(--rule2),0 6px 14px -10px rgba(0,0,0,.25)}
+nav.sec .in{display:flex;align-items:center;height:46px;gap:0}
+nav.sec .mini{font-family:"Noto Serif SC";font-weight:900;font-size:19px;letter-spacing:.1em;color:var(--head);width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:width .35s,opacity .35s,margin .35s;cursor:pointer}
+nav.sec.stuck .mini{width:96px;opacity:1;margin-right:18px}
+nav.sec a.t{position:relative;padding:0 15px;height:46px;line-height:46px;font-size:14.5px;font-weight:500;color:var(--head)}
+nav.sec a.t::after{content:"";position:absolute;left:15px;right:15px;bottom:-1px;height:3px;background:var(--acc);transform:scaleX(0);transition:transform .25s}
+nav.sec a.t:hover::after,nav.sec a.t.on::after{transform:scaleX(1)}
+nav.sec a.t.on{color:var(--acc);font-weight:700}
+nav.sec .sp{margin-left:auto;font-size:12px;color:var(--mute)}
+.hl{background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;transition:background-size .3s;cursor:pointer;color:inherit}
+.hl:hover,a:hover>.hl,.card:hover .hl{background-size:100% 1.5px}
+.front{display:grid;grid-template-columns:300px 1fr 300px;gap:0;padding:22px 0 10px}
+.front>div{padding:0 24px}
+.front>div:first-child{padding-left:0;border-right:1px solid var(--rule)}
+.front>div:last-child{padding-right:0;border-left:1px solid var(--rule)}
+.kick{font:700 12px "Noto Sans SC";letter-spacing:.12em;color:var(--acc);margin-bottom:6px}
+.itm{padding:14px 0;border-top:1px solid var(--rule2);cursor:pointer}
+.itm:first-of-type{border-top:0;padding-top:0}
+.itm h3{font-family:"Noto Serif SC";font-weight:700;font-size:19px;line-height:1.38;color:var(--head)}
+.itm p{font-size:13.5px;color:var(--ink);margin-top:6px;line-height:1.6}
+.itm .by{font-size:12px;color:var(--mute);margin-top:6px}
+.lead{cursor:pointer}
+.lead h2{font-family:"Noto Serif SC";font-weight:900;font-size:44px;line-height:1.24;color:var(--head);letter-spacing:-.005em;margin-bottom:12px}
+.lead .deck{font-family:"Noto Serif SC";font-size:17px;line-height:1.7;color:var(--ink);margin-bottom:10px}
+.by{font-size:12.5px;color:var(--mute)}
+.by b{color:var(--head);font-weight:700;letter-spacing:.04em}
+figure{margin:16px 0 0}
+figure .ph{aspect-ratio:16/8.4;overflow:hidden;background:var(--soft)}
+figure img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.lead:hover figure img,.card:hover img{transform:scale(1.025)}
+figcaption{font-size:11.5px;color:var(--mute);margin-top:6px;display:flex;justify-content:space-between}
+.sub2{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;border-top:1px solid var(--rule)}
+.sub2>div{padding:14px 18px 0 0;cursor:pointer}
+.sub2>div+div{padding:14px 0 0 18px;border-left:1px solid var(--rule2)}
+.sub2 h3{font-family:"Noto Serif SC";font-weight:700;font-size:20px;line-height:1.38;color:var(--head)}
+.sub2 p{font-size:13.5px;margin-top:6px}
+.rd h4,.mk h4{font:700 12px "Noto Sans SC";letter-spacing:.14em;border-bottom:2px solid var(--head);padding-bottom:6px;margin-bottom:4px;color:var(--head)}
+.rd ol{list-style:none}
+.rd li{display:grid;grid-template-columns:34px 1fr;gap:6px;padding:11px 0;border-top:1px solid var(--rule2);cursor:pointer}
+.rd li:first-child{border-top:0}
+.rd li i{font:900 26px/1 "Noto Serif SC";font-style:normal;color:var(--acc)}
+.rd li span{font-family:"Noto Serif SC";font-weight:600;font-size:15.5px;line-height:1.45;color:var(--head)}
+.mk{margin-top:20px}
+.mk table{width:100%;border-collapse:collapse;font-size:12.5px}
+.mk td{padding:6px 0;border-top:1px solid var(--rule2)}
+.mk tr:first-child td{border-top:0}
+.mk td:nth-child(2){text-align:right;color:var(--head)}.mk td:nth-child(3){text-align:right;width:62px}
+.u{color:var(--up)}.d{color:var(--dn)}
+.mk small{display:block;font-size:11px;color:var(--mute);margin-top:6px}
+.band{border-top:3px double var(--head);margin-top:18px;padding-top:26px}
+.band h3.sh{font-family:"Noto Serif SC";font-weight:900;font-size:22px;color:var(--head);margin-bottom:16px;display:flex;align-items:baseline;gap:14px}
+.band h3.sh span{font:400 12px "Noto Sans SC";color:var(--mute)}
+.cols4{display:grid;grid-template-columns:repeat(4,1fr);gap:0 0;margin-bottom:34px}
+.cols4>div{padding:0 22px;border-left:1px solid var(--rule)}
+.cols4>div:first-child{padding-left:0;border-left:0}
+.cols4>div:last-child{padding-right:0}
+.card{cursor:pointer}
+.card .ph{aspect-ratio:3/2;overflow:hidden;background:var(--soft);margin-bottom:10px}
+.card .ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.cols4 .card .by{font-size:12px}
+.card h4{font-family:"Noto Serif SC";font-weight:700;font-size:18px;line-height:1.42;color:var(--head)}
+.card p{font-size:13px;margin-top:5px;color:var(--ink)}
+.card .cap{font-size:10.5px;color:var(--mute);margin-top:4px}
+.opn{display:grid;grid-template-columns:repeat(3,1fr);margin-bottom:30px}
+.opn>div{padding:0 26px;border-left:1px solid var(--rule);cursor:pointer}
+.opn>div:first-child{padding-left:0;border-left:0}
+.opn q{display:block;font-family:"Noto Serif SC";font-weight:700;font-size:20px;line-height:1.5;color:var(--head);quotes:"“" "”"}
+.opn .by{margin-top:10px}
+footer.ft{border-top:1px solid var(--head);margin-top:20px;padding:20px 0 50px;font-size:12px;color:var(--mute);display:flex;justify-content:space-between}
+/* 文章 */
+#art{display:none;padding:34px 0 80px}
+#art .col{max-width:740px;margin:0 auto}
+#art .bk{font-size:13px;color:var(--acc);cursor:pointer;display:inline-block;margin-bottom:26px;font-weight:500}
+#art .bk:hover{text-decoration:underline}
+#art h1{font-family:"Noto Serif SC";font-weight:900;font-size:46px;line-height:1.27;color:var(--head);margin:6px 0 16px}
+#art .deck{font-family:"Noto Serif SC";font-size:20px;line-height:1.7;color:var(--ink);margin-bottom:18px}
+#art .meta{display:flex;justify-content:space-between;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:9px 0;font-size:12.5px;color:var(--mute);margin-bottom:24px}
+#art figure{margin:0 0 30px}
+#art p.b{font-family:"Noto Serif SC";font-size:18.5px;line-height:1.95;margin-bottom:20px;color:var(--ink)}
+#art p.b:first-of-type::first-letter{float:left;font-weight:900;font-size:68px;line-height:.86;padding:6px 10px 0 0;color:var(--acc)}
+#art blockquote{font-family:"Noto Serif SC";font-weight:700;font-size:26px;line-height:1.5;color:var(--head);border-top:3px solid var(--head);border-bottom:1px solid var(--rule);padding:16px 0;margin:30px 0}
+#art .rel{margin-top:40px;border-top:3px double var(--head);padding-top:16px}
+#art .rel h5{font:700 12px "Noto Sans SC";letter-spacing:.14em;color:var(--acc);margin-bottom:8px}
+#art .rel a{display:block;font-family:"Noto Serif SC";font-weight:700;font-size:17px;padding:9px 0;border-top:1px solid var(--rule2);cursor:pointer;color:var(--head)}
+#art .rel a:first-of-type{border-top:0}
+.fade{animation:fd .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes fd{from{opacity:0;transform:translateY(12px)}}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .7s,transform .7s}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="util"><span id="dt">—</span><span>头版</span><span>全球版</span><span class="sp"></span><span class="tog" id="tog"><button class="on" data-m="paper">纸色</button><button data-m="white">白色</button></span><button>搜索</button><button>登录</button><button style="font-weight:700">订阅</button></div>
+  <header class="mast"><div class="ed">创刊于 2019 年<br>示例数据 · 报名虚构</div><h1>信号日报</h1><div class="en">The Signal · Technology &amp; AI</div><div class="wx">杭州 · 周五<br>多云 14°C</div></header>
+  <div class="live"><div class="lb"><i></i>实时</div><div class="vp"><div class="tr" id="tr"></div></div><span class="up mono" id="upd">更新于 --:--</span></div>
+</div>
+<nav class="sec" id="nav"><div class="wrap"><div class="in"><span class="mini" id="mini">信号日报</span>
+  <a class="t on" href="#top" data-s="top">头版</a><a class="t" href="#s-ai" data-s="s-ai">人工智能</a><a class="t" href="#s-chip" data-s="s-chip">芯片与算力</a><a class="t" href="#s-cloud" data-s="s-cloud">云与数据中心</a><a class="t" href="#s-robot" data-s="s-robot">机器人</a><a class="t" href="#s-op" data-s="s-op">观点</a><span class="sp mono" id="clock"></span></div></div></nav>
+
+<div class="wrap" id="home">
+  <div id="top"></div>
+  <section class="front" id="front"></section>
+  <section class="band" id="bands"></section>
+  <footer class="ft"><span>© 2026 信号日报 · 示例数据，报名、公司与报道均为虚构</span><span>图片均为示意图，摄影师署名见各图</span></footer>
+</div>
+<div class="wrap" id="art"><div class="col" id="artc"></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const IM={a:["satellite-downtown","Alexander Pidgeon"],b:["flatlay-keyboard","Nik"],c:["flatlay-rocket","SpaceX"],d:["satellite-harbor","Michael Olsen"],e:["satellite-roundabout","Maximillian Conacher"],f:["device-tablet","Olena Sergienko"],g:["satellite-campus","Victor"],h:["lifestyle-table","Harry Tang"]};
+const A=[
+{id:0,s:"人工智能",h:"大模型推理价格一年降八成，「按次计费」成云厂商新卖点",d:"多家厂商把每百万 token 的价格压到去年的五分之一，竞争焦点从单价转向延迟和稳定性。",by:"陈岚",t:"09:12",im:"a",cap:"城市街区航拍（示意）",p:["过去十二个月，主流大模型的推理报价平均下降了 78%，其中小模型降幅最大。多位采购负责人对本报表示，单价已经不再是谈判的第一项，他们更关心高峰期的首字延迟和失败率。","一家云服务商本周推出「按次计费」套餐：一次调用不论长短，统一收 0.02 元，上限 8 千 token。该公司称，这样可以让客户在做预算时更容易估算。","分析人士提醒，低价背后是算力利用率的竞争。机房空转一小时的成本，需要靠更密的调度来摊平，价格战短期内难以结束。"],q:"单价已经不再是谈判的第一项。",rel:[1,2,3]},
+{id:1,s:"人工智能",h:"企业开始给模型「记账」：每个部门每月用了多少 token",d:"用量看板成为采购后的第一个需求，财务部门要求按项目拆分。",by:"周启明",t:"08:40",im:"b",cap:"办公桌上的键盘（示意）",p:["越来越多企业把模型调用纳入内部分摊。一家制造企业的信息部门透露，他们为 14 个业务线分别建了额度，月底按实际用量出账。","这类需求让「谁调用了什么」成为刚需：调用方、模型、项目标签、失败重试，缺一项账单就对不上。","一位财务总监说，最难的是把共享调用的费用合理拆给各部门，目前只能按调用次数的比例暂估。"],q:"月底对不上账，是最常见的投诉。",rel:[0,4,5]},
+{id:2,s:"芯片与算力",h:"新一代加速卡能效追平旗舰，交期拖到明年二季度",d:"首批样卡在多项测试中表现接近，但封装产能仍是瓶颈。",by:"赵未",t:"08:05",im:"c",cap:"发射升空的火箭（示意）",p:["据多家系统集成商透露，新一代加速卡在每瓦性能上已接近上一代旗舰，但首批订单交期被推迟到明年二季度。","瓶颈在先进封装：同一条产线要同时供应多个客户，排产优先级由长期协议决定。","采购方的策略正在分化，一部分选择继续等待，另一部分转向上一代产品并增加数量。"],q:"瓶颈不在芯片，在封装。",rel:[0,6,7]},
+{id:3,s:"云与数据中心",h:"数据中心改用液冷后，机房电费一年少了三成",d:"一座新园区的运行数据显示，冷却能耗占比从 38% 降到 19%。",by:"林晓",t:"07:50",im:"g",cap:"园区鸟瞰（示意）",p:["该园区去年完成液冷改造，全年冷却电耗减少约一半。综合下来，机房总电费同比下降 31%。","运维人员说，最大的变化是噪声消失和故障定位更快，漏液检测的告警比温度告警更可靠。","改造成本约在三年内回收，前提是机柜功率持续保持在高位。"],q:"漏液检测的告警比温度告警更可靠。",rel:[2,0,6]},
+{id:4,s:"机器人",h:"港口试点无人集卡，夜班事故数降为零",d:"试点三个月，单箱作业时长缩短 12%。",by:"孙远",t:"07:30",im:"d",cap:"港口与船只（示意）",p:["试点港口在夜间引入 20 辆无人集卡，由中央调度系统统一派单。三个月内未发生人员伤害事故。","调度员表示，系统最大的价值在于稳定：它不疲劳，也不会因为交接班丢掉信息。","接下来试点范围将扩大到白班，并与泊位计划系统打通。"],q:"它不疲劳，也不会因为交接班丢掉信息。",rel:[1,5,3]},
+{id:5,s:"人工智能",h:"平板上的写作助手：我们让它替一位编辑工作了一周",d:"它擅长整理，不擅长取舍。",by:"唐宁",t:"07:10",im:"f",cap:"木桩上的平板和键盘（示意）",p:["本报编辑部让写作助手参与一周选题会，它在归纳资料和列提纲上明显比人快。","但当需要判断哪条新闻该放头版时，它给出的理由大多正确却不够有立场。","最后的结论是：它可以替编辑做完九成的整理，剩下一成仍然需要人负责。"],q:"剩下一成仍然需要人负责。",rel:[0,1,4]},
+{id:6,s:"云与数据中心",h:"跨城灾备演练：切换用时从 40 分钟缩到 6 分钟",d:"演练覆盖 120 个业务系统，唯一的人工步骤是确认。",by:"何岸",t:"06:55",im:"e",cap:"城市环岛（示意）",p:["一家大型企业完成年度跨城灾备演练，核心系统在 6 分钟内完成切换。","此前最大的耽误来自人工核对，如今核对步骤被写成脚本，只在最后保留一次人工确认。","演练也暴露出问题：有 9 个边缘系统没有登记在资产清单里。"],q:"有 9 个边缘系统没有登记在资产清单里。",rel:[3,2,0]},
+{id:7,s:"观点",h:"便宜的模型会让软件更复杂，还是更简单？",d:"当调用不再需要精打细算，产品设计会先变得啰嗦。",by:"沈知",t:"06:30",im:"h",cap:"阳光下的木桌（示意）",p:["当每次调用只要几厘钱，工程师不再克制：多问一句、多读一遍、多生成三个候选。","这会让产品先变得啰嗦，用户看到的选项越来越多。真正的设计任务，是在能力变多的时候依然只留下三件事。","便宜是一种诱惑，也是一种考验。"],q:"便宜是一种诱惑，也是一种考验。",rel:[0,1,5]},
+{id:8,s:"观点",h:"算力不是新石油，它更像电",d:"决定价值的是稳定供应，而不是囤积。",by:"许宁",t:"06:10",im:"c",cap:"（示意）",p:["把算力比作石油，会让人以为囤得越多越好。算力更像电：谁都需要，谁都不愿意为闲置付费。","利用率因此成为核心指标。一个机柜一年用了多少小时，比一共有多少机柜更能说明问题。","下一个阶段的竞争，会发生在调度层。"],q:"利用率比机柜数量更能说明问题。",rel:[2,3,0]},
+{id:9,s:"观点",h:"给 AI 产品写需求文档，先写不做什么",d:"边界比功能更难写，也更值钱。",by:"江远",t:"05:50",im:"b",cap:"（示意）",p:["模型能做的事太多，需求文档如果只列功能，研发和测试都会无所适从。","好的文档先写清楚不做什么：不处理哪些输入，不承诺哪些指标，失败时怎么退回人工。","这些边界一旦写下来，争论会少一半。"],q:"边界比功能更难写，也更值钱。",rel:[1,7,8]}
+];
+
+const X=[
+["人工智能","小模型进手机：本地运行的摘要功能为何突然流行","隐私和延迟让厂商把一部分推理搬回终端。","马川","05:30","h",["多款新机型默认在本地完成短文摘要，不再上传云端。厂商的理由有两条：隐私合规，以及弱网环境下的响应速度。","代价是模型必须缩小。测试显示，本地摘要在长文上漏掉要点的概率比云端高约一成。","预计明年更多应用会提供「本地 / 云端」两档选择。"]],
+["人工智能","评测榜单换题后，排名大洗牌","一份新题库让多个旧榜首掉出前五。","徐朗","05:10","b",["一所高校发布新版模型评测题库，题目全部为近三个月新编。结果显示，多个在旧榜单上领先的模型成绩下降超过 15 分。","研究者认为，旧榜单存在不同程度的题目泄漏，新题库将每季度更换一次。","厂商对此反应不一，部分已公开复测结果。"]],
+["人工智能","客服机器人上岗半年：转人工率从 42% 降到 19%","差评里「答非所问」的占比却在上升。","钟越","04:50","f",["一家电商平台披露客服机器人半年数据，转人工率下降 23 个百分点，但差评中「答非所问」占比上升。","团队的做法是把高频问题拆成固定流程，只在流程之外调用模型。","下一步将增加「问题没解决」的一键反馈。"]],
+["人工智能","高中老师用 AI 批作文：快了，但学生不买账","含原文引用的评语满意度高出一倍。","乔安","04:30","h",["试点学校用模型给作文打初评，教师复核时间缩短一半。","学生更在意评语是否具体：含有原文引用的评语满意度高出一倍。","学校计划把评语模板交给教师自行修改。"]],
+["芯片与算力","存储价格连涨三个季度，推理服务器成本被迫上调","单台物料成本增加约 9%。","韩木","04:10","c",["高带宽存储的合约价连续三个季度上涨，单台推理服务器的物料成本因此增加约 9%。","下游集成商表示，涨价会在年底前传导至报价。","部分客户开始提前锁定明年的订单。"]],
+["芯片与算力","国产加速卡生态：软件栈比硬件更慢","瓶颈在算子库和调试工具，不在峰值算力。","邓越","03:50","b",["多位开发者反映，新硬件的瓶颈在算子库和调试工具，而不是峰值算力。","厂商开始成立联合实验室，集中补齐常用算子。","迁移一个常见模型的平均工时，已从 6 周缩短到 2 周。"]],
+["芯片与算力","边缘芯片出货量首超云端，家用摄像头是大头","隐私政策推动识别功能本地化。","范舟","03:30","e",["本季度边缘推理芯片出货量首次超过云端。增量主要来自带本地识别功能的家用摄像头。","行业分析认为，隐私政策是推动本地化的重要因素。","云端训练与边缘推理的分工将更加明确。"]],
+["芯片与算力","一块板卡的一年：从上架到报废的算力账","利用率提高十个百分点，比换新卡划算。","郭瑾","03:10","c",["我们追踪了一块加速卡一年的使用：平均利用率 61%，有 23 天处于待机，3 次因故障下线。","结论是，利用率提高十个百分点，比换新卡划算得多。","这也是多家企业开始做利用率巡检的原因。"]],
+["云与数据中心","多云管理的新难题：同一个项目，三家账单","月底对账平均耗时 4 天。","叶舟","02:50","g",["企业同时使用多家云，账单口径各不相同。财务团队的月底对账平均耗时 4 天。","一些公司开始要求所有资源在创建时必须带项目标签。","没有标签的资源，会被归入「待认领」并按月提醒。"]],
+["云与数据中心","机房巡检进入「机器人 + 传感器」阶段","异常自动开单，换件仍需人工。","曹明","02:30","e",["巡检机器人可以读取机柜指示灯和温度，异常自动开单。","它无法替代人工的地方是更换故障部件。","运维团队的夜班人数因此减少了三分之一。"]],
+["云与数据中心","对象存储降价后，冷数据该放哪？","判断标准是取回频率，而不是容量。","秦川","02:10","a",["对象存储降价后，归档层与标准层的价差缩小，部分企业选择把冷数据迁回标准层。","判断标准是取回频率，而不是容量。","迁移前建议先统计三个月的访问日志。"]],
+["云与数据中心","夜间电价与调度：错峰训练能省多少？","月电费下降 14%，任务平均延后 3 小时。","蒋瑶","01:50","g",["一家研究机构将非紧急训练任务调度到夜间，月电费下降 14%，任务平均延后 3 小时。","可行的前提是任务具备断点续训能力。","部分地区的夜间电价差正在缩小，收益会随之下降。"]],
+["机器人","仓储分拣机器人迎来第二代：识别率到 99.6%","新增对破损包装的识别。","贺然","01:30","d",["第二代分拣机器人把包裹识别率提高到 99.6%，并新增对破损包装的识别。","仓库管理者最看重的是故障后的恢复时间，新一代机型从 12 分钟缩短到 3 分钟。","首批已在两座仓库上线。"]],
+["机器人","送货机器人进小区：最难的是电梯","门禁和电梯的对接占了落地成本的一半。","白露","01:10","e",["送货机器人在小区里最大的障碍不是行人，而是电梯和门禁。","对接一栋楼的电梯平均要花两周，且每家物业的接口不同。","行业正在推动统一的呼梯协议。"]],
+["机器人","家用机器人的订阅制，能走多远？","订阅价包含维护，但续费率只有 57%。","宋诚","00:50","f",["几家家用机器人公司改用订阅制，月费包含维护和软件升级。","首年续费率只有 57%，用户的主要理由是「用得少」。","厂商打算把家务以外的场景加入订阅。"]],
+["机器人","人形机器人演示很惊艳，工厂为什么不急着买","节拍、故障率和维修成本比外形更重要。","岳峰","00:30","d",["多位工厂负责人表示，人形外观并不是采购标准，节拍、故障率和维修成本才是。","演示环境下的成功率，与连续运行 8 小时的成功率相差很大。","他们愿意先在搬运这类单一工位试用。"]]
+];
+X.forEach((x,i)=>A.push({id:10+i,s:x[0],h:x[1],d:x[2],by:x[3],t:x[4],im:x[5],cap:"（示意）",p:x[6],q:"",rel:[0,1,2]}));
+const TICK=[["20:41","国产加速卡厂商披露新一轮融资，估值未公布"],["20:33","多家云厂商同步下调推理服务报价"],["20:12","机器人公司发布第二代仓储分拣系统"],["19:58","数据中心用电需求纳入地方能耗考核"],["19:40","某开源模型周下载量突破 500 万次"],["19:22","芯片封装产能紧张，交期普遍顺延一季度"],["19:05","自动驾驶卡车试点扩展至三个港口"],["18:47","高校发布大模型评测新榜单"]];
+const img=(k)=>"img/real/"+IM[k][0]+".jpg";
+const byA=id=>A.find(a=>a.id===id);
+// 日期
+const D=new Date();$("dt").textContent=D.getFullYear()+"年"+(D.getMonth()+1)+"月"+D.getDate()+"日 星期"+"日一二三四五六"[D.getDay()];
+function tick(){const d=new Date(),h=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");$("clock").textContent=h+" 北京时间";$("upd").textContent="更新于 "+h}
+tick();setInterval(tick,15000);
+$("tr").innerHTML=[...TICK,...TICK].map((t,i)=>`<a data-a="${i%TICK.length}"><b>${t[0]}</b><span>${t[1]}</span></a>`).join("");
+const tkMap=[0,2,2,3,0,2,4,5];
+$("tr").onclick=e=>{const a=e.target.closest("a");if(a)openA(tkMap[+a.dataset.a])};
+// 头版
+const L=[A[1],A[2],A[3],A[6]],R=[0,2,5,7,3].map(i=>A[i]);
+$("front").innerHTML=`<div>
+  <div class="kick">要闻</div>
+  ${L.map(a=>`<div class="itm" data-a="${a.id}"><h3><span class="hl">${a.h}</span></h3><p>${a.d}</p><div class="by"><b>${a.by}</b> · ${a.t}</div></div>`).join("")}
+</div>
+<div><article class="lead" data-a="0"><div class="kick">人工智能 · 头条</div><h2><span class="hl">${A[0].h}</span></h2><p class="deck">${A[0].d}</p><div class="by"><b>文 ${A[0].by}</b> · 本报记者 · 今日 ${A[0].t}</div>
+  <figure><div class="ph"><img src="${img("a")}" alt=""></div><figcaption><span>${A[0].cap}</span><span>示意图 · ${IM.a[1]}</span></figcaption></figure></article>
+  <div class="sub2"><div data-a="4"><div class="kick">机器人</div><h3><span class="hl">${A[4].h}</span></h3><p>${A[4].d}</p></div><div data-a="5"><div class="kick">人工智能</div><h3><span class="hl">${A[5].h}</span></h3><p>${A[5].d}</p></div></div></div>
+<div><div class="rd"><h4>最多阅读</h4><ol>${[0,2,3,1,7].map((id,i)=>`<li data-a="${id}"><i>${i+1}</i><span><span class="hl">${byA(id).h}</span></span></li>`).join("")}</ol></div>
+  <div class="mk"><h4>今日算力指数</h4><table class="mono"><tr><td>推理均价指数</td><td>62.4</td><td class="d">−1.8%</td></tr><tr><td>加速卡现货</td><td>118.9</td><td class="u">+0.6%</td></tr><tr><td>机房电价</td><td>0.71</td><td class="u">+0.3%</td></tr><tr><td>开源模型下载</td><td>5.2M</td><td class="u">+12%</td></tr></table><small>示例数据，仅作版式演示</small></div></div>`;
+// 分栏：每栏第一条带图，其余纯文字
+const BAND=[["s-ai","人工智能","模型、产品与应用",[10,11,12,13]],["s-chip","芯片与算力","加速卡、封装、能效",[14,15,16,17]],["s-cloud","云与数据中心","机房、网络与运维",[18,19,20,21]],["s-robot","机器人","港口、仓储与出行",[22,23,24,25]]];
+const sec=(id,title,sub,ids)=>`<div id="${id}" class="reveal"><h3 class="sh">${title}<span>${sub}</span></h3><div class="cols4">${ids.map((i,k)=>{const a=byA(i);return `<div class="card" data-a="${a.id}">${k===0?`<div class="ph"><img src="${img(a.im)}" alt=""></div>`:""}<div class="kick">${a.s}</div><h4><span class="hl">${a.h}</span></h4><p>${a.d}</p><div class="by" style="margin-top:6px"><b>${a.by}</b> · ${a.t}</div>${k===0?`<div class="cap">示意图 · ${IM[a.im][1]}</div>`:""}</div>`}).join("")}</div></div>`;
+$("bands").innerHTML=BAND.map(b=>sec(...b)).join("")+
+ `<div id="s-op" class="reveal"><h3 class="sh">观点<span>专栏与评论</span></h3><div class="opn">${[7,8,9].map(i=>{const a=byA(i);return `<div data-a="${a.id}"><div class="kick">${a.s}</div><q><span class="hl">${a.h}</span></q><div class="by"><b>${a.by}</b> · ${a.d}</div></div>`}).join("")}</div></div>`;
+// 点击
+document.addEventListener("click",e=>{const t=e.target.closest("[data-a]");if(t&&!t.closest("#tr")&&!t.closest("#art")){e.preventDefault();openA(+t.dataset.a)}});
+// 文章视图
+let scrollY0=0;
+function openA(id){if(location.hash!=="#a"+id){scrollY0=scrollY;history.pushState({a:id},"","#a"+id)}show(id)}
+function show(id){const a=byA(id),rel=a.id<10?a.rel.map(byA):A.filter(x=>x.s===a.s&&x.id!==a.id).slice(0,3);
+  $("artc").innerHTML=`<a class="bk" id="bk">← 返回头版</a><div class="kick">${a.s}</div><h1>${a.h}</h1><p class="deck">${a.d}</p><div class="meta"><span><b style="color:var(--head)">文 ${a.by}</b> · 本报记者</span><span class="mono">今日 ${a.t} · 约 ${Math.ceil(a.p.join("").length/380)} 分钟读完</span></div>
+  <figure><div class="ph" style="aspect-ratio:16/9;overflow:hidden"><img src="${img(a.im)}" alt="" style="width:100%;height:100%;object-fit:cover"></div><figcaption><span>${a.cap}</span><span>示意图 · ${IM[a.im][1]}</span></figcaption></figure>
+  <p class="b">${a.p[0]}</p><p class="b">${a.p[1]}</p>${a.q?`<blockquote>${a.q}</blockquote>`:""}<p class="b">${a.p[2]}</p>
+  <div class="rel"><h5>相关报道</h5>${rel.map(r=>`<a data-a="${r.id}">${r.h}</a>`).join("")}</div>`;
+  $("home").style.display="none";$("art").style.display="block";$("art").classList.remove("fade");void $("art").offsetWidth;$("art").classList.add("fade");scrollTo(0,0);
+  $("bk").onclick=()=>history.back();document.querySelectorAll("nav.sec a.t").forEach(x=>x.classList.remove("on"));document.title=a.h+" · 信号日报"}
+function showHome(){$("art").style.display="none";$("home").style.display="block";scrollTo(0,scrollY0||0);document.title="信号日报 · 科技与人工智能头版";spy()}
+addEventListener("popstate",()=>{const m=location.hash.match(/^#a(\d+)/);m?show(+m[1]):showHome()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("art").style.display==="block")history.back()});
+// 吸顶与栏目高亮
+const nav=$("nav");new IntersectionObserver(([e])=>nav.classList.toggle("stuck",!e.isIntersecting),{rootMargin:"-1px 0px 0px 0px"}).observe($("top").parentElement.querySelector(".live")||$("top"));
+function spy(){if($("home").style.display==="none")return;const ids=["top","s-ai","s-chip","s-cloud","s-robot","s-op"];let cur="top";ids.forEach(id=>{const el=$(id);if(el&&el.getBoundingClientRect().top<140&&id!=="top")cur=id});if(scrollY<300)cur="top";document.querySelectorAll("nav.sec a.t").forEach(a=>a.classList.toggle("on",a.dataset.s===cur))}
+addEventListener("scroll",spy,{passive:true});
+nav.addEventListener("click",e=>{const a=e.target.closest("a.t");if(a){e.preventDefault();if($("home").style.display==="none"){history.back();setTimeout(()=>$(a.dataset.s).scrollIntoView(),50)}else if(a.dataset.s==="top")scrollTo({top:0,behavior:"smooth"});else $(a.dataset.s).scrollIntoView({behavior:"smooth"})}else if(e.target.id==="mini")scrollTo({top:0,behavior:"smooth"})});
+// 纸色/白色
+$("tog").onclick=e=>{const b=e.target.closest("button");if(!b)return;document.body.classList.toggle("white",b.dataset.m==="white");document.querySelectorAll("#tog button").forEach(x=>x.classList.toggle("on",x===b))};
+// 滚动显现
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+if(location.hash.match(/^#a(\d+)/))show(+location.hash.slice(2));
+</script>
+</body>
+</html>

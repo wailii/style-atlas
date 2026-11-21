@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>曜枢 R1 · 发布会</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #000; --fg: #f5f5f7; --mute: #86868b; --line: rgba(255,255,255,.16); --acc: #2bd9c0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: Inter, "Noto Sans SC", sans-serif; color: var(--fg); background: #000; -webkit-font-smoothing: antialiased; letter-spacing: -.01em; overflow-x: hidden; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+
+  /* 导航：顶部透明，滚动后变半透明磨砂 */
+  nav { position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 50; display: flex; align-items: center; justify-content: center; gap: 44px; font-size: 12.5px; color: rgba(245,245,247,.82); transition: background .4s, color .4s, border-color .4s; border-bottom: 1px solid transparent; }
+  nav .brand { font-weight: 700; font-size: 15px; letter-spacing: .02em; color: var(--fg); }
+  nav a:hover { color: #fff; }
+  nav .buy { background: #f5f5f7; color: #111; padding: 4px 12px; border-radius: 980px; font-weight: 500; }
+  nav.solid { background: rgba(22,22,24,.72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom-color: rgba(255,255,255,.1); }
+  nav.light { color: rgba(29,29,31,.8); }
+  nav.light .brand { color: #1d1d1f; }
+  nav.light a:hover { color: #000; }
+  nav.light .buy { background: #1d1d1f; color: #fff; }
+  nav.solid.light { background: rgba(245,245,247,.72); border-bottom-color: rgba(0,0,0,.1); }
+
+  /* 舞台：一整段 sticky，背景由黑转白，产品随滚动放大、旋转 */
+  #stage { height: 560vh; position: relative; }
+  #pin { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .cap { position: absolute; left: 0; right: 0; text-align: center; opacity: 0; pointer-events: none; transition: color .3s; }
+  .cap h2 { font: 700 76px/1.06 Inter, "Noto Sans SC"; letter-spacing: -.035em; }
+  .cap p { margin-top: 16px; font: 400 21px/1.45 Inter, "Noto Sans SC"; color: var(--mute); }
+  .hero { top: 118px; opacity: 1; }
+  .hero .eb { font: 600 19px Inter, "Noto Sans SC"; color: var(--acc); margin-bottom: 10px; letter-spacing: 0; }
+  .hero h1 { font: 800 112px/1.02 Inter, "Noto Sans SC"; letter-spacing: -.045em; }
+  .hero .sub { margin-top: 18px; font: 400 25px/1.4 Inter, "Noto Sans SC"; color: #a1a1a6; letter-spacing: -.005em; }
+  .hero .ctas { margin-top: 26px; display: flex; gap: 14px; justify-content: center; pointer-events: auto; }
+  .btn { padding: 11px 24px; border-radius: 980px; background: #f5f5f7; color: #111; font-weight: 500; font-size: 16px; }
+  .btn.ghost { background: transparent; color: var(--acc); padding-left: 4px; }
+  .btn.ghost::after { content: " ›"; }
+  .c1 { top: 120px; } .c2 { top: 120px; } .c3 { bottom: 110px; } .c4 { top: 120px; }
+  .cap.L h2 { color: #1d1d1f; } .cap.L p { color: #6e6e73; }
+  .cap.s { text-align: left; left: 9%; right: auto; width: 440px; }
+  .hint { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; font-size: 12px; color: #6e6e73; transition: opacity .4s; }
+  .dots { position: absolute; right: 28px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; }
+  .dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(128,128,128,.4); transition: background .3s, transform .3s; }
+  .dots i.on { background: var(--acc); transform: scale(1.4); }
+
+  /* 规格：黑底大数字 */
+  #spec { background: #000; padding: 170px 0 150px; text-align: center; }
+  #spec .eb { font: 600 19px Inter, "Noto Sans SC"; color: var(--acc); }
+  #spec h2 { font: 700 70px/1.08 Inter, "Noto Sans SC"; letter-spacing: -.035em; margin: 10px auto 90px; max-width: 900px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--line); }
+  .grid > div { padding: 54px 18px 8px; border-left: 1px solid var(--line); text-align: left; }
+  .grid > div:first-child { border-left: 0; }
+  .grid .n { font: 700 92px/1 Inter; letter-spacing: -.05em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .grid .n small { font: 600 26px Inter; letter-spacing: -.01em; margin-left: 6px; color: #a1a1a6; }
+  .grid .l { margin-top: 18px; font-size: 16px; color: #a1a1a6; line-height: 1.5; }
+  .grid .l b { display: block; color: var(--fg); font-weight: 600; font-size: 18px; margin-bottom: 2px; }
+
+  /* 配色 */
+  #color { background: #f5f5f7; color: #1d1d1f; position: relative; height: 820px; overflow: hidden; }
+  #gl2 { position: absolute; left: 0; top: 0; width: 100%; height: 100%; cursor: grab; }
+  #gl2:active { cursor: grabbing; }
+  #color .txt { position: absolute; left: 9%; top: 150px; width: 400px; pointer-events: none; }
+  #color .txt h2 { font: 700 64px/1.08 Inter, "Noto Sans SC"; letter-spacing: -.035em; }
+  #color .txt p { margin-top: 16px; font-size: 19px; color: #6e6e73; line-height: 1.5; }
+  .sw { position: absolute; left: 0; right: 0; bottom: 120px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .sw .nm { font: 600 20px Inter, "Noto Sans SC"; height: 26px; }
+  .sw .row { display: flex; gap: 20px; }
+  .sw button { width: 30px; height: 30px; border-radius: 50%; background: var(--c); position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); transition: transform .2s; }
+  .sw button:hover { transform: scale(1.12); }
+  .sw button.on::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #1d1d1f; }
+  .sw .tip { position: absolute; bottom: 24px; font-size: 12px; color: #86868b; }
+  #foot { background: #000; padding: 70px 0 56px; text-align: center; color: #86868b; font-size: 12.5px; line-height: 1.8; }
+  #foot .btn { display: inline-block; margin-bottom: 34px; }
+</style>
+</head>
+<body>
+<nav id="nav">
+  <span class="brand">曜枢</span>
+  <a href="#stage" data-go="0">概览</a><a href="#spec">规格</a><a href="#color">配色</a>
+  <a class="buy" href="#foot">预订</a>
+</nav>
+
+<section id="stage">
+  <div id="pin">
+    <canvas id="gl"></canvas>
+    <div class="cap hero" id="c0">
+      <div class="eb">曜枢 R1</div>
+      <h1>推理，快得<br>不用等。</h1>
+      <div class="sub">为大模型在线服务而生的推理加速卡。</div>
+      <div class="ctas"><a class="btn" href="#foot">预订 R1</a><a class="btn ghost" href="#spec">查看规格</a></div>
+    </div>
+    <div class="cap c1 L" id="c1"><h2>96 GB 显存，<br>一张卡装下 70B。</h2><p>HBM3 堆叠，带宽 3.2 TB/s。</p></div>
+    <div class="cap c2 s L" id="c2" style="top:50%;transform:translateY(-50%)"><h2 style="font-size:60px">双风扇，<br>静到听不见。</h2><p>叶片重新设计，满载噪声 38 分贝。</p></div>
+    <div class="cap c3 L" id="c3"><h2>350 瓦，一根线。</h2><p>每瓦推理性能是上一代的 2.1 倍。</p></div>
+    <div class="cap c4 L" id="c4"><h2>从每一个角度，<br>都是一张整卡。</h2><p>一体机加工外壳，全金属背板。</p></div>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+</section>
+
+<section id="spec">
+  <div class="eb">规格</div>
+  <h2>每一项，<br>都比上一代大。</h2>
+  <div class="grid" id="grid">
+    <div><div class="n"><span data-to="2000">0</span><small>TOPS</small></div><div class="l"><b>INT8 算力</b>稀疏加速开启时</div></div>
+    <div><div class="n"><span data-to="96">0</span><small>GB</small></div><div class="l"><b>HBM3 显存</b>带 ECC 校验</div></div>
+    <div><div class="n"><span data-to="3.2" data-d="1">0</span><small>TB/s</small></div><div class="l"><b>显存带宽</b>较上一代提升 60%</div></div>
+    <div><div class="n"><span data-to="350">0</span><small>W</small></div><div class="l"><b>满载功耗</b>单根 12V 供电</div></div>
+  </div>
+</section>
+
+<section id="color">
+  <canvas id="gl2"></canvas>
+  <div class="txt"><h2>选一个<br>你的颜色。</h2><p>四种阳极氧化外壳，拖动卡片从各个角度看。</p></div>
+  <div class="sw"><div class="nm" id="cname"></div><div class="row" id="row"></div></div>
+</section>
+
+<footer id="foot">
+  <a class="btn" href="#stage" style="background:#f5f5f7;color:#111;padding:11px 24px;border-radius:980px">回到顶部</a>
+  <div>曜枢 R1 为虚构产品，本页仅作为发布页风格示例。示例数据。</div>
+</footer>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/three-RoomEnvironment.js"></script>
+<script>
+(() => {
+const $ = (s) => document.querySelector(s);
+const COLORS = [
+  { n: '银白', c: 0xcfd2d6, css: '#cfd2d6', met: .85, rough: .32 },
+  { n: '石墨', c: 0x34363b, css: '#34363b', met: .8, rough: .36 },
+  { n: '靛蓝', c: 0x1c2a78, css: '#27357d', met: .55, rough: .38 },
+  { n: '琥珀', c: 0xb03a08, css: '#c9591f', met: .4, rough: .42 },
+];
+const scenes = [];
+let colorIdx = 0;
+
+/* ---------- 一张推理卡：全部用几何体搭出来 ---------- */
+function plateGeo(w, h, r, depth, bevel) {
+  const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 18 });
+  g.translate(0, 0, -depth / 2); return g;
+}
+function buildCard() {
+  const g = new THREE.Group(), mats = {};
+  const D = 0.34, W = 4.4, H = 1.7;
+  mats.paint = new THREE.MeshStandardMaterial({ color: COLORS[0].c, metalness: COLORS[0].met, roughness: COLORS[0].rough });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x0b0c0e, metalness: .5, roughness: .55 });
+  const metal = new THREE.MeshStandardMaterial({ color: 0x1d1e22, metalness: .9, roughness: .38 });
+  const gold = new THREE.MeshStandardMaterial({ color: 0xd9ad4f, metalness: 1, roughness: .28 });
+  const led = new THREE.MeshBasicMaterial({ color: 0x2bd9c0 });
+  const body = new THREE.Mesh(plateGeo(W, H, .16, D, .035), mats.paint); g.add(body);
+  const top = D / 2 + .035;
+  const back = new THREE.Mesh(plateGeo(W - .08, H - .1, .14, .05, 0), metal); back.position.z = -D / 2 - .075; g.add(back);
+  // 风扇凹槽、叶片
+  const fans = [];
+  [-1.12, 1.12].forEach((fx) => {
+    const well = new THREE.Mesh(new THREE.CircleGeometry(.68, 48), dark); well.position.set(fx, 0, top + .004); g.add(well);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(.69, .022, 12, 64), metal); rim.position.set(fx, 0, top + .008); g.add(rim);
+    const fan = new THREE.Group(); fan.position.set(fx, 0, top + .03);
+    for (let i = 0; i < 11; i++) {
+      const bl = new THREE.Mesh(new THREE.BoxGeometry(.4, .17, .012), metal); const a = i / 11 * Math.PI * 2;
+      const arm = new THREE.Group(); arm.rotation.z = a; bl.position.x = .38; bl.rotation.x = .75; bl.rotation.z = .25; arm.add(bl); fan.add(arm);
+    }
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .03, 32), dark); hub.rotation.x = Math.PI / 2; fan.add(hub);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .034, 32), mats.paint); cap.rotation.x = Math.PI / 2; cap.position.z = .006; fan.add(cap);
+    g.add(fan); fans.push(fan);
+  });
+  // 中间铭牌 + 灯带
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 128; const c = cv.getContext('2d');
+  c.fillStyle = '#0b0c0e'; c.fillRect(0, 0, 512, 128); c.fillStyle = '#f2f2f4'; c.font = '700 54px Inter, "Noto Sans SC", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('曜枢 R1', 256, 68);
+  c.fillStyle = '#2bd9c0'; c.fillRect(190, 108, 132, 4);
+  const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(.78, .195), new THREE.MeshBasicMaterial({ map: tex })); plate.position.set(0, 0, top + .003); g.add(plate);
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(3.4, .022, .012), led); strip.position.set(0, H / 2 - .1, top + .004); g.add(strip);
+  const strip2 = strip.clone(); strip2.position.y = -(H / 2 - .1); g.add(strip2);
+  // 金手指
+  for (let i = 0; i < 26; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(.06, .2, .02), gold); f.position.set(-1.0 + i * .08 + 0.4, -H / 2 - .11, -D / 2 - .06); g.add(f); }
+  // 挡板：金属板 + 散热孔
+  const br = new THREE.Mesh(new THREE.BoxGeometry(.05, H + .14, D + .78), metal); br.position.set(-W / 2 - .06, 0, -.06); g.add(br);
+  for (let i = 0; i < 9; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(.06, .11, .52), dark); s.position.set(-W / 2 - .06, -.64 + i * .16, -.06 + .14); g.add(s); }
+  // 右端散热鳍片
+  const grill = new THREE.Mesh(new THREE.BoxGeometry(.02, H - .3, D - .1), dark); grill.position.set(W / 2 + .045, 0, 0); g.add(grill);
+  for (let i = 0; i < 14; i++) { const l = new THREE.Mesh(new THREE.BoxGeometry(.03, H - .4, .008), metal); l.position.set(W / 2 + .058, 0, -D / 2 + .1 + i * (D - .2) / 13); g.add(l); }
+  return { group: g, fans, mats };
+}
+
+function makeScene(canvas, opts) {
+  const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+  r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = opts.exp || 1;
+  const scene = new THREE.Scene(), pm = new THREE.PMREMGenerator(r);
+  scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.03).texture;
+  const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(3, 5, 6); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x9fe9ff, 1.1); rim.position.set(-5, 2, -4); scene.add(rim);
+  const card = buildCard(); const pivot = new THREE.Group(), tilt = new THREE.Group(); tilt.add(card.group); pivot.add(tilt); scene.add(pivot);
+  const cam = new THREE.PerspectiveCamera(28, 1, .1, 60); cam.position.set(0, 0, 11); cam.lookAt(0, 0, 0);
+  const S = { r, scene, cam, pivot, tilt, card, state: { ry: 0, rx: -1.1, rz: 0, s: 1, x: 0, y: 0 }, resize() { const w = canvas.clientWidth, h = canvas.clientHeight; if (!w) return; const dpr = Math.min(devicePixelRatio || 1, 2); r.setPixelRatio(dpr); r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); } };
+  S.resize(); addEventListener('resize', S.resize);
+  scenes.push(S); return S;
+}
+function paint(i) {
+  colorIdx = i; const c = COLORS[i];
+  scenes.forEach(S => { const m = S.card.mats.paint; m.color.setHex(c.c); m.metalness = c.met; m.roughness = c.rough; });
+  document.querySelectorAll('#row button').forEach((b, k) => b.classList.toggle('on', k === i)); $('#cname').textContent = c.n;
+}
+
+/* ---------- 舞台：滚动进度 → 产品姿态 + 背景色 + 文案 ---------- */
+const st = makeScene($('#gl'), { exp: 1.05 });
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), mix = (a, b, t) => a + (b - a) * t, sm = t => t * t * (3 - 2 * t);
+// 关键帧：[进度, 旋转y, 倾角x, 绕z, 缩放, 位置x, 位置y]
+const KF = [
+  [0.00, -0.55, -0.72, 0.00, 0.78, 0.0, -1.5],
+  [0.14, -0.4, -0.68, 0.00, 0.95, 0.0, -1.3],
+  [0.30, 0.12, -0.5, 0.00, 1.12, 0.0, -0.45],     // 显存：正面大图
+  [0.48, 0.05, -0.62, 0.00, 0.88, 1.95, 0.0],     // 风扇：产品靠右，文案在左
+  [0.66, -1.15, -0.4, 0.00, 1.1, 0.0, 0.25],      // 功耗：侧向展示挡板端
+  [0.84, 1.9, -0.45, 0.00, 1.0, 0.0, 0.0],        // 另一侧
+  [1.00, 3.1, -0.7, 0.00, 0.95, 0.0, 0.0],
+];
+function pose(p) {
+  let i = 0; while (i < KF.length - 2 && p > KF[i + 1][0]) i++;
+  const a = KF[i], b = KF[i + 1], t = sm(clamp((p - a[0]) / (b[0] - a[0])));
+  return { ry: mix(a[1], b[1], t), rx: mix(a[2], b[2], t), rz: mix(a[3], b[3], t), s: mix(a[4], b[4], t), x: mix(a[5], b[5], t), y: mix(a[6], b[6], t) };
+}
+const CAPS = [[0, 0.1], [0.2, 0.38], [0.4, 0.58], [0.6, 0.76], [0.78, 1.01]].map((r, i) => ({ el: $('#c' + i), r }));
+const stage = $('#stage'), nav = $('#nav'), dots = [...document.querySelectorAll('#dots i')];
+let sp = 0, curP = 0;
+function scrollP() { const r = stage.getBoundingClientRect(); return clamp(-r.top / (r.height - innerHeight)); }
+function applyStage(p) {
+  const o = pose(p), S = st.state; Object.assign(S, o);
+  // 背景：0.16~0.3 由黑渐白
+  const k = sm(clamp((p - 0.16) / 0.14)), v = Math.round(mix(0, 245, k)); $('#pin').style.background = `rgb(${v},${v},${Math.round(mix(0, 247, k))})`;
+  st.r.toneMappingExposure = mix(1.05, .95, k);
+  CAPS.forEach((c, i) => {
+    const [a, b] = c.r, f = .035; let op = clamp((p - a) / f) * clamp((b - p) / f); if (i === 0) op = 1 - clamp((p - 0.06) / 0.06); if (i === 4) op = clamp((p - a) / f);
+    c.el.style.opacity = op; c.el.style.transform = (i === 2 ? 'translateY(-50%) ' : '') + `translateY(${(1 - op) * 22}px)`;
+    if (i === 2) c.el.style.transform = `translateY(calc(-50% + ${(1 - op) * 22}px))`;
+    c.el.style.pointerEvents = i === 0 && op > .5 ? 'auto' : 'none';
+  });
+  const act = CAPS.findIndex((c, i) => (i === 0 ? p < .1 : p >= c.r[0] && p < c.r[1])); dots.forEach((d, i) => d.classList.toggle('on', i === act));
+}
+function draw(S, t) {
+  const s = S.state; S.pivot.rotation.y = s.ry; S.tilt.rotation.x = s.rx; S.tilt.rotation.z = s.rz; S.pivot.scale.setScalar(s.s); S.pivot.position.set(s.x, s.y, 0);
+  S.card.fans.forEach((f, i) => { f.rotation.z = -t * (i ? 3.4 : 3.1); });
+  S.r.render(S.scene, S.cam);
+}
+
+/* ---------- 配色区：可拖动旋转，松手惯性 ---------- */
+const cs = makeScene($('#gl2'), { exp: .95 });
+cs.state.s = .95; cs.state.rx = -0.6; cs.state.x = 1.8; cs.state.y = 0; cs.state.ry = -0.4;
+let drag = null, vel = 0, auto = true;
+const cv2 = $('#gl2');
+cv2.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ry: cs.state.ry, rx: cs.state.rx }; vel = 0; auto = false; cv2.setPointerCapture(e.pointerId); });
+cv2.addEventListener('pointermove', e => { if (!drag) return; const ny = drag.ry + (e.clientX - drag.x) * .008; vel = ny - cs.state.ry; cs.state.ry = ny; cs.state.rx = clamp(drag.rx + (e.clientY - drag.y) * .005, -1.4, 0.1); });
+const up = () => { drag = null; }; cv2.addEventListener('pointerup', up); cv2.addEventListener('pointercancel', up);
+$('#row').innerHTML = COLORS.map((c, i) => `<button style="--c:${c.css}" title="${c.n}" data-i="${i}"></button>`).join('');
+$('#row').onclick = e => { const b = e.target.closest('button'); if (b) paint(+b.dataset.i); };
+$('#row').insertAdjacentHTML('afterend', '<div class="tip" style="position:static;font-size:12px;color:#86868b">拖动卡片旋转</div>');
+
+/* ---------- 规格数字：进入视口从 0 数上来 ---------- */
+const nums = [...document.querySelectorAll('[data-to]')];
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !e.target._d) { e.target._d = 1; const to = +e.target.dataset.to, d = +(e.target.dataset.d || 0), t0 = performance.now(); const f = n => { const k = clamp((n - t0) / 1600), v = to * (1 - Math.pow(1 - k, 4)); e.target.textContent = (d ? v.toFixed(d) : Math.round(v).toLocaleString('en-US')); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); } }), { threshold: .6 });
+nums.forEach(n => io.observe(n));
+
+/* ---------- 主循环 ---------- */
+let t0 = performance.now();
+function loop(n) {
+  const t = (n - t0) / 1000, p = scrollP(); curP = mix(curP, p, .14); if (Math.abs(curP - p) < .0004) curP = p;
+  applyStage(curP);
+  st.state.ry += Math.sin(t * .6) * .0009;      // 首屏轻微呼吸
+  draw(st, t);
+  if (auto) cs.state.ry += .003; else if (!drag) { cs.state.ry += vel; vel *= .94; }
+  draw(cs, t);
+  nav.classList.toggle('solid', scrollY > 10);
+  requestAnimationFrame(loop);
+}
+paint(0); requestAnimationFrame(loop);
+// 滚到「配色」区时导航也要对应变色
+const lightSec = [$('#color')]; addEventListener('scroll', () => { const sp = scrollP(); const inColor = $('#color').getBoundingClientRect().top < 48 && $('#color').getBoundingClientRect().bottom > 48; const inStageLight = sp > .22 && stage.getBoundingClientRect().bottom > 48; nav.classList.toggle('light', inColor || inStageLight); }, { passive: true });
+window.__k = { st, cs, paint, scrollP };
+})();
+</script>
+</body>
+</html>

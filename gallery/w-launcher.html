@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>命令启动器 · 栖启</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --w1: rgba(255,255,255,.94); --w2: rgba(255,255,255,.62); --w3: rgba(255,255,255,.38); --ln: rgba(255,255,255,.12); --hi: rgba(255,255,255,.13); --glass: rgba(22,24,32,.58); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #0a0b10; }
+  body { font: 14px/1.5 "Inter","Noto Sans SC",sans-serif; color: var(--w1); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; background: none; border: 0; outline: none; cursor: pointer; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+  .bg { position: fixed; inset: 0; background: url("img/real/flatlay-clouds.jpg") center / cover; transform: scale(1.04); animation: kb 30s ease-in-out infinite alternate; }
+  @keyframes kb { to { transform: scale(1.12) translate(-1.2%, -.8%); } }
+  .dim { position: fixed; inset: 0; background: rgba(6,8,16,.38); }
+  .mb { position: fixed; top: 0; left: 0; right: 0; height: 28px; display: flex; align-items: center; gap: 18px; padding: 0 16px; font-size: 12.5px; color: rgba(255,255,255,.85); background: rgba(10,12,20,.28); backdrop-filter: blur(20px); }
+  .mb b { font-weight: 600; } .mb .r { margin-left: auto; display: flex; gap: 16px; }
+  svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  .panel { position: fixed; left: 50%; top: 118px; width: 840px; height: 580px; margin-left: -420px; display: grid; grid-template-columns: 1fr 330px; grid-template-rows: 62px minmax(0,1fr) 42px; border-radius: 18px; background: var(--glass); backdrop-filter: blur(44px) saturate(150%); -webkit-backdrop-filter: blur(44px) saturate(150%); border: 1px solid rgba(255,255,255,.16); box-shadow: 0 40px 90px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1); animation: pin .55s cubic-bezier(.2,.8,.2,1) both; overflow: hidden; }
+  @keyframes pin { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+  .sb { grid-column: 1 / 3; display: flex; align-items: center; gap: 12px; padding: 0 22px; border-bottom: 1px solid var(--ln); }
+  .sb svg { width: 20px; height: 20px; color: var(--w2); }
+  .sb input { flex: 1; font-size: 20px; font-weight: 400; cursor: text; caret-color: #fff; letter-spacing: .005em; }
+  .sb input::placeholder { color: var(--w3); }
+  .sb .tag { font: 11.5px "JetBrains Mono"; color: var(--w3); border: 1px solid var(--ln); border-radius: 6px; padding: 1px 7px; }
+
+  .list { overflow-y: auto; padding: 8px 10px 10px; border-right: 1px solid var(--ln); scrollbar-width: none; }
+  .list::-webkit-scrollbar { display: none; }
+  .gh { padding: 10px 12px 5px; font-size: 11.5px; color: var(--w3); letter-spacing: .06em; }
+  .row { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 10px; cursor: pointer; }
+  .row.on { background: var(--hi); }
+  .tile { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: #fff; flex: none; }
+  .tile svg { width: 17px; height: 17px; stroke-width: 1.7; }
+  .row .nm { font-size: 14.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .nm b { color: #fff; font-weight: 600; background: rgba(255,255,255,.2); border-radius: 3px; box-shadow: 0 0 0 1px rgba(255,255,255,.2); }
+  .row .sd { margin-left: 8px; font-size: 12.5px; color: var(--w3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .row .ty { margin-left: auto; font-size: 12px; color: var(--w3); flex: none; padding-left: 8px; }
+  .row .sd + .ty { margin-left: 0; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--w3); }
+
+  .pv { padding: 22px 24px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; animation: pvin .25s ease both; }
+  @keyframes pvin { from { opacity: 0; transform: translateX(8px); } }
+  .pv .big { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; color: #fff; }
+  .pv .big svg { width: 32px; height: 32px; stroke-width: 1.5; }
+  .pv h3 { font-size: 20px; font-weight: 600; line-height: 1.3; }
+  .pv p { color: var(--w2); font-size: 13px; line-height: 1.65; }
+  .kv { margin-top: auto; border-top: 1px solid var(--ln); padding-top: 12px; display: grid; gap: 6px; font-size: 12.5px; }
+  .kv div { display: flex; justify-content: space-between; color: var(--w3); } .kv span { color: var(--w2); }
+  .mini { border: 1px solid var(--ln); border-radius: 12px; padding: 12px 14px; background: rgba(255,255,255,.05); }
+  .mini small { display: block; color: var(--w3); font-size: 11.5px; }
+  .mini b { font: 500 24px/1.3 "JetBrains Mono", monospace; letter-spacing: -.02em; }
+  .mini b em { font: 400 12px "Inter","Noto Sans SC"; color: var(--w2); margin-left: 4px; font-style: normal; }
+  .mini svg { display: block; width: 100%; height: 44px; margin-top: 6px; overflow: visible; }
+  .doc p { font-size: 12.5px; color: var(--w2); line-height: 1.7; } .doc h4 { font-size: 13px; margin-bottom: 4px; }
+  .calc { align-items: flex-start; }
+  .calc .ex { font: 400 15px "JetBrains Mono"; color: var(--w2); word-break: break-all; }
+  .calc .res { font: 500 44px/1.15 "JetBrains Mono"; letter-spacing: -.03em; word-break: break-all; }
+  .calc .hint { color: var(--w3); font-size: 12.5px; }
+
+  .ft { grid-column: 1 / 3; display: flex; align-items: center; gap: 20px; padding: 0 18px; border-top: 1px solid var(--ln); font-size: 12px; color: var(--w3); background: rgba(0,0,0,.16); }
+  .ft .main { color: var(--w1); display: flex; align-items: center; gap: 8px; }
+  .ft kbd { font: 500 11px "JetBrains Mono"; border: 1px solid rgba(255,255,255,.2); border-radius: 5px; padding: 0 6px; color: var(--w2); }
+  .ft .r { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .ft button.k { display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 8px; border-radius: 7px; color: var(--w2); }
+  .ft button.k:hover { background: var(--hi); color: #fff; }
+
+  .am { position: absolute; right: 14px; bottom: 50px; width: 260px; border-radius: 12px; background: rgba(30,32,42,.9); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,.16); box-shadow: 0 18px 50px rgba(0,0,0,.5); padding: 6px; display: none; z-index: 5; }
+  .am.on { display: block; animation: pin .18s ease both; }
+  .am h5 { padding: 6px 10px 4px; font-size: 11.5px; font-weight: 400; color: var(--w3); }
+  .am .a { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 8px; cursor: pointer; font-size: 13.5px; }
+  .am .a.on { background: var(--hi); }
+  .am .a kbd { margin-left: auto; font: 11px "JetBrains Mono"; color: var(--w3); }
+  .am .a svg { color: var(--w2); width: 15px; height: 15px; }
+
+  .toast { position: fixed; left: 50%; top: 726px; transform: translate(-50%, 8px); padding: 9px 16px; border-radius: 10px; background: rgba(20,22,30,.72); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,.14); font-size: 13px; opacity: 0; transition: .22s; pointer-events: none; display: flex; gap: 8px; align-items: center; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .toast i { width: 7px; height: 7px; border-radius: 50%; background: #6fe0a8; }
+  .credit { position: fixed; left: 14px; bottom: 10px; font-size: 11px; color: rgba(255,255,255,.55); }
+  .credit span { margin-left: 10px; }
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="dim"></div>
+<div class="mb"><b>栖启</b><span>文件</span><span>编辑</span><span>窗口</span><div class="r"><span>周四 14:32</span></div></div>
+
+<div class="panel" id="panel">
+  <div class="sb"><svg class="i" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5.5"/><path d="M13.2 13.2L17 17"/></svg><input id="q" placeholder="搜索应用、文档，或输入动作、算式" autocomplete="off" spellcheck="false"><span class="tag">⌘ Space</span></div>
+  <div class="list" id="list"></div>
+  <div class="pv" id="pv"></div>
+  <div class="ft"><span class="main" id="mainhint"><kbd>↵</kbd> 打开</span><span><kbd>↑</kbd> <kbd>↓</kbd> 选择</span><span>Esc 清空</span><div class="r"><button class="k" id="akbtn">动作 <kbd>⌘ K</kbd></button></div></div>
+  <div class="am" id="am"></div>
+</div>
+<div class="toast" id="toast"><i></i><span></span></div>
+<div class="credit">示例数据<span id="cr">示意图 · Luke Pamer</span></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+fetch("img/real/flatlay-clouds.jpg.json").then(r => r.json()).then(j => { if (j.by) $("#cr").textContent = "示意图 · " + j.by; }).catch(() => {});
+
+/* ---------- 图标 ---------- */
+const IC = {
+  grid: '<rect x="3" y="3" width="6.5" height="6.5" rx="1.5"/><rect x="11.5" y="3" width="6.5" height="6.5" rx="1.5"/><rect x="3" y="11.5" width="6.5" height="6.5" rx="1.5"/><rect x="11.5" y="11.5" width="6.5" height="6.5" rx="1.5"/>',
+  chart: '<path d="M3 16.5h14M5.5 13V9M10 13V5M14.5 13v-6"/>',
+  cube: '<path d="M10 2.5l6.5 3.5v8L10 17.5 3.5 14V6z"/><path d="M3.5 6L10 9.5 16.5 6M10 9.5v8"/>',
+  ticket: '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h11A1.5 1.5 0 0 1 17 6.5V8a2 2 0 0 0 0 4v1.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 13.5V12a2 2 0 0 0 0-4z"/><path d="M8.5 5v10" stroke-dasharray="1.5 2"/>',
+  pulse: '<path d="M2.5 10h3.5l2-5 3 10 2-5h4.5"/>',
+  doc: '<path d="M5 2.5h6.5L15 6v11a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 5 17z"/><path d="M11 2.5V6.5h4M7.5 10h5M7.5 13h5"/>',
+  plus: '<path d="M10 4v12M4 10h12"/>',
+  wrench: '<path d="M12.5 3.5a4 4 0 0 0-3.4 5.4L3.5 14.500a1.5 1.5 0 0 0 2 2l5.600-5.600a4 4 0 0 0 5.400-3.400l-2.500 2.500-2-.5-.5-2z"/>',
+  down: '<path d="M10 3v10M6 9.500l4 4 4-4M4 16.500h12"/>',
+  calc: '<rect x="4" y="2.500" width="12" height="15" rx="2"/><path d="M7 6h6M7.500 10h.01M10 10h.01M12.500 10h.01M7.500 13.500h.01M10 13.500h.01M12.500 13.500h.01"/>',
+  copy: '<rect x="7" y="7" width="9" height="9" rx="1.500"/><path d="M13 7V5.500A1.500 1.500 0 0 0 11.500 4h-6A1.500 1.500 0 0 0 4 5.500v6A1.500 1.500 0 0 0 5.500 13H7"/>',
+  link: '<path d="M8.500 11.500a3 3 0 0 0 4.200 0l2.500-2.500a3 3 0 0 0-4.200-4.200l-.8.800M11.500 8.500a3 3 0 0 0-4.200 0L4.800 11a3 3 0 0 0 4.200 4.200l.8-.8"/>',
+  pin: '<path d="M10 17.500v-6M6 3.500h8l-1 5 2 3H5l2-3z"/>',
+  share: '<circle cx="5.500" cy="10" r="2"/><circle cx="14.500" cy="5" r="2"/><circle cx="14.500" cy="15" r="2"/><path d="M7.300 9l5.400-3M7.300 11l5.400 3"/>',
+  win: '<rect x="3" y="4" width="14" height="12" rx="2"/><path d="M3 8h14"/>',
+};
+const svg = k => `<svg class="i" viewBox="0 0 20 20">${IC[k]}</svg>`;
+const COL = { app: "#4d6bd6", doc: "#8a63c8", act: "#2f9a7a", calc: "#d9822b" };
+
+/* ---------- 数据 ---------- */
+const ITEMS = [
+  { id: "ledger", g: "应用", n: "资源台账", py: "zytz", kw: "ledger asset 资产 机器", d: "全部服务器、GPU 与网络设备的在册记录，支持按部门、状态、到期日筛选。", ic: "grid", c: COL.app, vis: ["在册资源", "3,482", "台", [3200, 3260, 3310, 3350, 3400, 3430, 3482]], meta: [["最近打开", "今天 09:42"], ["所属", "资源管理"]] },
+  { id: "cost", g: "应用", n: "费用分析", py: "fyfx", kw: "cost bill 账单 费用", d: "按部门、厂商、资源类型拆分月度费用，查看环比与异常。", ic: "chart", c: COL.app, vis: ["本月总费用", "286.4", "万元", [251, 258, 262, 270, 268, 279, 286]], meta: [["最近打开", "昨天 17:08"], ["所属", "费用中心"]] },
+  { id: "models", g: "应用", n: "模型广场", py: "mxgc", kw: "model llm 大模型 价格", d: "浏览已接入的大模型，对比价格、上下文长度与速度。", ic: "cube", c: COL.app, vis: ["上线模型", "38", "个", [22, 25, 27, 30, 33, 35, 38]], meta: [["最近打开", "周二 11:20"], ["所属", "Token 平台"]] },
+  { id: "tickets", g: "应用", n: "工单中心", py: "gdzx", kw: "ticket 报修 审批", d: "报修、资源申请和审批类工单的统一入口。", ic: "ticket", c: COL.app, vis: ["待处理工单", "12", "单", [18, 15, 16, 13, 14, 11, 12]], meta: [["最近打开", "今天 10:15"], ["所属", "运维服务"]] },
+  { id: "monitor", g: "应用", n: "监控大盘", py: "jkdp", kw: "monitor gpu 利用率 告警", d: "集群 GPU 利用率、显存、温度和告警的实时大盘。", ic: "pulse", c: COL.app, vis: ["GPU 平均利用率", "61.5", "%", [54, 58, 57, 60, 63, 59, 61]], meta: [["最近打开", "今天 08:55"], ["所属", "运维监控"]] },
+  { id: "d1", g: "文档", n: "10 月资源使用月报", py: "10yzyysyyb", kw: "report 月报 报告", d: "全集群 GPU 利用率 61.5%，总费用 286.4 万元，环比增长 4.4%。增量主要来自平台研发和算法一部。", ic: "doc", c: COL.doc, doc: true, meta: [["修改于", "昨天 16:40"], ["作者", "林舟"]] },
+  { id: "d2", g: "文档", n: "GPU 资源申请流程", py: "gpuzysqlc", kw: "apply 流程 申请", d: "提交申请后由部门负责人审批，资源管理员在两个工作日内完成分配与交付。", ic: "doc", c: COL.doc, doc: true, meta: [["修改于", "11 月 12 日"], ["作者", "周宁"]] },
+  { id: "d3", g: "文档", n: "A100 训练池扩容方案", py: "a100xlckrfa", kw: "扩容 expand a100", d: "拟分两批新增 64 张 A100 80G，先回收闲置超过 14 天的预留资源。", ic: "doc", c: COL.doc, doc: true, meta: [["修改于", "周一 09:12"], ["作者", "许沐"]] },
+  { id: "d4", g: "文档", n: "GPU 报修 SLA 说明", py: "gpubxslasm", kw: "sla 报修 时效", d: "一级故障 2 小时内响应，24 小时内修复；二级故障 8 小时内响应。", ic: "doc", c: COL.doc, doc: true, meta: [["修改于", "10 月 28 日"], ["作者", "陈芮"]] },
+  { id: "a1", g: "动作", n: "新建资源申请", py: "xjzysq", kw: "new apply 申请", d: "打开空白的资源申请表，部门和负责人会自动带入。", ic: "plus", c: COL.act, run: "已打开新的资源申请表" },
+  { id: "a2", g: "动作", n: "提交报修工单", py: "tjbxgd", kw: "repair 故障 坏", d: "选择故障设备并描述现象，工单会派给对应机房的值班人员。", ic: "wrench", c: COL.act, run: "已打开报修表单" },
+  { id: "a3", g: "动作", n: "导出本月账单", py: "dcbyzd", kw: "export 导出 csv excel", d: "把 10 月全部部门的费用明细导出为表格文件。", ic: "down", c: COL.act, run: "10 月账单已开始导出" },
+  { id: "a4", g: "动作", n: "复制本月总费用", py: "fzbyzfy", kw: "copy 复制 费用", d: "复制 “286.4 万元（环比 +4.4%）” 到剪贴板。", ic: "copy", c: COL.act, run: "已复制：286.4 万元（环比 +4.4%）" },
+];
+const ACTIONS = {
+  应用: [["打开", "win", "↵"], ["在新窗口打开", "win", "⌘ ↵"], ["复制链接", "link", "⌘ L"], ["固定到顶部", "pin", "⌘ P"]],
+  文档: [["打开文档", "doc", "↵"], ["复制链接", "link", "⌘ L"], ["分享给同事", "share", "⌘ S"], ["固定到顶部", "pin", "⌘ P"]],
+  动作: [["执行", "plus", "↵"], ["复制动作名称", "copy", "⌘ C"]],
+  计算: [["复制结果", "copy", "↵"], ["复制算式和结果", "copy", "⌘ ↵"]],
+};
+
+/* ---------- 搜索 ---------- */
+function fuzzy(q, s) { let i = 0; const idx = []; const t = s.toLowerCase(); for (let j = 0; j < t.length && i < q.length; j++) if (t[j] === q[i]) { idx.push(j); i++; } return i === q.length ? idx : null; }
+function score(it, q) {
+  const iName = fuzzy(q, it.n); if (iName) { const span = iName[iName.length - 1] - iName[0]; return { s: 100 - span - iName[0] * 2, idx: iName }; }
+  if (fuzzy(q, it.py)) return { s: 60 - it.py.indexOf(q[0]), idx: null, via: it.py };
+  if (it.kw.toLowerCase().includes(q)) return { s: 40, idx: null };
+  return null;
+}
+function calc(q) {
+  const t = q.replace(/×/g, "*").replace(/÷/g, "/").replace(/，/g, ",").replace(/,/g, "").replace(/\s+/g, "");
+  if (!/^[0-9+\-*/().%]+$/.test(t) || !/[+\-*/%]/.test(t.replace(/^-/, "")) || /[+\-*/]$/.test(t)) return null;
+  try {
+    let e = t.replace(/(\d+(?:\.\d+)?)%/g, "($1/100)");
+    const v = Function('"use strict"; return (' + e + ")")();
+    if (typeof v !== "number" || !isFinite(v)) return null;
+    return v;
+  } catch (_) { return null; }
+}
+const fmt = v => Number.isInteger(v) ? v.toLocaleString("en-US") : (+v.toFixed(8)).toLocaleString("en-US", { maximumFractionDigits: 8 });
+let results = [], sel = 0, q = "";
+function search() {
+  q = $("#q").value.trim().toLowerCase(); const out = [];
+  const cv = q ? calc($("#q").value.trim()) : null;
+  if (cv !== null) out.push({ g: "计算", calc: true, v: cv, ex: $("#q").value.trim(), n: fmt(cv), sd: "= " + $("#q").value.trim(), ic: "calc", c: COL.calc });
+  if (!q) ITEMS.forEach(it => out.push({ ...it, g2: ["ledger", "cost", "monitor", "d1", "a1"].includes(it.id) ? "建议" : it.g, hl: null })), out.sort((a, b) => (a.g2 === "建议" ? 0 : 1) - (b.g2 === "建议" ? 0 : 1));
+  else ITEMS.map(it => ({ it, r: score(it, q) })).filter(x => x.r).sort((a, b) => b.r.s - a.r.s).forEach(x => out.push({ ...x.it, g2: x.it.g, hl: x.r.idx, via: x.r.via }));
+  results = q ? out : out.filter(o => o.g2 === "建议").concat(out.filter(o => o.g2 !== "建议"));
+  sel = 0; render();
+}
+function nameHTML(r) { if (!r.hl) return esc(r.n); return [...r.n].map((c, i) => r.hl.includes(i) ? `<b>${esc(c)}</b>` : esc(c)).join(""); }
+function render() {
+  const list = $("#list");
+  if (!results.length) { list.innerHTML = '<div class="empty">没有找到匹配项</div>'; $("#pv").innerHTML = ""; $("#mainhint").innerHTML = ""; return; }
+  let html = "", last = null;
+  results.forEach((r, i) => {
+    const g = r.calc ? "计算" : (q ? r.g2 : r.g2); if (g !== last) { html += `<div class="gh">${g}</div>`; last = g; }
+    html += `<div class="row${i === sel ? " on" : ""}" data-i="${i}"><span class="tile" style="background:${r.c}">${svg(r.ic)}</span><span class="nm">${r.calc ? r.n : nameHTML(r)}</span>${r.calc ? `<span class="sd mono">${esc(r.sd)}</span>` : r.via && !r.hl ? `<span class="sd">${esc(r.via)}</span>` : '<span class="sd"></span>'}<span class="ty">${r.calc ? "计算器" : r.g}</span></div>`;
+  });
+  list.innerHTML = html;
+  const on = list.querySelector(".row.on"); if (on) on.scrollIntoView({ block: "nearest" });
+  preview(results[sel]);
+}
+function spark(arr, c = "#9db7ff") { const mn = Math.min(...arr), mx = Math.max(...arr), W = 280, H = 44; const pts = arr.map((v, i) => [i * W / (arr.length - 1), H - 4 - (v - mn) / (mx - mn || 1) * (H - 10)]); return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts.map(p => p.join(",")).join(" ")}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/><circle cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="3" fill="#fff"/></svg>`; }
+function preview(r) {
+  const pv = $("#pv"); pv.style.animation = "none"; pv.offsetHeight; pv.style.animation = "";
+  const hint = r.calc ? "复制结果" : r.g === "应用" ? "打开" : r.g === "文档" ? "打开文档" : "执行";
+  $("#mainhint").innerHTML = `<kbd>↵</kbd> ${hint}`;
+  if (r.calc) { pv.className = "pv calc"; pv.innerHTML = `<div class="hint">算式</div><div class="ex">${esc(r.ex)}</div><div class="hint" style="margin-top:6px">结果</div><div class="res">${r.n}</div><div class="kv"><div>按 <span>↵</span> 复制结果，<span>⌘ K</span> 更多</div></div>`; return; }
+  pv.className = "pv";
+  let h = `<div class="big" style="background:${r.c}">${svg(r.ic)}</div><div><h3>${esc(r.n)}</h3></div><p>${esc(r.d)}</p>`;
+  if (r.vis) h += `<div class="mini"><small>${r.vis[0]}</small><b>${r.vis[1]}<em>${r.vis[2]}</em></b>${spark(r.vis[3])}</div>`;
+  if (r.doc) h += `<div class="mini doc"><h4>${esc(r.n)}</h4><p>${esc(r.d).slice(0, 40)}…</p></div>`;
+  if (r.meta) h += `<div class="kv">${r.meta.map(([k, v]) => `<div>${k}<span>${v}</span></div>`).join("")}</div>`;
+  else h += `<div class="kv"><div>类型<span>动作</span></div><div>执行后<span>${esc(r.run)}</span></div></div>`;
+  pv.innerHTML = h;
+}
+
+/* ---------- 执行与动作菜单 ---------- */
+const toast = $("#toast"); let tt;
+function say(t) { toast.querySelector("span").textContent = t; toast.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("on"), 1900); }
+function runItem(r, actIdx = 0) {
+  if (r.calc) { const txt = actIdx === 1 ? `${r.ex} = ${r.n}` : r.n; try { navigator.clipboard.writeText(txt); } catch (_) {} say("已复制：" + txt); return; }
+  const a = ACTIONS[r.g][actIdx][0];
+  if (r.g === "动作") { say(actIdx === 0 ? r.run : "已复制：" + r.n); return; }
+  if (a.startsWith("打开")) say("正在打开 " + r.n + "…");
+  else if (a === "在新窗口打开") say("已在新窗口打开 " + r.n);
+  else if (a === "复制链接") say("已复制 " + r.n + " 的链接");
+  else if (a === "分享给同事") say("已生成分享链接，可发给同事");
+  else if (a === "固定到顶部") say("已固定：" + r.n);
+}
+const am = $("#am"); let ai = 0;
+function openAm() { if (!results.length) return; const r = results[sel], list = ACTIONS[r.calc ? "计算" : r.g]; ai = 0; am.innerHTML = `<h5>${esc(r.calc ? "计算器" : r.n)}</h5>` + list.map((a, i) => `<div class="a${i === ai ? " on" : ""}" data-i="${i}">${svg(a[1])}${a[0]}<kbd>${a[2]}</kbd></div>`).join(""); am.classList.add("on"); }
+function closeAm() { am.classList.remove("on"); }
+function amMove(d) { const n = am.querySelectorAll(".a").length; ai = (ai + d + n) % n; am.querySelectorAll(".a").forEach((e, i) => e.classList.toggle("on", i === ai)); }
+am.addEventListener("click", e => { const a = e.target.closest(".a"); if (a) { runItem(results[sel], +a.dataset.i); closeAm(); $("#q").focus(); } });
+am.addEventListener("mousemove", e => { const a = e.target.closest(".a"); if (a) { ai = +a.dataset.i; am.querySelectorAll(".a").forEach((x, i) => x.classList.toggle("on", i === ai)); } });
+$("#akbtn").addEventListener("click", () => am.classList.contains("on") ? closeAm() : openAm());
+
+/* ---------- 事件 ---------- */
+const input = $("#q");
+input.addEventListener("input", () => { closeAm(); search(); });
+$("#list").addEventListener("mousemove", e => { const r = e.target.closest(".row"); if (r && +r.dataset.i !== sel) { sel = +r.dataset.i; document.querySelectorAll(".row").forEach((x, i) => x.classList.toggle("on", i === sel)); preview(results[sel]); } });
+$("#list").addEventListener("click", e => { const r = e.target.closest(".row"); if (r) { sel = +r.dataset.i; runItem(results[sel]); input.focus(); } });
+addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); am.classList.contains("on") ? closeAm() : openAm(); return; }
+  const amOn = am.classList.contains("on");
+  if (e.key === "ArrowDown") { e.preventDefault(); if (amOn) amMove(1); else if (results.length) { sel = (sel + 1) % results.length; render(); } }
+  else if (e.key === "ArrowUp") { e.preventDefault(); if (amOn) amMove(-1); else if (results.length) { sel = (sel - 1 + results.length) % results.length; render(); } }
+  else if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); if (!results.length) return; if (amOn) { runItem(results[sel], ai); closeAm(); } else runItem(results[sel], (e.metaKey || e.ctrlKey) ? 1 : 0); }
+  else if (e.key === "Escape") { if (amOn) closeAm(); else if (input.value) { input.value = ""; search(); } }
+  else if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && document.activeElement !== input) input.focus();
+});
+search(); input.focus();
+if (/demo/.test(location.search)) { input.value = "资源"; search(); }
+</script>
+</body>
+</html>

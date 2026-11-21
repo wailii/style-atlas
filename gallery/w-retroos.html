@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>岚山 OS · 小满的工作站</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Pixelify+Sans:wght@400;600&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--g:#dcdcdc;--g2:#bdbdbd;--dk:#7a7a7a;--k:#000;--w:#fff;--sel:#2c3e8f;--f:"DotGothic16","Pixelify Sans","Noto Sans SC",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000}
+body{font:13px/1.4 var(--f);color:var(--k);user-select:none;cursor:default;min-width:1100px}
+#desk{position:fixed;inset:0;background:#5f8aa6}
+#wall{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.bev{background:var(--g);border:2px solid;border-color:var(--w) var(--k) var(--k) var(--w);box-shadow:inset -1px -1px 0 var(--dk),inset 1px 1px 0 var(--g2)}
+.ins{background:var(--w);border:2px solid;border-color:var(--dk) var(--w) var(--w) var(--dk);box-shadow:inset 1px 1px 0 var(--k)}
+/* menubar */
+#mb{position:fixed;left:0;right:0;top:0;height:26px;background:var(--g);border-bottom:2px solid var(--k);display:flex;align-items:center;z-index:9000;box-shadow:0 1px 0 var(--w) inset}
+.mi{position:relative;height:100%;padding:0 12px;display:flex;align-items:center;gap:6px}
+.mi.open,.mi:hover{background:var(--k);color:var(--w)}
+.mi svg{width:16px;height:16px;image-rendering:pixelated}
+.mi.open svg rect,.mi:hover svg rect{}
+.menu{position:absolute;left:0;top:100%;min-width:190px;background:var(--g);border:2px solid var(--k);box-shadow:3px 3px 0 rgba(0,0,0,.45);display:none;padding:2px 0;color:var(--k)}
+.mi.open>.menu{display:block}
+.menu div{padding:3px 22px 3px 18px;white-space:nowrap;display:flex;justify-content:space-between;gap:24px}
+.menu div:hover{background:var(--sel);color:var(--w)}
+.menu hr{border:0;border-top:1px solid var(--dk);border-bottom:1px solid var(--w);margin:3px 2px}
+.menu .dis{color:var(--dk)} .menu .dis:hover{background:none;color:var(--dk)}
+#clock{margin-left:auto;padding:0 14px;font-family:"Pixelify Sans",var(--f);letter-spacing:.04em}
+/* icons */
+.ic{position:absolute;width:92px;text-align:center;padding:2px}
+.ic svg{width:48px;height:48px;image-rendering:pixelated;display:block;margin:0 auto 3px}
+.ic span{display:inline-block;padding:0 4px;background:rgba(0,0,0,.0);color:var(--w);text-shadow:1px 1px 0 #000;word-break:break-all}
+.ic.s svg{filter:invert(.15) sepia(1) hue-rotate(190deg) saturate(3)}
+.ic.s span{background:var(--sel);text-shadow:none}
+.wi .ic span{color:var(--k);text-shadow:none}
+.wi .ic.s span{color:var(--w)}
+/* windows */
+.win{position:absolute;display:flex;flex-direction:column;background:var(--g);border:2px solid var(--k);box-shadow:3px 3px 0 rgba(0,0,0,.4),inset 1px 1px 0 var(--w),inset -1px -1px 0 var(--dk);padding:2px}
+.tb{height:22px;display:flex;align-items:center;gap:6px;padding:0 4px;background:repeating-linear-gradient(0deg,var(--w) 0 1px,var(--g) 1px 3px);border:1px solid var(--k);cursor:grab}
+.win:not(.act) .tb{background:var(--g)}
+.win:not(.act) .tb .t{color:var(--dk)}
+.tb .t{flex:1;text-align:center;background:var(--g);padding:0 8px;margin:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;max-width:fit-content;margin-inline:auto}
+.win:not(.act) .tb .t{background:transparent}
+.tb .bx{width:14px;height:14px;border:1px solid var(--k);background:var(--g);box-shadow:inset 1px 1px 0 var(--w),inset -1px -1px 0 var(--dk);flex:none;cursor:pointer}
+.tb .bx:active{background:var(--dk)}
+.win:not(.act) .bx{visibility:hidden}
+.wb{flex:1;margin-top:3px;overflow:auto;min-height:0;position:relative}
+.wi{background:var(--w);border:2px solid;border-color:var(--dk) var(--w) var(--w) var(--dk);position:relative}
+.wi .ic{position:static;display:inline-block;margin:8px 6px;vertical-align:top}
+.sb{font-size:11px;padding:2px 6px;border-bottom:1px solid var(--dk);background:var(--g)}
+.txt{padding:14px 16px;font-size:14px;line-height:1.75;user-select:text;cursor:text}
+.txt h2{font:600 22px/1.2 "Pixelify Sans",var(--f);margin-bottom:8px}
+.btn{display:inline-block;padding:3px 16px;background:var(--g);border:2px solid;border-color:var(--w) var(--k) var(--k) var(--w);box-shadow:inset -1px -1px 0 var(--dk);cursor:pointer;min-width:72px;text-align:center}
+.btn:active{border-color:var(--k) var(--w) var(--w) var(--k);box-shadow:inset 1px 1px 0 var(--dk)}
+.btn.def{outline:2px solid var(--k);outline-offset:1px;border-radius:0}
+.prog{height:18px;border:2px solid var(--k);padding:1px;display:flex;gap:2px;background:var(--w)}
+.prog i{flex:1;background:var(--sel)}
+.prog i.e{background:transparent}
+/* paint */
+.pt{display:flex;gap:8px;padding:8px;background:var(--g)}
+.pal{display:grid;grid-template-columns:repeat(2,22px);gap:2px;align-content:start}
+.pal b{width:22px;height:22px;border:2px solid;border-color:var(--dk) var(--w) var(--w) var(--dk);cursor:pointer}
+.pal b.on{outline:2px solid var(--k);outline-offset:1px}
+canvas.px{image-rendering:pixelated;display:block;cursor:crosshair;touch-action:none}
+/* dialog */
+#shade{position:fixed;inset:0;display:none;z-index:9500;background:rgba(0,0,0,.0)}
+.dlg{position:absolute;left:50%;top:34%;transform:translateX(-50%);width:400px;padding:16px;display:flex;gap:16px}
+.dlg .ico{width:48px;height:48px;image-rendering:pixelated;flex:none}
+.dlg p{margin-bottom:14px;line-height:1.6}
+.dlg .bt{display:flex;gap:12px;justify-content:flex-end}
+#off{position:fixed;inset:0;background:#000;color:#bbb;z-index:9800;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;font-size:18px}
+#off small{font-size:12px;color:#666}
+#boot{position:fixed;inset:0;background:#000;z-index:9900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:22px;color:#fff;font-size:18px}
+#boot .prog{width:260px;background:#000;border-color:#fff}
+#boot .prog i{background:#fff}
+.credit{position:fixed;right:10px;bottom:6px;font-size:10px;color:rgba(255,255,255,.75);z-index:5;text-shadow:1px 1px 0 #000}
+</style>
+</head>
+<body>
+<div id="desk">
+  <canvas id="wall"></canvas>
+</div>
+<div id="mb">
+  <div class="mi" id="m1"><svg viewBox="0 0 8 8" id="lg"></svg><b>岚山</b>
+    <div class="menu">
+      <div data-a="about">关于这台电脑…</div><hr>
+      <div data-a="open:paint">画板</div><div data-a="open:note">便笺</div><div data-a="open:works">我的作品</div><hr>
+      <div data-a="off">关机…</div>
+    </div></div>
+  <div class="mi" id="m2">文件
+    <div class="menu"><div data-a="newf">新建文件夹</div><div data-a="closew">关闭窗口</div><hr><div class="dis">打印…</div></div></div>
+  <div class="mi" id="m3">特别
+    <div class="menu"><div data-a="trash">清倒废纸篓</div><div data-a="restart">重新启动</div><div data-a="off">关机…</div></div></div>
+  <div id="clock">10:42</div>
+</div>
+<div id="icons"></div>
+<div id="wins"></div>
+<div id="shade"></div>
+<div id="off"><div>现在可以安全地关闭电脑了。</div><small>点击屏幕任意处重新开机 · 示例数据</small></div>
+<div id="boot"><div>岚山 OS 9.2</div><div class="prog" id="bp"></div></div>
+<div class="credit">示意图 · Dana Cristea · 示例数据</div>
+
+<script>
+window.__e=[];addEventListener("error",e=>__e.push(e.message+" @"+e.lineno));
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+// ---------- 像素图标 ----------
+const PAL={K:"#000",W:"#fff",G:"#c0c0c0",D:"#7a7a7a",Y:"#f2c744",O:"#c98a1a",B:"#3b66b0",L:"#8fc1ea",R:"#c8382d",N:"#2f9e44",P:"#d86aa8"};
+const ICONS={
+folder:["................","................","..KKKKK.........",".KYYYYYK........",".KYYYYYYKKKKKKK.","KKWWWWWWWWWWWWYK","KWYYYYYYYYYYYYOK","KWYYYYYYYYYYYYOK","KWYYYYYYYYYYYYOK","KWYYYYYYYYYYYYOK","KWYYYYYYYYYYYYOK","KWYYYYYYYYYYYYOK","KYOOOOOOOOOOOOOK",".KKKKKKKKKKKKKK.","................","................"],
+disk:["................","................",".KKKKKKKKKKKKKK.","KWWWWWWWWWWWWWGK","KWGGGGGGGGGGGGDK","KWGGGGGGGGGGGGDK","KWGKKKKKKKKKKGDK","KWGGGGGGGGGGGGDK","KWGGGGGGGGGGGGDK","KWGGGGGNNGGGGGDK","KWGGGGGGGGGGGGDK","KDDDDDDDDDDDDDDK",".KKKKKKKKKKKKKK.","................","................","................"],
+doc:["................","..KKKKKKKKKK....","..KWWWWWWWWKK...","..KWWWWWWWWKWK..","..KWKKKKKKWKKKK.","..KWWWWWWWWWWWK.","..KWKKKKKKKKWWK.","..KWWWWWWWWWWWK.","..KWKKKKKKKKKWK.","..KWWWWWWWWWWWK.","..KWKKKKKKWWWWK.","..KWWWWWWWWWWWK.","..KWWWWWWWWWWWK.","..KKKKKKKKKKKKK.","................","................"],
+img:["................","KKKKKKKKKKKKKKKK","KWWWWWWWWWWWWWWK","KWLLLLLLLLLLLLWK","KWLLLLLWWLLLLLWK","KWLLLLWWWWLLLLWK","KWLLLLLWWLLLLLWK","KWLLLLLLLLLLLLWK","KWLLDLLLLLLDLLWK","KWLDDDLLLLDDDLWK","KWNNNNNNNNNNNNWK","KWNNNNNNNNNNNNWK","KWWWWWWWWWWWWWWK","KKKKKKKKKKKKKKKK","................","................"],
+trash:["................","......KKKK......","....KKDDDDKK....","..KKKKKKKKKKKK..","..KWWWWWWWWWWK..",".KGKGWGWGWGKGK..",".KGKWGWGWGWKGK..",".KGKGWGWGWGKGK..",".KGKWGWGWGWKGK..",".KGKGWGWGWGKGK..",".KGKWGWGWGWKGK..",".KGKGWGWGWGKGK..","..KDDDDDDDDDK...","..KKKKKKKKKKK...","................","................"],
+paint:["................","..KKKKKKKKKKKK..",".KWWWWWWWWWWWWK.",".KWRRWBBWNNWYWK.",".KWRRWBBWNNWYWK.",".KWWWWWWWWWWWWK.",".KWWPPWWWWWWWWK.",".KWWPPWWKKWWWWK.",".KWWWWWWKRKWWWK.",".KWWWWWWWKRKWWK.",".KWWWWWWWWKKWWK.",".KWWWWWWWWWWWWK.","..KKKKKKKKKKKK..","................","................","................"],
+warn:["................","......KKKK......",".....KYYYYK.....",".....KYYYYK.....","....KYYKKYYK....","....KYYKKYYK....","...KYYYKKYYYK...","...KYYYKKYYYK...","..KYYYYKKYYYYK..","..KYYYYYYYYYYK..",".KYYYYYKKYYYYYK.",".KYYYYYKKYYYYYK.","KYYYYYYYYYYYYYYK","KKKKKKKKKKKKKKKK","................","................"]};
+function icon(n,cls){const m=ICONS[n];let r="";m.forEach((row,y)=>[...row].forEach((c,x)=>{if(c!=".")r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${PAL[c]}"/>`}));return `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" class="${cls||""}">${r}</svg>`}
+// 菜单栏徽标
+(function(){const m=["..KKKK..",".KWWWWK.","KWKWWKWK","KWWWWWWK","KWKKKKWK",".KWWWWK.","..KKKK..","........"];let r="";m.forEach((row,y)=>[...row].forEach((c,x)=>{if(c!=".")r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c=="K"?"#000":"#fff"}"/>`}));$("#lg").innerHTML=`<g>${r}</g>`;$("#lg").setAttribute("shape-rendering","crispEdges")})();
+// ---------- 壁纸（画布点阵） ----------
+(function(){const c=$("#wall"),x=c.getContext("2d");c.width=360;c.height=225;
+for(let j=0;j<225;j++)for(let i=0;i<360;i++){const a=((i+j)&1)?0:1;x.fillStyle=a?"#6c97b3":"#5a84a0";x.fillRect(i,j,1,1)}
+})();
+// ---------- 窗口管理 ----------
+let z=10,wid=0;const W={};
+function focus(w){$$(".win").forEach(e=>e.classList.remove("act"));w.classList.add("act");w.style.zIndex=++z}
+function win(o){
+  const id=o.id||("w"+(++wid));if(o.id&&W[o.id]){focus(W[o.id]);return W[o.id]}
+  const w=document.createElement("div");w.className="win";w.style.cssText=`left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px`;
+  w.innerHTML=`<div class="tb"><div class="bx cl"></div><div class="t">${o.title}</div><div class="bx zm"></div></div><div class="wb"></div>`;
+  $("#wins").appendChild(w);W[id]=w;w.dataset.id=id;o.body(w.querySelector(".wb"),w);
+  const tb=w.querySelector(".tb");let dx,dy,drag=0;
+  tb.addEventListener("pointerdown",e=>{if(e.target.classList.contains("bx"))return;drag=1;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop;tb.setPointerCapture(e.pointerId);tb.style.cursor="grabbing"});
+  tb.addEventListener("pointermove",e=>{if(!drag)return;w.style.left=Math.max(-w.offsetWidth+80,Math.min(innerWidth-80,e.clientX-dx))+"px";w.style.top=Math.max(26,Math.min(innerHeight-30,e.clientY-dy))+"px"});
+  tb.addEventListener("pointerup",()=>{drag=0;tb.style.cursor=""});
+  w.addEventListener("pointerdown",()=>focus(w),true);
+  w.querySelector(".cl").onclick=()=>{w.remove();delete W[id]};
+  let big=null;w.querySelector(".zm").onclick=()=>{if(big){Object.assign(w.style,big);big=null}else{big={left:w.style.left,top:w.style.top,width:w.style.width,height:w.style.height};Object.assign(w.style,{left:"6px",top:"32px",width:innerWidth-16+"px",height:innerHeight-44+"px"})}};
+  focus(w);return w}
+// ---------- 内容 ----------
+const FILES={
+ hello:{n:"欢迎.txt",t:"doc"},
+ diary:{n:"日记 11月.txt",t:"doc"},
+ shore:{n:"海边.img",t:"img"},
+ paint:{n:"画板",t:"paint"},
+ old:{n:"旧项目",t:"folder"},
+ note:{n:"便笺",t:"doc"}
+};
+function iconEl(k,x,y,cls){const f=FILES[k]||k;const d=document.createElement("div");d.className="ic"+(cls?" "+cls:"");if(x!=null){d.style.left=x+"px";d.style.top=y+"px"}d.innerHTML=icon(f.t)+`<span>${f.n}</span>`;d.dataset.k=k;return d}
+function wireIcons(root){
+  root.addEventListener("click",e=>{const ic=e.target.closest(".ic");root.querySelectorAll(".ic").forEach(i=>i.classList.toggle("s",i===ic));e.stopPropagation()});
+  root.addEventListener("dblclick",e=>{const ic=e.target.closest(".ic");if(ic)openK(ic.dataset.k)})}
+function folderBody(items,status){return (b)=>{b.style.display="flex";b.style.flexDirection="column";b.innerHTML=`<div class="sb">${items.length} 个项目 · ${status}</div>`;const v=document.createElement("div");v.className="wi";v.style.flex="1";v.style.overflow="auto";items.forEach(k=>v.appendChild(iconEl(k)));b.appendChild(v);wireIcons(v);v.addEventListener("click",()=>v.querySelectorAll(".ic").forEach(i=>i.classList.remove("s")))}}
+const TXT={
+hello:`<h2>欢迎来到小满的工作站</h2>这是一台 1999 年的虚拟电脑，里面放着我的东西：<br>· 「我的作品」里有照片、日记和一个小画板<br>· 窗口可以拖标题条移动，左上角方块是关闭<br>· 双击图标打开，左上角的 <b>岚山</b> 菜单里有关机<br><br>最后更新 11 月 20 日。`,
+diary:`<h2>日记 · 11 月</h2>11/03　下雨。把硬盘里的旧照片整理了一遍，居然找回一张去年的海边。<br>11/09　画板里画了一只猫，像素太少，看着更像一块饼干。<br>11/17　夜里听了一整晚的老歌，风扇很吵。<br>11/20　想把这台机器的壁纸换成绿色的。`,
+note:`<h2>便笺</h2>· 周五交稿<br>· 给硬盘清一下废纸篓<br>· 买软盘（开玩笑的）`};
+function txtWin(k,x,y,w,h){const f=FILES[k];return win({id:"t"+k,title:f.n,x,y,w:w||420,h:h||300,body:b=>{b.innerHTML=`<div class="wi" style="height:100%;overflow:auto"><div class="txt">${TXT[k]}</div></div>`}})}
+function imgWin(x,y){return win({id:"imgshore",title:"海边.img",x,y,w:470,h:380,body:b=>{
+  b.innerHTML=`<div class="sb">256 × 171 · 4 级灰 · 抖动</div><div class="wi" style="height:calc(100% - 22px);display:grid;place-items:center"><canvas id="ditc" class="px" style="width:416px;height:278px"></canvas></div>`;
+  const im=new Image();im.onload=()=>{const c=b.querySelector("canvas"),x=c.getContext("2d");c.width=208;c.height=139;const t=document.createElement("canvas");t.width=208;t.height=139;const tx=t.getContext("2d");tx.drawImage(im,0,0,208,139);
+   const d=tx.getImageData(0,0,208,139),M=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];const out=x.createImageData(208,139);const cols=[[20,22,40],[110,92,60],[225,170,70],[255,238,200]];
+   for(let j=0;j<139;j++)for(let i=0;i<208;i++){const p=(j*208+i)*4;let l=(d.data[p]*.3+d.data[p+1]*.59+d.data[p+2]*.11)/255;l=Math.min(1,Math.max(0,l*1.1));const th=(M[(j&3)*4+(i&3)]+.5)/16-.5;let v=Math.floor((l+th/3)*3.999+.0);v=Math.max(0,Math.min(3,v));const c=cols[v];out.data[p]=c[0];out.data[p+1]=c[1];out.data[p+2]=c[2];out.data[p+3]=255}
+   x.putImageData(out,0,0)};im.src="img/real/documentary-shore.jpg"}})}
+function aboutWin(x,y){return win({id:"about",title:"关于这台电脑",x,y,w:400,h:340,body:b=>{
+  b.innerHTML=`<div class="wi" style="height:100%;padding:14px 16px;line-height:1.8"><div style="display:flex;gap:14px;align-items:center;margin-bottom:10px"><span style="width:48px;height:48px;display:block;flex:none">${icon("disk")}</span><div><b style="font-size:16px">岚山 OS 9.2</b><br>小满的工作站 · 型号 LS-486</div></div>
+  内存 64 MB　已用 <span id="ramv">38</span> MB<div class="prog" id="ramb" style="margin:6px 0 10px"></div>
+  硬盘 2.1 GB　可用 1.4 GB<div class="prog" style="margin:6px 0 10px">${'<i></i>'.repeat(10)+'<i class="e"></i>'.repeat(0)}</div>
+  <div style="font-size:11px;color:#555">示例数据 · 以下为虚构设备</div></div>`;
+  const rb=b.querySelector("#ramb");let n=0;const draw=()=>{const k=Math.round(n/64*24);rb.innerHTML='<i></i>'.repeat(k)+'<i class="e"></i>'.repeat(24-k);b.querySelector("#ramv").textContent=n};
+  n=38;draw();const iv=setInterval(()=>{if(!document.body.contains(b)){clearInterval(iv);return}n=Math.max(30,Math.min(52,n+Math.round((Math.random()-.5)*6)));draw()},900)
+  // 硬盘条：10 格里 6 格满
+  const hd=b.querySelectorAll(".prog")[1];hd.innerHTML='<i></i>'.repeat(7)+'<i class="e"></i>'.repeat(3)}})}
+function paintWin(x,y){return win({id:"paint",title:"画板",x,y,w:420,h:350,body:b=>{
+  const cols=["#000","#fff","#c8382d","#f2c744","#2f9e44","#3b66b0","#d86aa8","#7a7a7a"];let cur=0;
+  b.innerHTML=`<div class="pt"><div><div class="pal"></div><div class="btn" style="margin-top:10px;min-width:0;padding:3px 8px" id="clr">清空</div></div><div class="ins" style="padding:0"><canvas class="px" width="32" height="24" style="width:320px;height:240px"></canvas></div></div><div class="sb" style="border-top:1px solid var(--dk)">按住拖动作画 · 32 × 24</div>`;
+  const pal=b.querySelector(".pal");cols.forEach((c,i)=>{const e=document.createElement("b");e.style.background=c;if(!i)e.className="on";e.onclick=()=>{cur=i;pal.querySelectorAll("b").forEach((q,j)=>q.classList.toggle("on",j==i))};pal.appendChild(e)});
+  const cv=b.querySelector("canvas"),cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,32,24);
+  // 预置一只像素猫
+  const cat=["...K......K...",".KKKK....KKKK.","KOOOK....KOOOK","KOOOOKKKKOOOOK","KOOOOOOOOOOOOK","KOOKOOOOOOKOOK","KOOOOOOKOOOOOK","KOOOOOOOOOOOOK",".KOOROOOOROOK.","..KOOOOOOOOK..","...KKKKKKKK..."];
+  cat.forEach((r,j)=>[...r].forEach((c,i)=>{if(c=="K"||c=="O"||c=="R"){cx.fillStyle=c=="K"?"#000":c=="O"?"#f2c744":"#c8382d";cx.fillRect(9+i,5+j,1,1)}}));
+  let dn=0;const pt=e=>{const r=cv.getBoundingClientRect();cx.fillStyle=cols[cur];cx.fillRect(Math.floor((e.clientX-r.left)/r.width*32),Math.floor((e.clientY-r.top)/r.height*24),1,1)};
+  cv.addEventListener("pointerdown",e=>{dn=1;cv.setPointerCapture(e.pointerId);pt(e)});cv.addEventListener("pointermove",e=>{if(dn)pt(e)});cv.addEventListener("pointerup",()=>dn=0);
+  b.querySelector("#clr").onclick=()=>{cx.fillStyle="#fff";cx.fillRect(0,0,32,24)}}})}
+let wk=0;
+function openK(k,x,y){
+  const o=(wk=(wk+1)%5)*26;
+  if(k=="hello"||k=="diary"||k=="note")return txtWin(k,x||300+o,y||120+o);
+  if(k=="shore")return imgWin(x||260+o,y||90+o);
+  if(k=="paint")return paintWin(x||520+o,y||200+o);
+  if(k=="old")return win({id:"old",title:"旧项目",x:340+o,y:160+o,w:340,h:230,body:folderBody(["note","hello"],"可用 1.4 GB")});
+  if(k=="works")return worksWin();
+  if(k=="disk")return win({id:"disk",title:"岚山 HD",x:200+o,y:80+o,w:420,h:260,body:folderBody(["works","note","hello","old"],"2.1 GB · 可用 1.4 GB")});
+  if(k=="trash")return win({id:"trash",title:"废纸篓",x:420+o,y:140+o,w:320,h:200,body:b=>{b.innerHTML=`<div class="sb">0 个项目</div><div class="wi" style="height:calc(100% - 22px);display:grid;place-items:center;color:#777">废纸篓是空的</div>`}});
+  if(k=="about")return aboutWin(480,150);
+  if(k=="note")return txtWin("note",360,200)
+}
+function worksWin(){return win({id:"works",title:"我的作品",x:520,y:70,w:430,h:260,body:folderBody(["shore","diary","paint","old"],"可用 1.4 GB")})}
+FILES.works={n:"我的作品",t:"folder"};FILES.disk={n:"岚山 HD",t:"disk"};FILES.trash={n:"废纸篓",t:"trash"};
+// 桌面图标
+const IC=$("#icons");[["disk",null,"right",20,44],["works",null,"right",20,150],["paint",null,"right",20,256],["trash",null,"right",20,770]].forEach(([k,,,r,t])=>{const e=iconEl(k,null,null);e.style.left="auto";e.style.right=r+"px";e.style.top=t+"px";IC.appendChild(e)});
+IC.style.position="fixed";IC.style.inset="0";IC.style.pointerEvents="none";IC.querySelectorAll(".ic").forEach(e=>e.style.pointerEvents="auto");
+wireIcons(IC);
+$("#desk").addEventListener("pointerdown",e=>{if(e.target.id=="wall")IC.querySelectorAll(".ic").forEach(i=>i.classList.remove("s"))});
+// ---------- 菜单 ----------
+function closeMenus(){$$(".mi").forEach(m=>m.classList.remove("open"))}
+$$(".mi").forEach(m=>{m.addEventListener("pointerdown",e=>{if(e.target.closest(".menu"))return;const o=m.classList.contains("open");closeMenus();if(!o)m.classList.add("open");e.stopPropagation()});
+  m.addEventListener("pointerenter",()=>{if($(".mi.open")&&!m.classList.contains("open")){closeMenus();m.classList.add("open")}})});
+addEventListener("pointerdown",e=>{if(!e.target.closest(".mi"))closeMenus()});
+let nf=0;
+$$(".menu div[data-a]").forEach(d=>d.addEventListener("click",()=>{const a=d.dataset.a;closeMenus();
+  if(a=="about")openK("about");else if(a.startsWith("open:")){const k=a.slice(5);openK(k=="paint"?"paint":k=="note"?"note":"works")}
+  else if(a=="off")shutdown();else if(a=="restart"){boot()}
+  else if(a=="newf"){const k="nf"+(++nf);FILES[k]={n:"未命名文件夹"+(nf>1?" "+nf:""),t:"folder"};const e=iconEl(k);e.style.cssText=`left:60px;top:${60+nf*90}px;pointer-events:auto`;IC.appendChild(e);}
+  else if(a=="closew"){const a2=$(".win.act");if(a2)a2.querySelector(".cl").click()}
+  else if(a=="trash"){openK("trash")}}));
+// ---------- 关机 / 开机 ----------
+function shutdown(){const s=$("#shade");s.style.display="block";s.innerHTML=`<div class="dlg bev">${icon("warn","ico")}<div style="flex:1"><p>确定要关闭电脑吗？<br><span style="font-size:12px;color:#444">尚未保存的画板内容将会丢失。</span></p><div class="bt"><div class="btn" id="dc">取消</div><div class="btn def" id="dk">关机</div></div></div></div>`;
+  $("#dc").onclick=()=>{s.style.display="none";s.innerHTML=""};$("#dk").onclick=()=>{s.style.display="none";s.innerHTML="";const o=$("#off");o.style.display="flex"};}
+$("#off").onclick=()=>{$("#off").style.display="none";boot()};
+function boot(){const b=$("#boot");b.style.display="flex";const p=$("#bp");let n=0;p.innerHTML='<i class="e"></i>'.repeat(16);const iv=setInterval(()=>{n++;p.innerHTML='<i></i>'.repeat(n)+'<i class="e"></i>'.repeat(16-n);if(n>=16){clearInterval(iv);setTimeout(()=>{b.style.display="none"},250)}},70)}
+addEventListener("keydown",e=>{if(e.key=="Escape"){$("#dc")&&$("#dc").click();closeMenus()}});
+// 时钟
+function tick(){const d=new Date(2026,10,20,10,42,0);const n=Math.floor((Date.now()-T0)/1000);d.setSeconds(n);$("#clock").textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+const T0=Date.now();tick();setInterval(tick,1000);
+// 初始窗口
+worksWin();openK("hello",70,64);paintWin(540,360);aboutWin(80,400);imgWin(Math.min(905,innerWidth-500),380);focus(W["works"]);
+</script>
+</body>
+</html>
